@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    'FantasyBumps',
 ]
 
 MIDDLEWARE = [
@@ -106,4 +108,4 @@ STATIC_URL = '/static/'
 
 
 # Other settings
-LOGIN_REDIRECT_URL = 'index'
+LOGIN_REDIRECT_URL = 'fantasybumps:index'
