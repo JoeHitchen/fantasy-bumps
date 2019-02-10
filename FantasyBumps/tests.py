@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.urls import reverse, resolve
 
+from external import utils as ext
+
 
 class Test__Views(TestCase):
     
@@ -20,6 +22,7 @@ class Test__Views(TestCase):
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
         self.assertEqual(response.context['gender'], 'Men')
+        self.assertEqual(response.context['start_order'], ext.start_order_men)
     
     
     def test__women(self):
@@ -30,4 +33,5 @@ class Test__Views(TestCase):
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
         self.assertEqual(response.context['gender'], 'Women')
+        self.assertEqual(response.context['start_order'], ext.start_order_women)
 

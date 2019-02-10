@@ -1,5 +1,24 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-This is the {{ gender|lower }}'s market page for Fantasy Bumps.
+
+{% for div in start_order %}
+  <ul class="list-group">
+    <li class="list-group-item active">{{ gender }}'s Division {{ forloop.counter }}</li>
+    {% for crew in div %}
+      <li class="list-group-item">
+        <div class="d-flex">
+          <div><span class="badge badge-pill badge-primary">{{ forloop.counter }}</span></div>
+          
+          <div class="flex-grow-1">{{ crew }}</div>
+          
+          <div style="margin-right: 1rem;">£100</div>
+          <div><button type="button" class="text-right btn btn-sm btn-primary">Buy</button></div>
+        </span>
+      </li>
+    {% endfor %}
+  </ul>
+  <br/><br/>
+{% endfor %}
+
 {% endblock%}
