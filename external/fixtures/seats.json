@@ -1,0 +1,74 @@
+[
+  {
+    "model": "external.Seat",
+    "pk": 1,
+    "fields": {
+      "name": "Bow",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 2,
+    "fields": {
+      "name": "2",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 3,
+    "fields": {
+      "name": "3",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 4,
+    "fields": {
+      "name": "4",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 5,
+    "fields": {
+      "name": "5",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 6,
+    "fields": {
+      "name": "6",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 7,
+    "fields": {
+      "name": "7",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 8,
+    "fields": {
+      "name": "Stroke",
+      "cox": false
+    }
+  },
+  {
+    "model": "external.Seat",
+    "pk": 9,
+    "fields": {
+      "name": "Cox",
+      "cox": true
+    }
+  }
+]
