@@ -4,6 +4,7 @@ from django.contrib.auth import models as usr
 from . import models
 from . import utils
 from external import models as ext
+from external.constants import genders
 
 
 class Test__Get_Crew(TestCase):
@@ -12,6 +13,8 @@ class Test__Get_Crew(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
+        cls.crew = ext.Crew(gender = genders.MENS)
+        cls.crew.save()
     
     
     def test__empty_crew(self):
@@ -28,6 +31,7 @@ class Test__Get_Crew(TestCase):
         
         models.Rower(
             team = other_team,
+            crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
@@ -40,6 +44,7 @@ class Test__Get_Crew(TestCase):
         
         models.Rower(
             team = self.team,
+            crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
@@ -53,6 +58,7 @@ class Test__Get_Crew(TestCase):
         for seat in ext.Seat.objects.all():
             models.Rower(
                 team = self.team,
+                crew = self.crew,
                 seat = seat,
             ).save()
         
@@ -66,11 +72,13 @@ class Test__Get_Crew(TestCase):
         for seat in ext.Seat.objects.all():
             models.Rower(
                 team = self.team,
+                crew = self.crew,
                 seat = seat,
             ).save()
         
         models.Rower(
             team = self.team,
+            crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
@@ -85,6 +93,8 @@ class Test__Has_All_Seats(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
+        cls.crew = ext.Crew(gender = genders.MENS)
+        cls.crew.save()
     
     
     def test__all_seats(self):
@@ -93,6 +103,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in ext.Seat.objects.all():
             models.Rower(
                 team = self.team,
+                crew = self.crew,
                 seat = seat,
             ).save()
         
@@ -106,6 +117,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in ext.Seat.objects.exclude(name__iexact = missing_seat):
             models.Rower(
                 team = self.team,
+                crew = self.crew,
                 seat = seat,
             ).save()
         
@@ -155,12 +167,14 @@ class Test__Has_All_Seats(TestCase):
         for seat in ext.Seat.objects.all():
             models.Rower(
                 team = self.team,
+                crew = self.crew,
                 seat = seat,
             ).save()
         
         extra_seat = ext.Seat.objects.get(name__iexact = extra_seat)
         models.Rower(
             team = self.team,
+            crew = self.crew,
             seat = extra_seat,
         ).save()
         
