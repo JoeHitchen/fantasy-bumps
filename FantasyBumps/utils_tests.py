@@ -6,6 +6,79 @@ from . import utils
 from external import models as ext
 
 
+class Test__Get_Crew(TestCase):
+    fixtures = ['seats']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = usr.User.objects.create_user('Seats')
+    
+    
+    def test__empty_crew(self):
+        """Returns an empty crew list if no rowers have been added to crew."""
+        
+        crew = utils.get_crew(self.team)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__other_team(self):
+        """Does not include rowers assigned to another team."""
+        
+        other_team = usr.User.objects.create_user('Other')
+        
+        models.Rower(
+            team = other_team,
+            seat = ext.Seat.objects.get(name = 'Bow'),
+        ).save()
+        
+        crew = utils.get_crew(self.team)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__partial_team(self):
+        """Returns any rowers it finds."""
+        
+        models.Rower(
+            team = self.team,
+            seat = ext.Seat.objects.get(name = 'Bow'),
+        ).save()
+        
+        crew = utils.get_crew(self.team)
+        self.assertEqual(crew.count(), 1)
+    
+    
+    def test__full_team(self):
+        """Returns any rowers it finds."""
+        
+        for seat in ext.Seat.objects.all():
+            models.Rower(
+                team = self.team,
+                seat = seat,
+            ).save()
+        
+        crew = utils.get_crew(self.team)
+        self.assertEqual(crew.count(), 9)
+    
+    
+    def test__duplicate_seats(self):
+        """Returns any rowers it finds, regardless of duplications."""
+        
+        for seat in ext.Seat.objects.all():
+            models.Rower(
+                team = self.team,
+                seat = seat,
+            ).save()
+        
+        models.Rower(
+            team = self.team,
+            seat = ext.Seat.objects.get(name = 'Bow'),
+        ).save()
+        
+        crew = utils.get_crew(self.team)
+        self.assertEqual(crew.count(), 10)
+
+
+
 class Test__Has_All_Seats(TestCase):
     fixtures = ['seats']
     
