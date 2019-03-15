@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.contrib.auth import models as usr
 
 from . import models
 from . import utils
@@ -8,11 +9,19 @@ from external import models as ext
 class Test__Has_All_Seats(TestCase):
     fixtures = ['seats']
     
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = usr.User.objects.create_user('Seats')
+    
+    
     def test__all_seats(self):
         """Returns true if all seats are present exactly once."""
         
         for seat in ext.Seat.objects.all():
-            models.Rower(seat = seat).save()
+            models.Rower(
+                team = self.team,
+                seat = seat,
+            ).save()
         
         value = utils.has_all_seats(models.Rower.objects.all())
         self.assertTrue(value)
@@ -22,7 +31,10 @@ class Test__Has_All_Seats(TestCase):
         """Returns false if a specific seat is missing."""
         
         for seat in ext.Seat.objects.exclude(name__iexact = missing_seat):
-            models.Rower(seat = seat).save()
+            models.Rower(
+                team = self.team,
+                seat = seat,
+            ).save()
         
         value = utils.has_all_seats(models.Rower.objects.all())
         self.assertFalse(value)
@@ -68,9 +80,16 @@ class Test__Has_All_Seats(TestCase):
         """Raises ValueError if any seat present twice."""
         
         for seat in ext.Seat.objects.all():
-            models.Rower(seat = seat).save()
+            models.Rower(
+                team = self.team,
+                seat = seat,
+            ).save()
+        
         extra_seat = ext.Seat.objects.get(name__iexact = extra_seat)
-        models.Rower(seat = extra_seat).save()
+        models.Rower(
+            team = self.team,
+            seat = extra_seat,
+        ).save()
         
         with self.assertRaises(ValueError):
             utils.has_all_seats(models.Rower.objects.all())
