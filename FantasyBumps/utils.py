@@ -4,9 +4,9 @@ from . import models
 from external import models as ext
 
 
-def get_crew(team):
-    """Returns all rower objects associated with a team."""
-    return models.Rower.objects.filter(team = team)
+def get_crew(team, gender):
+    """Returns all rower objects associated with a team and of the specified gender."""
+    return models.Rower.objects.filter(team = team, crew__gender = gender)
 
 
 def has_all_seats(rowers):

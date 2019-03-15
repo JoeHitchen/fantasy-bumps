@@ -13,14 +13,14 @@ class Test__Get_Crew(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
-        cls.crew = ext.Crew(gender = genders.MENS)
+        cls.crew = ext.Crew(gender = genders.WOMENS)
         cls.crew.save()
     
     
     def test__empty_crew(self):
         """Returns an empty crew list if no rowers have been added to crew."""
         
-        crew = utils.get_crew(self.team)
+        crew = utils.get_crew(self.team, genders.WOMENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -35,7 +35,22 @@ class Test__Get_Crew(TestCase):
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team)
+        crew = utils.get_crew(self.team, genders.WOMENS)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__wrong_gender(self):
+        """Does not include rowers of the wrong gender."""
+        
+        other_team = usr.User.objects.create_user('Other')
+        
+        models.Rower(
+            team = self.team,
+            crew = self.crew, # Is a women's crew
+            seat = ext.Seat.objects.get(name = 'Bow'),
+        ).save()
+        
+        crew = utils.get_crew(self.team, genders.MENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -48,7 +63,7 @@ class Test__Get_Crew(TestCase):
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team)
+        crew = utils.get_crew(self.team, genders.WOMENS)
         self.assertEqual(crew.count(), 1)
     
     
@@ -62,7 +77,7 @@ class Test__Get_Crew(TestCase):
                 seat = seat,
             ).save()
         
-        crew = utils.get_crew(self.team)
+        crew = utils.get_crew(self.team, genders.WOMENS)
         self.assertEqual(crew.count(), 9)
     
     
@@ -82,7 +97,7 @@ class Test__Get_Crew(TestCase):
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team)
+        crew = utils.get_crew(self.team, genders.WOMENS)
         self.assertEqual(crew.count(), 10)
 
 
