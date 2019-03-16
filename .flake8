@@ -15,4 +15,9 @@ ignore =
     W293,
     W391,
 
-    
+import-order-style = pep8app
+application-package-names = 
+    external,
+    FantasyCore,
+    FantasyBumps,
+
