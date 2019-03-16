@@ -1,1 +1,5 @@
 django
+
+# Development
+flake8
+flake8-commas

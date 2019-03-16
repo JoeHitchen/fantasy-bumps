@@ -42,11 +42,9 @@ class Test__Get_Crew(TestCase):
     def test__wrong_gender(self):
         """Does not include rowers of the wrong gender."""
         
-        other_team = usr.User.objects.create_user('Other')
-        
         models.Rower(
             team = self.team,
-            crew = self.crew, # Is a women's crew
+            crew = self.crew,  # Is a women's crew
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
