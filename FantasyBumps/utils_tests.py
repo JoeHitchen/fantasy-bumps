@@ -110,6 +110,13 @@ class Test__Has_All_Seats(TestCase):
         cls.crew.save()
     
     
+    def test__empty_crew(self):
+        """Returns false if there are no seats filled."""
+        
+        value = utils.has_all_seats(models.Rower.objects.all())
+        self.assertFalse(value)
+    
+    
     def test__all_seats(self):
         """Returns true if all seats are present exactly once."""
         

@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 
-class Test_URLs(TestCase):
+class Test__URLs(TestCase):
     
     def test__accounts_inbuilt(self):
         """
