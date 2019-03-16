@@ -1,5 +1,7 @@
 # flake8: noqa: E121
 
+from .constants import genders
+
 start_order_women = [
   [
     'Oriel W1',
@@ -31,5 +33,9 @@ start_order_men = [
 
 
 def get_start_order(gender):
-    return {'M': start_order_men, 'W': start_order_women}[gender]
+    """Untested, due to temporary nature."""
+    return {
+        genders.MENS: start_order_men,
+        genders.WOMENS: start_order_women,
+    }[gender]
 
