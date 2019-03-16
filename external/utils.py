@@ -39,3 +39,11 @@ def get_start_order(gender):
         genders.WOMENS: start_order_women,
     }[gender]
 
+
+def reverse_gender(gender):
+    """Untested, due to simplistic nature."""
+    return {
+        genders.MENS: genders.WOMENS,
+        genders.WOMENS: genders.MENS,
+    }[gender]
+
