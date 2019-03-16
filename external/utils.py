@@ -1,3 +1,4 @@
+# flake8: noqa: E121
 
 start_order_women = [
   [
@@ -27,6 +28,7 @@ start_order_men = [
     'Balliol M1',
   ],
 ]
+
 
 def get_start_order(gender):
     return {'M': start_order_men, 'W': start_order_women}[gender]

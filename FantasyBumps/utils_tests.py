@@ -44,7 +44,7 @@ class Test__Get_Crew(TestCase):
         
         models.Rower(
             team = self.team,
-            crew = self.crew, # Is a women's crew
+            crew = self.crew,  # Is a women's crew
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
