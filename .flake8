@@ -1,0 +1,18 @@
+[flake8]
+
+max-line-length = 99
+
+exclude = 
+    .git,
+    venv**,
+    __pycache__,
+    *.pyc,
+    migrations,
+
+ignore =
+    E251,
+    E303,
+    W293,
+    W391,
+
+    
