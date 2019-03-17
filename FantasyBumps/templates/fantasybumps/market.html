@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load fantasy_tags %}
 
 {% block content %}
 
@@ -20,5 +21,9 @@
   </ul>
   <br/><br/>
 {% endfor %}
+
+{% if user.is_authenticated %}
+  {% crew_list_box %}
+{% endif %}
 
 {% endblock%}
