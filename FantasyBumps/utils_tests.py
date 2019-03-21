@@ -1,10 +1,11 @@
 from django.test import TestCase
 from django.contrib.auth import models as usr
 
-from . import models
-from . import utils
 from external import models as ext
 from external.constants import genders
+
+from . import models
+from . import utils
 
 
 class Test__Get_Crew(TestCase):

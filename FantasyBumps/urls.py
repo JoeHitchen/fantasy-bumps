@@ -1,7 +1,8 @@
 from django.urls import path
 
-from . import views
 from external.constants import genders
+
+from . import views
 
 
 app_name = 'fantasybumps'

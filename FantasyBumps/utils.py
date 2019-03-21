@@ -1,7 +1,8 @@
 from django.db.models import Count
 
-from . import models
 from external import models as ext
+
+from . import models
 
 
 def get_crew(team, gender):
