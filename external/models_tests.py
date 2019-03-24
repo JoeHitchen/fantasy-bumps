@@ -27,6 +27,13 @@ class Test__Seat(TestCase):
         
         seat = models.Seat(name = 'Seat')
         self.assertEqual(seat.short, 'S')
+    
+    
+    def test__string(self):
+        """Returns a seat's name as it's string representation."""
+        
+        seat = models.Seat(name = 'Name')
+        self.assertEqual(str(seat), 'Name')
 
 
 

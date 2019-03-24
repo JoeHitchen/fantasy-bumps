@@ -12,6 +12,9 @@ class Seat(models.Model):
     @property
     def short(self):
         return self.name[0]
+    
+    def __str__(self):
+        return self.name
 
 
 
