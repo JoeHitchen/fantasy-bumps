@@ -1,8 +1,13 @@
 from django.views.generic.base import TemplateView
+from django.views.generic.edit import FormView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.messages.views import SuccessMessageMixin
+from django.urls import reverse
 
 from external import utils as ext
 from external.constants import genders
 
+from . import forms
 from . import utils
 
 
@@ -33,4 +38,35 @@ class MarketView(TemplateView):
             context['other_crew_valid'] = utils.has_all_seats(other_crew)
         
         return context
+
+
+
+class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+    
+    # View settings
+    template_name = 'fantasybumps/buy.html'
+    form_class = forms.Buy
+    redirect_field_name = None  # Don't include return path in login redirect
+    
+    def form_valid(self, form):
+        """Saves the valid form."""
+        self.rower = form.save(self.request.user)
+        return super().form_valid(form)
+    
+    
+    def get_success_url(self):
+        """Returns the relevant market page for the gender purchased."""
+        return reverse('fantasybumps:{}'.format(
+            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.rower.crew.gender],
+        ))
+    
+    
+    def get_success_message(self, cleaned_data):
+        """Generates the success message text."""
+        seat = cleaned_data['seat']
+        return 'Successfully added {} to your crew {} {}.'.format(
+            cleaned_data['crew'],
+            'as the' if seat.cox else 'at',
+            str(seat).lower(),
+        )
 

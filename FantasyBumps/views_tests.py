@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import models as usr
-from django.urls import reverse
+from django.contrib import messages
+from django.urls import reverse, resolve
 
 from external import models as ext_models
 from external import utils as ext_utils
@@ -8,6 +9,7 @@ from external.constants import genders
 
 from . import models
 from . import utils
+from . import views
 
 
 class Test__Index(TestCase):
@@ -287,4 +289,150 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertFalse(response.context['crew'])
         self.assertFalse(response.context['crew_valid'])
         self.assertTrue(response.context['other_crew_valid'])
+
+
+
+class MessagesMixin:
+    
+    def check_messages(self, msgs, expected):
+        """Tests that the expected messages are sent to the client."""
+        
+        def convert_level(level):
+            return messages.__dict__.get(level.upper())
+        
+        self.assertEqual(len(msgs), len(expected))
+        
+        for i, msg in enumerate(msgs):
+            with self.subTest(index = i):
+                
+                self.assertEqual(
+                    msg.level,
+                    convert_level(expected[i]['level']),
+                )
+                self.assertEqual(
+                    msg.message,
+                    expected[i]['message'],
+                )
+
+
+
+class Test__Buy__Integration(TestCase, MessagesMixin):
+    fixtures = ['seats']
+    url = reverse('fantasybumps:buy')
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = usr.User.objects.create_user('Buy', '', 'secret')
+        
+        cls.crew = ext_models.Crew(name = 'A', gender = genders.MENS)
+        cls.crew.save()
+        
+        cls.seat = ext_models.Seat.objects.get(name = 'Stroke')
+    
+    
+    def test__no_login(self):
+        """Requires a log in."""
+        
+        response = self.client.get(self.url)
+        self.assertRedirects(response, reverse('login'))
+    
+    
+    def test__get(self):
+        """Renders the form page for GET requests."""
+        
+        self.client.login(username='Buy', password='secret')
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+    
+    
+    def test__invalid_post(self):
+        """Renders the form page for invalid POST requests."""
+        
+        self.client.login(username='Buy', password='secret')
+        response = self.client.post(self.url, {})
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+    
+    
+    def test__valid_post(self):
+        """Creates the object and redirects to the relevant market page."""
+        
+        self.assertEqual(models.Rower.objects.count(), 0)
+        
+        self.client.login(username='Buy', password='secret')
+        response = self.client.post(
+            self.url,
+            {'crew': str(self.crew.id), 'seat': str(self.seat.id)},
+            follow = True,
+        )
+        
+        self.assertRedirects(response, reverse('fantasybumps:men'))
+        self.assertEqual(models.Rower.objects.count(), 1)
+        
+        self.check_messages(
+            response.context['messages'],
+            [{'level': 'success', 'message': 'Successfully added A to your crew at stroke.'}],
+        )
+
+
+        
+class Test__Buy__Unit(TestCase):
+    
+    @classmethod
+    def setUpTestData(cls):
+        """N.B. Saving objects not necessary since no database lookups performed."""
+        cls.crew = ext_models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
+        
+        cls.stroke = ext_models.Seat(name = 'Stroke', cox = False)
+        cls.cox = ext_models.Seat(name = 'Cox', cox = True)
+    
+    
+    def test__get_success_url__men(self):
+        """Returns a redirect to the relevant market place."""
+        
+        mens_crew = ext_models.Crew(name = 'Hertford M1', gender = genders.MENS)
+        
+        view = views.BuyView()
+        view.rower = models.Rower(crew = mens_crew)
+        url = view.get_success_url()
+        
+        resolved = resolve(url)
+        self.assertEqual(resolved.namespaces, ['fantasybumps'])
+        self.assertEqual(resolved.url_name, 'men')
+    
+    
+    def test__get_success_url__women(self):
+        """Returns a redirect to the relevant market place."""
+        
+        view = views.BuyView()
+        view.rower = models.Rower(crew = self.crew)
+        url = view.get_success_url()
+        
+        resolved = resolve(url)
+        self.assertEqual(resolved.namespaces, ['fantasybumps'])
+        self.assertEqual(resolved.url_name, 'women')
+    
+    
+    def test__get_success_message__rower(self):
+        """Generates a success message including the team and seat."""
+        
+        msg = views.BuyView().get_success_message({
+            'crew': self.crew,
+            'seat': self.stroke,
+        })
+        self.assertEqual(msg, 'Successfully added Hertford W1 to your crew at stroke.')
+    
+    
+    def test__get_success_message__cox(self):
+        """Presents a slightly different seat description for coxes."""
+        
+        msg = views.BuyView().get_success_message({
+            'crew': self.crew,
+            'seat': self.cox,
+        })
+        self.assertNotIn('at cox.', msg)
+        self.assertIn('as the cox.', msg)
 

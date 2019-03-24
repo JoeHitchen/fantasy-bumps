@@ -17,7 +17,7 @@ def bungline_avatar(bungline):
     '  <td>{{ bungline }}</td>\n'
     '  <td>{{ tag_crew }}</td>\n'
     '  <td>£100</td>\n'
-    '  <td><button class="btn btn-sm btn-primary">Buy</button></td>\n'
+    '  <td><a href="{% url \'fantasybumps:buy\' %}" class="btn btn-sm btn-primary">Buy</a></td>\n'
     '</tr>\n',
 ))
 def market_division_row(bungline, crew):
