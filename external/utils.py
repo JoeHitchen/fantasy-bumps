@@ -1,34 +1,33 @@
-# flake8: noqa: E121
-
+from . import models
 from .constants import genders
 
 start_order_women = [
-  [
-    'Oriel W1',
-    'Wadham W1',
-    'Pembroke W1',
-    'Christ Church W1',
-  ],
-  [
-    'Keble W1',
-    'Hertford W1',
-    'Wolfson W1',
-    'St John\'s W1',
-  ],
+    [
+        models.Crew(name = "Oriel W1", gender = genders.WOMENS),
+        models.Crew(name = "Wadham W1", gender = genders.WOMENS),
+        models.Crew(name = "Pembroke W1", gender = genders.WOMENS),
+        models.Crew(name = "Christ Church W1", gender = genders.WOMENS),
+    ],
+    [
+        models.Crew(name = "Keble W1", gender = genders.WOMENS),
+        models.Crew(name = "Hertford W1", gender = genders.WOMENS),
+        models.Crew(name = "Wolfson W1", gender = genders.WOMENS),
+        models.Crew(name = "St John's W1", gender = genders.WOMENS),
+    ],
 ]
 start_order_men = [
-  [
-    'Oriel M1',
-    'Pembroke M1',
-    'Wadham M1',
-    'Christ Church M1',
-  ],
-  [
-    'St Catherine\'s M1',
-    'Wolfson M1',
-    'Hertford M1',
-    'Balliol M1',
-  ],
+    [
+        models.Crew(name = "Oriel M1", gender = genders.MENS),
+        models.Crew(name = "Pembroke M1", gender = genders.MENS),
+        models.Crew(name = "Wadham M1", gender = genders.MENS),
+        models.Crew(name = "Christ Church M1", gender = genders.MENS),
+    ],
+    [
+        models.Crew(name = "St Catherine's M1", gender = genders.MENS),
+        models.Crew(name = "Wolfson M1", gender = genders.MENS),
+        models.Crew(name = "Hertford M1", gender = genders.MENS),
+        models.Crew(name = "Balliol M1", gender = genders.MENS),
+    ],
 ]
 
 

@@ -16,7 +16,7 @@ def seat_avatar(seat):
     '{% load fantasy_tags %}\n'
     '<tr class="table-{% if rower %}primary{% else %}danger{% endif %}">\n'
     '  <td>{{ seat|seat_avatar }}</td>\n'
-    '  <td>{% if rower %}Filled{% else %}Empty{% endif %}</td>\n'
+    '  <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>\n'
     '</tr>\n',
 ))
 def crew_list_row(seat, rower):

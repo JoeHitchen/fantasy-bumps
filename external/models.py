@@ -18,6 +18,7 @@ class Seat(models.Model):
 class Crew(models.Model):
     """Describes a crew (e.g. New College W1)"""
     
+    name = models.CharField(max_length = 40)
     gender = models.CharField(
         max_length = 1,
         choices = [
@@ -25,4 +26,7 @@ class Crew(models.Model):
             (genders.WOMENS, 'Women\'s'),
         ],
     )
+    
+    def __str__(self):
+        return self.name
 
