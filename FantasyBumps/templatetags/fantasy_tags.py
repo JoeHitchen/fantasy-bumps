@@ -7,6 +7,41 @@ register = template.Library()
 
 
 @register.filter
+def bungline_avatar(bungline):
+    text = bungline if isinstance(bungline, int) else 'E'
+    return format_html('<span class="bungline-avatar">{}</span>', text)
+
+
+@register.inclusion_tag(template.Template(
+    '<tr>\n'
+    '  <td>{{ bungline }}</td>\n'
+    '  <td>{{ tag_crew }}</td>\n'
+    '  <td>£100</td>\n'
+    '  <td><button class="btn btn-sm btn-primary">Buy</button></td>\n'
+    '</tr>\n',
+))
+def market_division_row(bungline, crew):
+    return {'bungline': bungline, 'tag_crew': crew}
+
+
+@register.inclusion_tag(template.Template(
+    '{% load fantasy_tags %}\n'
+    '<table class="table table-sm table-bordered table-hover">'
+    '  <thead class="thead-dark">'
+    '    <tr><th colspan="4">{{ gender }}\'s Division {{ number }}</th></tr>'
+    '  </thead>'
+    '  <tbody>'
+    '  {% for position in division %}'
+    '    {% market_division_row forloop.counter position.crew %}'
+    '  {% endfor %}'
+    '  </tbody>'
+    '</table>',
+))
+def market_division_box(division, gender, number):
+    return {'division': division, 'gender': gender, 'number': number}
+
+
+@register.filter
 def seat_avatar(seat):
     text = seat.short if isinstance(seat, ext.Seat) else 'E'
     return format_html('<span class="seat-avatar">{}</span>', text)

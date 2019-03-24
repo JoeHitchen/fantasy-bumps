@@ -5,6 +5,26 @@ from external import models as ext
 from . import fantasy_tags as tags
 
 
+class Test__Bungline_Avatar(TestCase):
+    
+    def test__standard_use(self):
+        """Returns a span with the 'bungline-avatar' class, and containing the bungline number."""
+        
+        self.assertHTMLEqual(
+            tags.bungline_avatar(7),
+            '<span class="bungline-avatar">7</span>',
+        )
+    
+    
+    def test__not_seat(self):
+        """Replaces seat.short with an error indicator if the object passed is not a Seat."""
+        
+        self.assertHTMLEqual(
+            tags.bungline_avatar(None),
+            '<span class="bungline-avatar">E</span>',
+        )
+
+
 class Test__Seat_Avatar(TestCase):
     
     def test__standard_use(self):
