@@ -22,8 +22,23 @@ class Test__Index(TestCase):
 
 
 
-class Test__Market_Men(TestCase):
-    fixtures = ['seats']
+class StartOrdersMixin:
+    
+    def assertStartOrderEqual(self, received, expected):
+        """Checks that two start orders are the same."""
+        
+        self.assertEqual(len(received), len(expected))
+        for i, division in enumerate(expected):
+            with self.subTest(index = i):
+                self.assertEqual(
+                    list(received[i]),
+                    list(division),
+                )
+
+
+
+class Test__Market_Men(TestCase, StartOrdersMixin):
+    fixtures = ['seats', 'start_orders']
     url = reverse('fantasybumps:men')
     
     @classmethod
@@ -46,7 +61,10 @@ class Test__Market_Men(TestCase):
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
         self.assertEqual(response.context['gender'], 'Men')
-        self.assertEqual(response.context['start_order'], ext_utils.start_order_men)
+        self.assertStartOrderEqual(
+            response.context['start_order'],
+            ext_utils.get_start_order(genders.MENS),
+        )
         
         self.assertFalse('crew' in response.context)
         self.assertFalse('crew_valid' in response.context)
@@ -63,7 +81,10 @@ class Test__Market_Men(TestCase):
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
         self.assertEqual(response.context['gender'], 'Men')
-        self.assertEqual(response.context['start_order'], ext_utils.start_order_men)
+        self.assertStartOrderEqual(
+            response.context['start_order'],
+            ext_utils.get_start_order(genders.MENS),
+        )
         
         self.assertTrue('crew' in response.context)
         self.assertTrue('crew_valid' in response.context)
@@ -142,8 +163,8 @@ class Test__Market_Men(TestCase):
 
 
 
-class Test__Market_Women(TestCase):
-    fixtures = ['seats']
+class Test__Market_Women(TestCase, StartOrdersMixin):
+    fixtures = ['seats', 'start_orders']
     url = reverse('fantasybumps:women')
     
     @classmethod
@@ -167,7 +188,10 @@ class Test__Market_Women(TestCase):
         
         
         self.assertEqual(response.context['gender'], 'Women')
-        self.assertEqual(response.context['start_order'], ext_utils.start_order_women)
+        self.assertStartOrderEqual(
+            response.context['start_order'],
+            ext_utils.get_start_order(genders.WOMENS),
+        )
         
         self.assertFalse('crew' in response.context)
         self.assertFalse('crew_valid' in response.context)
@@ -184,7 +208,10 @@ class Test__Market_Women(TestCase):
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
         self.assertEqual(response.context['gender'], 'Women')
-        self.assertEqual(response.context['start_order'], ext_utils.start_order_women)
+        self.assertStartOrderEqual(
+            response.context['start_order'],
+            ext_utils.get_start_order(genders.WOMENS),
+        )
         
         self.assertTrue('crew' in response.context)
         self.assertTrue('crew_valid' in response.context)

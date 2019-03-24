@@ -30,3 +30,11 @@ class Crew(models.Model):
     def __str__(self):
         return self.name
 
+
+
+class Position(models.Model):
+    """Describes a crew's position on the river (e.g. Hertford W1 are third on the river)."""
+    
+    crew = models.ForeignKey(Crew, models.PROTECT)
+    rank = models.PositiveSmallIntegerField()
+
