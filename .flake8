@@ -8,6 +8,7 @@ exclude =
     __pycache__,
     *.pyc,
     migrations,
+    manage.py,
 
 ignore =
     E251,

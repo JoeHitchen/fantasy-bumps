@@ -25,8 +25,8 @@ class Crew(models.Model):
     gender = models.CharField(
         max_length = 1,
         choices = [
-            (genders.MENS, 'Men\'s'),
-            (genders.WOMENS, 'Women\'s'),
+            (genders.MENS, "Men's"),
+            (genders.WOMENS, "Women's"),
         ],
     )
     
