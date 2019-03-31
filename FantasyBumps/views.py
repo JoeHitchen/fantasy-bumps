@@ -70,3 +70,39 @@ class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
             str(seat).lower(),
         )
 
+
+
+class SellView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+    
+    # View settings
+    template_name = 'fantasybumps/buy.html'
+    form_class = forms.Sell
+    redirect_field_name = None  # Don't include return path in login redirect
+    
+    def get_form_kwargs(self):
+        """Supplies team information to the form."""
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'team': self.request.user})
+        return kwargs
+    
+    def form_valid(self, form):
+        """Saves the valid form."""
+        self.gender = form.save()
+        return super().form_valid(form)
+    
+    
+    def get_success_url(self):
+        """Returns the relevant market page for the gender sold."""
+        return reverse('fantasybumps:{}'.format(
+            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.gender],
+        ))
+    
+    
+    def get_success_message(self, cleaned_data):
+        """Generates the success message text."""
+        seat = cleaned_data['seat']
+        return 'Successfully sold your {}{}.'.format(
+            str(seat).lower(),
+            '' if seat.cox else ' seat',
+        )
+
