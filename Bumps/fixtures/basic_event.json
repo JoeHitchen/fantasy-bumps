@@ -1,0 +1,30 @@
+[
+  {
+    "model": "Bumps.Event",
+    "pk": 1,
+    "fields": {
+      "name": "Test Event",
+      "mens_divisions": 2,
+      "womens_divisions": 2,
+      "boats_per_division": 4
+    }
+  },
+  {
+    "model": "Bumps.Day",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "name": "Wednesday",
+      "date": "2019-02-27"
+    }
+  },
+  {
+    "model": "Bumps.Day",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "name": "Thursday",
+      "date": "2019-02-28"
+    }
+  }
+]
