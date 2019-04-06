@@ -344,7 +344,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
     def test__invalid_post(self):
@@ -354,7 +354,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         response = self.client.post(self.url, {})
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
     def test__valid_post(self):
@@ -466,7 +466,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
     def test__invalid_post(self):
@@ -476,7 +476,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         response = self.client.post(self.url, {})
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
     def test__valid_post(self):

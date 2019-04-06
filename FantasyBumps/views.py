@@ -44,7 +44,7 @@ class MarketView(TemplateView):
 class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
     
     # View settings
-    template_name = 'fantasybumps/buy.html'
+    template_name = 'fantasybumps/form.html'
     form_class = forms.Buy
     redirect_field_name = None  # Don't include return path in login redirect
     
@@ -75,7 +75,7 @@ class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
 class SellView(LoginRequiredMixin, SuccessMessageMixin, FormView):
     
     # View settings
-    template_name = 'fantasybumps/buy.html'
+    template_name = 'fantasybumps/form.html'
     form_class = forms.Sell
     redirect_field_name = None  # Don't include return path in login redirect
     
