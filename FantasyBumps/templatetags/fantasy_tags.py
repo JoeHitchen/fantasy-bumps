@@ -52,6 +52,9 @@ def seat_avatar(seat):
     '<tr class="table-{% if rower %}primary{% else %}danger{% endif %}">\n'
     '  <td>{{ seat|seat_avatar }}</td>\n'
     '  <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>\n'
+    '  <td>\n'
+    '    <a href="{% url \'fantasybumps:sell\' %}" class="btn btn-sm btn-primary">Sell</a>\n'
+    '  </td>\n'
     '</tr>\n',
 ))
 def crew_list_row(seat, rower):
@@ -63,7 +66,7 @@ def crew_list_row(seat, rower):
         '{% load fantasy_tags %}\n'
         '<table class="table table-sm table-bordered table-hover">\n'
         '  <thead class="thead-dark">\n'
-        '    <tr><th colspan="2">Your crew</th></tr>\n'
+        '    <tr><th colspan="3">Your crew</th></tr>\n'
         '  </thead>\n'
         '  <tbody>\n'
         '  {% for seat, rower in crew %}'
@@ -72,12 +75,12 @@ def crew_list_row(seat, rower):
         '  </tbody>\n'
         '  <tfoot>\n'
         '    <tr class="table-{% if crew_valid %}success{% else %}danger{% endif %}">\n'
-        '      <th colspan="2">\n'
+        '      <th colspan="3">\n'
         '        This crew is {% if not crew_valid %}not {% endif %}ready to race.\n'
         '      </th>\n'
         '    </tr>\n'
         '    <tr class="table-{% if other_crew_valid %}success{% else %}danger{% endif %}">'
-        '      <th colspan="2">\n'
+        '      <th colspan="3">\n'
         '        Your other crew is {% if not other_crew_valid %}not {% endif %}ready to race.'
         '      </th>\n'
         '    </tr>\n'
