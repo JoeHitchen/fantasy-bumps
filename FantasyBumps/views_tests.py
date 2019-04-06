@@ -344,7 +344,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
     def test__invalid_post(self):
@@ -354,7 +354,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         response = self.client.post(self.url, {})
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/buy.html')
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
     def test__valid_post(self):
@@ -435,4 +435,122 @@ class Test__Buy__Unit(TestCase):
         })
         self.assertNotIn('at cox.', msg)
         self.assertIn('as the cox.', msg)
+
+
+
+class Test__Sell__Integration(TestCase, MessagesMixin):
+    fixtures = ['seats']
+    url = reverse('fantasybumps:sell')
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = usr.User.objects.create_user('Sell', '', 'secret')
+        
+        cls.crew = ext_models.Crew(name = 'A', gender = genders.MENS)
+        cls.crew.save()
+        
+        cls.seat = ext_models.Seat.objects.get(name = 'Stroke')
+    
+    
+    def test__no_login(self):
+        """Requires a log in."""
+        
+        response = self.client.get(self.url)
+        self.assertRedirects(response, reverse('login'))
+    
+    
+    def test__get(self):
+        """Renders the form page for GET requests."""
+        
+        self.client.login(username='Sell', password='secret')
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
+    
+    
+    def test__invalid_post(self):
+        """Renders the form page for invalid POST requests."""
+        
+        self.client.login(username='Sell', password='secret')
+        response = self.client.post(self.url, {})
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/form.html')
+    
+    
+    def test__valid_post(self):
+        """Deletes the object and redirects to the relevant market page."""
+        
+        models.Rower(
+            team = self.team,
+            seat = self.seat,
+            crew = self.crew,
+        ).save()
+        self.assertEqual(models.Rower.objects.count(), 1)
+        
+        self.client.login(username='Sell', password='secret')
+        response = self.client.post(
+            self.url,
+            {'seat': str(self.seat.id), 'gender': 'M'},
+            follow = True,
+        )
+        
+        self.assertRedirects(response, reverse('fantasybumps:men'))
+        self.assertEqual(models.Rower.objects.count(), 0)
+        
+        self.check_messages(
+            response.context['messages'],
+            [{'level': 'success', 'message': 'Successfully sold your stroke seat.'}],
+        )
+
+
+
+class Test__Sell__Unit(TestCase):
+    
+    @classmethod
+    def setUpTestData(cls):
+        """N.B. Saving objects not necessary since no database lookups performed."""
+        
+        cls.stroke = ext_models.Seat(name = 'Stroke', cox = False)
+        cls.cox = ext_models.Seat(name = 'Cox', cox = True)
+    
+    
+    def test__get_success_url__men(self):
+        """Returns a redirect to the relevant market place."""
+        
+        view = views.SellView()
+        view.gender = genders.MENS
+        url = view.get_success_url()
+        
+        resolved = resolve(url)
+        self.assertEqual(resolved.namespaces, ['fantasybumps'])
+        self.assertEqual(resolved.url_name, 'men')
+    
+    
+    def test__get_success_url__women(self):
+        """Returns a redirect to the relevant market place."""
+        
+        view = views.SellView()
+        view.gender = genders.WOMENS
+        url = view.get_success_url()
+        
+        resolved = resolve(url)
+        self.assertEqual(resolved.namespaces, ['fantasybumps'])
+        self.assertEqual(resolved.url_name, 'women')
+    
+    
+    def test__get_success_message__rower(self):
+        """Generates a success message including the team and seat."""
+        
+        msg = views.SellView().get_success_message({'seat': self.stroke})
+        self.assertEqual(msg, 'Successfully sold your stroke seat.')
+    
+    
+    def test__get_success_message__cox(self):
+        """Presents a slightly different seat description for coxes."""
+        
+        msg = views.SellView().get_success_message({'seat': self.cox})
+        self.assertNotIn('your cox seat.', msg)
+        self.assertIn('your cox.', msg)
 
