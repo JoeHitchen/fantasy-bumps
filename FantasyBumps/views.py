@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from external import utils as ext
 from external.constants import genders
+from Bumps import models as bmp_models
 
 from . import forms
 from . import utils
@@ -24,7 +25,7 @@ class MarketView(TemplateView):
         
         gender = context['gender']
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
-        context['start_order'] = ext.get_start_order(gender)
+        context['start_order'] = bmp_models.Day.objects.first().start_order(gender)
         
         user = self.request.user
         if user.is_authenticated:

@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.urls import reverse, resolve
 
 from external import models as ext_models
-from external import utils as ext_utils
 from external.constants import genders
+from Bumps import models as bmp_models
 
 from . import models
 from . import utils
@@ -40,7 +40,7 @@ class StartOrdersMixin:
 
 
 class Test__Market_Men(TestCase, StartOrdersMixin):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:men')
     
     @classmethod
@@ -65,7 +65,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.MENS),
+            bmp_models.Day.objects.first().start_order(genders.MENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -85,7 +85,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.MENS),
+            bmp_models.Day.objects.first().start_order(genders.MENS),
         )
         
         self.assertTrue('crew' in response.context)
@@ -166,7 +166,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
 
 
 class Test__Market_Women(TestCase, StartOrdersMixin):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:women')
     
     @classmethod
@@ -192,7 +192,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.WOMENS),
+            bmp_models.Day.objects.first().start_order(genders.WOMENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -212,7 +212,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.WOMENS),
+            bmp_models.Day.objects.first().start_order(genders.WOMENS),
         )
         
         self.assertTrue('crew' in response.context)
@@ -317,7 +317,7 @@ class MessagesMixin:
 
 
 class Test__Buy__Integration(TestCase, MessagesMixin):
-    fixtures = ['seats']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:buy')
     
     @classmethod
@@ -439,7 +439,7 @@ class Test__Buy__Unit(TestCase):
 
 
 class Test__Sell__Integration(TestCase, MessagesMixin):
-    fixtures = ['seats']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:sell')
     
     @classmethod

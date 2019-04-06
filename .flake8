@@ -18,6 +18,7 @@ ignore =
 
 import-order-style = pep8app
 application-package-names = 
+    Bumps,
     external,
     FantasyCore,
     FantasyBumps,

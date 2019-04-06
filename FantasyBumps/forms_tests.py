@@ -8,7 +8,7 @@ from . import forms
 
 
 class Test__Buy(TestCase):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
@@ -29,7 +29,7 @@ class Test__Buy(TestCase):
 
 
 class Test__Sell(TestCase):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
