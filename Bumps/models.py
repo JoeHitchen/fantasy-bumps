@@ -27,3 +27,14 @@ class Day(models.Model):
     def __str__(self):
         return self.name
 
+
+class Position(models.Model):
+    """A crew's position on the river for a given day."""
+    
+    day = models.ForeignKey(Day, models.CASCADE, related_name = 'positions')
+    crew = models.ForeignKey('external.Crew', models.PROTECT)
+    rank = models.PositiveSmallIntegerField()
+    
+    class Meta:
+        ordering = ['day', 'rank']
+
