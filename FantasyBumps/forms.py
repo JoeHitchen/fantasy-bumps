@@ -13,11 +13,12 @@ class Buy(forms.ModelForm):
         fields = ('crew', 'seat')
     
     
-    def save(self, team):
-        """Add a team to the created purchase and saves it."""
+    def save(self, team, day):
+        """Add a team and day to the created purchase."""
         
         purchase = super().save(commit = False)
         purchase.team = team
+        purchase.day = day
         purchase.save()
         return purchase
 
@@ -33,18 +34,20 @@ class Sell(forms.Form):
         ],
     )
     
-    def __init__(self, *args, team, **kwargs):
-        """Stores the 'team' keyword argument."""
+    def __init__(self, *args, team, day, **kwargs):
+        """Store the 'team' and 'day' keyword arguments."""
         
         super().__init__(*args, **kwargs)
         self.team = team
+        self.day = day
     
     
     def save(self):
-        """Delete all purchase instances matching the team, seat, and gender. Return the gender."""
+        """Delete all purchase instances matching the criteria provided. Return the gender."""
         
         models.Purchase.objects.filter(
             team = self.team,
+            day = self.day,
             seat = self.cleaned_data['seat'],
             crew__gender = self.cleaned_data['gender'],
         ).delete()
