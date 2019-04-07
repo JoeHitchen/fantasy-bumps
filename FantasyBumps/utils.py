@@ -5,9 +5,9 @@ from external import models as ext
 from . import models
 
 
-def get_crew(team, gender):
-    """Return all purchases for a team and gender."""
-    return models.Purchase.objects.filter(team = team, crew__gender = gender)
+def get_crew(team, day, gender):
+    """Return all purchases for a team, day, and gender."""
+    return models.Purchase.objects.filter(team = team, day = day, crew__gender = gender)
 
 
 def has_all_seats(purchases):

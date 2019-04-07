@@ -3,17 +3,19 @@ from django.contrib.auth import models as usr
 
 from external import models as ext
 from external.constants import genders
+from Bumps import models as bmp_models
 
 from . import models
 from . import utils
 
 
 class Test__Get_Crew(TestCase):
-    fixtures = ['seats']
+    fixtures = ['seats', 'basic_event']
     
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
+        cls.day = bmp_models.Day.objects.first()
         cls.crew = ext.Crew(gender = genders.WOMENS)
         cls.crew.save()
     
@@ -21,7 +23,7 @@ class Test__Get_Crew(TestCase):
     def test__empty_crew(self):
         """Returns an empty crew list if no rowers have been purchased."""
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -32,11 +34,29 @@ class Test__Get_Crew(TestCase):
         
         models.Purchase(
             team = other_team,
+            day = self.day,
             crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__other_day(self):
+        """Does not include rowers purchased on another day."""
+        
+        other_day = bmp_models.Day.objects.last()
+        self.assertNotEqual(other_day, self.day)
+        
+        models.Purchase(
+            team = self.team,
+            day = other_day,
+            crew = self.crew,
+            seat = ext.Seat.objects.get(name = 'Bow'),
+        ).save()
+        
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -45,11 +65,12 @@ class Test__Get_Crew(TestCase):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew,  # Is a women's crew
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.MENS)
+        crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -58,11 +79,12 @@ class Test__Get_Crew(TestCase):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 1)
     
     
@@ -72,11 +94,12 @@ class Test__Get_Crew(TestCase):
         for seat in ext.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew,
                 seat = seat,
             ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 9)
     
     
@@ -86,27 +109,30 @@ class Test__Get_Crew(TestCase):
         for seat in ext.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew,
                 seat = seat,
             ).save()
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 10)
 
 
 
 class Test__Has_All_Seats(TestCase):
-    fixtures = ['seats']
+    fixtures = ['seats', 'basic_event']
     
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
+        cls.day = bmp_models.Day.objects.first()
         cls.crew = ext.Crew(gender = genders.MENS)
         cls.crew.save()
     
@@ -124,6 +150,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in ext.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew,
                 seat = seat,
             ).save()
@@ -138,6 +165,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in ext.Seat.objects.exclude(name__iexact = missing_seat):
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew,
                 seat = seat,
             ).save()
@@ -188,6 +216,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in ext.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew,
                 seat = seat,
             ).save()
@@ -195,6 +224,7 @@ class Test__Has_All_Seats(TestCase):
         extra_seat = ext.Seat.objects.get(name__iexact = extra_seat)
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew,
             seat = extra_seat,
         ).save()
