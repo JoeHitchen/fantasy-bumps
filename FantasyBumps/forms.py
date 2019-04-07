@@ -9,17 +9,17 @@ from . import models
 class Buy(forms.ModelForm):
     
     class Meta:
-        model = models.Rower
+        model = models.Purchase
         fields = ('crew', 'seat')
     
     
     def save(self, team):
-        """Adds the team to the Rower object and creates it."""
+        """Add a team to the created purchase and saves it."""
         
-        rower = super().save(commit = False)
-        rower.team = team
-        rower.save()
-        return rower
+        purchase = super().save(commit = False)
+        purchase.team = team
+        purchase.save()
+        return purchase
 
 
 
@@ -41,9 +41,9 @@ class Sell(forms.Form):
     
     
     def save(self):
-        """Deletes all rower instances matching the team, seat, and gender. Returns the gender."""
+        """Delete all purchase instances matching the team, seat, and gender. Return the gender."""
         
-        models.Rower.objects.filter(
+        models.Purchase.objects.filter(
             team = self.team,
             seat = self.cleaned_data['seat'],
             crew__gender = self.cleaned_data['gender'],

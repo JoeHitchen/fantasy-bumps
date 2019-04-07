@@ -50,14 +50,14 @@ class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
     
     def form_valid(self, form):
         """Saves the valid form."""
-        self.rower = form.save(self.request.user)
+        self.purchase = form.save(self.request.user)
         return super().form_valid(form)
     
     
     def get_success_url(self):
         """Returns the relevant market page for the gender purchased."""
         return reverse('fantasybumps:{}'.format(
-            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.rower.crew.gender],
+            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.purchase.crew.gender],
         ))
     
     
