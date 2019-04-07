@@ -19,18 +19,18 @@ class Test__Get_Crew(TestCase):
     
     
     def test__empty_crew(self):
-        """Returns an empty crew list if no rowers have been added to crew."""
+        """Returns an empty crew list if no rowers have been purchased."""
         
         crew = utils.get_crew(self.team, genders.WOMENS)
         self.assertEqual(crew.count(), 0)
     
     
     def test__other_team(self):
-        """Does not include rowers assigned to another team."""
+        """Does not include rowers purchased by another team."""
         
         other_team = usr.User.objects.create_user('Other')
         
-        models.Rower(
+        models.Purchase(
             team = other_team,
             crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
@@ -41,9 +41,9 @@ class Test__Get_Crew(TestCase):
     
     
     def test__wrong_gender(self):
-        """Does not include rowers of the wrong gender."""
+        """Does not include purchases of the wrong gender."""
         
-        models.Rower(
+        models.Purchase(
             team = self.team,
             crew = self.crew,  # Is a women's crew
             seat = ext.Seat.objects.get(name = 'Bow'),
@@ -54,9 +54,9 @@ class Test__Get_Crew(TestCase):
     
     
     def test__partial_team(self):
-        """Returns any rowers it finds."""
+        """Returns any purchases matching the criteria."""
         
-        models.Rower(
+        models.Purchase(
             team = self.team,
             crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
@@ -67,10 +67,10 @@ class Test__Get_Crew(TestCase):
     
     
     def test__full_team(self):
-        """Returns any rowers it finds."""
+        """Returns any purchases matching the criteria."""
         
         for seat in ext.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew,
                 seat = seat,
@@ -81,16 +81,16 @@ class Test__Get_Crew(TestCase):
     
     
     def test__duplicate_seats(self):
-        """Returns any rowers it finds, regardless of duplications."""
+        """Returns any purchases matching the criteria, regardless of duplication."""
         
         for seat in ext.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew,
                 seat = seat,
             ).save()
         
-        models.Rower(
+        models.Purchase(
             team = self.team,
             crew = self.crew,
             seat = ext.Seat.objects.get(name = 'Bow'),
@@ -114,7 +114,7 @@ class Test__Has_All_Seats(TestCase):
     def test__empty_crew(self):
         """Returns false if there are no seats filled."""
         
-        value = utils.has_all_seats(models.Rower.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all())
         self.assertFalse(value)
     
     
@@ -122,13 +122,13 @@ class Test__Has_All_Seats(TestCase):
         """Returns true if all seats are present exactly once."""
         
         for seat in ext.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew,
                 seat = seat,
             ).save()
         
-        value = utils.has_all_seats(models.Rower.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all())
         self.assertTrue(value)
     
     
@@ -136,13 +136,13 @@ class Test__Has_All_Seats(TestCase):
         """Returns false if a specific seat is missing."""
         
         for seat in ext.Seat.objects.exclude(name__iexact = missing_seat):
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew,
                 seat = seat,
             ).save()
         
-        value = utils.has_all_seats(models.Rower.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all())
         self.assertFalse(value)
     
     def test__missing_seat__bow(self):
@@ -186,21 +186,21 @@ class Test__Has_All_Seats(TestCase):
         """Raises ValueError if any seat present twice."""
         
         for seat in ext.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew,
                 seat = seat,
             ).save()
         
         extra_seat = ext.Seat.objects.get(name__iexact = extra_seat)
-        models.Rower(
+        models.Purchase(
             team = self.team,
             crew = self.crew,
             seat = extra_seat,
         ).save()
         
         with self.assertRaises(ValueError):
-            utils.has_all_seats(models.Rower.objects.all())
+            utils.has_all_seats(models.Purchase.objects.all())
     
     def test__extra_seat__bow(self):
         """Raises ValueError if any seat present twice."""

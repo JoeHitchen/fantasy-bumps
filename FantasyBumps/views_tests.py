@@ -99,7 +99,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         Does not test response or default context.
         """
         
-        models.Rower(
+        models.Purchase(
             team = self.team,
             crew = self.crew_mens,
             seat = ext_models.Seat.objects.first(),
@@ -123,7 +123,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         """
         
         for seat in ext_models.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew_mens,
                 seat = seat,
@@ -147,7 +147,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         """
         
         for seat in ext_models.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew_womens,
                 seat = seat,
@@ -226,7 +226,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         Does not test response or default context.
         """
         
-        models.Rower(
+        models.Purchase(
             team = self.team,
             crew = self.crew_womens,
             seat = ext_models.Seat.objects.first(),
@@ -250,7 +250,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         """
         
         for seat in ext_models.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew_womens,
                 seat = seat,
@@ -274,7 +274,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         """
         
         for seat in ext_models.Seat.objects.all():
-            models.Rower(
+            models.Purchase(
                 team = self.team,
                 crew = self.crew_mens,
                 seat = seat,
@@ -360,7 +360,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     def test__valid_post(self):
         """Creates the object and redirects to the relevant market page."""
         
-        self.assertEqual(models.Rower.objects.count(), 0)
+        self.assertEqual(models.Purchase.objects.count(), 0)
         
         self.client.login(username='Buy', password='secret')
         response = self.client.post(
@@ -370,7 +370,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         )
         
         self.assertRedirects(response, reverse('fantasybumps:men'))
-        self.assertEqual(models.Rower.objects.count(), 1)
+        self.assertEqual(models.Purchase.objects.count(), 1)
         
         self.check_messages(
             response.context['messages'],
@@ -396,7 +396,7 @@ class Test__Buy__Unit(TestCase):
         mens_crew = ext_models.Crew(name = 'Hertford M1', gender = genders.MENS)
         
         view = views.BuyView()
-        view.rower = models.Rower(crew = mens_crew)
+        view.purchase = models.Purchase(crew = mens_crew)
         url = view.get_success_url()
         
         resolved = resolve(url)
@@ -408,7 +408,7 @@ class Test__Buy__Unit(TestCase):
         """Returns a redirect to the relevant market place."""
         
         view = views.BuyView()
-        view.rower = models.Rower(crew = self.crew)
+        view.purchase = models.Purchase(crew = self.crew)
         url = view.get_success_url()
         
         resolved = resolve(url)
@@ -482,12 +482,12 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     def test__valid_post(self):
         """Deletes the object and redirects to the relevant market page."""
         
-        models.Rower(
+        models.Purchase(
             team = self.team,
             seat = self.seat,
             crew = self.crew,
         ).save()
-        self.assertEqual(models.Rower.objects.count(), 1)
+        self.assertEqual(models.Purchase.objects.count(), 1)
         
         self.client.login(username='Sell', password='secret')
         response = self.client.post(
@@ -497,7 +497,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         )
         
         self.assertRedirects(response, reverse('fantasybumps:men'))
-        self.assertEqual(models.Rower.objects.count(), 0)
+        self.assertEqual(models.Purchase.objects.count(), 0)
         
         self.check_messages(
             response.context['messages'],

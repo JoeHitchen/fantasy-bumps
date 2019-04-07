@@ -6,14 +6,14 @@ from . import models
 
 
 def get_crew(team, gender):
-    """Returns all rower objects associated with a team and of the specified gender."""
-    return models.Rower.objects.filter(team = team, crew__gender = gender)
+    """Return all purchases for a team and gender."""
+    return models.Purchase.objects.filter(team = team, crew__gender = gender)
 
 
-def has_all_seats(rowers):
-    """Checks that a queryset of rower objects has every seat filled exactly once."""
+def has_all_seats(purchases):
+    """Checks that a queryset of purchase objects has every seat filled exactly once."""
     
-    seats_filled = rowers.values('seat').annotate(count = Count('seat'))
+    seats_filled = purchases.values('seat').annotate(count = Count('seat'))
     seats_filled = {seat['seat']: seat['count'] for seat in seats_filled}
     seats_filled = [seats_filled.get(seat.id, 0) for seat in ext.Seat.objects.all()]
     
