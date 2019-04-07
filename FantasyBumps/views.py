@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from external import utils as ext
 from external.constants import genders
+from Bumps import models as bmp_models
 
 from . import forms
 from . import utils
@@ -24,17 +25,19 @@ class MarketView(TemplateView):
         
         gender = context['gender']
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
-        context['start_order'] = ext.get_start_order(gender)
+        
+        day = bmp_models.Day.objects.first()
+        context['start_order'] = day.start_order(gender)
         
         user = self.request.user
         if user.is_authenticated:
             
-            crew = utils.get_crew(user, gender)
+            crew = utils.get_crew(user, day, gender)
             context['crew'] = crew
             context['crew_valid'] = utils.has_all_seats(crew)
             
             other_gender = ext.reverse_gender(gender)
-            other_crew = utils.get_crew(user, other_gender)
+            other_crew = utils.get_crew(user, day, other_gender)
             context['other_crew_valid'] = utils.has_all_seats(other_crew)
         
         return context
@@ -50,7 +53,7 @@ class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
     
     def form_valid(self, form):
         """Saves the valid form."""
-        self.purchase = form.save(self.request.user)
+        self.purchase = form.save(self.request.user, bmp_models.Day.objects.first())
         return super().form_valid(form)
     
     
@@ -82,7 +85,10 @@ class SellView(LoginRequiredMixin, SuccessMessageMixin, FormView):
     def get_form_kwargs(self):
         """Supplies team information to the form."""
         kwargs = super().get_form_kwargs()
-        kwargs.update({'team': self.request.user})
+        kwargs.update({
+            'team': self.request.user,
+            'day': bmp_models.Day.objects.first(),
+        })
         return kwargs
     
     def form_valid(self, form):

@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.urls import reverse, resolve
 
 from external import models as ext_models
-from external import utils as ext_utils
 from external.constants import genders
+from Bumps import models as bmp_models
 
 from . import models
 from . import utils
@@ -40,12 +40,13 @@ class StartOrdersMixin:
 
 
 class Test__Market_Men(TestCase, StartOrdersMixin):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:men')
     
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
+        cls.day = bmp_models.Day.objects.first()
         
         cls.crew_mens = ext_models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -65,7 +66,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.MENS),
+            bmp_models.Day.objects.first().start_order(genders.MENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -85,7 +86,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.MENS),
+            bmp_models.Day.objects.first().start_order(genders.MENS),
         )
         
         self.assertTrue('crew' in response.context)
@@ -101,11 +102,12 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew_mens,
             seat = ext_models.Seat.objects.first(),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.MENS)
+        crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertFalse(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -125,11 +127,12 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_mens,
                 seat = seat,
             ).save()
         
-        crew = utils.get_crew(self.team, genders.MENS)
+        crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -149,11 +152,12 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_womens,
                 seat = seat,
             ).save()
         
-        other_crew = utils.get_crew(self.team, genders.WOMENS)
+        other_crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
         self.client.login(username='Market', password='secret')
@@ -166,12 +170,13 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
 
 
 class Test__Market_Women(TestCase, StartOrdersMixin):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:women')
     
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
+        cls.day = bmp_models.Day.objects.first()
         
         cls.crew_mens = ext_models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -192,7 +197,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.WOMENS),
+            bmp_models.Day.objects.first().start_order(genders.WOMENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -212,7 +217,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            ext_utils.get_start_order(genders.WOMENS),
+            bmp_models.Day.objects.first().start_order(genders.WOMENS),
         )
         
         self.assertTrue('crew' in response.context)
@@ -228,11 +233,12 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew_womens,
             seat = ext_models.Seat.objects.first(),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertFalse(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -252,11 +258,12 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_womens,
                 seat = seat,
             ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -276,11 +283,12 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_mens,
                 seat = seat,
             ).save()
         
-        other_crew = utils.get_crew(self.team, genders.MENS)
+        other_crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
         self.client.login(username='Market', password='secret')
@@ -317,7 +325,7 @@ class MessagesMixin:
 
 
 class Test__Buy__Integration(TestCase, MessagesMixin):
-    fixtures = ['seats']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:buy')
     
     @classmethod
@@ -439,12 +447,13 @@ class Test__Buy__Unit(TestCase):
 
 
 class Test__Sell__Integration(TestCase, MessagesMixin):
-    fixtures = ['seats']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     url = reverse('fantasybumps:sell')
     
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Sell', '', 'secret')
+        cls.day = bmp_models.Day.objects.first()
         
         cls.crew = ext_models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
@@ -484,6 +493,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             seat = self.seat,
             crew = self.crew,
         ).save()

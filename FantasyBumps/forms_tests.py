@@ -2,16 +2,18 @@ from django.test import TestCase
 from django.contrib.auth import models as usr
 
 from external import models as ext_models
+from Bumps import models as bmp_models
 
 from . import models
 from . import forms
 
 
 class Test__Buy(TestCase):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
+        self.day = bmp_models.Day.objects.first()
         self.crew = ext_models.Crew.objects.first().id
         self.seat = ext_models.Seat.objects.first().id
     
@@ -23,32 +25,28 @@ class Test__Buy(TestCase):
             'crew': self.crew,
             'seat': self.seat,
         })
-        purchase = form.save(self.team)
+        purchase = form.save(self.team, self.day)
         self.assertEqual(purchase.team, self.team)
+        self.assertEqual(purchase.day, self.day)
 
 
 
 class Test__Sell(TestCase):
-    fixtures = ['seats', 'start_orders']
+    fixtures = ['seats', 'basic_event', 'start_orders']
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
+        self.day = bmp_models.Day.objects.first()
         self.crew = ext_models.Crew.objects.filter(gender = 'W').first()
         self.seat = ext_models.Seat.objects.first()
     
     
-    def test__init__team_missing(self):
-        """The 'team' kwarg is required."""
+    def test__init__kwargs_stored(self):
+        """Stores the 'team' and 'day' keyword arguments."""
         
-        with self.assertRaises(TypeError):
-            forms.Sell()
-    
-    
-    def test__init__team_stored(self):
-        """The 'team' kwarg is stored for future use."""
-        
-        form = forms.Sell(team = self.team)
+        form = forms.Sell(team = self.team, day = self.day)
         self.assertEqual(form.team, self.team)
+        self.assertEqual(form.day, self.day)
     
     
     def test__save__deletes_purchases(self):
@@ -56,6 +54,7 @@ class Test__Sell(TestCase):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             seat = self.seat,
             crew = self.crew,
         ).save()
@@ -64,6 +63,7 @@ class Test__Sell(TestCase):
         form = forms.Sell(
             {'seat': self.seat.id, 'gender': 'W'},
             team = self.team,
+            day = self.day,
         )
         self.assertTrue(form.is_valid())
         
@@ -78,6 +78,7 @@ class Test__Sell(TestCase):
         other_team = usr.User.objects.create_user('other', '', '')
         models.Purchase(
             team = other_team,
+            day = self.day,
             seat = self.seat,
             crew = self.crew,
         ).save()
@@ -86,6 +87,31 @@ class Test__Sell(TestCase):
         form = forms.Sell(
             {'seat': self.seat.id, 'gender': 'W'},
             team = self.team,
+            day = self.day,
+        )
+        self.assertTrue(form.is_valid())
+        
+        form.save()
+        self.assertEqual(models.Purchase.objects.count(), 1)
+    
+    
+    def test__save__ignores_other_days(self):
+        """Does not delete purchases for other days."""
+        
+        other_day = bmp_models.Day.objects.last()
+        self.assertNotEqual(other_day, self.day)
+        models.Purchase(
+            team = self.team,
+            day = other_day,
+            seat = self.seat,
+            crew = self.crew,
+        ).save()
+        self.assertEqual(models.Purchase.objects.count(), 1)
+        
+        form = forms.Sell(
+            {'seat': self.seat.id, 'gender': 'W'},
+            team = self.team,
+            day = self.day,
         )
         self.assertTrue(form.is_valid())
         
@@ -98,6 +124,7 @@ class Test__Sell(TestCase):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             seat = ext_models.Seat.objects.last(),
             crew = self.crew,
         ).save()
@@ -106,6 +133,7 @@ class Test__Sell(TestCase):
         form = forms.Sell(
             {'seat': self.seat.id, 'gender': 'W'},
             team = self.team,
+            day = self.day,
         )
         self.assertTrue(form.is_valid())
         
@@ -120,6 +148,7 @@ class Test__Sell(TestCase):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             seat = self.seat,
             crew = other_crew,
         ).save()
@@ -128,6 +157,7 @@ class Test__Sell(TestCase):
         form = forms.Sell(
             {'seat': self.seat.id, 'gender': 'W'},
             team = self.team,
+            day = self.day,
         )
         self.assertTrue(form.is_valid())
         
