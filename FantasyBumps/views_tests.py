@@ -46,6 +46,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
+        cls.day = bmp_models.Day.objects.first()
         
         cls.crew_mens = ext_models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -101,11 +102,12 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew_mens,
             seat = ext_models.Seat.objects.first(),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.MENS)
+        crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertFalse(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -125,11 +127,12 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_mens,
                 seat = seat,
             ).save()
         
-        crew = utils.get_crew(self.team, genders.MENS)
+        crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -149,11 +152,12 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_womens,
                 seat = seat,
             ).save()
         
-        other_crew = utils.get_crew(self.team, genders.WOMENS)
+        other_crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
         self.client.login(username='Market', password='secret')
@@ -172,6 +176,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
+        cls.day = bmp_models.Day.objects.first()
         
         cls.crew_mens = ext_models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -228,11 +233,12 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             crew = self.crew_womens,
             seat = ext_models.Seat.objects.first(),
         ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertFalse(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -252,11 +258,12 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_womens,
                 seat = seat,
             ).save()
         
-        crew = utils.get_crew(self.team, genders.WOMENS)
+        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(crew))
         
         self.client.login(username='Market', password='secret')
@@ -276,11 +283,12 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         for seat in ext_models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
+                day = self.day,
                 crew = self.crew_mens,
                 seat = seat,
             ).save()
         
-        other_crew = utils.get_crew(self.team, genders.MENS)
+        other_crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
         self.client.login(username='Market', password='secret')
@@ -445,6 +453,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Sell', '', 'secret')
+        cls.day = bmp_models.Day.objects.first()
         
         cls.crew = ext_models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
@@ -484,6 +493,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         
         models.Purchase(
             team = self.team,
+            day = self.day,
             seat = self.seat,
             crew = self.crew,
         ).save()
