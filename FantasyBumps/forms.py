@@ -6,25 +6,36 @@ from external.constants import genders
 from . import models
 
 
-class Buy(forms.ModelForm):
+class MarketFormMixin:
+    
+    def __init__(self, *args, team, day, **kwargs):
+        """Store the 'team' and 'day' keyword arguments."""
+        
+        super().__init__(*args, **kwargs)
+        self.team = team
+        self.day = day
+
+
+
+class Buy(MarketFormMixin, forms.ModelForm):
     
     class Meta:
         model = models.Purchase
         fields = ('crew', 'seat')
     
     
-    def save(self, team, day):
+    def save(self):
         """Add a team and day to the created purchase."""
         
         purchase = super().save(commit = False)
-        purchase.team = team
-        purchase.day = day
+        purchase.team = self.team
+        purchase.day = self.day
         purchase.save()
         return purchase
 
 
 
-class Sell(forms.Form):
+class Sell(MarketFormMixin, forms.Form):
     
     seat = forms.ModelChoiceField(queryset = ext_models.Seat.objects.all())
     gender = forms.ChoiceField(
@@ -33,13 +44,6 @@ class Sell(forms.Form):
             (genders.WOMENS, "Women's"),
         ],
     )
-    
-    def __init__(self, *args, team, day, **kwargs):
-        """Store the 'team' and 'day' keyword arguments."""
-        
-        super().__init__(*args, **kwargs)
-        self.team = team
-        self.day = day
     
     
     def save(self):

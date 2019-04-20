@@ -18,14 +18,23 @@ class Test__Buy(TestCase):
         self.seat = ext_models.Seat.objects.first().id
     
     
+    def test__init__kwargs_stored(self):
+        """Stores the 'team' and 'day' keyword arguments."""
+        
+        form = forms.Buy(team = self.team, day = self.day)
+        self.assertEqual(form.team, self.team)
+        self.assertEqual(form.day, self.day)
+    
+    
     def test__save(self):
         """Uses an extra argument to complete the object."""
         
-        form = forms.Buy({
-            'crew': self.crew,
-            'seat': self.seat,
-        })
-        purchase = form.save(self.team, self.day)
+        form = forms.Buy(
+            {'crew': self.crew, 'seat': self.seat},
+            team = self.team,
+            day = self.day,
+        )
+        purchase = form.save()
         self.assertEqual(purchase.team, self.team)
         self.assertEqual(purchase.day, self.day)
 

@@ -404,7 +404,7 @@ class Test__Buy__Unit(TestCase):
         mens_crew = ext_models.Crew(name = 'Hertford M1', gender = genders.MENS)
         
         view = views.BuyView()
-        view.purchase = models.Purchase(crew = mens_crew)
+        view.form_save_out = models.Purchase(crew = mens_crew)
         url = view.get_success_url()
         
         resolved = resolve(url)
@@ -416,7 +416,7 @@ class Test__Buy__Unit(TestCase):
         """Returns a redirect to the relevant market place."""
         
         view = views.BuyView()
-        view.purchase = models.Purchase(crew = self.crew)
+        view.form_save_out = models.Purchase(crew = self.crew)
         url = view.get_success_url()
         
         resolved = resolve(url)
@@ -530,7 +530,7 @@ class Test__Sell__Unit(TestCase):
         """Returns a redirect to the relevant market place."""
         
         view = views.SellView()
-        view.gender = genders.MENS
+        view.form_save_out = genders.MENS
         url = view.get_success_url()
         
         resolved = resolve(url)
@@ -542,7 +542,7 @@ class Test__Sell__Unit(TestCase):
         """Returns a redirect to the relevant market place."""
         
         view = views.SellView()
-        view.gender = genders.WOMENS
+        view.form_save_out = genders.WOMENS
         url = view.get_success_url()
         
         resolved = resolve(url)

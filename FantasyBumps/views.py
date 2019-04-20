@@ -44,23 +44,37 @@ class MarketView(TemplateView):
 
 
 
-class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
     
-    # View settings
+    # Mixin settings
     template_name = 'fantasybumps/form.html'
-    form_class = forms.Buy
     redirect_field_name = None  # Don't include return path in login redirect
+    
+    def get_form_kwargs(self):
+        """Supplies team information to the form."""
+        kwargs = super().get_form_kwargs()
+        kwargs.update({
+            'team': self.request.user,
+            'day': bmp_models.Day.objects.first(),
+        })
+        return kwargs
     
     def form_valid(self, form):
         """Saves the valid form."""
-        self.purchase = form.save(self.request.user, bmp_models.Day.objects.first())
+        self.form_save_out = form.save()
         return super().form_valid(form)
+
+
+
+class BuyView(MarketActionMixin, FormView):
     
+    # View settings
+    form_class = forms.Buy
     
     def get_success_url(self):
         """Returns the relevant market page for the gender purchased."""
         return reverse('fantasybumps:{}'.format(
-            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.purchase.crew.gender],
+            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out.crew.gender],
         ))
     
     
@@ -75,32 +89,15 @@ class BuyView(LoginRequiredMixin, SuccessMessageMixin, FormView):
 
 
 
-class SellView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+class SellView(MarketActionMixin, FormView):
     
     # View settings
-    template_name = 'fantasybumps/form.html'
     form_class = forms.Sell
-    redirect_field_name = None  # Don't include return path in login redirect
-    
-    def get_form_kwargs(self):
-        """Supplies team information to the form."""
-        kwargs = super().get_form_kwargs()
-        kwargs.update({
-            'team': self.request.user,
-            'day': bmp_models.Day.objects.first(),
-        })
-        return kwargs
-    
-    def form_valid(self, form):
-        """Saves the valid form."""
-        self.gender = form.save()
-        return super().form_valid(form)
-    
     
     def get_success_url(self):
         """Returns the relevant market page for the gender sold."""
         return reverse('fantasybumps:{}'.format(
-            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.gender],
+            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out],
         ))
     
     
