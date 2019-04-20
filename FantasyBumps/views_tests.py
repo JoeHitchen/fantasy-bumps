@@ -10,6 +10,7 @@ from Bumps import models as bmp_models
 from . import models
 from . import utils
 from . import views
+from . import patching
 
 
 class Test__Index(TestCase):
@@ -365,7 +366,8 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
-    def test__valid_post(self):
+    @patching.markets_open(True)
+    def test__valid_post(self, markets_mock):
         """Creates the object and redirects to the relevant market page."""
         
         self.assertEqual(models.Purchase.objects.count(), 0)
@@ -488,7 +490,8 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
-    def test__valid_post(self):
+    @patching.markets_open(True)
+    def test__valid_post(self, markets_mock):
         """Deletes the object and redirects to the relevant market page."""
         
         models.Purchase(

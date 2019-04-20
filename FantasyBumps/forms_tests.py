@@ -6,6 +6,7 @@ from Bumps import models as bmp_models
 
 from . import models
 from . import forms
+from . import patching
 
 
 class Test__Buy(TestCase):
@@ -26,7 +27,35 @@ class Test__Buy(TestCase):
         self.assertEqual(form.day, self.day)
     
     
-    def test__save(self):
+    @patching.markets_open(True)
+    def test__valid__markets_open(self, markets_mock):
+        """Purchases allowed when markets are open."""
+        
+        form = forms.Buy(
+            {'crew': self.crew, 'seat': self.seat},
+            team = self.team,
+            day = self.day,
+        )
+        self.assertTrue(form.is_valid())
+    
+    
+    @patching.markets_open(False)
+    def test__valid__markets_closed(self, markets_mock):
+        """Purchases allowed when markets are open."""
+        
+        form = forms.Buy(
+            {'crew': self.crew, 'seat': self.seat},
+            team = self.team,
+            day = self.day,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertDictEqual(form.errors, {
+            '__all__': ['Markets are not currently open.'],
+        })
+    
+    
+    @patching.markets_open(True)
+    def test__save(self, markets_mock):
         """Uses an extra argument to complete the object."""
         
         form = forms.Buy(
@@ -58,7 +87,35 @@ class Test__Sell(TestCase):
         self.assertEqual(form.day, self.day)
     
     
-    def test__save__deletes_purchases(self):
+    @patching.markets_open(True)
+    def test__valid__markets_open(self, markets_mock):
+        """Sales allowed when markets are open."""
+        
+        form = forms.Sell(
+            {'seat': self.seat.id, 'gender': 'W'},
+            team = self.team,
+            day = self.day,
+        )
+        self.assertTrue(form.is_valid())
+    
+    
+    @patching.markets_open(False)
+    def test__valid__markets_closed(self, markets_mock):
+        """Sales allowed when markets are open."""
+        
+        form = forms.Sell(
+            {'seat': self.seat.id, 'gender': 'W'},
+            team = self.team,
+            day = self.day,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertDictEqual(form.errors, {
+            '__all__': ['Markets are not currently open.'],
+        })
+    
+    
+    @patching.markets_open(True)
+    def test__save__deletes_purchases(self, markets_mock):
         """Removes any and all purchases for that team, seat, and gender. Returns gender."""
         
         models.Purchase(
@@ -81,7 +138,8 @@ class Test__Sell(TestCase):
         self.assertEqual(out, 'W')
     
     
-    def test__save__ignores_other_teams(self):
+    @patching.markets_open(True)
+    def test__save__ignores_other_teams(self, markets_mock):
         """Does not delete purchases from other teams."""
         
         other_team = usr.User.objects.create_user('other', '', '')
@@ -104,7 +162,8 @@ class Test__Sell(TestCase):
         self.assertEqual(models.Purchase.objects.count(), 1)
     
     
-    def test__save__ignores_other_days(self):
+    @patching.markets_open(True)
+    def test__save__ignores_other_days(self, markets_mock):
         """Does not delete purchases for other days."""
         
         other_day = bmp_models.Day.objects.last()
@@ -128,7 +187,8 @@ class Test__Sell(TestCase):
         self.assertEqual(models.Purchase.objects.count(), 1)
     
     
-    def test__save__ignores_other_seats(self):
+    @patching.markets_open(True)
+    def test__save__ignores_other_seats(self, markets_mock):
         """Does not delete purchases in other seats."""
         
         models.Purchase(
@@ -150,7 +210,8 @@ class Test__Sell(TestCase):
         self.assertEqual(models.Purchase.objects.count(), 1)
     
     
-    def test__save__ignores_other_gender(self):
+    @patching.markets_open(True)
+    def test__save__ignores_other_gender(self, markets_mock):
         """Does not delete purchases of the other gender."""
         
         other_crew = ext_models.Crew.objects.exclude(gender = self.crew.gender).first()

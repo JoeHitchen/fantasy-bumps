@@ -16,3 +16,7 @@ def current_time(hour, minute = 0, second = 0):
     
     return patch('django.utils.timezone.now', return_value = now_new)
 
+
+def markets_open(status):
+    return patch('FantasyBumps.utils.markets_open', return_value = status)
+
