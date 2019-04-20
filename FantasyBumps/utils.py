@@ -1,4 +1,7 @@
+from datetime import datetime, time, timedelta
+
 from django.db.models import Count
+from django.utils import timezone
 
 from external import models as ext
 
@@ -21,4 +24,29 @@ def has_all_seats(purchases):
         raise ValueError('Seat filled too many times.')
     
     return all(seats_filled)
+
+
+def markets_open(day):
+    """Indicates whether trades can be made for the day provided.
+    
+    Markets open at 8pm four days before the first day of racing and the night before subsequent
+    days. Markets close at 11:30am on each day of racing.
+    """
+    
+    now = timezone.now()
+    earlier_days = day.event.day_set.exclude(date__gte = day.date).exists()
+    
+    open_time = datetime.combine(
+        day.date - timedelta(1 if earlier_days else 4),
+        time(hour = 20),
+        tzinfo = now.tzinfo,
+    )
+    
+    closing_time = datetime.combine(
+        day.date,
+        time(hour = 11, minute = 30),
+        tzinfo = now.tzinfo,
+    )
+    
+    return open_time <= now < closing_time
 
