@@ -6,8 +6,8 @@ from django.urls import reverse
 
 from external import utils as ext
 from external.constants import genders
-from Bumps import models as bmp_models
 
+from . import models
 from . import forms
 from . import utils
 
@@ -26,7 +26,7 @@ class MarketView(TemplateView):
         gender = context['gender']
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
-        day = bmp_models.Day.objects.first()
+        day = models.Day.objects.first()
         context['start_order'] = day.start_order(gender)
         
         user = self.request.user
@@ -55,7 +55,7 @@ class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
         kwargs = super().get_form_kwargs()
         kwargs.update({
             'team': self.request.user,
-            'day': bmp_models.Day.objects.first(),
+            'day': models.Day.objects.first(),
         })
         return kwargs
     

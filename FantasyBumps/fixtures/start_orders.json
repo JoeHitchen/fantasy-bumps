@@ -8,7 +8,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 1,
     "fields": {
       "day": 1,
@@ -17,7 +17,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 19,
     "fields": {
       "day": 2,
@@ -34,7 +34,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 2,
     "fields": {
       "day": 1,
@@ -43,7 +43,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 20,
     "fields": {
       "day": 2,
@@ -60,7 +60,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 3,
     "fields": {
       "day": 1,
@@ -69,7 +69,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 21,
     "fields": {
       "day": 2,
@@ -86,7 +86,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 4,
     "fields": {
       "day": 1,
@@ -95,7 +95,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 22,
     "fields": {
       "day": 2,
@@ -112,7 +112,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 5,
     "fields": {
       "day": 1,
@@ -121,7 +121,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 23,
     "fields": {
       "day": 2,
@@ -138,7 +138,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 6,
     "fields": {
       "day": 1,
@@ -147,7 +147,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 24,
     "fields": {
       "day": 2,
@@ -164,7 +164,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 7,
     "fields": {
       "day": 1,
@@ -173,7 +173,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 25,
     "fields": {
       "day": 2,
@@ -190,7 +190,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 8,
     "fields": {
       "day": 1,
@@ -207,7 +207,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 26,
     "fields": {
       "day": 2,
@@ -224,7 +224,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 9,
     "fields": {
       "day": 1,
@@ -233,7 +233,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 27,
     "fields": {
       "day": 2,
@@ -250,7 +250,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 10,
     "fields": {
       "day": 1,
@@ -259,7 +259,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 28,
     "fields": {
       "day": 2,
@@ -276,7 +276,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 11,
     "fields": {
       "day": 1,
@@ -285,7 +285,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 29,
     "fields": {
       "day": 2,
@@ -302,7 +302,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 12,
     "fields": {
       "day": 1,
@@ -311,7 +311,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 30,
     "fields": {
       "day": 2,
@@ -328,7 +328,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 13,
     "fields": {
       "day": 1,
@@ -337,7 +337,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 31,
     "fields": {
       "day": 2,
@@ -354,7 +354,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 14,
     "fields": {
       "day": 1,
@@ -363,7 +363,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 32,
     "fields": {
       "day": 2,
@@ -380,7 +380,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 15,
     "fields": {
       "day": 1,
@@ -389,7 +389,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 33,
     "fields": {
       "day": 2,
@@ -406,7 +406,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 16,
     "fields": {
       "day": 1,
@@ -415,7 +415,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 34,
     "fields": {
       "day": 2,
@@ -432,7 +432,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 17,
     "fields": {
       "day": 1,
@@ -441,7 +441,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 35,
     "fields": {
       "day": 2,
@@ -458,7 +458,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 18,
     "fields": {
       "day": 1,
@@ -467,7 +467,7 @@
     }
   },
   {
-    "model": "Bumps.Position",
+    "model": "FantasyBumps.Position",
     "pk": 36,
     "fields": {
       "day": 2,

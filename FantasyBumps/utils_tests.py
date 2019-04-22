@@ -6,7 +6,6 @@ from django.utils import timezone
 
 from external import models as ext
 from external.constants import genders
-from Bumps import models as bmp_models
 
 from . import models
 from . import utils
@@ -19,7 +18,7 @@ class Test__Get_Crew(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
-        cls.day = bmp_models.Day.objects.first()
+        cls.day = models.Day.objects.first()
         cls.crew = ext.Crew(gender = genders.WOMENS)
         cls.crew.save()
     
@@ -50,7 +49,7 @@ class Test__Get_Crew(TestCase):
     def test__other_day(self):
         """Does not include rowers purchased on another day."""
         
-        other_day = bmp_models.Day.objects.last()
+        other_day = models.Day.objects.last()
         self.assertNotEqual(other_day, self.day)
         
         models.Purchase(
@@ -136,7 +135,7 @@ class Test__Has_All_Seats(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
-        cls.day = bmp_models.Day.objects.first()
+        cls.day = models.Day.objects.first()
         cls.crew = ext.Crew(gender = genders.MENS)
         cls.crew.save()
     
@@ -278,7 +277,7 @@ class Test__Markets_Open(TestCase):
     
     @classmethod
     def setUpTestData(self):
-        self.event = bmp_models.Event(
+        self.event = models.Event(
             name = 'Markets',
             mens_divisions = 3,
             womens_divisions = 3,
@@ -291,7 +290,7 @@ class Test__Markets_Open(TestCase):
     def test__first_day__before_open(self, tz_now):
         """Markets open four days before the first day."""
         
-        day = bmp_models.Day(
+        day = models.Day(
             event = self.event,
             name = 'Markets',
             date = timezone.now() + timedelta(4),
@@ -305,7 +304,7 @@ class Test__Markets_Open(TestCase):
     def test__first_day__after_open(self, tz_now):
         """Markets open four days before the first day."""
         
-        day = bmp_models.Day(
+        day = models.Day(
             event = self.event,
             name = 'Markets',
             date = timezone.now() + timedelta(4),
@@ -319,13 +318,13 @@ class Test__Markets_Open(TestCase):
     def test__second_day__before_open(self, tz_now):
         """Markets open four days before the first day."""
         
-        day_first = bmp_models.Day(
+        day_first = models.Day(
             event = self.event,
             name = 'First',
             date = timezone.now(),
         )
         day_first.save()
-        day = bmp_models.Day(
+        day = models.Day(
             event = self.event,
             name = 'Markets',
             date = timezone.now() + timedelta(1),
@@ -339,13 +338,13 @@ class Test__Markets_Open(TestCase):
     def test__second_day__after_open(self, tz_now):
         """Markets open four days before the first day."""
         
-        day_first = bmp_models.Day(
+        day_first = models.Day(
             event = self.event,
             name = 'First',
             date = timezone.now(),
         )
         day_first.save()
-        day = bmp_models.Day(
+        day = models.Day(
             event = self.event,
             name = 'Markets',
             date = timezone.now() + timedelta(1),
@@ -359,7 +358,7 @@ class Test__Markets_Open(TestCase):
     def test__before_close(self, tz_now):
         """Markets are open until the deadline on the day of racing."""
         
-        day = bmp_models.Day(
+        day = models.Day(
             event = self.event,
             name = 'Markets',
             date = timezone.now(),
@@ -373,7 +372,7 @@ class Test__Markets_Open(TestCase):
     def test__after_close(self, tz_now):
         """Markets are closed after the deadline on the day of racing."""
         
-        day = bmp_models.Day(
+        day = models.Day(
             event = self.event,
             name = 'Markets',
             date = timezone.now(),

@@ -5,7 +5,6 @@ from django.urls import reverse, resolve
 
 from external import models as ext_models
 from external.constants import genders
-from Bumps import models as bmp_models
 
 from . import models
 from . import utils
@@ -47,7 +46,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = bmp_models.Day.objects.first()
+        cls.day = models.Day.objects.first()
         
         cls.crew_mens = ext_models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -67,7 +66,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            bmp_models.Day.objects.first().start_order(genders.MENS),
+            models.Day.objects.first().start_order(genders.MENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -87,7 +86,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            bmp_models.Day.objects.first().start_order(genders.MENS),
+            models.Day.objects.first().start_order(genders.MENS),
         )
         
         self.assertTrue('crew' in response.context)
@@ -177,7 +176,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = bmp_models.Day.objects.first()
+        cls.day = models.Day.objects.first()
         
         cls.crew_mens = ext_models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -198,7 +197,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            bmp_models.Day.objects.first().start_order(genders.WOMENS),
+            models.Day.objects.first().start_order(genders.WOMENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -218,7 +217,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            bmp_models.Day.objects.first().start_order(genders.WOMENS),
+            models.Day.objects.first().start_order(genders.WOMENS),
         )
         
         self.assertTrue('crew' in response.context)
@@ -455,7 +454,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Sell', '', 'secret')
-        cls.day = bmp_models.Day.objects.first()
+        cls.day = models.Day.objects.first()
         
         cls.crew = ext_models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()

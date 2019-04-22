@@ -2,7 +2,6 @@ from django.test import TestCase
 from django.contrib.auth import models as usr
 
 from external import models as ext_models
-from Bumps import models as bmp_models
 
 from . import models
 from . import forms
@@ -14,7 +13,7 @@ class Test__Buy(TestCase):
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
-        self.day = bmp_models.Day.objects.first()
+        self.day = models.Day.objects.first()
         self.crew = ext_models.Crew.objects.first().id
         self.seat = ext_models.Seat.objects.first().id
     
@@ -74,7 +73,7 @@ class Test__Sell(TestCase):
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
-        self.day = bmp_models.Day.objects.first()
+        self.day = models.Day.objects.first()
         self.crew = ext_models.Crew.objects.filter(gender = 'W').first()
         self.seat = ext_models.Seat.objects.first()
     
@@ -166,7 +165,7 @@ class Test__Sell(TestCase):
     def test__save__ignores_other_days(self, markets_mock):
         """Does not delete purchases for other days."""
         
-        other_day = bmp_models.Day.objects.last()
+        other_day = models.Day.objects.last()
         self.assertNotEqual(other_day, self.day)
         models.Purchase(
             team = self.team,
