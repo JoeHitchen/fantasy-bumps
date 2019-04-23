@@ -1,15 +1,11 @@
-from datetime import timedelta
-
 from django.test import TestCase
 from django.contrib.auth import models as usr
-from django.utils import timezone
 
 from external import models as ext
 from external.constants import genders
 
 from . import models
 from . import utils
-from . import patching
 
 
 class Test__Get_Crew(TestCase):
@@ -270,114 +266,4 @@ class Test__Has_All_Seats(TestCase):
     def test__extra_seat__cox(self):
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('cox')
-
-
-
-class Test__Markets_Open(TestCase):
-    
-    @classmethod
-    def setUpTestData(self):
-        self.event = models.Event(
-            name = 'Markets',
-            mens_divisions = 3,
-            womens_divisions = 3,
-            boats_per_division = 2,
-        )
-        self.event.save()
-    
-    
-    @patching.current_time(hour = 19, minute = 59)
-    def test__first_day__before_open(self, tz_now):
-        """Markets open four days before the first day."""
-        
-        day = models.Day(
-            event = self.event,
-            name = 'Markets',
-            date = timezone.now() + timedelta(4),
-        )
-        day.save()
-        
-        self.assertFalse(utils.markets_open(day))
-    
-    
-    @patching.current_time(hour = 20, minute = 0)
-    def test__first_day__after_open(self, tz_now):
-        """Markets open four days before the first day."""
-        
-        day = models.Day(
-            event = self.event,
-            name = 'Markets',
-            date = timezone.now() + timedelta(4),
-        )
-        day.save()
-        
-        self.assertTrue(utils.markets_open(day))
-    
-    
-    @patching.current_time(hour = 19, minute = 59)
-    def test__second_day__before_open(self, tz_now):
-        """Markets open four days before the first day."""
-        
-        day_first = models.Day(
-            event = self.event,
-            name = 'First',
-            date = timezone.now(),
-        )
-        day_first.save()
-        day = models.Day(
-            event = self.event,
-            name = 'Markets',
-            date = timezone.now() + timedelta(1),
-        )
-        day.save()
-        
-        self.assertFalse(utils.markets_open(day))
-    
-    
-    @patching.current_time(hour = 20, minute = 0)
-    def test__second_day__after_open(self, tz_now):
-        """Markets open four days before the first day."""
-        
-        day_first = models.Day(
-            event = self.event,
-            name = 'First',
-            date = timezone.now(),
-        )
-        day_first.save()
-        day = models.Day(
-            event = self.event,
-            name = 'Markets',
-            date = timezone.now() + timedelta(1),
-        )
-        day.save()
-        
-        self.assertTrue(utils.markets_open(day))
-    
-    
-    @patching.current_time(hour = 11, minute = 29)
-    def test__before_close(self, tz_now):
-        """Markets are open until the deadline on the day of racing."""
-        
-        day = models.Day(
-            event = self.event,
-            name = 'Markets',
-            date = timezone.now(),
-        )
-        day.save()
-        
-        self.assertTrue(utils.markets_open(day))
-    
-    
-    @patching.current_time(hour = 11, minute = 30)
-    def test__after_close(self, tz_now):
-        """Markets are closed after the deadline on the day of racing."""
-        
-        day = models.Day(
-            event = self.event,
-            name = 'Markets',
-            date = timezone.now(),
-        )
-        day.save()
-        
-        self.assertFalse(utils.markets_open(day))
 

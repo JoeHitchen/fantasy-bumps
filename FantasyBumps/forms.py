@@ -4,7 +4,6 @@ from external import models as ext_models
 from external.constants import genders
 
 from . import models
-from . import utils
 
 
 class MarketFormMixin:
@@ -21,7 +20,7 @@ class MarketFormMixin:
         """Invalidates the form if markets are closed."""
         super().clean()
         
-        if not utils.markets_open(self.day):
+        if not self.day.market_is_open:
             self.add_error(None, 'Markets are not currently open.')
 
 

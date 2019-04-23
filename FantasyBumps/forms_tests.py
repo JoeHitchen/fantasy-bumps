@@ -26,7 +26,7 @@ class Test__Buy(TestCase):
         self.assertEqual(form.day, self.day)
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__valid__markets_open(self, markets_mock):
         """Purchases allowed when markets are open."""
         
@@ -38,14 +38,16 @@ class Test__Buy(TestCase):
         self.assertTrue(form.is_valid())
     
     
-    @patching.markets_open(False)
+    @patching.market_is_open(False)
     def test__valid__markets_closed(self, markets_mock):
         """Purchases allowed when markets are open."""
+        
+        day = models.Day.objects.first()
         
         form = forms.Buy(
             {'crew': self.crew, 'seat': self.seat},
             team = self.team,
-            day = self.day,
+            day = day,
         )
         self.assertFalse(form.is_valid())
         self.assertDictEqual(form.errors, {
@@ -53,7 +55,7 @@ class Test__Buy(TestCase):
         })
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__save(self, markets_mock):
         """Uses an extra argument to complete the object."""
         
@@ -86,7 +88,7 @@ class Test__Sell(TestCase):
         self.assertEqual(form.day, self.day)
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__valid__markets_open(self, markets_mock):
         """Sales allowed when markets are open."""
         
@@ -98,7 +100,7 @@ class Test__Sell(TestCase):
         self.assertTrue(form.is_valid())
     
     
-    @patching.markets_open(False)
+    @patching.market_is_open(False)
     def test__valid__markets_closed(self, markets_mock):
         """Sales allowed when markets are open."""
         
@@ -113,7 +115,7 @@ class Test__Sell(TestCase):
         })
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__save__deletes_purchases(self, markets_mock):
         """Removes any and all purchases for that team, seat, and gender. Returns gender."""
         
@@ -137,7 +139,7 @@ class Test__Sell(TestCase):
         self.assertEqual(out, 'W')
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__save__ignores_other_teams(self, markets_mock):
         """Does not delete purchases from other teams."""
         
@@ -161,7 +163,7 @@ class Test__Sell(TestCase):
         self.assertEqual(models.Purchase.objects.count(), 1)
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__save__ignores_other_days(self, markets_mock):
         """Does not delete purchases for other days."""
         
@@ -186,7 +188,7 @@ class Test__Sell(TestCase):
         self.assertEqual(models.Purchase.objects.count(), 1)
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__save__ignores_other_seats(self, markets_mock):
         """Does not delete purchases in other seats."""
         
@@ -209,7 +211,7 @@ class Test__Sell(TestCase):
         self.assertEqual(models.Purchase.objects.count(), 1)
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__save__ignores_other_gender(self, markets_mock):
         """Does not delete purchases of the other gender."""
         

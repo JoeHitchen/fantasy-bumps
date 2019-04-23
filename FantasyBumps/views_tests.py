@@ -365,7 +365,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__valid_post(self, markets_mock):
         """Creates the object and redirects to the relevant market page."""
         
@@ -489,7 +489,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         self.assertTemplateUsed(response, 'fantasybumps/form.html')
     
     
-    @patching.markets_open(True)
+    @patching.market_is_open(True)
     def test__valid_post(self, markets_mock):
         """Deletes the object and redirects to the relevant market page."""
         

@@ -1,4 +1,8 @@
+from datetime import datetime, time, timedelta
+
 from django.db import models
+from django.utils import timezone
+from django.utils.functional import cached_property
 
 from external.constants import genders
 
@@ -59,6 +63,40 @@ class Day(models.Model):
         # Create start order
         ranking = self.positions.filter(crew__gender = gender)
         return [ranking[slice] for slice in slices]
+    
+    
+    @cached_property
+    def market_opens(self):
+        """Gives the time that markets open for trading.
+        
+        Markets always open at 8:00PM. On the first day, they open four days before racing. For
+        later days they open the day before racing."""
+        
+        earlier_days = self.event.day_set.exclude(date__gte = self.date).exists()
+        
+        return datetime.combine(
+            self.date - timedelta(1 if earlier_days else 4),
+            time(hour = 20),
+            timezone.now().tzinfo,
+        )
+    
+    
+    @cached_property
+    def market_closes(self):
+        """Markets always close at 11:30AM on the day of racing."""
+        
+        return datetime.combine(
+            self.date,
+            time(hour = 11, minute = 30),
+            timezone.now().tzinfo,
+        )
+    
+    
+    @cached_property
+    def market_is_open(self):
+        """Indicates whether the market is currently open for trading."""
+        return self.market_opens <= timezone.now() < self.market_closes
+
 
 
 class Position(models.Model):

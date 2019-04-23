@@ -1,4 +1,8 @@
+from unittest.mock import patch, PropertyMock
+from datetime import time, timedelta
+
 from django.test import TestCase
+from django.utils import timezone
 
 from external.constants import genders
 
@@ -60,4 +64,131 @@ class Test__Day(TestCase):
         div_genders = start_order[0].values_list('crew__gender', flat = True)
         self.assertFalse(genders.WOMENS in div_genders)
         self.assertTrue(genders.MENS in div_genders)
+
+
+
+class Test__Day__Markets(TestCase):
+    
+    @classmethod
+    def setUpTestData(self):
+        self.event = models.Event(
+            name = 'Markets',
+            mens_divisions = 3,
+            womens_divisions = 3,
+            boats_per_division = 2,
+        )
+        self.event.save()
+    
+    
+    def test__market_opens__first_day(self):
+        """First day markets open more than 24h in advance."""
+        
+        # Create day
+        now = timezone.now()
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+        )
+        day.save()
+        
+        # Test property
+        open = day.market_opens
+        self.assertEqual(open.date() - now.date(), timedelta(-4))
+        self.assertEqual(open.time(), time(hour = 20))
+    
+    
+    def test__market_opens__later_day(self):
+        """Later day markets open after racing the previous day."""
+        
+        # Create days
+        now = timezone.now()
+        models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now - timedelta(1),
+        ).save()
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+        )
+        day.save()
+        
+        # Test property
+        open = day.market_opens
+        self.assertEqual(open.date() - now.date(), timedelta(-1))
+        self.assertEqual(open.time(), time(hour = 20))
+    
+    
+    def test__market_closes(self):
+        """Markets close at 11:30AM on the day of racing."""
+        
+        # Create days
+        now = timezone.now()
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+        )
+        day.save()
+        
+        # Test property
+        close = day.market_closes
+        self.assertEqual(close.date(), now.date())
+        self.assertEqual(close.time(), time(hour = 11, minute = 30))
+    
+    
+    @patch.object(models.Day, 'market_opens', new_callable = PropertyMock)
+    @patch.object(models.Day, 'market_closes', new_callable = PropertyMock)
+    def test__market_is_open__before_open(self, closes_mock, opens_mock):
+        """Returns False if before opening time."""
+    
+        now = timezone.now()
+        opens_mock.return_value = now + timedelta(minutes = 5)
+        closes_mock.return_value = now + timedelta(minutes = 10)
+        
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+        )
+        
+        self.assertFalse(day.market_is_open)
+    
+    
+    @patch.object(models.Day, 'market_opens', new_callable = PropertyMock)
+    @patch.object(models.Day, 'market_closes', new_callable = PropertyMock)
+    def test__market_is_open__between(self, closes_mock, opens_mock):
+        """Returns True if between opening time and closing time."""
+    
+        now = timezone.now()
+        opens_mock.return_value = now - timedelta(minutes = 10)
+        closes_mock.return_value = now + timedelta(minutes = 10)
+        
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+        )
+        
+        self.assertTrue(day.market_is_open)
+    
+    
+    @patch.object(models.Day, 'market_opens', new_callable = PropertyMock)
+    @patch.object(models.Day, 'market_closes', new_callable = PropertyMock)
+    def test__market_is_open__after_close(self, closes_mock, opens_mock):
+        """Returns False if after closing time."""
+    
+        now = timezone.now()
+        opens_mock.return_value = now - timedelta(minutes = 10)
+        closes_mock.return_value = now - timedelta(minutes = 5)
+        
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+        )
+        
+        self.assertFalse(day.market_is_open)
 
