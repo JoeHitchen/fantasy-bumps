@@ -96,6 +96,8 @@ class Day(models.Model):
     @cached_property
     def market_is_open(self):
         """Indicates whether the market is currently open for trading."""
+        if not self.first_race_time:
+            return False
         return self.market_opens <= timezone.now() < self.market_closes
 
 

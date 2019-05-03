@@ -148,6 +148,7 @@ class Test__Day__Markets(TestCase):
             event = self.event,
             name = 'Markets',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
         )
         
         self.assertFalse(day.market_is_open)
@@ -162,6 +163,7 @@ class Test__Day__Markets(TestCase):
             event = self.event,
             name = 'Markets',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
         )
         
         self.assertTrue(day.market_is_open)
@@ -176,6 +178,22 @@ class Test__Day__Markets(TestCase):
             event = self.event,
             name = 'Markets',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.assertFalse(day.market_is_open)
+    
+    
+    @patching.market_opens(timezone.now() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.now() + timedelta(minutes = 10))
+    def test__market_is_open__without_first_race(self, closes_mock, opens_mock):
+        """Returns False if first_race_time is not set."""
+        
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = timezone.now(),
+            first_race_time = None,
         )
         
         self.assertFalse(day.market_is_open)
