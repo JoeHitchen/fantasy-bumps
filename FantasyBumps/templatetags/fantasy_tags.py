@@ -40,7 +40,7 @@ def market_status_box(day):
         }
     
     # Market closed
-    future_open = day.market_opens if now < day.market_opens else None
+    future_open = day.market_opens if day.market_opens and now < day.market_opens else None
     return {
         'style': 'danger',
         'dismissable': False,

@@ -174,9 +174,7 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 5))
-    @patching.market_closes(timezone.now() + timedelta(days = 1))
-    def test__non_racing_day(self, closes_mock, opens_mock):
+    def test__non_racing_day(self):
         """Returns a non-dismissable danger alert."""
         
         # Create day
@@ -184,6 +182,7 @@ class Test__Market_Status_Box(TestCase):
             event = self.event,
             name = 'Market Status',
             date = timezone.now(),
+            first_race_time = None,
         )
         
         # Call and test method

@@ -80,7 +80,7 @@ class Test__Day__Markets(TestCase):
         self.event.save()
     
     
-    def test__market_opens__first_day(self):
+    def test__market_opens__first_race_day(self):
         """First day markets open more than 24h in advance."""
         
         # Create day
@@ -89,6 +89,7 @@ class Test__Day__Markets(TestCase):
             event = self.event,
             name = 'Markets',
             date = now,
+            first_race_time = time(hour = 12),
         )
         day.save()
         
@@ -98,7 +99,7 @@ class Test__Day__Markets(TestCase):
         self.assertEqual(open.time(), time(hour = 20))
     
     
-    def test__market_opens__later_day(self):
+    def test__market_opens__later_race_day(self):
         """Later day markets open after racing the previous day."""
         
         # Create days
@@ -107,11 +108,13 @@ class Test__Day__Markets(TestCase):
             event = self.event,
             name = 'Markets',
             date = now - timedelta(1),
+            first_race_time = time(hour = 12),
         ).save()
         day = models.Day(
             event = self.event,
             name = 'Markets',
             date = now,
+            first_race_time = time(hour = 12),
         )
         day.save()
         
@@ -119,6 +122,24 @@ class Test__Day__Markets(TestCase):
         open = day.market_opens
         self.assertEqual(open.date() - now.date(), timedelta(-1))
         self.assertEqual(open.time(), time(hour = 20))
+    
+    
+    def test__market_opens__non_race_day(self):
+        """Returns null if no racing occurs."""
+        
+        # Create days
+        now = timezone.now()
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+            first_race_time = None,
+        )
+        day.save()
+        
+        # Test property
+        open = day.market_opens
+        self.assertIsNone(open)
     
     
     def test__market_closes__with_race(self):

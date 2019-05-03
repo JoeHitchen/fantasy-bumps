@@ -68,10 +68,13 @@ class Day(models.Model):
     
     @cached_property
     def market_opens(self):
-        """Gives the time that markets open for trading.
+        """Gives the time that markets open for trading, for racing days.
         
         Markets always open at 8:00PM. On the first day, they open four days before racing. For
         later days they open the day before racing."""
+        
+        if not self.first_race_time:
+            return
         
         earlier_days = self.event.day_set.exclude(date__gte = self.date).exists()
         
