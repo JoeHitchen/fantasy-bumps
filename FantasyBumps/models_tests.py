@@ -1,4 +1,3 @@
-from unittest.mock import patch, PropertyMock
 from datetime import time, timedelta
 
 from django.test import TestCase
@@ -7,6 +6,7 @@ from django.utils import timezone
 from external.constants import genders
 
 from . import models
+from . import patching
 
 
 class Test__Day(TestCase):
@@ -139,55 +139,43 @@ class Test__Day__Markets(TestCase):
         self.assertEqual(close.time(), time(hour = 11, minute = 30))
     
     
-    @patch.object(models.Day, 'market_opens', new_callable = PropertyMock)
-    @patch.object(models.Day, 'market_closes', new_callable = PropertyMock)
+    @patching.market_opens(timezone.now() + timedelta(minutes = 5))
+    @patching.market_closes(timezone.now() + timedelta(minutes = 10))
     def test__market_is_open__before_open(self, closes_mock, opens_mock):
         """Returns False if before opening time."""
-    
-        now = timezone.now()
-        opens_mock.return_value = now + timedelta(minutes = 5)
-        closes_mock.return_value = now + timedelta(minutes = 10)
         
         day = models.Day(
             event = self.event,
             name = 'Markets',
-            date = now,
+            date = timezone.now(),
         )
         
         self.assertFalse(day.market_is_open)
     
     
-    @patch.object(models.Day, 'market_opens', new_callable = PropertyMock)
-    @patch.object(models.Day, 'market_closes', new_callable = PropertyMock)
+    @patching.market_opens(timezone.now() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.now() + timedelta(minutes = 10))
     def test__market_is_open__between(self, closes_mock, opens_mock):
         """Returns True if between opening time and closing time."""
-    
-        now = timezone.now()
-        opens_mock.return_value = now - timedelta(minutes = 10)
-        closes_mock.return_value = now + timedelta(minutes = 10)
         
         day = models.Day(
             event = self.event,
             name = 'Markets',
-            date = now,
+            date = timezone.now(),
         )
         
         self.assertTrue(day.market_is_open)
     
     
-    @patch.object(models.Day, 'market_opens', new_callable = PropertyMock)
-    @patch.object(models.Day, 'market_closes', new_callable = PropertyMock)
+    @patching.market_opens(timezone.now() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.now() - timedelta(minutes = 5))
     def test__market_is_open__after_close(self, closes_mock, opens_mock):
         """Returns False if after closing time."""
-    
-        now = timezone.now()
-        opens_mock.return_value = now - timedelta(minutes = 10)
-        closes_mock.return_value = now - timedelta(minutes = 5)
         
         day = models.Day(
             event = self.event,
             name = 'Markets',
-            date = now,
+            date = timezone.now(),
         )
         
         self.assertFalse(day.market_is_open)
