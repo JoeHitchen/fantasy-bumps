@@ -4,6 +4,9 @@
 {% block content %}
 
 <br/>
+{% market_status_box day %}
+
+<br/>
 {% for division in start_order %}
   {% market_division_box division gender forloop.counter %}
 <br/>

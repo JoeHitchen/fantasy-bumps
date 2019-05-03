@@ -27,6 +27,7 @@ class MarketView(TemplateView):
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
         day = models.Day.objects.first()
+        context['day'] = day
         context['start_order'] = day.start_order(gender)
         
         user = self.request.user

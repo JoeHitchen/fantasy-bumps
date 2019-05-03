@@ -1,9 +1,55 @@
+from datetime import timedelta
+
 from django import template
+from django.utils import timezone
 from django.utils.html import format_html
+from django.contrib.humanize.templatetags.humanize import naturalday
 
 from external import models as ext
 
 register = template.Library()
+
+
+@register.inclusion_tag(template.Template('''
+  <div class="alert alert-{{ style }}{% if dismissable %} alert-dismissible fade show{% endif %}">
+    {{ message }}
+    {% if dismissable %}<button class="close" data-dismiss="alert">
+      <span>&times;</span>
+    </button>{% endif %}
+  </div>
+'''))
+def market_status_box(day):
+    """Creates the properties for an alert box that describes the market status."""
+    
+    # Preparation
+    now = timezone.now()
+    
+    def datetime_string(datetime):
+        """Generates a partially humanised datetime."""
+        return '{:%H:%M} {}'.format(datetime, naturalday(datetime, 'd/m/Y'))
+    
+    
+    # While market open
+    if day.market_is_open:
+        return {
+            'style': 'warning' if day.market_closes - now <= timedelta(hours = 6) else 'info',
+            'dismissable': True,
+            'message': 'The market is open until {}.'.format(
+                datetime_string(day.market_closes),
+            ),
+        }
+    
+    # Market closed
+    future_open = day.market_opens if now < day.market_opens else None
+    return {
+        'style': 'danger',
+        'dismissable': False,
+        'message': 'The market is closed{}.'.format(
+            ', and will open at {}'.format(datetime_string(future_open))
+            if future_open
+            else '',
+        ),
+    }
 
 
 @register.filter
