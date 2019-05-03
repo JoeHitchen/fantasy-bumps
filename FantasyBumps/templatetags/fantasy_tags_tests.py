@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import time, timedelta
 
 from django.test import TestCase
 from django.utils import timezone
@@ -32,6 +32,7 @@ class Test__Market_Status_Box(TestCase):
             event = self.event,
             name = 'Market Status',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
         )
         
         # Call and test method
@@ -56,6 +57,7 @@ class Test__Market_Status_Box(TestCase):
             event = self.event,
             name = 'Market Status',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
         )
         
         # Call and test method
@@ -80,6 +82,7 @@ class Test__Market_Status_Box(TestCase):
             event = self.event,
             name = 'Market Status',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
         )
         
         # Call and test method
@@ -105,6 +108,7 @@ class Test__Market_Status_Box(TestCase):
             event = self.event,
             name = 'Market Status',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
         )
         
         # Call and test method
@@ -130,6 +134,7 @@ class Test__Market_Status_Box(TestCase):
             event = self.event,
             name = 'Market Status',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
         )
         
         # Call and test method
@@ -147,7 +152,7 @@ class Test__Market_Status_Box(TestCase):
     
     @patching.market_opens(timezone.now() - timedelta(minutes = 5))
     @patching.market_closes(timezone.now() - timedelta(minutes = 2))
-    def test__closed(self, closes_mock, opens_mock):
+    def test__after_close(self, closes_mock, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
@@ -155,6 +160,29 @@ class Test__Market_Status_Box(TestCase):
             event = self.event,
             name = 'Market Status',
             date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        
+        # Call and test method
+        props = tags.market_status_box(day)
+        
+        self.assertEqual(props['style'], 'danger')
+        self.assertFalse(props['dismissable'])
+        self.assertEqual(
+            props['message'],
+            'The market is closed.',
+        )
+    
+    
+    def test__non_racing_day(self):
+        """Returns a non-dismissable danger alert."""
+        
+        # Create day
+        day = models.Day(
+            event = self.event,
+            name = 'Market Status',
+            date = timezone.now(),
+            first_race_time = None,
         )
         
         # Call and test method

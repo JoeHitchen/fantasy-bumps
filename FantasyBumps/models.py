@@ -27,6 +27,7 @@ class Day(models.Model):
     event = models.ForeignKey(Event, models.CASCADE)
     name = models.CharField(max_length = 10)
     date = models.DateField(db_index = True)
+    first_race_time = models.TimeField(null = True, db_index = True)
     
     class Meta:
         ordering = ['event', 'date']
@@ -67,10 +68,13 @@ class Day(models.Model):
     
     @cached_property
     def market_opens(self):
-        """Gives the time that markets open for trading.
+        """Gives the time that markets open for trading, for racing days.
         
         Markets always open at 8:00PM. On the first day, they open four days before racing. For
         later days they open the day before racing."""
+        
+        if not self.first_race_time:
+            return
         
         earlier_days = self.event.day_set.exclude(date__gte = self.date).exists()
         
@@ -83,18 +87,23 @@ class Day(models.Model):
     
     @cached_property
     def market_closes(self):
-        """Markets always close at 11:30AM on the day of racing."""
+        """Markets always close half an hour before the first race, if one occurs."""
+        
+        if not self.first_race_time:
+            return
         
         return datetime.combine(
             self.date,
-            time(hour = 11, minute = 30),
+            self.first_race_time,
             timezone.now().tzinfo,
-        )
+        ) - timedelta(minutes = 30)
     
     
     @cached_property
     def market_is_open(self):
         """Indicates whether the market is currently open for trading."""
+        if not self.first_race_time:
+            return False
         return self.market_opens <= timezone.now() < self.market_closes
 
 
