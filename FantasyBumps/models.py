@@ -27,6 +27,7 @@ class Day(models.Model):
     event = models.ForeignKey(Event, models.CASCADE)
     name = models.CharField(max_length = 10)
     date = models.DateField(db_index = True)
+    first_race_time = models.TimeField(null = True, db_index = True)
     
     class Meta:
         ordering = ['event', 'date']
