@@ -84,13 +84,16 @@ class Day(models.Model):
     
     @cached_property
     def market_closes(self):
-        """Markets always close at 11:30AM on the day of racing."""
+        """Markets always close half an hour before the first race, if one occurs."""
+        
+        if not self.first_race_time:
+            return
         
         return datetime.combine(
             self.date,
-            time(hour = 11, minute = 30),
+            self.first_race_time,
             timezone.now().tzinfo,
-        )
+        ) - timedelta(minutes = 30)
     
     
     @cached_property

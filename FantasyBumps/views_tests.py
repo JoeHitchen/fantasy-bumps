@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.test import TestCase
+from django.utils import timezone
 from django.contrib.auth import models as usr
 from django.contrib import messages
 from django.urls import reverse, resolve
@@ -366,7 +369,8 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     
     
     @patching.market_is_open(True)
-    def test__valid_post(self, markets_mock):
+    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
+    def test__valid_post(self, market_closes_mock, markets_mock):
         """Creates the object and redirects to the relevant market page."""
         
         self.assertEqual(models.Purchase.objects.count(), 0)
@@ -490,7 +494,8 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     
     
     @patching.market_is_open(True)
-    def test__valid_post(self, markets_mock):
+    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
+    def test__valid_post(self, market_closes_mock, markets_mock):
         """Deletes the object and redirects to the relevant market page."""
         
         models.Purchase(

@@ -121,8 +121,8 @@ class Test__Day__Markets(TestCase):
         self.assertEqual(open.time(), time(hour = 20))
     
     
-    def test__market_closes(self):
-        """Markets close at 11:30AM on the day of racing."""
+    def test__market_closes__with_race(self):
+        """Markets close half an hour before the first race."""
         
         # Create days
         now = timezone.now()
@@ -130,6 +130,7 @@ class Test__Day__Markets(TestCase):
             event = self.event,
             name = 'Markets',
             date = now,
+            first_race_time = time(hour = 12),
         )
         day.save()
         
@@ -137,6 +138,24 @@ class Test__Day__Markets(TestCase):
         close = day.market_closes
         self.assertEqual(close.date(), now.date())
         self.assertEqual(close.time(), time(hour = 11, minute = 30))
+    
+    
+    def test__market_closes__without_race(self):
+        """Returns a null value if no racing occurs."""
+        
+        # Create days
+        now = timezone.now()
+        day = models.Day(
+            event = self.event,
+            name = 'Markets',
+            date = now,
+            first_race_time = None,
+        )
+        day.save()
+        
+        # Test property
+        close = day.market_closes
+        self.assertIsNone(close)
     
     
     @patching.market_opens(timezone.now() + timedelta(minutes = 5))
