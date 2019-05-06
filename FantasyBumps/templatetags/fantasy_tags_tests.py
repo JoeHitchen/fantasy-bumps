@@ -42,7 +42,7 @@ class Test__Market_Status_Box(TestCase):
         self.assertFalse(props['dismissable'])
         self.assertEqual(
             props['message'],
-            'The market is closed, and will open at {:%H:%M} 05/05/2019.'.format(
+            'The market is closed, and will open at {0:%H:%M} {0:%d/%m/%Y}.'.format(
                 opens_mock.return_value,
             ),
         )
