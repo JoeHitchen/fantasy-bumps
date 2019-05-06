@@ -9,6 +9,84 @@ from . import models
 from . import patching
 
 
+
+class Test__Day__Misc(TestCase):
+    
+    @classmethod
+    def setUpTestData(self):
+        self.event = models.Event(
+            name = 'Markets',
+            mens_divisions = 3,
+            womens_divisions = 3,
+            boats_per_division = 2,
+        )
+        self.event.save()
+    
+    
+    def test__string(self):
+        """Returns a day's name as it's string representation."""
+        
+        day = models.Day(
+            event = self.event,
+            name = 'Racing',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        day_str = str(day)
+        self.assertEqual(day_str, day.name)
+    
+    
+    def test__next__past(self):
+        """Returns None if there are no days in the future."""
+        
+        models.Day(
+            event = self.event,
+            name = 'Prev',
+            date = timezone.now() - timedelta(1),
+            first_race_time = time(hour = 12),
+        ).save()
+        
+        curr = models.Day(
+            event = self.event,
+            name = 'Next',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        curr.save()
+        
+        self.assertIsNone(curr.next)
+    
+    
+    def test__next__future(self):
+        """Returns the next day in the series if there are days in the future."""
+        
+        curr = models.Day(
+            event = self.event,
+            name = 'Next',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        curr.save()
+        
+        future_1 = models.Day(
+            event = self.event,
+            name = 'Future 1',
+            date = timezone.now() + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        future_1.save()
+        
+        models.Day(
+            event = self.event,
+            name = 'Future 2',
+            date = timezone.now() + timedelta(2),
+            first_race_time = time(hour = 12),
+        ).save()
+        
+        self.assertEqual(curr.next, future_1)
+
+
+
 class Test__Day(TestCase):
     fixtures = ['basic_event', 'start_orders']
     

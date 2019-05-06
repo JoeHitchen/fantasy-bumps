@@ -35,6 +35,12 @@ class Day(models.Model):
     def __str__(self):
         return self.name
     
+    @cached_property
+    def next(self):
+        """The next day of the event."""
+        return self.event.day_set.filter(date__gt = self.date).first()
+    
+    
     def start_order(self, gender):
         """Return the day's start order for the given gender.
         
