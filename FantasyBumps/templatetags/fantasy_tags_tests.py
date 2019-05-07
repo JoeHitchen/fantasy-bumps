@@ -1,6 +1,6 @@
 from datetime import time, timedelta
 
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.utils import timezone
 
 from external import models as ext
@@ -10,6 +10,7 @@ from .. import patching
 from . import fantasy_tags as tags
 
 
+@tag('market-status')
 class Test__Market_Status_Box(TestCase):
     
     @classmethod

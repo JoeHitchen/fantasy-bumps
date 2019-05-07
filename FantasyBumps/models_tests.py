@@ -1,6 +1,6 @@
 from datetime import time, timedelta
 
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.utils import timezone
 
 from external.constants import genders
@@ -145,7 +145,8 @@ class Test__Day(TestCase):
 
 
 
-class Test__Day__Markets(TestCase):
+@tag('market-status')
+class Test__Day__Market_Status(TestCase):
     
     @classmethod
     def setUpTestData(self):
