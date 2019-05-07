@@ -174,6 +174,43 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
+    def test__after_close_with_next(self):
+        """Returns a non-dismissable danger alert with the open time for the next day.
+        
+        WARNING: Contains non-standard mocking. May not fail if other code changes.
+        """
+        
+        # Create first day and fix return values
+        day = models.Day(
+            event = self.event,
+            name = 'Market Status',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        day.save()
+        day.market_opens = timezone.now() - timedelta(minutes = 5)  # Non-standard mocking
+        day.market_closes = timezone.now() - timedelta(minutes = 2)  # Non-standard mocking
+        
+        # Create later day
+        next = models.Day(
+            event = self.event,
+            name = 'Market Status 2',
+            date = timezone.now() + timedelta(2),  # Ensure market never opens today
+            first_race_time = time(hour = 12),
+        )
+        next.save()
+        
+        # Call and test method
+        props = tags.market_status_box(day)
+        
+        self.assertEqual(props['style'], 'danger')
+        self.assertFalse(props['dismissable'])
+        self.assertEqual(
+            props['message'],
+            'The market is closed, and will open at 20:00 tomorrow.',
+        )
+    
+    
     def test__non_racing_day(self):
         """Returns a non-dismissable danger alert."""
         
