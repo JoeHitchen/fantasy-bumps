@@ -212,7 +212,10 @@ class Test__Market_Status_Box(TestCase):
     
     
     def test__non_racing_day(self):
-        """Returns a non-dismissable danger alert."""
+        """Returns a non-dismissable danger alert.
+        
+        A special case of test__after_close since markets are always closed for non-racing days,
+        but market_opens and market_closes do not return datetime objects."""
         
         # Create day
         day = models.Day(
