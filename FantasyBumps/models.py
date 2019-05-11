@@ -114,11 +114,28 @@ class Day(models.Model):
 
 
 
+class Crew(models.Model):
+    """Describes a crew (e.g. New College W1)"""
+    
+    name = models.CharField(max_length = 40)
+    gender = models.CharField(
+        max_length = 1,
+        choices = [
+            (genders.MENS, "Men's"),
+            (genders.WOMENS, "Women's"),
+        ],
+    )
+    
+    def __str__(self):
+        return self.name
+
+
+
 class Position(models.Model):
     """A crew's position on the river for a given day."""
     
     day = models.ForeignKey(Day, models.CASCADE, related_name = 'positions')
-    crew = models.ForeignKey('external.Crew', models.PROTECT)
+    crew = models.ForeignKey(Crew, models.PROTECT)
     rank = models.PositiveSmallIntegerField()
     
     class Meta:
@@ -131,6 +148,6 @@ class Purchase(models.Model):
     
     team = models.ForeignKey('auth.User', models.CASCADE)
     day = models.ForeignKey(Day, models.CASCADE)
-    crew = models.ForeignKey('external.Crew', models.PROTECT)
+    crew = models.ForeignKey(Crew, models.PROTECT)
     seat = models.ForeignKey('external.Seat', models.PROTECT)
 

@@ -14,7 +14,7 @@ class Test__Buy(TestCase):
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
         self.day = models.Day.objects.first()
-        self.crew = ext_models.Crew.objects.first().id
+        self.crew = models.Crew.objects.first().id
         self.seat = ext_models.Seat.objects.first().id
     
     
@@ -76,7 +76,7 @@ class Test__Sell(TestCase):
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
         self.day = models.Day.objects.first()
-        self.crew = ext_models.Crew.objects.filter(gender = 'W').first()
+        self.crew = models.Crew.objects.filter(gender = 'W').first()
         self.seat = ext_models.Seat.objects.first()
     
     
@@ -215,7 +215,7 @@ class Test__Sell(TestCase):
     def test__save__ignores_other_gender(self, markets_mock):
         """Does not delete purchases of the other gender."""
         
-        other_crew = ext_models.Crew.objects.exclude(gender = self.crew.gender).first()
+        other_crew = models.Crew.objects.exclude(gender = self.crew.gender).first()
         
         models.Purchase(
             team = self.team,

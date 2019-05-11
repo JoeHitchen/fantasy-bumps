@@ -15,7 +15,7 @@ class Test__Get_Crew(TestCase):
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
         cls.day = models.Day.objects.first()
-        cls.crew = ext.Crew(gender = genders.WOMENS)
+        cls.crew = models.Crew(gender = genders.WOMENS)
         cls.crew.save()
     
     
@@ -132,7 +132,7 @@ class Test__Has_All_Seats(TestCase):
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Seats')
         cls.day = models.Day.objects.first()
-        cls.crew = ext.Crew(gender = genders.MENS)
+        cls.crew = models.Crew(gender = genders.MENS)
         cls.crew.save()
     
     

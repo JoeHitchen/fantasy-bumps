@@ -1,6 +1,5 @@
 from django.test import TestCase
 
-from .constants import genders
 from . import models
 
 
@@ -34,18 +33,4 @@ class Test__Seat(TestCase):
         
         seat = models.Seat(name = 'Name')
         self.assertEqual(str(seat), 'Name')
-
-
-
-class Test__Crew(TestCase):
-    
-    def test__string(self):
-        """Returns a crew's name as it's string representation."""
-        
-        crew = models.Crew(
-            name = 'New College W1',
-            gender = genders.WOMENS,
-        )
-        crew_str = str(crew)
-        self.assertEqual(crew_str, crew.name)
 

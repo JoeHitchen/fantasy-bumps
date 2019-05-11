@@ -318,3 +318,18 @@ class Test__Day__Market_Status(TestCase):
         
         self.assertFalse(day.market_is_open)
 
+
+
+@tag('events-core')
+class Test__Crew(TestCase):
+    
+    def test__string(self):
+        """Returns a crew's name as it's string representation."""
+        
+        crew = models.Crew(
+            name = 'New College W1',
+            gender = genders.WOMENS,
+        )
+        crew_str = str(crew)
+        self.assertEqual(crew_str, crew.name)
+
