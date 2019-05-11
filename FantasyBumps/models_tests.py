@@ -9,8 +9,8 @@ from . import models
 from . import patching
 
 
-
-class Test__Day__Misc(TestCase):
+@tag('events-core')
+class Test__Day__Core(TestCase):
     
     @classmethod
     def setUpTestData(self):
@@ -87,7 +87,8 @@ class Test__Day__Misc(TestCase):
 
 
 
-class Test__Day(TestCase):
+@tag('events-core')
+class Test__Day__Start_Orders(TestCase):
     fixtures = ['basic_event', 'start_orders']
     
     @classmethod
@@ -101,21 +102,21 @@ class Test__Day(TestCase):
         self.day = models.Day.objects.first()
     
     
-    def test__start_order__number_of_mens_divisions(self):
+    def test__number_of_mens_divisions(self):
         """Creates the correct number of divisions."""
         
         start_order = self.day.start_order(genders.MENS)
         self.assertEqual(len(start_order), 2)
     
     
-    def test__start_order__number_of_womens_divisions(self):
+    def test__number_of_womens_divisions(self):
         """Creates the correct number of divisions."""
         
         start_order = self.day.start_order(genders.WOMENS)
         self.assertEqual(len(start_order), 3)
     
     
-    def test__start_order__number_of_boats(self):
+    def test__number_of_boats(self):
         """Has the correct number of boats in each divisions."""
         
         start_order = self.day.start_order(genders.WOMENS)
@@ -124,7 +125,7 @@ class Test__Day(TestCase):
         self.assertEqual(start_order[2].count(), 3)  # Extra boat in last division
     
     
-    def test__start_order__womens_divisions(self):
+    def test__womens_divisions(self):
         """Only returns crews with the correct gender."""
         
         start_order = self.day.start_order(genders.WOMENS)
@@ -134,7 +135,7 @@ class Test__Day(TestCase):
         self.assertFalse(genders.MENS in div_genders)
     
     
-    def test__start_order__mens_divisions(self):
+    def test__mens_divisions(self):
         """Only returns crews with the correct gender."""
         
         start_order = self.day.start_order(genders.MENS)
