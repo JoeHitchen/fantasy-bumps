@@ -7,8 +7,8 @@ from django.contrib import messages
 from django.urls import reverse, resolve
 
 from external import models as ext_models
-from external.constants import genders
 
+from .constants import genders
 from . import models
 from . import utils
 from . import views

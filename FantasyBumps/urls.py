@@ -1,7 +1,6 @@
 from django.urls import path
 
-from external.constants import genders
-
+from .constants import genders
 from . import views
 
 

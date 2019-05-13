@@ -1,8 +1,8 @@
 from django.db.models import Count
 
 from external import models as ext
-from external.constants import genders
 
+from .constants import genders
 from . import models
 
 

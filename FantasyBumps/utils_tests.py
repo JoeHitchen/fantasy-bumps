@@ -2,8 +2,8 @@ from django.test import TestCase
 from django.contrib.auth import models as usr
 
 from external import models as ext
-from external.constants import genders
 
+from .constants import genders
 from . import models
 from . import utils
 

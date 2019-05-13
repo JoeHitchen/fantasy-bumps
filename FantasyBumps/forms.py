@@ -1,8 +1,8 @@
 from django import forms
 
 from external import models as ext_models
-from external.constants import genders
 
+from .constants import genders
 from . import models
 
 

@@ -3,8 +3,7 @@ from datetime import time, timedelta
 from django.test import TestCase, tag
 from django.utils import timezone
 
-from external.constants import genders
-
+from .constants import genders
 from . import models
 from . import patching
 

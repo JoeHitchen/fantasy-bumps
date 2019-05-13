@@ -4,7 +4,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from external.constants import genders
+from .constants import genders
 
 
 class Event(models.Model):
