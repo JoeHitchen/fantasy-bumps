@@ -1,6 +1,7 @@
 from django.db.models import Count
 
 from external import models as ext
+from external.constants import genders
 
 from . import models
 
@@ -21,4 +22,12 @@ def has_all_seats(purchases):
         raise ValueError('Seat filled too many times.')
     
     return all(seats_filled)
+
+
+def reverse_gender(gender):
+    """Return opposite gender constant to that provided."""
+    return {
+        genders.MENS: genders.WOMENS,
+        genders.WOMENS: genders.MENS,
+    }[gender]
 

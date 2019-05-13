@@ -4,7 +4,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse
 
-from external import utils as ext
 from external.constants import genders
 
 from . import models
@@ -37,7 +36,7 @@ class MarketView(TemplateView):
             context['crew'] = crew
             context['crew_valid'] = utils.has_all_seats(crew)
             
-            other_gender = ext.reverse_gender(gender)
+            other_gender = utils.reverse_gender(gender)
             other_crew = utils.get_crew(user, day, other_gender)
             context['other_crew_valid'] = utils.has_all_seats(other_crew)
         

@@ -267,3 +267,15 @@ class Test__Has_All_Seats(TestCase):
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('cox')
 
+
+
+class Test__Reverse_Gender(TestCase):
+    
+    def test__men_to_women(self):
+        """Returns opposite gender."""
+        self.assertEqual(utils.reverse_gender(genders.MENS), genders.WOMENS)
+    
+    def test__women_to_men(self):
+        """Returns opposite gender."""
+        self.assertEqual(utils.reverse_gender(genders.WOMENS), genders.MENS)
+
