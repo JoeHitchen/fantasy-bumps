@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.contrib.humanize.templatetags.humanize import naturalday
 
-from external import models as ext
+from .. import models
 
 register = template.Library()
 
@@ -91,7 +91,7 @@ def market_division_box(division, gender, number):
 
 @register.filter
 def seat_avatar(seat):
-    text = seat.short if isinstance(seat, ext.Seat) else 'E'
+    text = seat.short if isinstance(seat, models.Seat) else 'E'
     return format_html('<span class="seat-avatar">{}</span>', text)
 
 
@@ -140,7 +140,7 @@ def crew_list_row(seat, rower):
 def crew_list_box(context):
     seat_rowers = {seat: [
         rower for rower in context['crew'] if rower.seat == seat
-    ] for seat in ext.Seat.objects.all()}
+    ] for seat in models.Seat.objects.all()}
     
     context['crew'] = [(
         seat,

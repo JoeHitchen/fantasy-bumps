@@ -3,8 +3,7 @@ from datetime import time, timedelta
 from django.test import TestCase, tag
 from django.utils import timezone
 
-from external.constants import genders
-
+from .constants import genders
 from . import models
 from . import patching
 
@@ -317,4 +316,52 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertFalse(day.market_is_open)
+
+
+
+@tag('events-core')
+class Test__Crew(TestCase):
+    
+    def test__string(self):
+        """Returns a crew's name as it's string representation."""
+        
+        crew = models.Crew(
+            name = 'New College W1',
+            gender = genders.WOMENS,
+        )
+        crew_str = str(crew)
+        self.assertEqual(crew_str, crew.name)
+
+
+
+class Test__Seat(TestCase):
+    
+    def test__short__empty(self):
+        """Raises expected error when Seat.name empty."""
+        
+        seat = models.Seat(name = '')
+        
+        with self.assertRaises(IndexError):
+            seat.short
+    
+    
+    def test__short__one_char(self):
+        """Gives first character of Seat.name."""
+        
+        seat = models.Seat(name = 'S')
+        self.assertEqual(seat.short, 'S')
+    
+    
+    def test__short__multi_char(self):
+        """Gives first character of Seat.name."""
+        
+        seat = models.Seat(name = 'Seat')
+        self.assertEqual(seat.short, 'S')
+    
+    
+    def test__string(self):
+        """Returns a seat's name as it's string representation."""
+        
+        seat = models.Seat(name = 'Name')
+        self.assertEqual(str(seat), 'Name')
 

@@ -1,6 +1,6 @@
 [
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 1,
     "fields": {
       "name": "Oriel W1",
@@ -26,7 +26,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 2,
     "fields": {
       "name": "Wadham W1",
@@ -52,7 +52,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 3,
     "fields": {
       "name": "Pembroke W1",
@@ -78,7 +78,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 4,
     "fields": {
       "name": "Christ Church W1",
@@ -104,7 +104,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 5,
     "fields": {
       "name": "Keble W1",
@@ -130,7 +130,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 6,
     "fields": {
       "name": "Hertford W1",
@@ -156,7 +156,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 7,
     "fields": {
       "name": "Wolfson W1",
@@ -182,7 +182,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 8,
     "fields": {
       "name": "St John's W1",
@@ -199,7 +199,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 19,
     "fields": {
       "name": "New College W1",
@@ -216,7 +216,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 9,
     "fields": {
       "name": "Magdalen W1",
@@ -242,7 +242,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 10,
     "fields": {
       "name": "Oriel M1",
@@ -268,7 +268,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 11,
     "fields": {
       "name": "Pembroke M1",
@@ -294,7 +294,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 12,
     "fields": {
       "name": "Wadham M1",
@@ -320,7 +320,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 13,
     "fields": {
       "name": "Christ Church M1",
@@ -346,7 +346,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 14,
     "fields": {
       "name": "St Catherine's M1",
@@ -372,7 +372,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 15,
     "fields": {
       "name": "Wolfson M1",
@@ -398,7 +398,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 16,
     "fields": {
       "name": "Hertford M1",
@@ -424,7 +424,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 17,
     "fields": {
       "name": "Balliol M1",
@@ -450,7 +450,7 @@
     }
   },
   {
-    "model": "external.Crew",
+    "model": "FantasyBumps.Crew",
     "pk": 18,
     "fields": {
       "name": "Jesus M1",

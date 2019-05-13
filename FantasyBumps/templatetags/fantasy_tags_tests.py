@@ -3,8 +3,6 @@ from datetime import time, timedelta
 from django.test import TestCase, tag
 from django.utils import timezone
 
-from external import models as ext
-
 from .. import models
 from .. import patching
 from . import fantasy_tags as tags
@@ -262,7 +260,7 @@ class Test__Seat_Avatar(TestCase):
     def test__standard_use(self):
         """Returns a span with the 'seat-avatar' class, and containing seat.short."""
         
-        seat = ext.Seat(
+        seat = models.Seat(
             name = 'Seat',
             cox = False,
         )

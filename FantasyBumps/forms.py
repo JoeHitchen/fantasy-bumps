@@ -1,8 +1,6 @@
 from django import forms
 
-from external import models as ext_models
-from external.constants import genders
-
+from .constants import genders
 from . import models
 
 
@@ -45,7 +43,7 @@ class Buy(MarketFormMixin, forms.ModelForm):
 
 class Sell(MarketFormMixin, forms.Form):
     
-    seat = forms.ModelChoiceField(queryset = ext_models.Seat.objects.all())
+    seat = forms.ModelChoiceField(queryset = models.Seat.objects.all())
     gender = forms.ChoiceField(
         choices = [
             (genders.MENS, "Men's"),

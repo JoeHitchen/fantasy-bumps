@@ -6,9 +6,7 @@ from django.contrib.auth import models as usr
 from django.contrib import messages
 from django.urls import reverse, resolve
 
-from external import models as ext_models
-from external.constants import genders
-
+from .constants import genders
 from . import models
 from . import utils
 from . import views
@@ -51,10 +49,10 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
         cls.day = models.Day.objects.first()
         
-        cls.crew_mens = ext_models.Crew(gender = genders.MENS)
+        cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
         
-        cls.crew_womens = ext_models.Crew(gender = genders.WOMENS)
+        cls.crew_womens = models.Crew(gender = genders.WOMENS)
         cls.crew_womens.save()
     
     
@@ -107,7 +105,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
             team = self.team,
             day = self.day,
             crew = self.crew_mens,
-            seat = ext_models.Seat.objects.first(),
+            seat = models.Seat.objects.first(),
         ).save()
         
         crew = utils.get_crew(self.team, self.day, genders.MENS)
@@ -127,7 +125,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         Does not test response or default context.
         """
         
-        for seat in ext_models.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -152,7 +150,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         Does not test response or default context.
         """
         
-        for seat in ext_models.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -181,10 +179,10 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
         cls.day = models.Day.objects.first()
         
-        cls.crew_mens = ext_models.Crew(gender = genders.MENS)
+        cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
         
-        cls.crew_womens = ext_models.Crew(gender = genders.WOMENS)
+        cls.crew_womens = models.Crew(gender = genders.WOMENS)
         cls.crew_womens.save()
     
     
@@ -238,7 +236,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
             team = self.team,
             day = self.day,
             crew = self.crew_womens,
-            seat = ext_models.Seat.objects.first(),
+            seat = models.Seat.objects.first(),
         ).save()
         
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
@@ -258,7 +256,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         Does not test response or default context.
         """
         
-        for seat in ext_models.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -283,7 +281,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         Does not test response or default context.
         """
         
-        for seat in ext_models.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -335,10 +333,10 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     def setUpTestData(cls):
         cls.team = usr.User.objects.create_user('Buy', '', 'secret')
         
-        cls.crew = ext_models.Crew(name = 'A', gender = genders.MENS)
+        cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
         
-        cls.seat = ext_models.Seat.objects.get(name = 'Stroke')
+        cls.seat = models.Seat.objects.get(name = 'Stroke')
     
     
     def test__no_login(self):
@@ -397,16 +395,16 @@ class Test__Buy__Unit(TestCase):
     @classmethod
     def setUpTestData(cls):
         """N.B. Saving objects not necessary since no database lookups performed."""
-        cls.crew = ext_models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
+        cls.crew = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
         
-        cls.stroke = ext_models.Seat(name = 'Stroke', cox = False)
-        cls.cox = ext_models.Seat(name = 'Cox', cox = True)
+        cls.stroke = models.Seat(name = 'Stroke', cox = False)
+        cls.cox = models.Seat(name = 'Cox', cox = True)
     
     
     def test__get_success_url__men(self):
         """Returns a redirect to the relevant market place."""
         
-        mens_crew = ext_models.Crew(name = 'Hertford M1', gender = genders.MENS)
+        mens_crew = models.Crew(name = 'Hertford M1', gender = genders.MENS)
         
         view = views.BuyView()
         view.form_save_out = models.Purchase(crew = mens_crew)
@@ -460,10 +458,10 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         cls.team = usr.User.objects.create_user('Sell', '', 'secret')
         cls.day = models.Day.objects.first()
         
-        cls.crew = ext_models.Crew(name = 'A', gender = genders.MENS)
+        cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
         
-        cls.seat = ext_models.Seat.objects.get(name = 'Stroke')
+        cls.seat = models.Seat.objects.get(name = 'Stroke')
     
     
     def test__no_login(self):
@@ -529,8 +527,8 @@ class Test__Sell__Unit(TestCase):
     def setUpTestData(cls):
         """N.B. Saving objects not necessary since no database lookups performed."""
         
-        cls.stroke = ext_models.Seat(name = 'Stroke', cox = False)
-        cls.cox = ext_models.Seat(name = 'Cox', cox = True)
+        cls.stroke = models.Seat(name = 'Stroke', cox = False)
+        cls.cox = models.Seat(name = 'Cox', cox = True)
     
     
     def test__get_success_url__men(self):
