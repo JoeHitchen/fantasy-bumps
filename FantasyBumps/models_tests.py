@@ -332,3 +332,36 @@ class Test__Crew(TestCase):
         crew_str = str(crew)
         self.assertEqual(crew_str, crew.name)
 
+
+
+class Test__Seat(TestCase):
+    
+    def test__short__empty(self):
+        """Raises expected error when Seat.name empty."""
+        
+        seat = models.Seat(name = '')
+        
+        with self.assertRaises(IndexError):
+            seat.short
+    
+    
+    def test__short__one_char(self):
+        """Gives first character of Seat.name."""
+        
+        seat = models.Seat(name = 'S')
+        self.assertEqual(seat.short, 'S')
+    
+    
+    def test__short__multi_char(self):
+        """Gives first character of Seat.name."""
+        
+        seat = models.Seat(name = 'Seat')
+        self.assertEqual(seat.short, 'S')
+    
+    
+    def test__string(self):
+        """Returns a seat's name as it's string representation."""
+        
+        seat = models.Seat(name = 'Name')
+        self.assertEqual(str(seat), 'Name')
+

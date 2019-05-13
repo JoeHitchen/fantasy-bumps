@@ -143,11 +143,26 @@ class Position(models.Model):
 
 
 
+class Seat(models.Model):
+    """Describes a position within a boat."""
+    
+    name = models.CharField(max_length = 6)
+    cox = models.BooleanField()
+    
+    @property
+    def short(self):
+        return self.name[0]
+    
+    def __str__(self):
+        return self.name
+
+
+
 class Purchase(models.Model):
     """A purchase for a fantasy team."""
     
     team = models.ForeignKey('auth.User', models.CASCADE)
     day = models.ForeignKey(Day, models.CASCADE)
     crew = models.ForeignKey(Crew, models.PROTECT)
-    seat = models.ForeignKey('external.Seat', models.PROTECT)
+    seat = models.ForeignKey(Seat, models.PROTECT)
 

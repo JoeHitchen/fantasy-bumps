@@ -1,8 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import models as usr
 
-from external import models as ext
-
 from .constants import genders
 from . import models
 from . import utils
@@ -35,7 +33,7 @@ class Test__Get_Crew(TestCase):
             team = other_team,
             day = self.day,
             crew = self.crew,
-            seat = ext.Seat.objects.get(name = 'Bow'),
+            seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
@@ -52,7 +50,7 @@ class Test__Get_Crew(TestCase):
             team = self.team,
             day = other_day,
             crew = self.crew,
-            seat = ext.Seat.objects.get(name = 'Bow'),
+            seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
@@ -66,7 +64,7 @@ class Test__Get_Crew(TestCase):
             team = self.team,
             day = self.day,
             crew = self.crew,  # Is a women's crew
-            seat = ext.Seat.objects.get(name = 'Bow'),
+            seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
         crew = utils.get_crew(self.team, self.day, genders.MENS)
@@ -80,7 +78,7 @@ class Test__Get_Crew(TestCase):
             team = self.team,
             day = self.day,
             crew = self.crew,
-            seat = ext.Seat.objects.get(name = 'Bow'),
+            seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
@@ -90,7 +88,7 @@ class Test__Get_Crew(TestCase):
     def test__full_team(self):
         """Returns any purchases matching the criteria."""
         
-        for seat in ext.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -105,7 +103,7 @@ class Test__Get_Crew(TestCase):
     def test__duplicate_seats(self):
         """Returns any purchases matching the criteria, regardless of duplication."""
         
-        for seat in ext.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -117,7 +115,7 @@ class Test__Get_Crew(TestCase):
             team = self.team,
             day = self.day,
             crew = self.crew,
-            seat = ext.Seat.objects.get(name = 'Bow'),
+            seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
@@ -146,7 +144,7 @@ class Test__Has_All_Seats(TestCase):
     def test__all_seats(self):
         """Returns true if all seats are present exactly once."""
         
-        for seat in ext.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -161,7 +159,7 @@ class Test__Has_All_Seats(TestCase):
     def subtest__missing_seat(self, missing_seat):
         """Returns false if a specific seat is missing."""
         
-        for seat in ext.Seat.objects.exclude(name__iexact = missing_seat):
+        for seat in models.Seat.objects.exclude(name__iexact = missing_seat):
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -212,7 +210,7 @@ class Test__Has_All_Seats(TestCase):
     def subtest__extra_seat(self, extra_seat):
         """Raises ValueError if any seat present twice."""
         
-        for seat in ext.Seat.objects.all():
+        for seat in models.Seat.objects.all():
             models.Purchase(
                 team = self.team,
                 day = self.day,
@@ -220,7 +218,7 @@ class Test__Has_All_Seats(TestCase):
                 seat = seat,
             ).save()
         
-        extra_seat = ext.Seat.objects.get(name__iexact = extra_seat)
+        extra_seat = models.Seat.objects.get(name__iexact = extra_seat)
         models.Purchase(
             team = self.team,
             day = self.day,

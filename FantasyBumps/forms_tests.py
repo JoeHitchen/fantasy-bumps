@@ -1,8 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import models as usr
 
-from external import models as ext_models
-
 from . import models
 from . import forms
 from . import patching
@@ -15,7 +13,7 @@ class Test__Buy(TestCase):
         self.team = usr.User.objects.create_user('Buy')
         self.day = models.Day.objects.first()
         self.crew = models.Crew.objects.first().id
-        self.seat = ext_models.Seat.objects.first().id
+        self.seat = models.Seat.objects.first().id
     
     
     def test__init__kwargs_stored(self):
@@ -77,7 +75,7 @@ class Test__Sell(TestCase):
         self.team = usr.User.objects.create_user('Buy')
         self.day = models.Day.objects.first()
         self.crew = models.Crew.objects.filter(gender = 'W').first()
-        self.seat = ext_models.Seat.objects.first()
+        self.seat = models.Seat.objects.first()
     
     
     def test__init__kwargs_stored(self):
@@ -195,7 +193,7 @@ class Test__Sell(TestCase):
         models.Purchase(
             team = self.team,
             day = self.day,
-            seat = ext_models.Seat.objects.last(),
+            seat = models.Seat.objects.last(),
             crew = self.crew,
         ).save()
         self.assertEqual(models.Purchase.objects.count(), 1)
