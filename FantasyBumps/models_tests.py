@@ -2,6 +2,8 @@ from datetime import time, timedelta
 
 from django.test import TestCase, tag
 from django.utils import timezone
+from django.db import IntegrityError
+from django.contrib.auth import models as auth
 
 from .constants import genders
 from . import models
@@ -334,6 +336,28 @@ class Test__Crew(TestCase):
 
 
 
+@tag('events-core')
+class Test__Position(TestCase):
+    fixtures = ['basic_event']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.day = models.Day.objects.first()
+        cls.crew = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
+        cls.crew.save()
+    
+    
+    def test__unique_pair(self):
+        """Raises a DB IntegrityError if a duplicate day/crew pairing created."""
+        
+        position1 = models.Position(day = self.day, crew = self.crew, rank = 1)
+        position2 = models.Position(day = self.day, crew = self.crew, rank = 2)
+        
+        position1.save()
+        self.assertRaises(IntegrityError, position2.save)
+
+
+
 class Test__Seat(TestCase):
     
     def test__short__empty(self):
@@ -364,4 +388,41 @@ class Test__Seat(TestCase):
         
         seat = models.Seat(name = 'Name')
         self.assertEqual(str(seat), 'Name')
+
+
+
+class Test__Purchase(TestCase):
+    fixtures = ['basic_event', 'seats']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = auth.User.objects.create_user('Team', '', 'pass')
+        cls.day = models.Day.objects.first()
+        
+        cls.crew1 = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
+        cls.crew1.save()
+        cls.crew2 = models.Crew(name = 'Hertford W2', gender = genders.WOMENS)
+        cls.crew2.save()
+        
+        cls.seat = models.Seat.objects.first()
+    
+    
+    def test__unique_group(self):
+        """Raises a DB IntegrityError if a duplicate team/day/seat group created."""
+        
+        purchase1 = models.Purchase(
+            team = self.team,
+            day = self.day,
+            crew = self.crew1,
+            seat = self.seat,
+        )
+        purchase2 = models.Purchase(
+            team = self.team,
+            day = self.day,
+            crew = self.crew2,
+            seat = self.seat,
+        )
+        
+        purchase1.save()
+        self.assertRaises(IntegrityError, purchase2.save)
 

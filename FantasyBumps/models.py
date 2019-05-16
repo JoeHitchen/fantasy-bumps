@@ -140,6 +140,7 @@ class Position(models.Model):
     
     class Meta:
         ordering = ['day', 'rank']
+        unique_together = ['day', 'crew']
 
 
 
@@ -165,4 +166,7 @@ class Purchase(models.Model):
     day = models.ForeignKey(Day, models.CASCADE)
     crew = models.ForeignKey(Crew, models.PROTECT)
     seat = models.ForeignKey(Seat, models.PROTECT)
+    
+    class Meta:
+        unique_together = ['team', 'day', 'seat']
 
