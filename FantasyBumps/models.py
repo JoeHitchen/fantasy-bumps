@@ -66,6 +66,11 @@ class Day(models.Model):
     
     
     def start_order(self, gender):
+        """Builds the day and gender's start order from the start order of each division."""
+        return [division.start_order for division in self.divisions(gender)]
+    
+    
+    def start_order_old(self, gender):
         """Return the day's start order for the given gender.
         
         The number of division and number of boats per division is taken from then parent event,

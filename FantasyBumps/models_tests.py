@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from unittest.mock import patch, PropertyMock
 
 from django.test import TestCase, tag
 from django.utils import timezone
@@ -141,6 +142,44 @@ class Test__Day__Start_Orders(TestCase):
         div3 = divisions[2]
         self.assertEqual(div3.top_bungline, 5)
         self.assertEqual(div3.bottom_bungline, 7)
+    
+    
+    @patch.object(models.Day, 'divisions', autospec = True)
+    def test__start_order__mens(self, day_divisions_mock):
+        """Passes the gender argument onto the divisions method."""
+        
+        # Get start orders
+        self.day.start_order(genders.MENS)
+        self.day.divisions.assert_called_once_with(genders.MENS)
+    
+    
+    @patch.object(models.Day, 'divisions', autospec = True)
+    def test__start_order__womens(self, day_divisions_mock):
+        """Passes the gender argument onto the divisions method."""
+        
+        # Get start orders
+        self.day.start_order(genders.WOMENS)
+        self.day.divisions.assert_called_once_with(genders.WOMENS)
+    
+    
+    @patch.object(
+        models.Division,
+        'start_order',
+        new_callable = PropertyMock,
+        side_effect = ['Call 1', 'Call 2', 'Call 3'],
+    )
+    def test__start_order__behaviour(self, start_order_mock):
+        """Iteratively calls `start_order` on each division.
+        
+        ## Only tests that Division.start_order used three times. ##
+        """
+        
+        # Get start orders
+        start_order = self.day.start_order(genders.WOMENS)
+        self.assertEqual(
+            start_order,
+            ['Call 1', 'Call 2', 'Call 3'],
+        )
     
     
     def test__number_of_mens_divisions(self):
