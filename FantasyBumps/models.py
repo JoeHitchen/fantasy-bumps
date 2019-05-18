@@ -1,4 +1,5 @@
 from datetime import datetime, time, timedelta
+from functools import lru_cache
 
 from django.db import models
 from django.utils import timezone
@@ -39,6 +40,29 @@ class Day(models.Model):
     def next(self):
         """The next day of the event."""
         return self.event.day_set.filter(date__gt = self.date).first()
+    
+    
+    @lru_cache(maxsize=2)
+    def divisions(self, gender):
+        """Generates the division structure for the day."""
+        
+        # Get number of divisions
+        number_of_divisions = {
+            genders.MENS: self.event.mens_divisions,
+            genders.WOMENS: self.event.womens_divisions,
+        }[gender]
+        
+        # Create division structure
+        return [
+            Division(
+                day = self,
+                gender = gender,
+                top_bungline = (division_number - 1) * self.event.boats_per_division + 1,
+                bottom_bungline = division_number * self.event.boats_per_division
+                + int(division_number == number_of_divisions),
+            )
+            for division_number in range(1, number_of_divisions + 1)
+        ]
     
     
     def start_order(self, gender):

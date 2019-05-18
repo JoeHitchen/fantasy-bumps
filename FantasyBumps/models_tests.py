@@ -103,6 +103,46 @@ class Test__Day__Start_Orders(TestCase):
         self.day = models.Day.objects.first()
     
     
+    def test__divisions__mens(self):
+        """Has the division structure as described by the event."""
+        
+        # Get divisions
+        divisions = self.day.divisions(genders.MENS)
+        
+        # Test division structure
+        self.assertEqual(len(divisions), 2)
+        
+        div1 = divisions[0]
+        self.assertEqual(div1.top_bungline, 1)
+        self.assertEqual(div1.bottom_bungline, 2)
+        
+        div2 = divisions[1]
+        self.assertEqual(div2.top_bungline, 3)
+        self.assertEqual(div2.bottom_bungline, 5)
+    
+    
+    def test__divisions__womens(self):
+        """Has the division structure as described by the event."""
+        
+        # Get divisions
+        divisions = self.day.divisions(genders.WOMENS)
+        
+        # Test division structure
+        self.assertEqual(len(divisions), 3)
+        
+        div1 = divisions[0]
+        self.assertEqual(div1.top_bungline, 1)
+        self.assertEqual(div1.bottom_bungline, 2)
+        
+        div2 = divisions[1]
+        self.assertEqual(div2.top_bungline, 3)
+        self.assertEqual(div2.bottom_bungline, 4)
+        
+        div3 = divisions[2]
+        self.assertEqual(div3.top_bungline, 5)
+        self.assertEqual(div3.bottom_bungline, 7)
+    
+    
     def test__number_of_mens_divisions(self):
         """Creates the correct number of divisions."""
         
