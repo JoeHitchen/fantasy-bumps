@@ -322,6 +322,59 @@ class Test__Day__Market_Status(TestCase):
 
 
 @tag('events-core')
+class Test__Division(TestCase):
+    fixtures = ['basic_event', 'start_orders']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.day = models.Day.objects.first()
+    
+    def test__start_order__full(self):
+        """Generates a list of crews for the division with bungline numbers."""
+        
+        # Generate start order
+        start_order = models.Division(
+            day = self.day,
+            gender = genders.WOMENS,
+            top_bungline = 3,
+            bottom_bungline = 8,
+        ).start_order
+        
+        self.assertEqual(start_order.count(), 6)
+        
+        # Iterate over start order objects
+        for idx, position in enumerate(start_order):
+            with self.subTest(idx = idx):
+                
+                # Test individual bungline
+                self.assertEqual(position.bungline, idx + 1)
+                self.assertEqual(position.crew.gender, genders.WOMENS)
+                self.assertTrue(position.rank >= 3)
+                self.assertTrue(position.rank <= 8)
+    
+    
+    def test__start_order__partial(self):
+        """Safely excludes missing bunglines from the returned data."""
+        
+        # Leave position 7 (Bungline 5) empty
+        models.Position.objects.filter(crew__gender = genders.WOMENS, rank = 7).delete()
+        
+        # Generate start order
+        start_order = models.Division(
+            day = self.day,
+            gender = genders.WOMENS,
+            top_bungline = 3,
+            bottom_bungline = 8,
+        ).start_order
+        
+        # Check for missing bungline
+        self.assertEqual(start_order.count(), 5)
+        bunglines = start_order.values_list('bungline', flat = True)
+        self.assertNotIn(5, bunglines)
+
+
+
+@tag('events-core')
 class Test__Crew(TestCase):
     
     def test__string(self):

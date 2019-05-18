@@ -114,6 +114,32 @@ class Day(models.Model):
 
 
 
+class Division:
+    """Temporary objects for storing division information and start orders."""
+    
+    def __init__(self, day, gender, top_bungline, bottom_bungline):
+        """Sets provided arguments as properties."""
+        
+        self.day = day
+        self.gender = gender
+        self.top_bungline = top_bungline
+        self.bottom_bungline = bottom_bungline
+    
+    
+    @cached_property
+    def start_order(self):
+        """Generates start order and bungline numbers (excluding sandwich boat)."""
+        
+        return self.day.positions.filter(
+            crew__gender = self.gender,
+            rank__gte = self.top_bungline,
+            rank__lte = self.bottom_bungline,
+        ).annotate(
+            bungline = models.F('rank') - self.top_bungline + 1,
+        )
+
+
+
 class Crew(models.Model):
     """Describes a crew (e.g. New College W1)"""
     
