@@ -70,37 +70,6 @@ class Day(models.Model):
         return [division.start_order for division in self.divisions(gender)]
     
     
-    def start_order_old(self, gender):
-        """Return the day's start order for the given gender.
-        
-        The number of division and number of boats per division is taken from then parent event,
-        and an extra boat is added to the last division.
-        """
-        
-        # Get number of divisions
-        number_of_divisions = {
-            genders.MENS: self.event.mens_divisions,
-            genders.WOMENS: self.event.womens_divisions,
-        }[gender]
-        
-        # Create division slices
-        slices = [
-            slice(
-                self.event.boats_per_division * (division - 1),
-                self.event.boats_per_division * division,
-            )
-            for division in range(1, number_of_divisions)
-        ]
-        slices.append(slice(
-            self.event.boats_per_division * (number_of_divisions - 1),
-            self.event.boats_per_division * number_of_divisions + 1,
-        ))
-        
-        # Create start order
-        ranking = self.positions.filter(crew__gender = gender)
-        return [ranking[slice] for slice in slices]
-    
-    
     @cached_property
     def market_opens(self):
         """Gives the time that markets open for trading, for racing days.
