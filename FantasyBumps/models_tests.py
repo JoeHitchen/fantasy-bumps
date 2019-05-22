@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+from unittest.mock import patch, PropertyMock
 
 from django.test import TestCase, tag
 from django.utils import timezone
@@ -103,47 +104,82 @@ class Test__Day__Start_Orders(TestCase):
         self.day = models.Day.objects.first()
     
     
-    def test__number_of_mens_divisions(self):
-        """Creates the correct number of divisions."""
+    def test__divisions__mens(self):
+        """Has the division structure as described by the event."""
         
-        start_order = self.day.start_order(genders.MENS)
-        self.assertEqual(len(start_order), 2)
+        # Get divisions
+        divisions = self.day.divisions(genders.MENS)
+        
+        # Test division structure
+        self.assertEqual(len(divisions), 2)
+        
+        div1 = divisions[0]
+        self.assertEqual(div1.top_bungline, 1)
+        self.assertEqual(div1.bottom_bungline, 2)
+        
+        div2 = divisions[1]
+        self.assertEqual(div2.top_bungline, 3)
+        self.assertEqual(div2.bottom_bungline, 5)
     
     
-    def test__number_of_womens_divisions(self):
-        """Creates the correct number of divisions."""
+    def test__divisions__womens(self):
+        """Has the division structure as described by the event."""
         
+        # Get divisions
+        divisions = self.day.divisions(genders.WOMENS)
+        
+        # Test division structure
+        self.assertEqual(len(divisions), 3)
+        
+        div1 = divisions[0]
+        self.assertEqual(div1.top_bungline, 1)
+        self.assertEqual(div1.bottom_bungline, 2)
+        
+        div2 = divisions[1]
+        self.assertEqual(div2.top_bungline, 3)
+        self.assertEqual(div2.bottom_bungline, 4)
+        
+        div3 = divisions[2]
+        self.assertEqual(div3.top_bungline, 5)
+        self.assertEqual(div3.bottom_bungline, 7)
+    
+    
+    @patch.object(models.Day, 'divisions', autospec = True)
+    def test__start_order__mens(self, day_divisions_mock):
+        """Passes the gender argument onto the divisions method."""
+        
+        # Get start orders
+        self.day.start_order(genders.MENS)
+        self.day.divisions.assert_called_once_with(genders.MENS)
+    
+    
+    @patch.object(models.Day, 'divisions', autospec = True)
+    def test__start_order__womens(self, day_divisions_mock):
+        """Passes the gender argument onto the divisions method."""
+        
+        # Get start orders
+        self.day.start_order(genders.WOMENS)
+        self.day.divisions.assert_called_once_with(genders.WOMENS)
+    
+    
+    @patch.object(
+        models.Division,
+        'start_order',
+        new_callable = PropertyMock,
+        side_effect = ['Call 1', 'Call 2', 'Call 3'],
+    )
+    def test__start_order__behaviour(self, start_order_mock):
+        """Iteratively calls `start_order` on each division.
+        
+        ## Only tests that Division.start_order used three times. ##
+        """
+        
+        # Get start orders
         start_order = self.day.start_order(genders.WOMENS)
-        self.assertEqual(len(start_order), 3)
-    
-    
-    def test__number_of_boats(self):
-        """Has the correct number of boats in each divisions."""
-        
-        start_order = self.day.start_order(genders.WOMENS)
-        self.assertEqual(start_order[0].count(), 2)
-        self.assertEqual(start_order[1].count(), 2)
-        self.assertEqual(start_order[2].count(), 3)  # Extra boat in last division
-    
-    
-    def test__womens_divisions(self):
-        """Only returns crews with the correct gender."""
-        
-        start_order = self.day.start_order(genders.WOMENS)
-        
-        div_genders = start_order[0].values_list('crew__gender', flat = True)
-        self.assertTrue(genders.WOMENS in div_genders)
-        self.assertFalse(genders.MENS in div_genders)
-    
-    
-    def test__mens_divisions(self):
-        """Only returns crews with the correct gender."""
-        
-        start_order = self.day.start_order(genders.MENS)
-        
-        div_genders = start_order[0].values_list('crew__gender', flat = True)
-        self.assertFalse(genders.WOMENS in div_genders)
-        self.assertTrue(genders.MENS in div_genders)
+        self.assertEqual(
+            start_order,
+            ['Call 1', 'Call 2', 'Call 3'],
+        )
 
 
 
@@ -318,6 +354,59 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertFalse(day.market_is_open)
+
+
+
+@tag('events-core')
+class Test__Division(TestCase):
+    fixtures = ['basic_event', 'start_orders']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.day = models.Day.objects.first()
+    
+    def test__start_order__full(self):
+        """Generates a list of crews for the division with bungline numbers."""
+        
+        # Generate start order
+        start_order = models.Division(
+            day = self.day,
+            gender = genders.WOMENS,
+            top_bungline = 3,
+            bottom_bungline = 8,
+        ).start_order
+        
+        self.assertEqual(start_order.count(), 6)
+        
+        # Iterate over start order objects
+        for idx, position in enumerate(start_order):
+            with self.subTest(idx = idx):
+                
+                # Test individual bungline
+                self.assertEqual(position.bungline, idx + 1)
+                self.assertEqual(position.crew.gender, genders.WOMENS)
+                self.assertTrue(position.rank >= 3)
+                self.assertTrue(position.rank <= 8)
+    
+    
+    def test__start_order__partial(self):
+        """Safely excludes missing bunglines from the returned data."""
+        
+        # Leave position 7 (Bungline 5) empty
+        models.Position.objects.filter(crew__gender = genders.WOMENS, rank = 7).delete()
+        
+        # Generate start order
+        start_order = models.Division(
+            day = self.day,
+            gender = genders.WOMENS,
+            top_bungline = 3,
+            bottom_bungline = 8,
+        ).start_order
+        
+        # Check for missing bungline
+        self.assertEqual(start_order.count(), 5)
+        bunglines = start_order.values_list('bungline', flat = True)
+        self.assertNotIn(5, bunglines)
 
 
 

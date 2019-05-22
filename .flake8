@@ -15,6 +15,7 @@ ignore =
     E303,
     W293,
     W391,
+    W503,
 
 import-order-style = pep8app
 application-package-names = 

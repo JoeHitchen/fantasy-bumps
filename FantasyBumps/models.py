@@ -1,4 +1,5 @@
 from datetime import datetime, time, timedelta
+from functools import lru_cache
 
 from django.db import models
 from django.utils import timezone
@@ -41,12 +42,9 @@ class Day(models.Model):
         return self.event.day_set.filter(date__gt = self.date).first()
     
     
-    def start_order(self, gender):
-        """Return the day's start order for the given gender.
-        
-        The number of division and number of boats per division is taken from then parent event,
-        and an extra boat is added to the last division.
-        """
+    @lru_cache(maxsize=2)
+    def divisions(self, gender):
+        """Generates the division structure for the day."""
         
         # Get number of divisions
         number_of_divisions = {
@@ -54,22 +52,22 @@ class Day(models.Model):
             genders.WOMENS: self.event.womens_divisions,
         }[gender]
         
-        # Create division slices
-        slices = [
-            slice(
-                self.event.boats_per_division * (division - 1),
-                self.event.boats_per_division * division,
+        # Create division structure
+        return [
+            Division(
+                day = self,
+                gender = gender,
+                top_bungline = (division_number - 1) * self.event.boats_per_division + 1,
+                bottom_bungline = division_number * self.event.boats_per_division
+                + int(division_number == number_of_divisions),
             )
-            for division in range(1, number_of_divisions)
+            for division_number in range(1, number_of_divisions + 1)
         ]
-        slices.append(slice(
-            self.event.boats_per_division * (number_of_divisions - 1),
-            self.event.boats_per_division * number_of_divisions + 1,
-        ))
-        
-        # Create start order
-        ranking = self.positions.filter(crew__gender = gender)
-        return [ranking[slice] for slice in slices]
+    
+    
+    def start_order(self, gender):
+        """Builds the day and gender's start order from the start order of each division."""
+        return [division.start_order for division in self.divisions(gender)]
     
     
     @cached_property
@@ -111,6 +109,32 @@ class Day(models.Model):
         if not self.first_race_time:
             return False
         return self.market_opens <= timezone.now() < self.market_closes
+
+
+
+class Division:
+    """Temporary objects for storing division information and start orders."""
+    
+    def __init__(self, day, gender, top_bungline, bottom_bungline):
+        """Sets provided arguments as properties."""
+        
+        self.day = day
+        self.gender = gender
+        self.top_bungline = top_bungline
+        self.bottom_bungline = bottom_bungline
+    
+    
+    @cached_property
+    def start_order(self):
+        """Generates start order and bungline numbers (excluding sandwich boat)."""
+        
+        return self.day.positions.filter(
+            crew__gender = self.gender,
+            rank__gte = self.top_bungline,
+            rank__lte = self.bottom_bungline,
+        ).annotate(
+            bungline = models.F('rank') - self.top_bungline + 1,
+        )
 
 
 
