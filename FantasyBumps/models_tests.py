@@ -12,6 +12,26 @@ from . import patching
 
 
 @tag('events-core')
+class Test__Event(TestCase):
+    
+    @classmethod
+    def setUpTestData(self):
+        self.event = models.Event(
+            name = 'Test Event',
+            mens_divisions = 3,
+            womens_divisions = 3,
+            boats_per_division = 2,
+        )
+        self.event.save()
+    
+    def test__string(self):
+        """Returns an event's name as its string representation."""
+        
+        self.assertEqual(str(self.event), 'Test Event')
+
+
+
+@tag('events-core')
 class Test__Day__Core(TestCase):
     
     @classmethod
