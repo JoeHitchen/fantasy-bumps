@@ -19,6 +19,23 @@ class Event(models.Model):
     
     def __str__(self):
         return self.name
+    
+    
+    @cached_property
+    def active_day(self):
+        """The active/most currently relevant day of the event.
+        
+        Before 8pm -> The first day from today onwards.
+        After 8pm -> The first day from tomorrow onwards.
+        After the event -> Last day of the event.
+        """
+        
+        now = timezone.now()
+        day_shift = timedelta(1) if now.time() >= time(20, 00) else timedelta(0)
+        date = now.date() + day_shift
+        
+        day = self.day_set.filter(date__gte = date).first()
+        return day if day else self.day_set.last()
 
 
 

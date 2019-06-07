@@ -1,6 +1,23 @@
 from unittest.mock import patch, PropertyMock
+from datetime import datetime, time
+
+from django.utils import timezone
 
 from . import models
+
+
+def timezone_now_time(hour, minute = 0, second = 0):
+    
+    now = timezone.now()
+    
+    return patch(
+        'django.utils.timezone.now',
+        return_value = datetime.combine(
+            now.date(),
+            time(hour, minute, second),
+            tzinfo = now.tzinfo,
+        ),
+    )
 
 
 def market_opens(datetime):

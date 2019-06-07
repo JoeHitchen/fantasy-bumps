@@ -23,11 +23,80 @@ class Test__Event(TestCase):
             boats_per_division = 2,
         )
         self.event.save()
+        
+        # Prepare days
+        self.yesterday = models.Day(
+            event = self.event,
+            name = 'Yesterday',
+            date = timezone.now() - timedelta(1),
+        )
+        self.yesterday.save()
+        self.today = models.Day(
+            event = self.event,
+            name = 'Today',
+            date = timezone.now(),
+        )
+        self.today.save()
+        self.tomorrow = models.Day(
+            event = self.event,
+            name = 'Tomorrow',
+            date = timezone.now() + timedelta(1),
+        )  # Saved per-test due to isolation conflict
+        self.future = models.Day(
+            event = self.event,
+            name = 'Future',
+            date = timezone.now() + timedelta(2),
+        )  # Saved per-test due to isolation conflict
+    
+    
+    def setUp(self):
+        
+        # Save future days for delete-safe test isolation
+        self.tomorrow.save()
+        self.future.save()
+        
+        # Clear event cache
+        self.event.active_day
+        del self.event.active_day
+    
     
     def test__string(self):
         """Returns an event's name as its string representation."""
         
         self.assertEqual(str(self.event), 'Test Event')
+    
+    
+    @patching.timezone_now_time(19, 59)
+    def test__before_rollover(self, timezone_mock):
+        """Returns first day from today onwards before 8pm."""
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.today,
+        )
+    
+    
+    @patching.timezone_now_time(20, 00)
+    def test__after_rollover(self, timezone_mock):
+        """Returns first day from tomorrow onwards before 8pm."""
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.tomorrow,
+        )
+    
+    
+    @patching.timezone_now_time(20, 00)
+    def test__after_event(self, timezone_mock):
+        """Returns last day of the event, if all have passed."""
+        
+        self.tomorrow.delete()
+        self.future.delete()
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.today,
+        )
 
 
 
