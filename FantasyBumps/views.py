@@ -1,3 +1,4 @@
+from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,6 +13,21 @@ from . import utils
 
 class IndexView(TemplateView):
     template_name = 'fantasybumps/index.html'
+
+
+
+class EventView(DetailView):
+    """A base view and index for event-specific pages."""
+    
+    # View settings
+    model = models.Event
+    slug_url_kwarg = 'event_tag'
+    slug_field = 'tag'
+    template_name = 'fantasybumps/event.html'
+    
+    def get_context_data(self, **kwargs):
+        self.event = self.object  # Provide friendly name for retrived event.
+        return super().get_context_data(**kwargs)
 
 
 
