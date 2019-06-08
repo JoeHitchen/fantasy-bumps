@@ -89,12 +89,15 @@ class StartOrdersMixin:
 
 class Test__Market_Men(TestCase, StartOrdersMixin):
     fixtures = ['seats', 'basic_event', 'start_orders']
-    url = reverse('fantasybumps:men')
+    url_name = 'fantasybumps:men'
     
     @classmethod
     def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
+        cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
+        
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = models.Day.objects.first()
+        cls.day = cls.event.active_day
         
         cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -114,7 +117,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            models.Day.objects.first().start_order(genders.MENS),
+            self.day.start_order(genders.MENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -134,7 +137,7 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Men')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            models.Day.objects.first().start_order(genders.MENS),
+            self.day.start_order(genders.MENS),
         )
         
         self.assertTrue('crew' in response.context)
@@ -219,12 +222,15 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
 
 class Test__Market_Women(TestCase, StartOrdersMixin):
     fixtures = ['seats', 'basic_event', 'start_orders']
-    url = reverse('fantasybumps:women')
+    url_name = 'fantasybumps:women'
     
     @classmethod
     def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
+        cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
+        
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = models.Day.objects.first()
+        cls.day = cls.event.active_day
         
         cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -245,7 +251,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            models.Day.objects.first().start_order(genders.WOMENS),
+            self.day.start_order(genders.WOMENS),
         )
         
         self.assertFalse('crew' in response.context)
@@ -265,7 +271,7 @@ class Test__Market_Women(TestCase, StartOrdersMixin):
         self.assertEqual(response.context['gender'], 'Women')
         self.assertStartOrderEqual(
             response.context['start_order'],
-            models.Day.objects.first().start_order(genders.WOMENS),
+            self.day.start_order(genders.WOMENS),
         )
         
         self.assertTrue('crew' in response.context)

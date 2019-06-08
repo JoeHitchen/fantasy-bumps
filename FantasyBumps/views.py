@@ -31,16 +31,20 @@ class EventView(DetailView):
 
 
 
-class MarketView(TemplateView):
+class MarketView(EventView):
+    """Presents the market pages for an event."""
+    
+    # View settings
     template_name = 'fantasybumps/market.html'
+    
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        gender = context['gender']
+        gender = self.kwargs['gender']
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
-        day = models.Day.objects.first()
+        day = self.event.active_day
         context['day'] = day
         context['start_order'] = day.start_order(gender)
         
