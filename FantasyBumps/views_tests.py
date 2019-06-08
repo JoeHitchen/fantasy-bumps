@@ -72,32 +72,18 @@ class Test__Simple(TestCase):
 
 
 
-class StartOrdersMixin:
-    
-    def assertStartOrderEqual(self, received, expected):
-        """Checks that two start orders are the same."""
-        
-        self.assertEqual(len(received), len(expected))
-        for i, division in enumerate(expected):
-            with self.subTest(index = i):
-                self.assertEqual(
-                    list(received[i]),
-                    list(division),
-                )
-
-
-
-class Test__Market_Men(TestCase, StartOrdersMixin):
+class MarketTestBase():
     fixtures = ['seats', 'basic_event', 'start_orders']
-    url_name = 'fantasybumps:men'
     
     @classmethod
     def setUpTestData(cls):
+        
         cls.event = models.Event.objects.first()
+        cls.day = cls.event.active_day
+        
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = cls.event.active_day
         
         cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -106,18 +92,31 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         cls.crew_womens.save()
     
     
-    def test__without_user(self):
-        """Renders the market page for the men's competition."""
+    def test__generic__unknown_event(self):
+        """Returns a 404 response if the event tag is not recognised."""
+        
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': 'unknown'},
+        ))
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__generic__without_user(self):
+        """Renders the market page for the relevant competition, but does not include team info."""
         
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
-        self.assertEqual(response.context['gender'], 'Men')
-        self.assertStartOrderEqual(
+        self.assertEqual(response.context['event'], self.event)
+        self.assertEqual(response.context['day'], self.day)
+        
+        self.assertEqual(response.context['gender'], self.gender_info['text'])
+        self.assertEqual(
             response.context['start_order'],
-            self.day.start_order(genders.MENS),
+            self.day.start_order(self.gender_info['code']),
         )
         
         self.assertFalse('crew' in response.context)
@@ -125,8 +124,8 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertFalse('other_crew_valid' in response.context)
     
     
-    def test__with_user(self):
-        """Renders the market page with details of the user's team."""
+    def test__generic__with_user(self):
+        """Renders the market page for the relevant competition with details of the user's team."""
         
         self.client.login(username='Market', password='secret')
         response = self.client.get(self.url)
@@ -134,16 +133,29 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
-        self.assertEqual(response.context['gender'], 'Men')
-        self.assertStartOrderEqual(
+        self.assertEqual(response.context['event'], self.event)
+        self.assertEqual(response.context['day'], self.day)
+        
+        self.assertEqual(response.context['gender'], self.gender_info['text'])
+        self.assertEqual(
             response.context['start_order'],
-            self.day.start_order(genders.MENS),
+            self.day.start_order(self.gender_info['code']),
         )
         
         self.assertTrue('crew' in response.context)
         self.assertTrue('crew_valid' in response.context)
         self.assertTrue('other_crew_valid' in response.context)
+
+
+
+class Test__Market_Men(MarketTestBase, TestCase):
     
+    # Test settings
+    url_name = 'fantasybumps:men'
+    gender_info = {
+        'text': 'Men',
+        'code': genders.MENS,
+    }
     
     def test__partial_crew(self):
         """
@@ -220,64 +232,14 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
 
 
 
-class Test__Market_Women(TestCase, StartOrdersMixin):
-    fixtures = ['seats', 'basic_event', 'start_orders']
+class Test__Market_Women(MarketTestBase, TestCase):
+    
+    # Test settings
     url_name = 'fantasybumps:women'
-    
-    @classmethod
-    def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
-        cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
-        
-        cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = cls.event.active_day
-        
-        cls.crew_mens = models.Crew(gender = genders.MENS)
-        cls.crew_mens.save()
-        
-        cls.crew_womens = models.Crew(gender = genders.WOMENS)
-        cls.crew_womens.save()
-    
-    
-    def test__without_user(self):
-        """Renders the market page for the women's competition."""
-        
-        response = self.client.get(self.url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/market.html')
-        
-        
-        self.assertEqual(response.context['gender'], 'Women')
-        self.assertStartOrderEqual(
-            response.context['start_order'],
-            self.day.start_order(genders.WOMENS),
-        )
-        
-        self.assertFalse('crew' in response.context)
-        self.assertFalse('crew_valid' in response.context)
-        self.assertFalse('other_crew_valid' in response.context)
-    
-    
-    def test__with_user(self):
-        """Adds additional context about logged-in user's crews."""
-        
-        self.client.login(username='Market', password='secret')
-        response = self.client.get(self.url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/market.html')
-        
-        self.assertEqual(response.context['gender'], 'Women')
-        self.assertStartOrderEqual(
-            response.context['start_order'],
-            self.day.start_order(genders.WOMENS),
-        )
-        
-        self.assertTrue('crew' in response.context)
-        self.assertTrue('crew_valid' in response.context)
-        self.assertTrue('other_crew_valid' in response.context)
-    
+    gender_info = {
+        'text': 'Women',
+        'code': genders.WOMENS,
+    }
     
     def test__partial_crew(self):
         """
