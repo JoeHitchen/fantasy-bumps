@@ -4,6 +4,7 @@
     "pk": 1,
     "fields": {
       "name": "Test Event",
+      "tag": "test2019",
       "mens_divisions": 2,
       "womens_divisions": 2,
       "boats_per_division": 4

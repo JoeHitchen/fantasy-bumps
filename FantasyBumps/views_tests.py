@@ -13,7 +13,14 @@ from . import views
 from . import patching
 
 
-class Test__Index(TestCase):
+class Test__Simple(TestCase):
+    """Tests simple views that do not justify separate test classes."""
+    fixtures = ['basic_event']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
+    
     
     def test__index(self):
         """Renders the index page."""
@@ -22,32 +29,65 @@ class Test__Index(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/index.html')
-
-
-
-class StartOrdersMixin:
+        self.assertEqual(
+            list(response.context['events']),
+            list(models.Event.objects.all()),
+        )
     
-    def assertStartOrderEqual(self, received, expected):
-        """Checks that two start orders are the same."""
+    
+    def test__event__unknown_event(self):
+        """Returns 404 for unknown events."""
         
-        self.assertEqual(len(received), len(expected))
-        for i, division in enumerate(expected):
-            with self.subTest(index = i):
-                self.assertEqual(
-                    list(received[i]),
-                    list(division),
-                )
+        url = reverse('fantasybumps:event', kwargs = {'event_tag': 'unknown'})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__event__known_event(self):
+        """Returns 200 for known events, with the event in the context."""
+        
+        url = reverse('fantasybumps:event', kwargs = {'event_tag': self.event.tag})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/event.html')
+        self.assertEqual(response.context['event'], self.event)
+    
+    
+    def test__leaderboard__unknown_event(self):
+        """Returns 404 for unknown events."""
+        
+        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': 'unknown'})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__leaderboard__known_event(self):
+        """Returns 200 for known events, with the event in the context."""
+        
+        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': self.event.tag})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/leaderboard.html')
+        self.assertEqual(response.context['event'], self.event)
 
 
 
-class Test__Market_Men(TestCase, StartOrdersMixin):
+class MarketTestBase():
     fixtures = ['seats', 'basic_event', 'start_orders']
-    url = reverse('fantasybumps:men')
     
     @classmethod
     def setUpTestData(cls):
+        
+        cls.event = models.Event.objects.first()
+        cls.day = cls.event.active_day
+        
+        cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
+        
         cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = models.Day.objects.first()
         
         cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -56,18 +96,31 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         cls.crew_womens.save()
     
     
-    def test__without_user(self):
-        """Renders the market page for the men's competition."""
+    def test__generic__unknown_event(self):
+        """Returns a 404 response if the event tag is not recognised."""
+        
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': 'unknown'},
+        ))
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__generic__without_user(self):
+        """Renders the market page for the relevant competition, but does not include team info."""
         
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
-        self.assertEqual(response.context['gender'], 'Men')
-        self.assertStartOrderEqual(
+        self.assertEqual(response.context['event'], self.event)
+        self.assertEqual(response.context['day'], self.day)
+        
+        self.assertEqual(response.context['gender'], self.gender_info['text'])
+        self.assertEqual(
             response.context['start_order'],
-            models.Day.objects.first().start_order(genders.MENS),
+            self.day.start_order(self.gender_info['code']),
         )
         
         self.assertFalse('crew' in response.context)
@@ -75,8 +128,8 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertFalse('other_crew_valid' in response.context)
     
     
-    def test__with_user(self):
-        """Renders the market page with details of the user's team."""
+    def test__generic__with_user(self):
+        """Renders the market page for the relevant competition with details of the user's team."""
         
         self.client.login(username='Market', password='secret')
         response = self.client.get(self.url)
@@ -84,16 +137,29 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/market.html')
         
-        self.assertEqual(response.context['gender'], 'Men')
-        self.assertStartOrderEqual(
+        self.assertEqual(response.context['event'], self.event)
+        self.assertEqual(response.context['day'], self.day)
+        
+        self.assertEqual(response.context['gender'], self.gender_info['text'])
+        self.assertEqual(
             response.context['start_order'],
-            models.Day.objects.first().start_order(genders.MENS),
+            self.day.start_order(self.gender_info['code']),
         )
         
         self.assertTrue('crew' in response.context)
         self.assertTrue('crew_valid' in response.context)
         self.assertTrue('other_crew_valid' in response.context)
+
+
+
+class Test__Market_Men(MarketTestBase, TestCase):
     
+    # Test settings
+    url_name = 'fantasybumps:men'
+    gender_info = {
+        'text': 'Men',
+        'code': genders.MENS,
+    }
     
     def test__partial_crew(self):
         """
@@ -170,61 +236,14 @@ class Test__Market_Men(TestCase, StartOrdersMixin):
 
 
 
-class Test__Market_Women(TestCase, StartOrdersMixin):
-    fixtures = ['seats', 'basic_event', 'start_orders']
-    url = reverse('fantasybumps:women')
+class Test__Market_Women(MarketTestBase, TestCase):
     
-    @classmethod
-    def setUpTestData(cls):
-        cls.team = usr.User.objects.create_user('Market', '', 'secret')
-        cls.day = models.Day.objects.first()
-        
-        cls.crew_mens = models.Crew(gender = genders.MENS)
-        cls.crew_mens.save()
-        
-        cls.crew_womens = models.Crew(gender = genders.WOMENS)
-        cls.crew_womens.save()
-    
-    
-    def test__without_user(self):
-        """Renders the market page for the women's competition."""
-        
-        response = self.client.get(self.url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/market.html')
-        
-        
-        self.assertEqual(response.context['gender'], 'Women')
-        self.assertStartOrderEqual(
-            response.context['start_order'],
-            models.Day.objects.first().start_order(genders.WOMENS),
-        )
-        
-        self.assertFalse('crew' in response.context)
-        self.assertFalse('crew_valid' in response.context)
-        self.assertFalse('other_crew_valid' in response.context)
-    
-    
-    def test__with_user(self):
-        """Adds additional context about logged-in user's crews."""
-        
-        self.client.login(username='Market', password='secret')
-        response = self.client.get(self.url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/market.html')
-        
-        self.assertEqual(response.context['gender'], 'Women')
-        self.assertStartOrderEqual(
-            response.context['start_order'],
-            models.Day.objects.first().start_order(genders.WOMENS),
-        )
-        
-        self.assertTrue('crew' in response.context)
-        self.assertTrue('crew_valid' in response.context)
-        self.assertTrue('other_crew_valid' in response.context)
-    
+    # Test settings
+    url_name = 'fantasybumps:women'
+    gender_info = {
+        'text': 'Women',
+        'code': genders.WOMENS,
+    }
     
     def test__partial_crew(self):
         """
@@ -331,6 +350,10 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     
     @classmethod
     def setUpTestData(cls):
+        
+        cls.event = models.Event.objects.first()
+        cls.day = cls.event.active_day
+        
         cls.team = usr.User.objects.create_user('Buy', '', 'secret')
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
@@ -380,7 +403,10 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
             follow = True,
         )
         
-        self.assertRedirects(response, reverse('fantasybumps:men'))
+        self.assertRedirects(
+            response,
+            reverse('fantasybumps:men', kwargs = {'event_tag': self.event.tag}),
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         self.check_messages(
@@ -395,6 +421,7 @@ class Test__Buy__Unit(TestCase):
     @classmethod
     def setUpTestData(cls):
         """N.B. Saving objects not necessary since no database lookups performed."""
+        cls.event_tag = 'testevent'
         cls.crew = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
         
         cls.stroke = models.Seat(name = 'Stroke', cox = False)
@@ -408,11 +435,13 @@ class Test__Buy__Unit(TestCase):
         
         view = views.BuyView()
         view.form_save_out = models.Purchase(crew = mens_crew)
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'men')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_url__women(self):
@@ -420,11 +449,13 @@ class Test__Buy__Unit(TestCase):
         
         view = views.BuyView()
         view.form_save_out = models.Purchase(crew = self.crew)
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'women')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_message__rower(self):
@@ -455,8 +486,11 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     
     @classmethod
     def setUpTestData(cls):
+        
+        cls.event = models.Event.objects.first()
+        cls.day = cls.event.active_day
+        
         cls.team = usr.User.objects.create_user('Sell', '', 'secret')
-        cls.day = models.Day.objects.first()
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
@@ -511,7 +545,10 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
             follow = True,
         )
         
-        self.assertRedirects(response, reverse('fantasybumps:men'))
+        self.assertRedirects(
+            response,
+            reverse('fantasybumps:men', kwargs = {'event_tag': self.event.tag}),
+        )
         self.assertEqual(models.Purchase.objects.count(), 0)
         
         self.check_messages(
@@ -526,6 +563,7 @@ class Test__Sell__Unit(TestCase):
     @classmethod
     def setUpTestData(cls):
         """N.B. Saving objects not necessary since no database lookups performed."""
+        cls.event_tag = 'testevent'
         
         cls.stroke = models.Seat(name = 'Stroke', cox = False)
         cls.cox = models.Seat(name = 'Cox', cox = True)
@@ -536,11 +574,13 @@ class Test__Sell__Unit(TestCase):
         
         view = views.SellView()
         view.form_save_out = genders.MENS
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'men')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_url__women(self):
@@ -548,11 +588,13 @@ class Test__Sell__Unit(TestCase):
         
         view = views.SellView()
         view.form_save_out = genders.WOMENS
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'women')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_message__rower(self):

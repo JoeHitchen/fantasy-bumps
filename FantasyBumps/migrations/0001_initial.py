@@ -23,22 +23,11 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Day',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=10)),
-                ('date', models.DateField(db_index=True)),
-                ('first_race_time', models.TimeField(db_index=True, null=True)),
-            ],
-            options={
-                'ordering': ['event', 'date'],
-            },
-        ),
-        migrations.CreateModel(
             name='Event',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=20)),
+                ('tag', models.SlugField(max_length=15, unique=True)),
                 ('mens_divisions', models.PositiveSmallIntegerField()),
                 ('womens_divisions', models.PositiveSmallIntegerField()),
                 ('boats_per_division', models.PositiveSmallIntegerField()),
@@ -53,6 +42,19 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Day',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=10)),
+                ('date', models.DateField(db_index=True)),
+                ('first_race_time', models.TimeField(db_index=True, null=True)),
+                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='FantasyBumps.Event')),
+            ],
+            options={
+                'ordering': ['event', 'date'],
+            },
+        ),
+        migrations.CreateModel(
             name='Purchase',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -61,6 +63,9 @@ class Migration(migrations.Migration):
                 ('seat', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='FantasyBumps.Seat')),
                 ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
+            options={
+                'unique_together': {('team', 'day', 'seat')},
+            },
         ),
         migrations.CreateModel(
             name='Position',
@@ -72,11 +77,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'ordering': ['day', 'rank'],
+                'unique_together': {('day', 'crew')},
             },
-        ),
-        migrations.AddField(
-            model_name='day',
-            name='event',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='FantasyBumps.Event'),
         ),
     ]

@@ -1,3 +1,4 @@
+from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,19 +13,41 @@ from . import utils
 
 class IndexView(TemplateView):
     template_name = 'fantasybumps/index.html'
+    
+    def get_context_data(self, **kwargs):
+        return {'events': models.Event.objects.all()}
 
 
 
-class MarketView(TemplateView):
+class EventView(DetailView):
+    """A base view and index for event-specific pages."""
+    
+    # View settings
+    model = models.Event
+    slug_url_kwarg = 'event_tag'
+    slug_field = 'tag'
+    template_name = 'fantasybumps/event.html'
+    
+    def get_context_data(self, **kwargs):
+        self.event = self.object  # Provide friendly name for retrived event.
+        return super().get_context_data(**kwargs)
+
+
+
+class MarketView(EventView):
+    """Presents the market pages for an event."""
+    
+    # View settings
     template_name = 'fantasybumps/market.html'
+    
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        gender = context['gender']
+        gender = self.kwargs['gender']
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
-        day = models.Day.objects.first()
+        day = self.event.active_day
         context['day'] = day
         context['start_order'] = day.start_order(gender)
         
@@ -43,6 +66,14 @@ class MarketView(TemplateView):
 
 
 
+class LeaderboardView(EventView):
+    """Presents the leaderboard for an event."""
+    
+    # View settings
+    template_name = 'fantasybumps/leaderboard.html'
+
+
+
 class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
     
     # Mixin settings
@@ -52,9 +83,10 @@ class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
     def get_form_kwargs(self):
         """Supplies team information to the form."""
         kwargs = super().get_form_kwargs()
+        self.event = models.Event.objects.first()
         kwargs.update({
             'team': self.request.user,
-            'day': models.Day.objects.first(),
+            'day': self.event.active_day,
         })
         return kwargs
     
@@ -72,9 +104,11 @@ class BuyView(MarketActionMixin, FormView):
     
     def get_success_url(self):
         """Returns the relevant market page for the gender purchased."""
-        return reverse('fantasybumps:{}'.format(
-            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out.crew.gender],
-        ))
+        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out.crew.gender]
+        return reverse(
+            'fantasybumps:{}'.format(gender),
+            kwargs = {'event_tag': self.event.tag},
+        )
     
     
     def get_success_message(self, cleaned_data):
@@ -95,9 +129,11 @@ class SellView(MarketActionMixin, FormView):
     
     def get_success_url(self):
         """Returns the relevant market page for the gender sold."""
-        return reverse('fantasybumps:{}'.format(
-            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out],
-        ))
+        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out]
+        return reverse(
+            'fantasybumps:{}'.format(gender),
+            kwargs = {'event_tag': self.event.tag},
+        )
     
     
     def get_success_message(self, cleaned_data):

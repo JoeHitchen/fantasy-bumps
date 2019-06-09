@@ -8,9 +8,12 @@
   
   <div class="collapse navbar-collapse" id="navbar_menu">
     <div class="navbar-nav">
-      <a class="nav-item nav-link" href="{% url 'fantasybumps:men' %}">Men</a>
-      <a class="nav-item nav-link" href="{% url 'fantasybumps:women' %}">Women</a>
-      <a class="nav-item nav-link" href="#">Leaderboard</a>
+      {% if event %}
+      <a class="nav-item navbar-brand" href="{% url 'fantasybumps:event' event.tag %}">{{ event }}</a>
+      <a class="nav-item nav-link" href="{% url 'fantasybumps:men' event.tag %}">Men</a>
+      <a class="nav-item nav-link" href="{% url 'fantasybumps:women' event.tag %}">Women</a>
+      <a class="nav-item nav-link" href="{% url 'fantasybumps:leaderboard' event.tag %}">Leaderboard</a>
+      {% endif %}
       <a class="nav-item nav-link" href="#">Guide</a>
     </div>
   </div>
