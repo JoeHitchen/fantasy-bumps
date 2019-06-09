@@ -346,6 +346,10 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     
     @classmethod
     def setUpTestData(cls):
+        
+        cls.event = models.Event.objects.first()
+        cls.day = cls.event.active_day
+        
         cls.team = usr.User.objects.create_user('Buy', '', 'secret')
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
@@ -395,7 +399,10 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
             follow = True,
         )
         
-        self.assertRedirects(response, reverse('fantasybumps:men'))
+        self.assertRedirects(
+            response,
+            reverse('fantasybumps:men', kwargs = {'event_tag': self.event.tag}),
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         self.check_messages(
@@ -410,6 +417,7 @@ class Test__Buy__Unit(TestCase):
     @classmethod
     def setUpTestData(cls):
         """N.B. Saving objects not necessary since no database lookups performed."""
+        cls.event_tag = 'testevent'
         cls.crew = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
         
         cls.stroke = models.Seat(name = 'Stroke', cox = False)
@@ -423,11 +431,13 @@ class Test__Buy__Unit(TestCase):
         
         view = views.BuyView()
         view.form_save_out = models.Purchase(crew = mens_crew)
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'men')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_url__women(self):
@@ -435,11 +445,13 @@ class Test__Buy__Unit(TestCase):
         
         view = views.BuyView()
         view.form_save_out = models.Purchase(crew = self.crew)
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'women')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_message__rower(self):
@@ -470,8 +482,11 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     
     @classmethod
     def setUpTestData(cls):
+        
+        cls.event = models.Event.objects.first()
+        cls.day = cls.event.active_day
+        
         cls.team = usr.User.objects.create_user('Sell', '', 'secret')
-        cls.day = models.Day.objects.first()
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
@@ -526,7 +541,10 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
             follow = True,
         )
         
-        self.assertRedirects(response, reverse('fantasybumps:men'))
+        self.assertRedirects(
+            response,
+            reverse('fantasybumps:men', kwargs = {'event_tag': self.event.tag}),
+        )
         self.assertEqual(models.Purchase.objects.count(), 0)
         
         self.check_messages(
@@ -541,6 +559,7 @@ class Test__Sell__Unit(TestCase):
     @classmethod
     def setUpTestData(cls):
         """N.B. Saving objects not necessary since no database lookups performed."""
+        cls.event_tag = 'testevent'
         
         cls.stroke = models.Seat(name = 'Stroke', cox = False)
         cls.cox = models.Seat(name = 'Cox', cox = True)
@@ -551,11 +570,13 @@ class Test__Sell__Unit(TestCase):
         
         view = views.SellView()
         view.form_save_out = genders.MENS
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'men')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_url__women(self):
@@ -563,11 +584,13 @@ class Test__Sell__Unit(TestCase):
         
         view = views.SellView()
         view.form_save_out = genders.WOMENS
+        view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
         
         resolved = resolve(url)
         self.assertEqual(resolved.namespaces, ['fantasybumps'])
         self.assertEqual(resolved.url_name, 'women')
+        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
     
     
     def test__get_success_message__rower(self):

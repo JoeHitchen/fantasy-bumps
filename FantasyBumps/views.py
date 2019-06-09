@@ -80,9 +80,10 @@ class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
     def get_form_kwargs(self):
         """Supplies team information to the form."""
         kwargs = super().get_form_kwargs()
+        self.event = models.Event.objects.first()
         kwargs.update({
             'team': self.request.user,
-            'day': models.Day.objects.first(),
+            'day': self.event.active_day,
         })
         return kwargs
     
@@ -100,9 +101,11 @@ class BuyView(MarketActionMixin, FormView):
     
     def get_success_url(self):
         """Returns the relevant market page for the gender purchased."""
-        return reverse('fantasybumps:{}'.format(
-            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out.crew.gender],
-        ))
+        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out.crew.gender]
+        return reverse(
+            'fantasybumps:{}'.format(gender),
+            kwargs = {'event_tag': self.event.tag},
+        )
     
     
     def get_success_message(self, cleaned_data):
@@ -123,9 +126,11 @@ class SellView(MarketActionMixin, FormView):
     
     def get_success_url(self):
         """Returns the relevant market page for the gender sold."""
-        return reverse('fantasybumps:{}'.format(
-            {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out],
-        ))
+        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out]
+        return reverse(
+            'fantasybumps:{}'.format(gender),
+            kwargs = {'event_tag': self.event.tag},
+        )
     
     
     def get_success_message(self, cleaned_data):
