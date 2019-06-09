@@ -49,6 +49,26 @@ class Test__Simple(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/event.html')
         self.assertEqual(response.context['event'], self.event)
+    
+    
+    def test__leaderboard__unknown_event(self):
+        """Returns 404 for unknown events."""
+        
+        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': 'unknown'})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__leaderboard__known_event(self):
+        """Returns 200 for known events, with the event in the context."""
+        
+        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': self.event.tag})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/leaderboard.html')
+        self.assertEqual(response.context['event'], self.event)
 
 
 

@@ -59,6 +59,14 @@ class MarketView(TemplateView):
 
 
 
+class LeaderboardView(EventView):
+    """Presents the leaderboard for an event."""
+    
+    # View settings
+    template_name = 'fantasybumps/leaderboard.html'
+
+
+
 class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
     
     # Mixin settings
