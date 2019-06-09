@@ -8,8 +8,8 @@
   
   <div class="collapse navbar-collapse" id="navbar_menu">
     <div class="navbar-nav">
-      <a class="nav-item nav-link" href="{% url 'fantasybumps:men' event.tag %}">Men</a>
-      <a class="nav-item nav-link" href="{% url 'fantasybumps:women' event.tag %}">Women</a>
+      {% if event %}<a class="nav-item nav-link" href="{% url 'fantasybumps:men' event.tag %}">Men</a>
+      <a class="nav-item nav-link" href="{% url 'fantasybumps:women' event.tag %}">Women</a>{% endif %}
       <a class="nav-item nav-link" href="#">Leaderboard</a>
       <a class="nav-item nav-link" href="#">Guide</a>
     </div>
