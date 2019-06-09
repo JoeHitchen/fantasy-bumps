@@ -13,6 +13,9 @@ from . import utils
 
 class IndexView(TemplateView):
     template_name = 'fantasybumps/index.html'
+    
+    def get_context_data(self, **kwargs):
+        return {'events': models.Event.objects.all()}
 
 
 

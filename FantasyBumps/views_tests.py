@@ -29,6 +29,10 @@ class Test__Simple(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/index.html')
+        self.assertEqual(
+            list(response.context['events']),
+            list(models.Event.objects.all()),
+        )
     
     
     def test__event__unknown_event(self):
