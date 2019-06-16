@@ -5,8 +5,7 @@
 
 <br/>
 {% market_status_box day %}
-
-<br/>
+<h3>{{ gender }}'s market for {{ day }}</h3>
 {% for division in start_order %}
   {% market_division_box division gender forloop.counter %}
 <br/>
