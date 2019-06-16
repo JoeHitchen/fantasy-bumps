@@ -60,6 +60,16 @@ class Day(models.Model):
         return self.event.day_set.filter(date__gt = self.date).first()
     
     
+    @cached_property
+    def first_race(self):
+        """The datetime for the first race of the day, or None if not racing day."""
+        return datetime.combine(
+            self.date,
+            self.first_race_time,
+            timezone.now().tzinfo,
+        ) if self.first_race_time else None
+    
+    
     @lru_cache(maxsize=2)
     def divisions(self, gender):
         """Generates the division structure for the day."""

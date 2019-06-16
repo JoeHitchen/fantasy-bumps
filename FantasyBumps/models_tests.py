@@ -1,4 +1,4 @@
-from datetime import time, timedelta
+from datetime import datetime, time, timedelta
 from unittest.mock import patch, PropertyMock
 
 from django.test import TestCase, tag
@@ -175,6 +175,21 @@ class Test__Day__Core(TestCase):
         ).save()
         
         self.assertEqual(curr.next, future_1)
+    
+    
+    def test__first_race(self):
+        """Returns a datetime object for the first race of the day."""
+        
+        first_race = models.Day(
+            event = self.event,
+            date = timezone.now(),
+            first_race_time = time(11, 30),
+        ).first_race
+        
+        self.assertIsInstance(first_race, datetime)
+        self.assertEqual(first_race.date(), timezone.now().date())
+        self.assertEqual(first_race.time(), time(11, 30))
+        self.assertEqual(first_race.tzinfo, timezone.now().tzinfo)
 
 
 
