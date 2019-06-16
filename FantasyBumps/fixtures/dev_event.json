@@ -1,0 +1,13 @@
+[
+  {
+    "model": "FantasyBumps.Event",
+    "pk": 1,
+    "fields": {
+      "name": "Dev Event",
+      "tag": "devgame",
+      "mens_divisions": 2,
+      "womens_divisions": 2,
+      "boats_per_division": 4
+    }
+  }
+]
