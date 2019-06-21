@@ -176,6 +176,7 @@ class Crew(models.Model):
             (genders.MENS, "Men's"),
             (genders.WOMENS, "Women's"),
         ],
+        db_index = True,
     )
     
     def __str__(self):
