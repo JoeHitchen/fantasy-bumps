@@ -188,7 +188,7 @@ class Position(models.Model):
     
     day = models.ForeignKey(Day, models.CASCADE, related_name = 'positions')
     crew = models.ForeignKey(Crew, models.PROTECT)
-    rank = models.PositiveSmallIntegerField()
+    rank = models.PositiveSmallIntegerField(db_index = True)
     
     class Meta:
         ordering = ['day', 'rank']
