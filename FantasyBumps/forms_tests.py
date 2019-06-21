@@ -7,7 +7,7 @@ from . import patching
 
 
 class Test__Buy(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats']
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')
@@ -69,7 +69,7 @@ class Test__Buy(TestCase):
 
 
 class Test__Sell(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats']
     
     def setUp(self):
         self.team = usr.User.objects.create_user('Buy')

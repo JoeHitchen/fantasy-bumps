@@ -77,7 +77,15 @@ class Test__Simple(TestCase):
 
 
 class MarketTestBase():
-    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
+    fixtures = [
+        'dev_event',
+        'dev_days',
+        'dev_crews',
+        'dev_start_day1',
+        'dev_start_day2',
+        'dev_start_day3',
+        'seats',
+    ]
     
     @classmethod
     def setUpTestData(cls):
@@ -345,7 +353,15 @@ class MessagesMixin:
 
 
 class Test__Buy__Integration(TestCase, MessagesMixin):
-    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
+    fixtures = [
+        'dev_event',
+        'dev_days',
+        'dev_crews',
+        'dev_start_day1',
+        'dev_start_day2',
+        'dev_start_day3',
+        'seats',
+    ]
     url = reverse('fantasybumps:buy')
     
     @classmethod
@@ -481,7 +497,15 @@ class Test__Buy__Unit(TestCase):
 
 
 class Test__Sell__Integration(TestCase, MessagesMixin):
-    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
+    fixtures = [
+        'dev_event',
+        'dev_days',
+        'dev_crews',
+        'dev_start_day1',
+        'dev_start_day2',
+        'dev_start_day3',
+        'seats',
+    ]
     url = reverse('fantasybumps:sell')
     
     @classmethod
