@@ -1,0 +1,164 @@
+[
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 37,
+    "fields": {
+      "day": 3,
+      "crew": 1,
+      "rank": 3
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 38,
+    "fields": {
+      "day": 3,
+      "crew": 2,
+      "rank": 1
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 39,
+    "fields": {
+      "day": 3,
+      "crew": 3,
+      "rank": 2
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 40,
+    "fields": {
+      "day": 3,
+      "crew": 4,
+      "rank": 7
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 41,
+    "fields": {
+      "day": 3,
+      "crew": 5,
+      "rank": 5
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 42,
+    "fields": {
+      "day": 3,
+      "crew": 6,
+      "rank": 4
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 43,
+    "fields": {
+      "day": 3,
+      "crew": 7,
+      "rank": 6
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 44,
+    "fields": {
+      "day": 3,
+      "crew": 20,
+      "rank": 9
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 45,
+    "fields": {
+      "day": 3,
+      "crew": 9,
+      "rank": 8
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 46,
+    "fields": {
+      "day": 3,
+      "crew": 10,
+      "rank": 1
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 47,
+    "fields": {
+      "day": 3,
+      "crew": 11,
+      "rank": 2
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 48,
+    "fields": {
+      "day": 3,
+      "crew": 12,
+      "rank": 3
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 49,
+    "fields": {
+      "day": 3,
+      "crew": 13,
+      "rank": 5
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 50,
+    "fields": {
+      "day": 3,
+      "crew": 14,
+      "rank": 4
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 51,
+    "fields": {
+      "day": 3,
+      "crew": 15,
+      "rank": 6
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 52,
+    "fields": {
+      "day": 3,
+      "crew": 16,
+      "rank": 8
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 53,
+    "fields": {
+      "day": 3,
+      "crew": 17,
+      "rank": 7
+    }
+  },
+  {
+    "model": "FantasyBumps.Position",
+    "pk": 54,
+    "fields": {
+      "day": 3,
+      "crew": 21,
+      "rank": 9
+    }
+  }
+]

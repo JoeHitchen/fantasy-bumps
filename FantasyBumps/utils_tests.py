@@ -7,7 +7,7 @@ from . import utils
 
 
 class Test__Get_Crew(TestCase):
-    fixtures = ['seats', 'basic_event']
+    fixtures = ['dev_event', 'dev_days', 'seats']
     
     @classmethod
     def setUpTestData(cls):
@@ -102,7 +102,7 @@ class Test__Get_Crew(TestCase):
 
 
 class Test__Has_All_Seats(TestCase):
-    fixtures = ['seats', 'basic_event']
+    fixtures = ['dev_event', 'dev_days', 'seats']
     
     @classmethod
     def setUpTestData(cls):
