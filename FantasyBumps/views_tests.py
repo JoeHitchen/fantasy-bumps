@@ -15,7 +15,7 @@ from . import patching
 
 class Test__Simple(TestCase):
     """Tests simple views that do not justify separate test classes."""
-    fixtures = ['basic_event']
+    fixtures = ['dev_event']
     
     @classmethod
     def setUpTestData(cls):
@@ -77,7 +77,7 @@ class Test__Simple(TestCase):
 
 
 class MarketTestBase():
-    fixtures = ['seats', 'basic_event', 'start_orders']
+    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
     
     @classmethod
     def setUpTestData(cls):
@@ -345,7 +345,7 @@ class MessagesMixin:
 
 
 class Test__Buy__Integration(TestCase, MessagesMixin):
-    fixtures = ['seats', 'basic_event', 'start_orders']
+    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
     url = reverse('fantasybumps:buy')
     
     @classmethod
@@ -481,7 +481,7 @@ class Test__Buy__Unit(TestCase):
 
 
 class Test__Sell__Integration(TestCase, MessagesMixin):
-    fixtures = ['seats', 'basic_event', 'start_orders']
+    fixtures = ['dev_event', 'dev_days', 'seats', 'start_orders']
     url = reverse('fantasybumps:sell')
     
     @classmethod

@@ -1,16 +1,5 @@
 [
   {
-    "model": "FantasyBumps.Event",
-    "pk": 1,
-    "fields": {
-      "name": "Test Event",
-      "tag": "test2019",
-      "mens_divisions": 2,
-      "womens_divisions": 2,
-      "boats_per_division": 4
-    }
-  },
-  {
     "model": "FantasyBumps.Day",
     "pk": 1,
     "fields": {
@@ -26,6 +15,15 @@
       "event": 1,
       "name": "Thursday",
       "date": "2019-02-28"
+    }
+  },
+  {
+    "model": "FantasyBumps.Day",
+    "pk": 3,
+    "fields": {
+      "event": 1,
+      "name": "Friday",
+      "date": "2019-03-01"
     }
   }
 ]

@@ -195,7 +195,7 @@ class Test__Day__Core(TestCase):
 
 @tag('events-core')
 class Test__Day__Start_Orders(TestCase):
-    fixtures = ['basic_event', 'start_orders']
+    fixtures = ['dev_event', 'dev_days', 'start_orders']
     
     @classmethod
     def setUpTestData(self):
@@ -463,7 +463,7 @@ class Test__Day__Market_Status(TestCase):
 
 @tag('events-core')
 class Test__Division(TestCase):
-    fixtures = ['basic_event', 'start_orders']
+    fixtures = ['dev_event', 'dev_days', 'start_orders']
     
     @classmethod
     def setUpTestData(cls):
@@ -531,7 +531,7 @@ class Test__Crew(TestCase):
 
 @tag('events-core')
 class Test__Position(TestCase):
-    fixtures = ['basic_event']
+    fixtures = ['dev_event', 'dev_days']
     
     @classmethod
     def setUpTestData(cls):
@@ -585,7 +585,7 @@ class Test__Seat(TestCase):
 
 
 class Test__Purchase(TestCase):
-    fixtures = ['basic_event', 'seats']
+    fixtures = ['dev_event', 'dev_days', 'seats']
     
     @classmethod
     def setUpTestData(cls):
