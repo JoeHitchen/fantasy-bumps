@@ -12,7 +12,7 @@ class Event(models.Model):
     """A bumps competition, with simple division information."""
     
     name = models.CharField(max_length = 20)
-    tag = models.SlugField(max_length = 15, unique = True)
+    tag = models.SlugField(max_length = 15, unique = True)  # Implicit db index
     
     mens_divisions = models.PositiveSmallIntegerField()
     womens_divisions = models.PositiveSmallIntegerField()
