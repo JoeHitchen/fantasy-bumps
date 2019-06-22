@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 'dev_start_day{}'.format(event.active_day.id + 1),
             )
         
-        event.day_set.update(date = F('date') - timedelta(1))
+        event.days.update(date = F('date') - timedelta(1))
         
         self.stdout.write('Successfully advanced the development game by 24 hours.')
 
