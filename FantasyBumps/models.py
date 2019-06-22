@@ -35,15 +35,15 @@ class Event(models.Model):
         day_shift = timedelta(1) if now.time() >= time(20, 00) else timedelta(0)
         date = now.date() + day_shift
         
-        day = self.day_set.filter(date__gte = date).first()
-        return day if day else self.day_set.last()
+        day = self.days.filter(date__gte = date).first()
+        return day if day else self.days.last()
 
 
 
 class Day(models.Model):
     """A day of racing."""
     
-    event = models.ForeignKey(Event, models.CASCADE)
+    event = models.ForeignKey(Event, models.CASCADE, related_name = 'days')
     name = models.CharField(max_length = 10)
     date = models.DateField(db_index = True)
     first_race_time = models.TimeField(null = True, db_index = True)
@@ -57,7 +57,7 @@ class Day(models.Model):
     @cached_property
     def next(self):
         """The next day of the event."""
-        return self.event.day_set.filter(date__gt = self.date).first()
+        return self.event.days.filter(date__gt = self.date).first()
     
     
     @cached_property
@@ -105,10 +105,10 @@ class Day(models.Model):
         Markets always open at 8:00PM. On the first day, they open four days before racing. For
         later days they open the day before racing."""
         
-        if not self.first_race_time:
+        if not self.first_race:
             return
         
-        earlier_days = self.event.day_set.exclude(date__gte = self.date).exists()
+        earlier_days = self.event.days.exclude(date__gte = self.date).exists()
         
         return datetime.combine(
             self.date - timedelta(1 if earlier_days else 4),
@@ -120,21 +120,13 @@ class Day(models.Model):
     @cached_property
     def market_closes(self):
         """Markets always close half an hour before the first race, if one occurs."""
-        
-        if not self.first_race_time:
-            return
-        
-        return datetime.combine(
-            self.date,
-            self.first_race_time,
-            timezone.now().tzinfo,
-        ) - timedelta(minutes = 30)
+        return self.first_race - timedelta(minutes = 30) if self.first_race else None
     
     
     @cached_property
     def market_is_open(self):
         """Indicates whether the market is currently open for trading."""
-        if not self.first_race_time:
+        if not self.first_race:
             return False
         return self.market_opens <= timezone.now() < self.market_closes
 
