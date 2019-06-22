@@ -117,12 +117,11 @@ class Test__Sell(TestCase):
     def test__save__deletes_purchases(self, markets_mock):
         """Removes any and all purchases for that team, seat, and gender. Returns gender."""
         
-        models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = self.day,
             seat = self.seat,
             crew = self.crew,
-        ).save()
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         form = forms.Sell(
@@ -142,12 +141,11 @@ class Test__Sell(TestCase):
         """Does not delete purchases from other teams."""
         
         other_team = usr.User.objects.create_user('other', '', '')
-        models.Purchase(
-            team = other_team,
+        other_team.purchases.create(
             day = self.day,
             seat = self.seat,
             crew = self.crew,
-        ).save()
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         form = forms.Sell(
@@ -167,12 +165,11 @@ class Test__Sell(TestCase):
         
         other_day = models.Day.objects.last()
         self.assertNotEqual(other_day, self.day)
-        models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = other_day,
             seat = self.seat,
             crew = self.crew,
-        ).save()
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         form = forms.Sell(
@@ -190,12 +187,11 @@ class Test__Sell(TestCase):
     def test__save__ignores_other_seats(self, markets_mock):
         """Does not delete purchases in other seats."""
         
-        models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = self.day,
             seat = models.Seat.objects.last(),
             crew = self.crew,
-        ).save()
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         form = forms.Sell(
@@ -215,12 +211,11 @@ class Test__Sell(TestCase):
         
         other_crew = models.Crew.objects.exclude(gender = self.crew.gender).first()
         
-        models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = self.day,
             seat = self.seat,
             crew = other_crew,
-        ).save()
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         form = forms.Sell(

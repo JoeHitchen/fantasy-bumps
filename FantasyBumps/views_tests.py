@@ -175,12 +175,11 @@ class Test__Market_Men(MarketTestBase, TestCase):
         Does not test response or default context.
         """
         
-        models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = self.day,
             crew = self.crew_mens,
             seat = models.Seat.objects.first(),
-        ).save()
+        )
         
         crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertFalse(utils.has_all_seats(crew))
@@ -200,12 +199,11 @@ class Test__Market_Men(MarketTestBase, TestCase):
         """
         
         for seat in models.Seat.objects.all():
-            models.Purchase(
-                team = self.team,
+            self.team.purchases.create(
                 day = self.day,
                 crew = self.crew_mens,
                 seat = seat,
-            ).save()
+            )
         
         crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(crew))
@@ -225,12 +223,11 @@ class Test__Market_Men(MarketTestBase, TestCase):
         """
         
         for seat in models.Seat.objects.all():
-            models.Purchase(
-                team = self.team,
+            self.team.purchases.create(
                 day = self.day,
                 crew = self.crew_womens,
                 seat = seat,
-            ).save()
+            )
         
         other_crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(other_crew))
@@ -259,12 +256,11 @@ class Test__Market_Women(MarketTestBase, TestCase):
         Does not test response or default context.
         """
         
-        models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = self.day,
             crew = self.crew_womens,
             seat = models.Seat.objects.first(),
-        ).save()
+        )
         
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertFalse(utils.has_all_seats(crew))
@@ -284,12 +280,11 @@ class Test__Market_Women(MarketTestBase, TestCase):
         """
         
         for seat in models.Seat.objects.all():
-            models.Purchase(
-                team = self.team,
+            self.team.purchases.create(
                 day = self.day,
                 crew = self.crew_womens,
                 seat = seat,
-            ).save()
+            )
         
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(crew))
@@ -309,12 +304,11 @@ class Test__Market_Women(MarketTestBase, TestCase):
         """
         
         for seat in models.Seat.objects.all():
-            models.Purchase(
-                team = self.team,
+            self.team.purchases.create(
                 day = self.day,
                 crew = self.crew_mens,
                 seat = seat,
-            ).save()
+            )
         
         other_crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(other_crew))
@@ -554,12 +548,11 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     def test__valid_post(self, market_closes_mock, markets_mock):
         """Deletes the object and redirects to the relevant market page."""
         
-        models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = self.day,
             seat = self.seat,
             crew = self.crew,
-        ).save()
+        )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
         self.client.login(username='Sell', password='secret')

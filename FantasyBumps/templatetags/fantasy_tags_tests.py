@@ -22,8 +22,7 @@ class Test__Market_Status_Box(TestCase):
         """Returns a non-dismissable danger alert."""
         
         # Create day
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -47,8 +46,7 @@ class Test__Market_Status_Box(TestCase):
         """Returns a non-dismissable danger alert."""
         
         # Create day
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -72,8 +70,7 @@ class Test__Market_Status_Box(TestCase):
         """Returns a non-dismissable danger alert."""
         
         # Create day
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -98,8 +95,7 @@ class Test__Market_Status_Box(TestCase):
         """Returns a dismissable info alert."""
         
         # Create day
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -124,8 +120,7 @@ class Test__Market_Status_Box(TestCase):
         """Returns a dismissable info alert."""
         
         # Create day
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -150,8 +145,7 @@ class Test__Market_Status_Box(TestCase):
         """Returns a non-dismissable danger alert."""
         
         # Create day
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -175,24 +169,20 @@ class Test__Market_Status_Box(TestCase):
         """
         
         # Create first day and fix return values
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = time(hour = 12),
         )
-        day.save()
         day.market_opens = timezone.now() - timedelta(minutes = 5)  # Non-standard mocking
         day.market_closes = timezone.now() - timedelta(minutes = 2)  # Non-standard mocking
         
         # Create later day
-        next = models.Day(
-            event = self.event,
+        self.event.days.create(
             name = 'Market Status 2',
             date = timezone.now() + timedelta(2),  # Ensure market never opens today
             first_race_time = time(hour = 12),
         )
-        next.save()
         
         # Call and test method
         props = tags.market_status_box(day)
@@ -212,8 +202,7 @@ class Test__Market_Status_Box(TestCase):
         but market_opens and market_closes do not return datetime objects."""
         
         # Create day
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Market Status',
             date = timezone.now(),
             first_race_time = None,

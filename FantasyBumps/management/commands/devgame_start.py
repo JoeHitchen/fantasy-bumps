@@ -19,28 +19,26 @@ class Command(BaseCommand):
         
         call_command('loaddata', 'seats', 'dev_crews', 'dev_event')
         
-        models.Day(
+        event = models.Event.objects.first()
+        event.days.create(
             id = 1,
-            event = models.Event.objects.first(),
             name = 'Day One',
             date = timezone.now() + timedelta(5),
             first_race_time = time(12, 00),
-        ).save()
+        )
         
-        models.Day(
+        event.days.create(
             id = 2,
-            event = models.Event.objects.first(),
             name = 'Day Two',
             date = timezone.now() + timedelta(6),
             first_race_time = time(12, 00),
-        ).save()
+        )
         
-        models.Day(
+        event.days.create(
             id = 3,
-            event = models.Event.objects.first(),
             name = 'Day Three',
             date = timezone.now() + timedelta(7),
-        ).save()
+        )
         
         call_command('loaddata', 'dev_start_day1')
         

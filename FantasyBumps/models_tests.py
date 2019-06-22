@@ -21,18 +21,14 @@ class Test__Event(TestCase):
         cls.event = models.Event.objects.first()
         
         # Prepare days
-        cls.yesterday = models.Day(
-            event = cls.event,
+        cls.yesterday = cls.event.days.create(
             name = 'Yesterday',
             date = timezone.now() - timedelta(1),
         )
-        cls.yesterday.save()
-        cls.today = models.Day(
-            event = cls.event,
+        cls.today = cls.event.days.create(
             name = 'Today',
             date = timezone.now(),
         )
-        cls.today.save()
         cls.tomorrow = models.Day(
             event = cls.event,
             name = 'Tomorrow',
@@ -108,8 +104,7 @@ class Test__Day__Core(TestCase):
     def test__string(self):
         """Returns a day's name as it's string representation."""
         
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Racing',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -121,20 +116,17 @@ class Test__Day__Core(TestCase):
     def test__next__past(self):
         """Returns None if there are no days in the future."""
         
-        models.Day(
-            event = self.event,
+        self.event.days.create(
             name = 'Prev',
             date = timezone.now() - timedelta(1),
             first_race_time = time(hour = 12),
-        ).save()
+        )
         
-        curr = models.Day(
-            event = self.event,
+        curr = self.event.days.create(
             name = 'Next',
             date = timezone.now(),
             first_race_time = time(hour = 12),
         )
-        curr.save()
         
         self.assertIsNone(curr.next)
     
@@ -142,28 +134,23 @@ class Test__Day__Core(TestCase):
     def test__next__future(self):
         """Returns the next day in the series if there are days in the future."""
         
-        curr = models.Day(
-            event = self.event,
+        curr = self.event.days.create(
             name = 'Next',
             date = timezone.now(),
             first_race_time = time(hour = 12),
         )
-        curr.save()
         
-        future_1 = models.Day(
-            event = self.event,
+        future_1 = self.event.days.create(
             name = 'Future 1',
             date = timezone.now() + timedelta(1),
             first_race_time = time(hour = 12),
         )
-        future_1.save()
         
-        models.Day(
-            event = self.event,
+        self.event.days.create(
             name = 'Future 2',
             date = timezone.now() + timedelta(2),
             first_race_time = time(hour = 12),
-        ).save()
+        )
         
         self.assertEqual(curr.next, future_1)
     
@@ -171,8 +158,7 @@ class Test__Day__Core(TestCase):
     def test__first_race(self):
         """Returns a datetime object for the first race of the day."""
         
-        first_race = models.Day(
-            event = self.event,
+        first_race = self.event.days.create(
             date = timezone.now(),
             first_race_time = time(11, 30),
         ).first_race
@@ -292,13 +278,11 @@ class Test__Day__Market_Status(TestCase):
         
         # Create day
         now = timezone.now()
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = now,
             first_race_time = time(hour = 12),
         )
-        day.save()
         
         # Test property
         open = day.market_opens
@@ -311,19 +295,16 @@ class Test__Day__Market_Status(TestCase):
         
         # Create days
         now = timezone.now()
-        models.Day(
-            event = self.event,
+        self.event.days.create(
             name = 'Markets',
             date = now - timedelta(1),
             first_race_time = time(hour = 12),
-        ).save()
-        day = models.Day(
-            event = self.event,
+        )
+        day = self.event.days.create(
             name = 'Markets',
             date = now,
             first_race_time = time(hour = 12),
         )
-        day.save()
         
         # Test property
         open = day.market_opens
@@ -336,13 +317,11 @@ class Test__Day__Market_Status(TestCase):
         
         # Create days
         now = timezone.now()
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = now,
             first_race_time = None,
         )
-        day.save()
         
         # Test property
         open = day.market_opens
@@ -354,13 +333,11 @@ class Test__Day__Market_Status(TestCase):
         
         # Create days
         now = timezone.now()
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = now,
             first_race_time = time(hour = 12),
         )
-        day.save()
         
         # Test property
         close = day.market_closes
@@ -373,13 +350,11 @@ class Test__Day__Market_Status(TestCase):
         
         # Create days
         now = timezone.now()
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = now,
             first_race_time = None,
         )
-        day.save()
         
         # Test property
         close = day.market_closes
@@ -391,8 +366,7 @@ class Test__Day__Market_Status(TestCase):
     def test__market_is_open__before_open(self, closes_mock, opens_mock):
         """Returns False if before opening time."""
         
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -406,8 +380,7 @@ class Test__Day__Market_Status(TestCase):
     def test__market_is_open__between(self, closes_mock, opens_mock):
         """Returns True if between opening time and closing time."""
         
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -421,8 +394,7 @@ class Test__Day__Market_Status(TestCase):
     def test__market_is_open__after_close(self, closes_mock, opens_mock):
         """Returns False if after closing time."""
         
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = timezone.now(),
             first_race_time = time(hour = 12),
@@ -436,8 +408,7 @@ class Test__Day__Market_Status(TestCase):
     def test__market_is_open__without_first_race(self, closes_mock, opens_mock):
         """Returns False if first_race_time is not set."""
         
-        day = models.Day(
-            event = self.event,
+        day = self.event.days.create(
             name = 'Markets',
             date = timezone.now(),
             first_race_time = None,
@@ -529,11 +500,10 @@ class Test__Position(TestCase):
     def test__unique_pair(self):
         """Raises a DB IntegrityError if a duplicate day/crew pairing created."""
         
-        position1 = models.Position(day = self.day, crew = self.crew, rank = 1)
-        position2 = models.Position(day = self.day, crew = self.crew, rank = 2)
+        self.day.positions.create(crew = self.crew, rank = 1)
         
-        position1.save()
-        self.assertRaises(IntegrityError, position2.save)
+        with self.assertRaises(IntegrityError):
+            self.day.positions.create(crew = self.crew, rank = 2)
 
 
 
@@ -589,19 +559,16 @@ class Test__Purchase(TestCase):
     def test__unique_group(self):
         """Raises a DB IntegrityError if a duplicate team/day/seat group created."""
         
-        purchase1 = models.Purchase(
-            team = self.team,
+        self.team.purchases.create(
             day = self.day,
             crew = self.crew1,
             seat = self.seat,
         )
-        purchase2 = models.Purchase(
-            team = self.team,
-            day = self.day,
-            crew = self.crew2,
-            seat = self.seat,
-        )
         
-        purchase1.save()
-        self.assertRaises(IntegrityError, purchase2.save)
+        with self.assertRaises(IntegrityError):
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew2,
+                seat = self.seat,
+            )
 
