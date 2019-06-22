@@ -148,7 +148,7 @@ class Division:
     def start_order(self):
         """Generates start order and bungline numbers (excluding sandwich boat)."""
         
-        return self.day.positions.filter(
+        return self.day.ranking.filter(
             crew__gender = self.gender,
             rank__gte = self.top_bungline,
             rank__lte = self.bottom_bungline,
@@ -179,7 +179,7 @@ class Crew(models.Model):
 class Position(models.Model):
     """A crew's position on the river for a given day."""
     
-    day = models.ForeignKey(Day, models.CASCADE, related_name = 'positions')
+    day = models.ForeignKey(Day, models.CASCADE, related_name = 'ranking')
     crew = models.ForeignKey(Crew, models.PROTECT)
     rank = models.PositiveSmallIntegerField(db_index = True)
     

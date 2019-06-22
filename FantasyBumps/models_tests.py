@@ -500,10 +500,10 @@ class Test__Position(TestCase):
     def test__unique_pair(self):
         """Raises a DB IntegrityError if a duplicate day/crew pairing created."""
         
-        self.day.positions.create(crew = self.crew, rank = 1)
+        self.day.ranking.create(crew = self.crew, rank = 1)
         
         with self.assertRaises(IntegrityError):
-            self.day.positions.create(crew = self.crew, rank = 2)
+            self.day.ranking.create(crew = self.crew, rank = 2)
 
 
 
