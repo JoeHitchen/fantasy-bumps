@@ -16,30 +16,30 @@ class Test__Event(TestCase):
     fixtures = ['dev_event']
     
     @classmethod
-    def setUpTestData(self):
+    def setUpTestData(cls):
         
-        self.event = models.Event.objects.first()
+        cls.event = models.Event.objects.first()
         
         # Prepare days
-        self.yesterday = models.Day(
-            event = self.event,
+        cls.yesterday = models.Day(
+            event = cls.event,
             name = 'Yesterday',
             date = timezone.now() - timedelta(1),
         )
-        self.yesterday.save()
-        self.today = models.Day(
-            event = self.event,
+        cls.yesterday.save()
+        cls.today = models.Day(
+            event = cls.event,
             name = 'Today',
             date = timezone.now(),
         )
-        self.today.save()
-        self.tomorrow = models.Day(
-            event = self.event,
+        cls.today.save()
+        cls.tomorrow = models.Day(
+            event = cls.event,
             name = 'Tomorrow',
             date = timezone.now() + timedelta(1),
         )  # Saved per-test due to isolation conflict
-        self.future = models.Day(
-            event = self.event,
+        cls.future = models.Day(
+            event = cls.event,
             name = 'Future',
             date = timezone.now() + timedelta(2),
         )  # Saved per-test due to isolation conflict
@@ -101,8 +101,8 @@ class Test__Day__Core(TestCase):
     fixtures = ['dev_event']
     
     @classmethod
-    def setUpTestData(self):
-        self.event = models.Event.objects.first()
+    def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
     
     
     def test__string(self):
@@ -189,14 +189,14 @@ class Test__Day__Start_Orders(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1']
     
     @classmethod
-    def setUpTestData(self):
+    def setUpTestData(cls):
         
-        self.event = models.Event.objects.first()
-        self.event.womens_divisions = 3
-        self.event.boats_per_division = 2
-        self.event.save()
+        cls.event = models.Event.objects.first()
+        cls.event.womens_divisions = 3
+        cls.event.boats_per_division = 2
+        cls.event.save()
         
-        self.day = models.Day.objects.first()
+        cls.day = models.Day.objects.first()
     
     
     def test__divisions__mens(self):
@@ -283,8 +283,8 @@ class Test__Day__Market_Status(TestCase):
     fixtures = ['dev_event']
     
     @classmethod
-    def setUpTestData(self):
-        self.event = models.Event.objects.first()
+    def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
     
     
     def test__market_opens__first_race_day(self):
