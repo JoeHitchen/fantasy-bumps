@@ -105,7 +105,7 @@ class Day(models.Model):
         Markets always open at 8:00PM. On the first day, they open four days before racing. For
         later days they open the day before racing."""
         
-        if not self.first_race_time:
+        if not self.first_race:
             return
         
         earlier_days = self.event.days.exclude(date__gte = self.date).exists()
@@ -120,21 +120,13 @@ class Day(models.Model):
     @cached_property
     def market_closes(self):
         """Markets always close half an hour before the first race, if one occurs."""
-        
-        if not self.first_race_time:
-            return
-        
-        return datetime.combine(
-            self.date,
-            self.first_race_time,
-            timezone.now().tzinfo,
-        ) - timedelta(minutes = 30)
+        return self.first_race - timedelta(minutes = 30) if self.first_race else None
     
     
     @cached_property
     def market_is_open(self):
         """Indicates whether the market is currently open for trading."""
-        if not self.first_race_time:
+        if not self.first_race:
             return False
         return self.market_opens <= timezone.now() < self.market_closes
 
