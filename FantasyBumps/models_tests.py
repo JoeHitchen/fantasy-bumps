@@ -13,16 +13,12 @@ from . import patching
 
 @tag('events-core')
 class Test__Event(TestCase):
+    fixtures = ['dev_event']
     
     @classmethod
     def setUpTestData(self):
-        self.event = models.Event(
-            name = 'Test Event',
-            mens_divisions = 3,
-            womens_divisions = 3,
-            boats_per_division = 2,
-        )
-        self.event.save()
+        
+        self.event = models.Event.objects.first()
         
         # Prepare days
         self.yesterday = models.Day(
@@ -63,7 +59,7 @@ class Test__Event(TestCase):
     def test__string(self):
         """Returns an event's name as its string representation."""
         
-        self.assertEqual(str(self.event), 'Test Event')
+        self.assertEqual(str(self.event), 'Dev Event')
     
     
     @patching.timezone_now_time(19, 59)
@@ -102,16 +98,11 @@ class Test__Event(TestCase):
 
 @tag('events-core')
 class Test__Day__Core(TestCase):
+    fixtures = ['dev_event']
     
     @classmethod
     def setUpTestData(self):
-        self.event = models.Event(
-            name = 'Markets',
-            mens_divisions = 3,
-            womens_divisions = 3,
-            boats_per_division = 2,
-        )
-        self.event.save()
+        self.event = models.Event.objects.first()
     
     
     def test__string(self):
@@ -289,16 +280,11 @@ class Test__Day__Start_Orders(TestCase):
 
 @tag('market-status')
 class Test__Day__Market_Status(TestCase):
+    fixtures = ['dev_event']
     
     @classmethod
     def setUpTestData(self):
-        self.event = models.Event(
-            name = 'Markets',
-            mens_divisions = 3,
-            womens_divisions = 3,
-            boats_per_division = 2,
-        )
-        self.event.save()
+        self.event = models.Event.objects.first()
     
     
     def test__market_opens__first_race_day(self):
