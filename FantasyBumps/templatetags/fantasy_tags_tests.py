@@ -10,16 +10,11 @@ from . import fantasy_tags as tags
 
 @tag('market-status')
 class Test__Market_Status_Box(TestCase):
+    fixtures = ['dev_event']
     
     @classmethod
     def setUpTestData(cls):
-        cls.event = models.Event(
-            name = 'Markets',
-            mens_divisions = 3,
-            womens_divisions = 3,
-            boats_per_division = 2,
-        )
-        cls.event.save()
+        cls.event = models.Event.objects.first()
     
     
     @patching.market_opens(timezone.now() + timedelta(days = 2))
