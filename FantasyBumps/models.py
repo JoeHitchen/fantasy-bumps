@@ -35,15 +35,15 @@ class Event(models.Model):
         day_shift = timedelta(1) if now.time() >= time(20, 00) else timedelta(0)
         date = now.date() + day_shift
         
-        day = self.day_set.filter(date__gte = date).first()
-        return day if day else self.day_set.last()
+        day = self.days.filter(date__gte = date).first()
+        return day if day else self.days.last()
 
 
 
 class Day(models.Model):
     """A day of racing."""
     
-    event = models.ForeignKey(Event, models.CASCADE)
+    event = models.ForeignKey(Event, models.CASCADE, related_name = 'days')
     name = models.CharField(max_length = 10)
     date = models.DateField(db_index = True)
     first_race_time = models.TimeField(null = True, db_index = True)
@@ -57,7 +57,7 @@ class Day(models.Model):
     @cached_property
     def next(self):
         """The next day of the event."""
-        return self.event.day_set.filter(date__gt = self.date).first()
+        return self.event.days.filter(date__gt = self.date).first()
     
     
     @cached_property
@@ -108,7 +108,7 @@ class Day(models.Model):
         if not self.first_race_time:
             return
         
-        earlier_days = self.event.day_set.exclude(date__gte = self.date).exists()
+        earlier_days = self.event.days.exclude(date__gte = self.date).exists()
         
         return datetime.combine(
             self.date - timedelta(1 if earlier_days else 4),
