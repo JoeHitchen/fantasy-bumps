@@ -59,7 +59,7 @@ class Test__Event(TestCase):
     def test__string(self):
         """Returns an event's name as its string representation."""
         
-        self.assertEqual(str(self.event), 'Dev Event')
+        self.assertEqual(str(self.event), self.event.name)
     
     
     @patching.timezone_now_time(19, 59)
@@ -74,7 +74,7 @@ class Test__Event(TestCase):
     
     @patching.timezone_now_time(20, 00)
     def test__after_rollover(self, timezone_mock):
-        """Returns first day from tomorrow onwards before 8pm."""
+        """Returns first day from tomorrow onwards after 8pm."""
         
         self.assertEqual(
             self.event.active_day,
@@ -196,7 +196,7 @@ class Test__Day__Start_Orders(TestCase):
         cls.event.boats_per_division = 2
         cls.event.save()
         
-        cls.day = models.Day.objects.first()
+        cls.day = cls.event.days.first()
     
     
     def test__divisions__mens(self):
