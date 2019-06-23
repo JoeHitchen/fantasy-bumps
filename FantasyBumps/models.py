@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import genders
+from .constants import genders, money
 
 
 class Event(models.Model):
@@ -224,6 +224,20 @@ class Team(models.Model):
 def create_team(sender, instance, created, **kwargs):
     if created:
         Team.objects.create(user = instance)
+
+
+
+class GameEntry(models.Model):
+    """Describes a team's budgets (and by extension, score) for an event."""
+    
+    # Fields
+    team = models.ForeignKey(Team, models.CASCADE, related_name='entries')
+    event = models.ForeignKey(Event, models.CASCADE, related_name='fantasies')
+    mens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
+    womens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
+    
+    class Meta:
+        unique_together = ['team', 'event']
 
 
 

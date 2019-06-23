@@ -649,6 +649,26 @@ class Test__Team(TestCase):
 
 
 @tag('game-core')
+class Test__GameEntry(TestCase):
+    fixtures = ['dev_event', 'dev_team']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.event = models.Event.objects.first()
+    
+    
+    def test__unique_group(self):
+        """Raises a DB IntegrityError if a duplicate team/event group created."""
+        
+        self.team.entries.create(event = self.event)
+        
+        with self.assertRaises(IntegrityError):
+            self.team.entries.create(event = self.event)
+
+
+
+@tag('game-core')
 class Test__Purchase(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     
