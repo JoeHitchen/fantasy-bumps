@@ -204,6 +204,16 @@ class Seat(models.Model):
 
 
 
+class Team(models.Model):
+    """Extends auth.User functionality for the Fantasy Bumps game."""
+    
+    user = models.OneToOneField('auth.User', models.CASCADE)
+    
+    def __str__(self):
+        return self.user.username
+
+
+
 class Purchase(models.Model):
     """A purchase for a fantasy team."""
     

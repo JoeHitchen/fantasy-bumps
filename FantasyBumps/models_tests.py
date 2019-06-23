@@ -540,6 +540,21 @@ class Test__Seat(TestCase):
 
 
 
+@tag('game-core')
+class Test__Team(TestCase):
+    
+    def test__string(self):
+        """Returns the related username as it's string representation."""
+        
+        user = auth.User.objects.create_user('A User', '', '')
+        
+        team = models.Team(user = user)
+        team.save()
+        
+        self.assertEqual(str(team), 'A User')
+
+
+
 class Test__Purchase(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats']
     
