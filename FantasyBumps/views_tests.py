@@ -139,7 +139,7 @@ class MarketTestBase():
     def test__generic__with_user(self):
         """Renders the market page for the relevant competition with details of the user's team."""
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
@@ -184,7 +184,7 @@ class Test__Market_Men(MarketTestBase, TestCase):
         crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertFalse(utils.has_all_seats(crew))
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -208,7 +208,7 @@ class Test__Market_Men(MarketTestBase, TestCase):
         crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(crew))
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -232,7 +232,7 @@ class Test__Market_Men(MarketTestBase, TestCase):
         other_crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertFalse(response.context['crew'])
@@ -265,7 +265,7 @@ class Test__Market_Women(MarketTestBase, TestCase):
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertFalse(utils.has_all_seats(crew))
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -289,7 +289,7 @@ class Test__Market_Women(MarketTestBase, TestCase):
         crew = utils.get_crew(self.team, self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(crew))
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -313,7 +313,7 @@ class Test__Market_Women(MarketTestBase, TestCase):
         other_crew = utils.get_crew(self.team, self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertFalse(response.context['crew'])
@@ -383,7 +383,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     def test__get(self):
         """Renders the form page for GET requests."""
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
@@ -393,7 +393,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     def test__invalid_post(self):
         """Renders the form page for invalid POST requests."""
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(self.url, {})
         
         self.assertEqual(response.status_code, 200)
@@ -407,7 +407,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         
         self.assertEqual(models.Purchase.objects.count(), 0)
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(
             self.url,
             {'crew': str(self.crew.id), 'seat': str(self.seat.id)},
@@ -528,7 +528,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     def test__get(self):
         """Renders the form page for GET requests."""
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
@@ -538,7 +538,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     def test__invalid_post(self):
         """Renders the form page for invalid POST requests."""
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(self.url, {})
         
         self.assertEqual(response.status_code, 200)
@@ -557,7 +557,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
-        self.client.login(username='DevTeam', password='')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(
             self.url,
             {'seat': str(self.seat.id), 'gender': 'M'},
