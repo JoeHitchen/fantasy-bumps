@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth import models as usr
+from django.contrib.auth import models as auth
 
 from . import models
 from . import forms
@@ -140,7 +140,7 @@ class Test__Sell(TestCase):
     def test__save__ignores_other_teams(self, markets_mock):
         """Does not delete purchases from other teams."""
         
-        other_team = usr.User.objects.create_user('other', '', '').team
+        other_team = auth.User.objects.create_user('other', '', '').team
         other_team.purchases.create(
             day = self.day,
             seat = self.seat,

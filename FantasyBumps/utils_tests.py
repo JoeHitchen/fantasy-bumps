@@ -1,5 +1,5 @@
 from django.test import TestCase
-from django.contrib.auth import models as usr
+from django.contrib.auth import models as auth
 
 from .constants import genders
 from . import models
@@ -27,7 +27,7 @@ class Test__Get_Crew(TestCase):
     def test__other_team(self):
         """Does not include rowers purchased by another team."""
         
-        other_team = usr.User.objects.create_user('Other').team
+        other_team = auth.User.objects.create_user('Other').team
         
         models.Purchase(
             team = other_team,
