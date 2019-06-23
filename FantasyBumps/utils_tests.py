@@ -11,7 +11,7 @@ class Test__Get_Crew(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        cls.team = usr.User.objects.create_user('Seats')
+        cls.team = usr.User.objects.create_user('Seats').team
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew(gender = genders.WOMENS)
         cls.crew.save()
@@ -27,7 +27,7 @@ class Test__Get_Crew(TestCase):
     def test__other_team(self):
         """Does not include rowers purchased by another team."""
         
-        other_team = usr.User.objects.create_user('Other')
+        other_team = usr.User.objects.create_user('Other').team
         
         models.Purchase(
             team = other_team,
@@ -106,7 +106,7 @@ class Test__Has_All_Seats(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        cls.team = usr.User.objects.create_user('Seats')
+        cls.team = usr.User.objects.create_user('Seats').team
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew(gender = genders.MENS)
         cls.crew.save()

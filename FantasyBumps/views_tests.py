@@ -95,7 +95,7 @@ class MarketTestBase():
         
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
-        cls.team = usr.User.objects.create_user('Market', '', 'secret')
+        cls.team = usr.User.objects.create_user('Market', '', 'secret').team
         
         cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -364,7 +364,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         cls.event = models.Event.objects.first()
         cls.day = cls.event.active_day
         
-        cls.team = usr.User.objects.create_user('Buy', '', 'secret')
+        cls.team = usr.User.objects.create_user('Buy', '', 'secret').team
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
@@ -508,7 +508,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         cls.event = models.Event.objects.first()
         cls.day = cls.event.active_day
         
-        cls.team = usr.User.objects.create_user('Sell', '', 'secret')
+        cls.team = usr.User.objects.create_user('Sell', '', 'secret').team
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()

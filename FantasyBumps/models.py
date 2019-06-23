@@ -225,7 +225,7 @@ def create_team(sender, instance, created, **kwargs):
 class Purchase(models.Model):
     """A purchase for a fantasy team."""
     
-    team = models.ForeignKey('auth.User', models.CASCADE, related_name='purchases')
+    team = models.ForeignKey(Team, models.CASCADE, related_name='purchases')
     day = models.ForeignKey(Day, models.CASCADE)
     crew = models.ForeignKey(Crew, models.PROTECT)
     seat = models.ForeignKey(Seat, models.PROTECT)

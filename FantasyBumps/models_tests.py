@@ -565,7 +565,7 @@ class Test__Purchase(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        cls.team = auth.User.objects.create_user('Team', '', 'pass')
+        cls.team = auth.User.objects.create_user('Team', '', 'pass').team
         cls.day = models.Day.objects.first()
         
         cls.crew1 = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
