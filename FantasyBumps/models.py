@@ -2,8 +2,10 @@ from datetime import datetime, time, timedelta
 from functools import lru_cache
 
 from django.db import models
+from django.contrib.auth import models as auth
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.dispatch import receiver
 
 from .constants import genders
 
@@ -211,6 +213,12 @@ class Team(models.Model):
     
     def __str__(self):
         return self.user.username
+
+
+@receiver(models.signals.post_save, sender = auth.User)
+def create_team(sender, instance, created, **kwargs):
+    if created:
+        Team.objects.create(user = instance)
 
 
 

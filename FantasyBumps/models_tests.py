@@ -543,13 +543,18 @@ class Test__Seat(TestCase):
 @tag('game-core')
 class Test__Team(TestCase):
     
+    def test__auto_create(self):
+        """Is auto created every time a User instance is created."""
+        
+        user = auth.User.objects.create_user('A User', '', '')
+        self.assertTrue(hasattr(user, 'team'))
+    
+    
     def test__string(self):
         """Returns the related username as it's string representation."""
         
         user = auth.User.objects.create_user('A User', '', '')
-        
-        team = models.Team(user = user)
-        team.save()
+        team = user.team
         
         self.assertEqual(str(team), 'A User')
 
