@@ -7,10 +7,10 @@ from . import patching
 
 
 class Test__Buy(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     
     def setUp(self):
-        self.team = usr.User.objects.create_user('Buy').team
+        self.team = models.Team.objects.first()
         self.day = models.Day.objects.first()
         self.crew = models.Crew.objects.first().id
         self.seat = models.Seat.objects.first().id
@@ -69,10 +69,10 @@ class Test__Buy(TestCase):
 
 
 class Test__Sell(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     
     def setUp(self):
-        self.team = usr.User.objects.create_user('Buy').team
+        self.team = models.Team.objects.first()
         self.day = models.Day.objects.first()
         self.crew = models.Crew.objects.filter(gender = 'W').first()
         self.seat = models.Seat.objects.first()

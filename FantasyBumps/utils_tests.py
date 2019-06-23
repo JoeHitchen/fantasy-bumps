@@ -7,11 +7,11 @@ from . import utils
 
 
 class Test__Get_Crew(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'seats']
+    fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     
     @classmethod
     def setUpTestData(cls):
-        cls.team = usr.User.objects.create_user('Seats').team
+        cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew(gender = genders.WOMENS)
         cls.crew.save()
@@ -102,11 +102,11 @@ class Test__Get_Crew(TestCase):
 
 
 class Test__Has_All_Seats(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'seats']
+    fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     
     @classmethod
     def setUpTestData(cls):
-        cls.team = usr.User.objects.create_user('Seats').team
+        cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew(gender = genders.MENS)
         cls.crew.save()

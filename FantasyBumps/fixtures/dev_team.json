@@ -1,0 +1,27 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$150000$1LOP0eK8KyF3$QOL7cLi3AMvHPkC8ShA2cKR0DIVLS7j0YXSmUbj0w90=",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "DevTeam",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2019-06-23T18:05:27.413Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "FantasyBumps.team",
+    "pk": 1,
+    "fields": {
+      "user": 1
+    }
+  }
+]

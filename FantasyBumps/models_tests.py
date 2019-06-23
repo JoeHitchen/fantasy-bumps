@@ -561,11 +561,11 @@ class Test__Team(TestCase):
 
 
 class Test__Purchase(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'seats']
+    fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     
     @classmethod
     def setUpTestData(cls):
-        cls.team = auth.User.objects.create_user('Team', '', 'pass').team
+        cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         
         cls.crew1 = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
