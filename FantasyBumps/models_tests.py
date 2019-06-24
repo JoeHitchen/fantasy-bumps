@@ -542,6 +542,16 @@ class Test__Seat(TestCase):
 
 @tag('game-core')
 class Test__Team(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        
+        cls.crew = models.Crew.objects.create(gender = genders.WOMENS)
+        cls.bow = models.Seat.objects.get(name = 'Bow')
+        
     
     def test__auto_create(self):
         """Is auto created every time a User instance is created."""
@@ -557,6 +567,84 @@ class Test__Team(TestCase):
         team = user.team
         
         self.assertEqual(str(team), 'A User')
+    
+    
+    def test__get_crew__empty_crew(self):
+        """Returns an empty crew list if no rowers have been purchased."""
+        
+        crew = self.team.get_crew(self.day, genders.WOMENS)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__get_crew__other_team(self):
+        """Does not include rowers purchased by another team."""
+        
+        other_team = auth.User.objects.create_user('Other').team
+        
+        other_team.purchases.create(
+            day = self.day,
+            crew = self.crew,
+            seat = self.bow,
+        )
+        
+        crew = self.team.get_crew(self.day, genders.WOMENS)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__get_crew__other_day(self):
+        """Does not include rowers purchased on another day."""
+        
+        other_day = models.Day.objects.last()
+        self.assertNotEqual(other_day, self.day)
+        
+        self.team.purchases.create(
+            day = other_day,
+            crew = self.crew,
+            seat = self.bow,
+        )
+        
+        crew = self.team.get_crew(self.day, genders.WOMENS)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__get_crew__wrong_gender(self):
+        """Does not include purchases of the wrong gender."""
+        
+        self.team.purchases.create(
+            day = self.day,
+            crew = self.crew,  # Is a women's crew
+            seat = self.bow,
+        )
+        
+        crew = self.team.get_crew(self.day, genders.MENS)
+        self.assertEqual(crew.count(), 0)
+    
+    
+    def test__get_crew__partial_team(self):
+        """Returns any purchases matching the criteria."""
+        
+        self.team.purchases.create(
+            day = self.day,
+            crew = self.crew,
+            seat = self.bow,
+        )
+        
+        crew = self.team.get_crew(self.day, genders.WOMENS)
+        self.assertEqual(crew.count(), 1)
+    
+    
+    def test__get_crew__full_team(self):
+        """Returns any purchases matching the criteria."""
+        
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew,
+                seat = seat,
+            )
+        
+        crew = self.team.get_crew(self.day, genders.WOMENS)
+        self.assertEqual(crew.count(), 9)
 
 
 
