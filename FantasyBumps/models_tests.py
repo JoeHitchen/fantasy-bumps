@@ -648,6 +648,7 @@ class Test__Team(TestCase):
 
 
 
+@tag('game-core')
 class Test__Purchase(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     

@@ -1,10 +1,11 @@
-from django.test import TestCase
+from django.test import TestCase, tag
 
 from .constants import genders
 from . import models
 from . import utils
 
 
+@tag('game-core')
 class Test__Has_All_Seats(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     
