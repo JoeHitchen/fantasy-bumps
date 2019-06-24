@@ -2,8 +2,10 @@ from datetime import datetime, time, timedelta
 from functools import lru_cache
 
 from django.db import models
+from django.contrib.auth import models as auth
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.dispatch import receiver
 
 from .constants import genders
 
@@ -204,10 +206,31 @@ class Seat(models.Model):
 
 
 
+class Team(models.Model):
+    """Extends auth.User functionality for the Fantasy Bumps game."""
+    
+    user = models.OneToOneField('auth.User', models.CASCADE)
+    
+    def __str__(self):
+        return self.user.username
+    
+    
+    def get_crew(self, day, gender):
+        """Return all purchases for a day, and gender."""
+        return self.purchases.filter(day = day, crew__gender = gender)
+
+
+@receiver(models.signals.post_save, sender = auth.User)
+def create_team(sender, instance, created, **kwargs):
+    if created:
+        Team.objects.create(user = instance)
+
+
+
 class Purchase(models.Model):
     """A purchase for a fantasy team."""
     
-    team = models.ForeignKey('auth.User', models.CASCADE, related_name='purchases')
+    team = models.ForeignKey(Team, models.CASCADE, related_name='purchases')
     day = models.ForeignKey(Day, models.CASCADE)
     crew = models.ForeignKey(Crew, models.PROTECT)
     seat = models.ForeignKey(Seat, models.PROTECT)

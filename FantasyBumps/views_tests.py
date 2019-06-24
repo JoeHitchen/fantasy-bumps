@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from django.test import TestCase
 from django.utils import timezone
-from django.contrib.auth import models as usr
 from django.contrib import messages
 from django.urls import reverse, resolve
 
@@ -85,6 +84,7 @@ class MarketTestBase():
         'dev_start_day2',
         'dev_start_day3',
         'seats',
+        'dev_team',
     ]
     
     @classmethod
@@ -95,7 +95,7 @@ class MarketTestBase():
         
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
-        cls.team = usr.User.objects.create_user('Market', '', 'secret')
+        cls.team = models.Team.objects.first()
         
         cls.crew_mens = models.Crew(gender = genders.MENS)
         cls.crew_mens.save()
@@ -139,7 +139,7 @@ class MarketTestBase():
     def test__generic__with_user(self):
         """Renders the market page for the relevant competition with details of the user's team."""
         
-        self.client.login(username='Market', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
@@ -181,10 +181,10 @@ class Test__Market_Men(MarketTestBase, TestCase):
             seat = models.Seat.objects.first(),
         )
         
-        crew = utils.get_crew(self.team, self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, genders.MENS)
         self.assertFalse(utils.has_all_seats(crew))
         
-        self.client.login(username='Market', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -205,10 +205,10 @@ class Test__Market_Men(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        crew = utils.get_crew(self.team, self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(crew))
         
-        self.client.login(username='Market', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -229,10 +229,10 @@ class Test__Market_Men(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        other_crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        other_crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
-        self.client.login(username='Market', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertFalse(response.context['crew'])
@@ -262,10 +262,10 @@ class Test__Market_Women(MarketTestBase, TestCase):
             seat = models.Seat.objects.first(),
         )
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertFalse(utils.has_all_seats(crew))
         
-        self.client.login(username='Market', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -286,10 +286,10 @@ class Test__Market_Women(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(crew))
         
-        self.client.login(username='Market', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(list(response.context['crew']), list(crew))
@@ -310,10 +310,10 @@ class Test__Market_Women(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        other_crew = utils.get_crew(self.team, self.day, genders.MENS)
+        other_crew = self.team.get_crew(self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
-        self.client.login(username='Market', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertFalse(response.context['crew'])
@@ -355,6 +355,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         'dev_start_day2',
         'dev_start_day3',
         'seats',
+        'dev_team',
     ]
     url = reverse('fantasybumps:buy')
     
@@ -364,7 +365,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         cls.event = models.Event.objects.first()
         cls.day = cls.event.active_day
         
-        cls.team = usr.User.objects.create_user('Buy', '', 'secret')
+        cls.team = models.Team.objects.first()
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
@@ -382,7 +383,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     def test__get(self):
         """Renders the form page for GET requests."""
         
-        self.client.login(username='Buy', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
@@ -392,7 +393,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
     def test__invalid_post(self):
         """Renders the form page for invalid POST requests."""
         
-        self.client.login(username='Buy', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(self.url, {})
         
         self.assertEqual(response.status_code, 200)
@@ -406,7 +407,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         
         self.assertEqual(models.Purchase.objects.count(), 0)
         
-        self.client.login(username='Buy', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(
             self.url,
             {'crew': str(self.crew.id), 'seat': str(self.seat.id)},
@@ -499,6 +500,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         'dev_start_day2',
         'dev_start_day3',
         'seats',
+        'dev_team',
     ]
     url = reverse('fantasybumps:sell')
     
@@ -508,7 +510,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         cls.event = models.Event.objects.first()
         cls.day = cls.event.active_day
         
-        cls.team = usr.User.objects.create_user('Sell', '', 'secret')
+        cls.team = models.Team.objects.first()
         
         cls.crew = models.Crew(name = 'A', gender = genders.MENS)
         cls.crew.save()
@@ -526,7 +528,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     def test__get(self):
         """Renders the form page for GET requests."""
         
-        self.client.login(username='Sell', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
@@ -536,7 +538,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
     def test__invalid_post(self):
         """Renders the form page for invalid POST requests."""
         
-        self.client.login(username='Sell', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(self.url, {})
         
         self.assertEqual(response.status_code, 200)
@@ -555,7 +557,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         )
         self.assertEqual(models.Purchase.objects.count(), 1)
         
-        self.client.login(username='Sell', password='secret')
+        self.client.login(username='DevTeam', password='password')
         response = self.client.post(
             self.url,
             {'seat': str(self.seat.id), 'gender': 'M'},
