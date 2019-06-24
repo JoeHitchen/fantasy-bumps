@@ -20,7 +20,7 @@ class Test__Get_Crew(TestCase):
     def test__empty_crew(self):
         """Returns an empty crew list if no rowers have been purchased."""
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -36,7 +36,7 @@ class Test__Get_Crew(TestCase):
             seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -53,7 +53,7 @@ class Test__Get_Crew(TestCase):
             seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -67,7 +67,7 @@ class Test__Get_Crew(TestCase):
             seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, genders.MENS)
         self.assertEqual(crew.count(), 0)
     
     
@@ -81,7 +81,7 @@ class Test__Get_Crew(TestCase):
             seat = models.Seat.objects.get(name = 'Bow'),
         ).save()
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 1)
     
     
@@ -96,7 +96,7 @@ class Test__Get_Crew(TestCase):
                 seat = seat,
             ).save()
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertEqual(crew.count(), 9)
 
 

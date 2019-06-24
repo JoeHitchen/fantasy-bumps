@@ -4,11 +4,6 @@ from .constants import genders
 from . import models
 
 
-def get_crew(team, day, gender):
-    """Return all purchases for a team, day, and gender."""
-    return models.Purchase.objects.filter(team = team, day = day, crew__gender = gender)
-
-
 def has_all_seats(purchases):
     """Checks that a queryset of purchase objects has every seat filled exactly once."""
     

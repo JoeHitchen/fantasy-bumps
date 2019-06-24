@@ -54,12 +54,12 @@ class MarketView(EventView):
         user = self.request.user
         if user.is_authenticated:
             
-            crew = utils.get_crew(user.team, day, gender)
+            crew = user.team.get_crew(day, gender)
             context['crew'] = crew
             context['crew_valid'] = utils.has_all_seats(crew)
             
             other_gender = utils.reverse_gender(gender)
-            other_crew = utils.get_crew(user.team, day, other_gender)
+            other_crew = user.team.get_crew(day, other_gender)
             context['other_crew_valid'] = utils.has_all_seats(other_crew)
         
         return context

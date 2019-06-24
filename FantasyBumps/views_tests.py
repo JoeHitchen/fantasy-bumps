@@ -181,7 +181,7 @@ class Test__Market_Men(MarketTestBase, TestCase):
             seat = models.Seat.objects.first(),
         )
         
-        crew = utils.get_crew(self.team, self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, genders.MENS)
         self.assertFalse(utils.has_all_seats(crew))
         
         self.client.login(username='DevTeam', password='password')
@@ -205,7 +205,7 @@ class Test__Market_Men(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        crew = utils.get_crew(self.team, self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(crew))
         
         self.client.login(username='DevTeam', password='password')
@@ -229,7 +229,7 @@ class Test__Market_Men(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        other_crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        other_crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
         self.client.login(username='DevTeam', password='password')
@@ -262,7 +262,7 @@ class Test__Market_Women(MarketTestBase, TestCase):
             seat = models.Seat.objects.first(),
         )
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertFalse(utils.has_all_seats(crew))
         
         self.client.login(username='DevTeam', password='password')
@@ -286,7 +286,7 @@ class Test__Market_Women(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        crew = utils.get_crew(self.team, self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, genders.WOMENS)
         self.assertTrue(utils.has_all_seats(crew))
         
         self.client.login(username='DevTeam', password='password')
@@ -310,7 +310,7 @@ class Test__Market_Women(MarketTestBase, TestCase):
                 seat = seat,
             )
         
-        other_crew = utils.get_crew(self.team, self.day, genders.MENS)
+        other_crew = self.team.get_crew(self.day, genders.MENS)
         self.assertTrue(utils.has_all_seats(other_crew))
         
         self.client.login(username='DevTeam', password='password')

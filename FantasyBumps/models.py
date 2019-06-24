@@ -213,6 +213,11 @@ class Team(models.Model):
     
     def __str__(self):
         return self.user.username
+    
+    
+    def get_crew(self, day, gender):
+        """Return all purchases for a day, and gender."""
+        return self.purchases.filter(day = day, crew__gender = gender)
 
 
 @receiver(models.signals.post_save, sender = auth.User)
