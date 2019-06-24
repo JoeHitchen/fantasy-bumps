@@ -12,7 +12,7 @@ from . import views
 from . import patching
 
 
-class Test__Simple(TestCase):
+class Test__Index(TestCase):
     """Tests simple views that do not justify separate test classes."""
     fixtures = ['dev_event', 'dev_team']
     
@@ -33,78 +33,10 @@ class Test__Simple(TestCase):
             list(response.context['events']),
             list(models.Event.objects.all()),
         )
-    
-    
-    def test__event__unknown_event(self):
-        """Returns 404 for unknown events."""
-        
-        url = reverse('fantasybumps:event', kwargs = {'event_tag': 'unknown'})
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 404)
-    
-    
-    def test__event__known_event(self):
-        """Returns 200 for known events, with the event in the context."""
-        
-        url = reverse('fantasybumps:event', kwargs = {'event_tag': self.event.tag})
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/event.html')
-        self.assertEqual(response.context['event'], self.event)
-        self.assertFalse('team' in response.context)
-    
-    
-    def test__event__with_login(self):
-        """Returns 200 for known events, and adds team info to context for logged in users."""
-        
-        self.client.login(username='DevTeam', password='password')
-        url = reverse('fantasybumps:event', kwargs = {'event_tag': self.event.tag})
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/event.html')
-        self.assertEqual(response.context['event'], self.event)
-        self.assertEqual(response.context['team'], self.team)
-    
-    
-    def test__leaderboard__unknown_event(self):
-        """Returns 404 for unknown events."""
-        
-        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': 'unknown'})
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 404)
-    
-    
-    def test__leaderboard__known_event(self):
-        """Returns 200 for known events, with the event in the context."""
-        
-        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': self.event.tag})
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/leaderboard.html')
-        self.assertEqual(response.context['event'], self.event)
-        self.assertFalse('team' in response.context)
-    
-    
-    def test__leaderboard__with_login(self):
-        """Returns 200 for known events, and adds team info to context for logged in users."""
-        
-        self.client.login(username='DevTeam', password='password')
-        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': self.event.tag})
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/leaderboard.html')
-        self.assertEqual(response.context['event'], self.event)
-        self.assertEqual(response.context['team'], self.team)
 
 
 
-class MarketTestBase():
+class GamePageBase():
     fixtures = [
         'dev_event',
         'dev_days',
@@ -120,17 +52,13 @@ class MarketTestBase():
     def setUpTestData(cls):
         
         cls.event = models.Event.objects.first()
+        cls.team = models.Team.objects.first()
         cls.day = cls.event.active_day
         
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
-        cls.team = models.Team.objects.first()
-        
-        cls.crew_mens = models.Crew(gender = genders.MENS)
-        cls.crew_mens.save()
-        
-        cls.crew_womens = models.Crew(gender = genders.WOMENS)
-        cls.crew_womens.save()
+        cls.crew_mens = models.Crew.objects.create(gender = genders.MENS)
+        cls.crew_womens = models.Crew.objects.create(gender = genders.WOMENS)
     
     
     def test__generic__unknown_event(self):
@@ -144,54 +72,88 @@ class MarketTestBase():
     
     
     def test__generic__without_user(self):
-        """Renders the market page for the relevant competition, but does not include team info."""
+        """Returns a 200 success, with the event and day in the context but no team."""
         
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/market.html')
+        self.assertTemplateUsed(response, self.template)
         
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
-        
-        self.assertEqual(response.context['gender'], self.gender_info['text'])
-        self.assertEqual(
-            response.context['start_order'],
-            self.day.start_order(self.gender_info['code']),
-        )
-        
         self.assertFalse('team' in response.context)
-        self.assertFalse('crew' in response.context)
-        self.assertFalse('crew_valid' in response.context)
-        self.assertFalse('other_crew_valid' in response.context)
+        
+        self.extra_context_without_user(response.context)
+    
+    def extra_context_without_user(self, context):
+        """Extra context tests for without_user base test."""
+        pass
     
     
     def test__generic__with_user(self):
-        """Renders the market page for the relevant competition with details of the user's team."""
+        """Returns a 200 success, with the event, day, and team in the context."""
         
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/market.html')
+        self.assertTemplateUsed(response, self.template)
         
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
+        self.assertEqual(response.context['team'], self.team)
         
-        self.assertEqual(response.context['gender'], self.gender_info['text'])
+        self.extra_context_with_user(response.context)
+    
+    def extra_context_with_user(self, context):
+        """Extra context tests for with_user base test."""
+        pass
+
+
+
+class Test__Event(GamePageBase, TestCase):
+    
+    # Test settings
+    url_name = 'fantasybumps:event'
+    template = 'fantasybumps/event.html'
+
+
+
+class MarketPageBase(GamePageBase):
+    
+    # Test group settings
+    template = 'fantasybumps/market.html'
+    
+    def extra_context_without_user(self, context):
+        """Extra context tests for without_user base test."""
+        
+        self.assertEqual(context['gender'], self.gender_info['text'])
         self.assertEqual(
-            response.context['start_order'],
+            context['start_order'],
             self.day.start_order(self.gender_info['code']),
         )
         
-        self.assertEqual(response.context['team'], self.team)
-        self.assertTrue('crew' in response.context)
-        self.assertTrue('crew_valid' in response.context)
-        self.assertTrue('other_crew_valid' in response.context)
+        self.assertFalse('crew' in context)
+        self.assertFalse('crew_valid' in context)
+        self.assertFalse('other_crew_valid' in context)
+    
+    
+    def extra_context_with_user(self, context):
+        """Extra context tests for with_user base test."""
+        
+        self.assertEqual(context['gender'], self.gender_info['text'])
+        self.assertEqual(
+            context['start_order'],
+            self.day.start_order(self.gender_info['code']),
+        )
+        
+        self.assertTrue('crew' in context)
+        self.assertTrue('crew_valid' in context)
+        self.assertTrue('other_crew_valid' in context)
 
 
 
-class Test__Market_Men(MarketTestBase, TestCase):
+class Test__Market_Men(MarketPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasybumps:men'
@@ -272,7 +234,7 @@ class Test__Market_Men(MarketTestBase, TestCase):
 
 
 
-class Test__Market_Women(MarketTestBase, TestCase):
+class Test__Market_Women(MarketPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasybumps:women'
@@ -350,6 +312,14 @@ class Test__Market_Women(MarketTestBase, TestCase):
         self.assertFalse(response.context['crew'])
         self.assertFalse(response.context['crew_valid'])
         self.assertTrue(response.context['other_crew_valid'])
+
+
+
+class Test__Leaderboard(GamePageBase, TestCase):
+    
+    # Test settings
+    url_name = 'fantasybumps:leaderboard'
+    template = 'fantasybumps/leaderboard.html'
 
 
 

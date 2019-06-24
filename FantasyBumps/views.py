@@ -32,6 +32,8 @@ class EventView(DetailView):
         context = super().get_context_data(**kwargs)
         
         self.event = self.object  # Provide friendly name for retrived event.
+        self.day = self.event.active_day
+        context['day'] = self.day
         
         if self.request.user.is_authenticated:
             self.team = self.request.user.team
@@ -54,19 +56,17 @@ class MarketView(EventView):
         gender = self.kwargs['gender']
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
-        day = self.event.active_day
-        context['day'] = day
-        context['start_order'] = day.start_order(gender)
+        context['start_order'] = self.day.start_order(gender)
         
         user = self.request.user
         if user.is_authenticated:
             
-            crew = user.team.get_crew(day, gender)
+            crew = user.team.get_crew(self.day, gender)
             context['crew'] = crew
             context['crew_valid'] = utils.has_all_seats(crew)
             
             other_gender = utils.reverse_gender(gender)
-            other_crew = user.team.get_crew(day, other_gender)
+            other_crew = user.team.get_crew(self.day, other_gender)
             context['other_crew_valid'] = utils.has_all_seats(other_crew)
         
         return context
