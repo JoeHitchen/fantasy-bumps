@@ -29,8 +29,15 @@ class EventView(DetailView):
     template_name = 'fantasybumps/event.html'
     
     def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
         self.event = self.object  # Provide friendly name for retrived event.
-        return super().get_context_data(**kwargs)
+        
+        if self.request.user.is_authenticated:
+            self.team = self.request.user.team
+            context['team'] = self.team
+        
+        return context
 
 
 

@@ -14,11 +14,12 @@ from . import patching
 
 class Test__Simple(TestCase):
     """Tests simple views that do not justify separate test classes."""
-    fixtures = ['dev_event']
+    fixtures = ['dev_event', 'dev_team']
     
     @classmethod
     def setUpTestData(cls):
         cls.event = models.Event.objects.first()
+        cls.team = models.Team.objects.first()
     
     
     def test__index(self):
@@ -52,6 +53,20 @@ class Test__Simple(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/event.html')
         self.assertEqual(response.context['event'], self.event)
+        self.assertFalse('team' in response.context)
+    
+    
+    def test__event__with_login(self):
+        """Returns 200 for known events, and adds team info to context for logged in users."""
+        
+        self.client.login(username='DevTeam', password='password')
+        url = reverse('fantasybumps:event', kwargs = {'event_tag': self.event.tag})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/event.html')
+        self.assertEqual(response.context['event'], self.event)
+        self.assertEqual(response.context['team'], self.team)
     
     
     def test__leaderboard__unknown_event(self):
@@ -72,6 +87,20 @@ class Test__Simple(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/leaderboard.html')
         self.assertEqual(response.context['event'], self.event)
+        self.assertFalse('team' in response.context)
+    
+    
+    def test__leaderboard__with_login(self):
+        """Returns 200 for known events, and adds team info to context for logged in users."""
+        
+        self.client.login(username='DevTeam', password='password')
+        url = reverse('fantasybumps:leaderboard', kwargs = {'event_tag': self.event.tag})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/leaderboard.html')
+        self.assertEqual(response.context['event'], self.event)
+        self.assertEqual(response.context['team'], self.team)
 
 
 
@@ -131,6 +160,7 @@ class MarketTestBase():
             self.day.start_order(self.gender_info['code']),
         )
         
+        self.assertFalse('team' in response.context)
         self.assertFalse('crew' in response.context)
         self.assertFalse('crew_valid' in response.context)
         self.assertFalse('other_crew_valid' in response.context)
@@ -154,6 +184,7 @@ class MarketTestBase():
             self.day.start_order(self.gender_info['code']),
         )
         
+        self.assertEqual(response.context['team'], self.team)
         self.assertTrue('crew' in response.context)
         self.assertTrue('crew_valid' in response.context)
         self.assertTrue('other_crew_valid' in response.context)
