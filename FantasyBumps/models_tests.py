@@ -665,6 +665,24 @@ class Test__GameEntry(TestCase):
         
         with self.assertRaises(IntegrityError):
             self.team.entries.create(event = self.event)
+    
+    
+    def test__query__add_totals(self):
+        """Has a queryset set method that totals the gendered budgets."""
+        
+        # Enter team to event
+        mens_budget = 567
+        womens_budget = 765
+        
+        self.team.entries.create(
+            event = self.event,
+            mens_budget = mens_budget,
+            womens_budget = womens_budget,
+        )
+        
+        # Retrieve objects with totals
+        entry = models.GameEntry.objects.add_totals().first()
+        self.assertEqual(entry.total_budget, mens_budget + womens_budget)
 
 
 

@@ -227,6 +227,15 @@ def create_team(sender, instance, created, **kwargs):
 
 
 
+class GameEntryQuerySet(models.QuerySet):
+    """Additional queryset methods related to budgets and scores."""
+    
+    def add_totals(self):
+        """Add non-gendered totals to the query."""
+        return self.annotate(total_budget = models.F('mens_budget') + models.F('womens_budget'))
+
+
+
 class GameEntry(models.Model):
     """Describes a team's budgets (and by extension, score) for an event."""
     
@@ -235,6 +244,8 @@ class GameEntry(models.Model):
     event = models.ForeignKey(Event, models.CASCADE, related_name='fantasies')
     mens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
     womens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
+    
+    objects = GameEntryQuerySet.as_manager()
     
     class Meta:
         unique_together = ['team', 'event']
