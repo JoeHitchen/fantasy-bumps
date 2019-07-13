@@ -84,6 +84,7 @@ class LeaderboardView(EventView):
         
         ranking = self.kwargs.get('gender', genders.TOTALS)
         context['ranking'] = ranking
+        context['fantasies'] = self.event.fantasies.add_totals().rank_by(ranking)
         
         return context
 

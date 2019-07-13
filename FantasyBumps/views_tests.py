@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 from django.contrib import messages
+from django.contrib.auth import models as auth
 from django.urls import reverse, resolve
 
 from .constants import genders
@@ -317,6 +318,30 @@ class Test__Market_Women(MarketPageBase, TestCase):
 
 class LeaderboardPageBase(GamePageBase):
     
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        
+        cls.team_1 = auth.User.objects.create_user('One', '', '').team
+        cls.team_2 = auth.User.objects.create_user('Two', '', '').team
+        cls.team_3 = auth.User.objects.create_user('Three', '', '').team
+        
+        cls.game_entry_1 = cls.event.fantasies.create(
+            team = cls.team_1,
+            mens_budget = 345,
+            womens_budget = 545,
+        )
+        cls.game_entry_2 = cls.event.fantasies.create(
+            team = cls.team_2,
+            mens_budget = 754,
+            womens_budget = 456,
+        )
+        cls.game_entry_3 = cls.event.fantasies.create(
+            team = cls.team_3,
+            mens_budget = 701,
+            womens_budget = 713,
+        )
+    
     # Test group settings
     template = 'fantasybumps/leaderboard.html'
     
@@ -324,12 +349,14 @@ class LeaderboardPageBase(GamePageBase):
         """Extra context tests for without_user base test."""
         
         self.assertEqual(context['ranking'], self.view_info['ranking'])
+        self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
     
     def extra_context_with_user(self, context):
         """Extra context tests for with_user base test."""
         
         self.assertEqual(context['ranking'], self.view_info['ranking'])
+        self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
 
 
 
@@ -340,6 +367,9 @@ class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
     view_info = {
         'ranking': 'T',
     }
+    
+    def get_ranked_fantasies(self):
+        return [self.game_entry_3, self.game_entry_2, self.game_entry_1]
 
 
 
@@ -350,6 +380,9 @@ class Test__Leaderboard_Men(LeaderboardPageBase, TestCase):
     view_info = {
         'ranking': genders.MENS,
     }
+    
+    def get_ranked_fantasies(self):
+        return [self.game_entry_2, self.game_entry_3, self.game_entry_1]
 
 
 
@@ -360,6 +393,9 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
     view_info = {
         'ranking': genders.WOMENS,
     }
+    
+    def get_ranked_fantasies(self):
+        return [self.game_entry_3, self.game_entry_1, self.game_entry_2]
 
 
 

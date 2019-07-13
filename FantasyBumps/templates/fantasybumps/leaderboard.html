@@ -12,6 +12,17 @@ Fantasy Bumps leaderboard page for {{ event }}.
     <th><a href="{% url 'fantasybumps:leaderboard_men' event.tag %}">Men's Score</a></th>
     <th><a href="{% url 'fantasybumps:leaderboard_women' event.tag %}">Women's Score</a></th>
   </thead>
+  <tbody>
+    {% for fantasy in fantasies %}<tr
+      {% if fantasy.team == team %}class="table-warning"{% elif forloop.counter == 1 %}class="table-success"{% endif %}
+    >
+      <td>{{ forloop.counter }}</td>
+      <td>{{ fantasy.team }}</td>
+      <td class="{% if ranking == 'T' %}table-primary{% endif %}">{{ fantasy.total_budget }}</td>
+      <td class="{% if ranking == 'M' %}table-primary{% endif %}">{{ fantasy.mens_budget }}</td>
+      <td class="{% if ranking == 'W' %}table-primary{% endif %}">{{ fantasy.womens_budget }}</td>
+    </tr>{% endfor %}
+  </tbody>
 </table>
 
 {% endblock %}
