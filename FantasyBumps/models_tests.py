@@ -654,7 +654,6 @@ class Test__GameEntry(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        cls.team = models.Team.objects.first()
         cls.event = models.Event.objects.first()
         
         cls.team_1 = auth.User.objects.create_user('One', '', '').team
@@ -681,28 +680,15 @@ class Test__GameEntry(TestCase):
     def test__unique_group(self):
         """Raises a DB IntegrityError if a duplicate team/event group created."""
         
-        self.team.entries.create(event = self.event)
-        
         with self.assertRaises(IntegrityError):
-            self.team.entries.create(event = self.event)
+            self.event.fantasies.create(team = self.team_1)  # Already exists
     
     
     def test__query__add_totals(self):
         """Has a queryset set method that totals the gendered budgets."""
         
-        # Enter team to event
-        mens_budget = 567
-        womens_budget = 765
-        
-        entry = self.team.entries.create(
-            event = self.event,
-            mens_budget = mens_budget,
-            womens_budget = womens_budget,
-        )
-        
-        # Retrieve objects with totals
-        entry = models.GameEntry.objects.add_totals().get(pk = entry.pk)
-        self.assertEqual(entry.total_budget, mens_budget + womens_budget)
+        entry = models.GameEntry.objects.add_totals().first()
+        self.assertEqual(entry.total_budget, 345 + 545)  # Budgets as set on class
     
     
     def test__query__rank_by__total(self):
