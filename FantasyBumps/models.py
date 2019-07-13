@@ -234,10 +234,10 @@ class GameEntryQuerySet(models.QuerySet):
         """Add non-gendered totals to the query."""
         return self.annotate(total_budget = models.F('mens_budget') + models.F('womens_budget'))
     
-    def rank_by(self, gender = 'T'):
+    def rank_by(self, gender = genders.TOTALS):
         """Retrieve team ranking for the gender provided."""
         ordering = {
-            'T': '-total_budget',
+            genders.TOTALS: '-total_budget',
             genders.MENS: '-mens_budget',
             genders.WOMENS: '-womens_budget',
         }[gender]

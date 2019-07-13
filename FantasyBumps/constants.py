@@ -2,6 +2,7 @@
 class genders:
     MENS = 'M'
     WOMENS = 'W'
+    TOTALS = 'T'
 
 
 class money:

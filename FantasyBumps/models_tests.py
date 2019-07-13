@@ -709,7 +709,7 @@ class Test__GameEntry(TestCase):
         """Ranks teams by the total budget."""
         
         self.assertEqual(
-            list(self.event.fantasies.add_totals().rank_by('T')),
+            list(self.event.fantasies.add_totals().rank_by(genders.TOTALS)),
             [self.game_entry_3, self.game_entry_2, self.game_entry_1],
         )
     

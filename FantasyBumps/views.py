@@ -82,7 +82,7 @@ class LeaderboardView(EventView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        ranking = self.kwargs.get('gender', 'T')
+        ranking = self.kwargs.get('gender', genders.TOTALS)
         context['ranking'] = ranking
         
         return context
