@@ -253,6 +253,8 @@ class GameEntry(models.Model):
     event = models.ForeignKey(Event, models.CASCADE, related_name='fantasies')
     mens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
     womens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
+    mens_balance = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
+    womens_balance = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
     
     objects = GameEntryQuerySet.as_manager()
     
