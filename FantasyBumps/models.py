@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import genders
+from .constants import genders, money
 
 
 class Event(models.Model):
@@ -224,6 +224,40 @@ class Team(models.Model):
 def create_team(sender, instance, created, **kwargs):
     if created:
         Team.objects.create(user = instance)
+
+
+
+class GameEntryQuerySet(models.QuerySet):
+    """Additional queryset methods related to budgets and scores."""
+    
+    def add_totals(self):
+        """Add non-gendered totals to the query."""
+        return self.annotate(total_budget = models.F('mens_budget') + models.F('womens_budget'))
+    
+    def rank_by(self, gender = genders.TOTALS):
+        """Retrieve team ranking for the gender provided."""
+        ordering = {
+            genders.TOTALS: '-total_budget',
+            genders.MENS: '-mens_budget',
+            genders.WOMENS: '-womens_budget',
+        }[gender]
+        return self.order_by(ordering)
+
+
+
+class GameEntry(models.Model):
+    """Describes a team's budgets (and by extension, score) for an event."""
+    
+    # Fields
+    team = models.ForeignKey(Team, models.CASCADE, related_name='entries')
+    event = models.ForeignKey(Event, models.CASCADE, related_name='fantasies')
+    mens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
+    womens_budget = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
+    
+    objects = GameEntryQuerySet.as_manager()
+    
+    class Meta:
+        unique_together = ['team', 'event']
 
 
 

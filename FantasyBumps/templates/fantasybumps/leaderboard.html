@@ -3,4 +3,26 @@
 
 {% block content %}
 Fantasy Bumps leaderboard page for {{ event }}.
+
+<table class="table table-hover table-sm">
+  <thead class="thead-light">
+    <th>Rank</th>
+    <th>Team</th>
+    <th><a href="{% url 'fantasybumps:leaderboard' event.tag %}">Total Score</a></th>
+    <th><a href="{% url 'fantasybumps:leaderboard_men' event.tag %}">Men's Score</a></th>
+    <th><a href="{% url 'fantasybumps:leaderboard_women' event.tag %}">Women's Score</a></th>
+  </thead>
+  <tbody>
+    {% for fantasy in fantasies %}<tr
+      {% if fantasy.team == team %}class="table-warning"{% elif forloop.counter == 1 %}class="table-success"{% endif %}
+    >
+      <td>{{ forloop.counter }}</td>
+      <td>{{ fantasy.team }}</td>
+      <td class="{% if ranking == genders.TOTALS %}table-primary{% endif %}">{{ fantasy.total_budget }}</td>
+      <td class="{% if ranking == genders.MENS %}table-primary{% endif %}">{{ fantasy.mens_budget }}</td>
+      <td class="{% if ranking == genders.WOMENS %}table-primary{% endif %}">{{ fantasy.womens_budget }}</td>
+    </tr>{% endfor %}
+  </tbody>
+</table>
+
 {% endblock %}

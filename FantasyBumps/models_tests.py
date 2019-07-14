@@ -649,6 +649,77 @@ class Test__Team(TestCase):
 
 
 @tag('game-core')
+class Test__GameEntry(TestCase):
+    fixtures = ['dev_event']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
+        
+        cls.team_1 = auth.User.objects.create_user('One', '', '').team
+        cls.team_2 = auth.User.objects.create_user('Two', '', '').team
+        cls.team_3 = auth.User.objects.create_user('Three', '', '').team
+        
+        cls.game_entry_1 = cls.event.fantasies.create(
+            team = cls.team_1,
+            mens_budget = 345,
+            womens_budget = 545,
+        )
+        cls.game_entry_2 = cls.event.fantasies.create(
+            team = cls.team_2,
+            mens_budget = 754,
+            womens_budget = 456,
+        )
+        cls.game_entry_3 = cls.event.fantasies.create(
+            team = cls.team_3,
+            mens_budget = 701,
+            womens_budget = 713,
+        )
+    
+    
+    def test__unique_group(self):
+        """Raises a DB IntegrityError if a duplicate team/event group created."""
+        
+        with self.assertRaises(IntegrityError):
+            self.event.fantasies.create(team = self.team_1)  # Already exists
+    
+    
+    def test__query__add_totals(self):
+        """Has a queryset set method that totals the gendered budgets."""
+        
+        entry = models.GameEntry.objects.add_totals().first()
+        self.assertEqual(entry.total_budget, 345 + 545)  # Budgets as set on class
+    
+    
+    def test__query__rank_by__total(self):
+        """Ranks teams by the total budget."""
+        
+        self.assertEqual(
+            list(self.event.fantasies.add_totals().rank_by(genders.TOTALS)),
+            [self.game_entry_3, self.game_entry_2, self.game_entry_1],
+        )
+    
+    
+    def test__query__rank_by__mens(self):
+        """Ranks teams by the men's budget."""
+        
+        self.assertEqual(
+            list(self.event.fantasies.rank_by(genders.MENS)),
+            [self.game_entry_2, self.game_entry_3, self.game_entry_1],
+        )
+    
+    
+    def test__query__rank_by__womens(self):
+        """Ranks teams by the women's budget."""
+        
+        self.assertEqual(
+            list(self.event.fantasies.rank_by(genders.WOMENS)),
+            [self.game_entry_3, self.game_entry_1, self.game_entry_2],
+        )
+
+
+
+@tag('game-core')
 class Test__Purchase(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     

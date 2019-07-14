@@ -78,6 +78,16 @@ class LeaderboardView(EventView):
     
     # View settings
     template_name = 'fantasybumps/leaderboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['genders'] = genders
+        
+        ranking = self.kwargs.get('gender', genders.TOTALS)
+        context['ranking'] = ranking
+        context['fantasies'] = self.event.fantasies.add_totals().rank_by(ranking)
+        
+        return context
 
 
 
