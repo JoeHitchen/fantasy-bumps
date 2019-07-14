@@ -650,7 +650,7 @@ class Test__Team(TestCase):
 
 @tag('game-core')
 class Test__GameEntry(TestCase):
-    fixtures = ['dev_event', 'dev_team']
+    fixtures = ['dev_event']
     
     @classmethod
     def setUpTestData(cls):

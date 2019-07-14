@@ -18,9 +18,9 @@ Fantasy Bumps leaderboard page for {{ event }}.
     >
       <td>{{ forloop.counter }}</td>
       <td>{{ fantasy.team }}</td>
-      <td class="{% if ranking == 'T' %}table-primary{% endif %}">{{ fantasy.total_budget }}</td>
-      <td class="{% if ranking == 'M' %}table-primary{% endif %}">{{ fantasy.mens_budget }}</td>
-      <td class="{% if ranking == 'W' %}table-primary{% endif %}">{{ fantasy.womens_budget }}</td>
+      <td class="{% if ranking == genders.TOTALS %}table-primary{% endif %}">{{ fantasy.total_budget }}</td>
+      <td class="{% if ranking == genders.MENS %}table-primary{% endif %}">{{ fantasy.mens_budget }}</td>
+      <td class="{% if ranking == genders.WOMENS %}table-primary{% endif %}">{{ fantasy.womens_budget }}</td>
     </tr>{% endfor %}
   </tbody>
 </table>

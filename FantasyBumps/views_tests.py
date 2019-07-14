@@ -318,6 +318,9 @@ class Test__Market_Women(MarketPageBase, TestCase):
 
 class LeaderboardPageBase(GamePageBase):
     
+    # Test group settings
+    template = 'fantasybumps/leaderboard.html'
+    
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -342,20 +345,19 @@ class LeaderboardPageBase(GamePageBase):
             womens_budget = 713,
         )
     
-    # Test group settings
-    template = 'fantasybumps/leaderboard.html'
-    
     def extra_context_without_user(self, context):
         """Extra context tests for without_user base test."""
         
-        self.assertEqual(context['ranking'], self.view_info['ranking'])
+        self.assertEqual(context['genders'], genders)
+        self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
     
     def extra_context_with_user(self, context):
         """Extra context tests for with_user base test."""
         
-        self.assertEqual(context['ranking'], self.view_info['ranking'])
+        self.assertEqual(context['genders'], genders)
+        self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
 
 
@@ -364,9 +366,7 @@ class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasybumps:leaderboard'
-    view_info = {
-        'ranking': 'T',
-    }
+    ranking = genders.TOTALS
     
     def get_ranked_fantasies(self):
         return [self.game_entry_3, self.game_entry_2, self.game_entry_1]
@@ -377,9 +377,7 @@ class Test__Leaderboard_Men(LeaderboardPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasybumps:leaderboard_men'
-    view_info = {
-        'ranking': genders.MENS,
-    }
+    ranking = genders.MENS
     
     def get_ranked_fantasies(self):
         return [self.game_entry_2, self.game_entry_3, self.game_entry_1]
@@ -390,9 +388,7 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasybumps:leaderboard_women'
-    view_info = {
-        'ranking': genders.WOMENS,
-    }
+    ranking = genders.WOMENS
     
     def get_ranked_fantasies(self):
         return [self.game_entry_3, self.game_entry_1, self.game_entry_2]
