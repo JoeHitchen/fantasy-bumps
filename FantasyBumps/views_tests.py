@@ -331,18 +331,24 @@ class LeaderboardPageBase(GamePageBase):
         
         cls.game_entry_1 = cls.event.fantasies.create(
             team = cls.team_1,
-            mens_budget = 345,
-            womens_budget = 545,
+            mens_budget = 701,
+            womens_budget = 713,
+            mens_balance = 110,
+            womens_balance = 103,
         )
         cls.game_entry_2 = cls.event.fantasies.create(
             team = cls.team_2,
             mens_budget = 754,
             womens_budget = 456,
+            mens_balance = 120,
+            womens_balance = 105,
         )
         cls.game_entry_3 = cls.event.fantasies.create(
             team = cls.team_3,
             mens_budget = 701,
             womens_budget = 713,
+            mens_balance = 117,
+            womens_balance = 112,
         )
     
     def extra_context_without_user(self, context):
@@ -369,7 +375,7 @@ class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
     ranking = genders.TOTALS
     
     def get_ranked_fantasies(self):
-        return [self.game_entry_3, self.game_entry_2, self.game_entry_1]
+        return [self.game_entry_1, self.game_entry_3, self.game_entry_2]
 
 
 
@@ -380,7 +386,7 @@ class Test__Leaderboard_Men(LeaderboardPageBase, TestCase):
     ranking = genders.MENS
     
     def get_ranked_fantasies(self):
-        return [self.game_entry_2, self.game_entry_3, self.game_entry_1]
+        return [self.game_entry_2, self.game_entry_1, self.game_entry_3]
 
 
 
@@ -391,7 +397,7 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
     ranking = genders.WOMENS
     
     def get_ranked_fantasies(self):
-        return [self.game_entry_3, self.game_entry_1, self.game_entry_2]
+        return [self.game_entry_1, self.game_entry_3, self.game_entry_2]
 
 
 
