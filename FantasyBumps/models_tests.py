@@ -664,16 +664,22 @@ class Test__GameEntry(TestCase):
             team = cls.team_1,
             mens_budget = 345,
             womens_budget = 545,
+            mens_balance = 110,
+            womens_balance = 103,
         )
         cls.game_entry_2 = cls.event.fantasies.create(
             team = cls.team_2,
             mens_budget = 754,
             womens_budget = 456,
+            mens_balance = 120,
+            womens_balance = 105,
         )
         cls.game_entry_3 = cls.event.fantasies.create(
             team = cls.team_3,
             mens_budget = 701,
             womens_budget = 713,
+            mens_balance = 117,
+            womens_balance = 112,
         )
     
     
@@ -684,18 +690,39 @@ class Test__GameEntry(TestCase):
             self.event.fantasies.create(team = self.team_1)  # Already exists
     
     
-    def test__query__add_totals(self):
-        """Has a queryset set method that totals the gendered budgets."""
+    def test__query__extend_financials__total_budget(self):
+        """Totals the gendered budgets."""
         
-        entry = models.GameEntry.objects.add_totals().first()
+        entry = models.GameEntry.objects.extend_financials().first()
         self.assertEqual(entry.total_budget, 345 + 545)  # Budgets as set on class
+    
+    
+    def test__query__extend_financials__mens_crew(self):
+        """Calculates the value of men's crews."""
+        
+        entry = models.GameEntry.objects.extend_financials().first()
+        self.assertEqual(entry.mens_crew_value, 345 - 110)
+    
+    
+    def test__query__extend_financials__womens_crew(self):
+        """Calculates the value of women's crews."""
+        
+        entry = models.GameEntry.objects.extend_financials().first()
+        self.assertEqual(entry.womens_crew_value, 545 - 103)
+    
+    
+    def test__query__extend_financials__total_crew(self):
+        """Calculates the value of both crews."""
+        
+        entry = models.GameEntry.objects.extend_financials().first()
+        self.assertEqual(entry.total_crew_value, 345 + 545 - 103 - 110)
     
     
     def test__query__rank_by__total(self):
         """Ranks teams by the total budget."""
         
         self.assertEqual(
-            list(self.event.fantasies.add_totals().rank_by(genders.TOTALS)),
+            list(self.event.fantasies.extend_financials().rank_by(genders.TOTALS)),
             [self.game_entry_3, self.game_entry_2, self.game_entry_1],
         )
     

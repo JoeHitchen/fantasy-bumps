@@ -228,11 +228,17 @@ def create_team(sender, instance, created, **kwargs):
 
 
 class GameEntryQuerySet(models.QuerySet):
-    """Additional queryset methods related to budgets and scores."""
+    """Additional queryset methods related to finances and scores."""
     
-    def add_totals(self):
-        """Add non-gendered totals to the query."""
-        return self.annotate(total_budget = models.F('mens_budget') + models.F('womens_budget'))
+    def extend_financials(self):
+        """Add crew values and non-gendered totals to the queried data."""
+        return self.annotate(
+            mens_crew_value = models.F('mens_budget') - models.F('mens_balance'),
+            womens_crew_value = models.F('womens_budget') - models.F('womens_balance'),
+        ).annotate(
+            total_budget = models.F('mens_budget') + models.F('womens_budget'),
+            total_crew_value = models.F('mens_crew_value') + models.F('womens_crew_value'),
+        )
     
     def rank_by(self, gender = genders.TOTALS):
         """Retrieve team ranking for the gender provided."""
@@ -246,7 +252,7 @@ class GameEntryQuerySet(models.QuerySet):
 
 
 class GameEntry(models.Model):
-    """Describes a team's budgets (and by extension, score) for an event."""
+    """Describes a team's finances (and by extension, score) for an event."""
     
     # Fields
     team = models.ForeignKey(Team, models.CASCADE, related_name='entries')
