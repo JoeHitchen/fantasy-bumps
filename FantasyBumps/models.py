@@ -241,13 +241,16 @@ class GameEntryQuerySet(models.QuerySet):
         )
     
     def rank_by(self, gender = genders.TOTALS):
-        """Retrieve team ranking for the gender provided."""
+        """Retrieve team ranking for the gender provided.
+        
+        Requires .extend_financials() to have been called.
+        """
         ordering = {
-            genders.TOTALS: '-total_budget',
-            genders.MENS: '-mens_budget',
-            genders.WOMENS: '-womens_budget',
+            genders.TOTALS: ['-total_budget', '-total_crew_value'],
+            genders.MENS: ['-mens_budget', '-mens_crew_value'],
+            genders.WOMENS: ['-womens_budget', '-womens_crew_value'],
         }[gender]
-        return self.order_by(ordering)
+        return self.order_by(*ordering)
 
 
 
