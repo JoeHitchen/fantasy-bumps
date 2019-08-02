@@ -182,7 +182,7 @@ class Position(models.Model):
     """A crew's position on the river for a given day."""
     
     day = models.ForeignKey(Day, models.CASCADE, related_name = 'ranking')
-    crew = models.ForeignKey(Crew, models.PROTECT)
+    crew = models.ForeignKey(Crew, models.PROTECT, related_name = 'positions')
     rank = models.PositiveSmallIntegerField(db_index = True)
     
     class Meta:
