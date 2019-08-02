@@ -175,6 +175,13 @@ class Crew(models.Model):
     
     def __str__(self):
         return self.name
+    
+    
+    @lru_cache(maxsize = 10)
+    def value(self, day):
+        """The price of the crew for a given day."""
+        self.positions.get(day = day)
+        return 150
 
 
 

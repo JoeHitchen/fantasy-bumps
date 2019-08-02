@@ -473,6 +473,13 @@ class Test__Division(TestCase):
 
 @tag('events-core')
 class Test__Crew(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.crew = models.Crew.objects.first()
+        cls.day = models.Day.objects.first()
+    
     
     def test__string(self):
         """Returns a crew's name as it's string representation."""
@@ -483,6 +490,20 @@ class Test__Crew(TestCase):
         )
         crew_str = str(crew)
         self.assertEqual(crew_str, crew.name)
+    
+    
+    def test__value__no_ranking(self):
+        """Raises an error if the crew does not have a position for the day provided."""
+        
+        with self.assertRaises(models.Position.DoesNotExist):
+            self.crew.value(self.day)
+    
+    
+    def test__value__with_ranking(self):
+        """Returns a fixed value."""
+        
+        self.crew.positions.create(day = self.day, rank = 1)
+        self.assertEqual(self.crew.value(self.day), 150)
 
 
 
