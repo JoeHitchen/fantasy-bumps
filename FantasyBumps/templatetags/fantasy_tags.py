@@ -96,12 +96,23 @@ def seat_avatar(seat):
 
 
 @register.inclusion_tag(template.Template('''
+  <form action="{% url 'fantasybumps:sell' %}" method="post">
+    {% csrf_token %}
+    <input name="purchase" type="hidden" value="{{ purchase.id }}"/>
+    <button class="btn btn-primary btn-sm" type="submit">Sell</button>
+  </form>
+'''))
+def sell_button(purchase):
+    return {'purchase': purchase}
+
+
+@register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <tr class="table-{% if rower %}primary{% else %}danger{% endif %}">
     <td>{{ seat|seat_avatar }}</td>
     <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
     <td>
-      <a href="{% url \'fantasybumps:oldsell\' %}" class="btn btn-sm btn-primary">Sell</a>
+      {% sell_button rower %}
     </td>
   </tr>
 '''))
