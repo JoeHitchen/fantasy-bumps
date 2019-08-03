@@ -734,7 +734,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': 'Sale was completed successfully.'}],
+            [{'level': 'success', 'message': "Successfully sold your women's bow seat."}],
         )
     
     
@@ -767,7 +767,38 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': 'Sale was completed successfully.'}],
+            [{'level': 'success', 'message': "Successfully sold your men's bow seat."}],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__valid_cox(self, market_closes_mock, markets_mock):
+        """Completes the sale.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        coxing_purchase = self.team.purchases.create(
+            day = self.day,
+            seat = models.Seat.objects.get(cox = True),
+            crew = self.crew,
+        )
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'purchase': coxing_purchase.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'success', 'message': "Successfully sold your women's cox."}],
         )
     
     

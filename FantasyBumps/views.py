@@ -171,7 +171,11 @@ def sell(request):
     except AssertionError:
         messages.error(request, 'An unknown error occurred processing this sale.')
     else:
-        messages.success(request, 'Sale was completed successfully.')
+        messages.success(request, 'Successfully sold your {} {}{}.'.format(
+            {genders.MENS: "men's", genders.WOMENS: "women's"}[purchase.crew.gender],
+            str(purchase.seat).lower(),
+            '' if purchase.seat.cox else ' seat',
+        ))
     
     return market_redirect
 
