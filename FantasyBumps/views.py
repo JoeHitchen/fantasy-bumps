@@ -1,14 +1,19 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
+from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib import messages
+from django.shortcuts import redirect
 from django.urls import reverse
 
 from .constants import genders
 from . import models
 from . import forms
 from . import utils
+from . import sell as transactions
 
 
 class IndexView(TemplateView):
@@ -139,25 +144,38 @@ class BuyView(MarketActionMixin, FormView):
 
 
 
-class SellView(MarketActionMixin, FormView):
+@require_POST
+@login_required(redirect_field_name = None)
+def sell(request):
     
-    # View settings
-    form_class = forms.Sell
-    
-    def get_success_url(self):
-        """Returns the relevant market page for the gender sold."""
-        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out]
-        return reverse(
-            'fantasybumps:{}'.format(gender),
-            kwargs = {'event_tag': self.event.tag},
+    try:
+        purchase = models.Purchase.objects.select_related().get(
+            id = request.POST.get('purchase'),
+            team = request.user.team,
         )
+    except models.Purchase.DoesNotExist:
+        messages.error(request, 'You are not authorised to conduct this sale.')
+        return redirect('fantasybumps:index')
     
+    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
+    market_url_name = 'fantasybumps:' + gender_string
+    market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
     
-    def get_success_message(self, cleaned_data):
-        """Generates the success message text."""
-        seat = cleaned_data['seat']
-        return 'Successfully sold your {}{}.'.format(
-            str(seat).lower(),
-            '' if seat.cox else ' seat',
-        )
+    if not purchase.day.market_is_open:
+        messages.warning(request, 'Markets are not open for this sale.')
+        return market_redirect
+    
+    crew_value = purchase.crew.value(purchase.day)
+    try:
+        transactions.sell_transaction(purchase, crew_value)
+    except AssertionError:
+        messages.error(request, 'An unknown error occurred processing this sale.')
+    else:
+        messages.success(request, 'Successfully sold your {} {}{}.'.format(
+            {genders.MENS: "men's", genders.WOMENS: "women's"}[purchase.crew.gender],
+            str(purchase.seat).lower(),
+            '' if purchase.seat.cox else ' seat',
+        ))
+    
+    return market_redirect
 
