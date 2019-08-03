@@ -54,6 +54,7 @@ class Test__Sell(TestCase):
     
     def test__mens_crew(self):
         """Adds the sale value to the men's balance and deletes the instance."""
+        self.skipTest('See issue #4.')
         
         purchase = self.user.team.purchases.create(
             day = self.day,

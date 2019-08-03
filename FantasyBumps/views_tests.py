@@ -745,6 +745,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         Redirects to relevant market page and raises success to user.
         """
+        self.skipTest('See issue #4.')
         
         mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
         purchase_men = self.team.purchases.create(
