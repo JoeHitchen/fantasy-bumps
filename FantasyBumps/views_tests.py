@@ -592,6 +592,7 @@ class Test__Sell(TestCase, MessagesMixin):
             seat = cls.seat,
             crew = cls.crew,
         )
+        cls.crew.positions.create(day = cls.day, rank = 1)
     
     
     def test__deny_get(self):
@@ -745,11 +746,13 @@ class Test__Sell(TestCase, MessagesMixin):
         Redirects to relevant market page and raises success to user.
         """
         
+        mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
         purchase_men = self.team.purchases.create(
             day = self.day,
             seat = self.seat,
-            crew = models.Crew.objects.filter(gender = genders.MENS).first(),
+            crew = mens_crew,
         )
+        mens_crew.positions.create(day = self.day, rank = 1)
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': purchase_men.id})
@@ -776,13 +779,16 @@ class Test__Sell(TestCase, MessagesMixin):
             (2) Django internals
             (1) SELECT user's team
             (1) SELECT purchase, crew, team, user, day, event
+            (1) SELECT crew's position that day
             (2) Transaction overhead
             (1) Sell action queries
         """
         
+        models.Crew.value.cache_clear()
+        
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.post(self.url, {'purchase': self.purchase.id})
 
 

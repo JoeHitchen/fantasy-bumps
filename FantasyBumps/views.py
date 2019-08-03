@@ -165,8 +165,9 @@ def sell(request):
         messages.warning(request, 'Markets are not open for this sale.')
         return market_redirect
     
+    crew_value = purchase.crew.value(purchase.day)
     try:
-        transactions.sell_transaction(purchase, 150)
+        transactions.sell_transaction(purchase, crew_value)
     except AssertionError:
         messages.error(request, 'An unknown error occurred processing this sale.')
     else:
