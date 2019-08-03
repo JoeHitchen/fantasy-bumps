@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.contrib.auth import models as auth
 
 from . import models
@@ -87,6 +87,7 @@ class Test__Sell(TestCase):
             self.purchase.refresh_from_db()
     
     
+    @tag('query-count')
     def test__query_count__without_related(self):
         """ Expect:
             1. SELECT purchase
@@ -107,6 +108,7 @@ class Test__Sell(TestCase):
             _sell_transaction_body(fresh_purchase, 150)
     
     
+    @tag('query-count')
     def test__query_count__with_related(self):
         """ Expect:
             1. SELECT purchase, crew, team, day, event

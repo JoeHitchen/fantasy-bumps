@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from datetime import timedelta
 
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth import models as auth
@@ -766,6 +766,24 @@ class Test__Sell(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{'level': 'success', 'message': 'Sale was completed successfully.'}],
         )
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock, markets_mock):
+        """ Expect:
+            (2) Django internals
+            (1) SELECT user's team
+            (1) SELECT purchase, crew, team, user, day, event
+            (2) Transaction overhead
+            (1) Sell action queries
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(8):
+            self.client.post(self.url, {'purchase': self.purchase.id})
 
 
 
