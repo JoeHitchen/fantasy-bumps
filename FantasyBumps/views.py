@@ -1,14 +1,19 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
+from django.views.decorators.http import require_POST
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib import messages
+from django.shortcuts import redirect
 from django.urls import reverse
 
 from .constants import genders
 from . import models
 from . import forms
 from . import utils
+from . import sell as transactions
 
 
 class IndexView(TemplateView):
@@ -136,6 +141,38 @@ class BuyView(MarketActionMixin, FormView):
             'as the' if seat.cox else 'at',
             str(seat).lower(),
         )
+
+
+
+@require_POST
+@login_required(redirect_field_name = None)
+def sell(request):
+    
+    try:
+        purchase = models.Purchase.objects.select_related().get(
+            id = request.POST.get('purchase'),
+            team = request.user.team,
+        )
+    except models.Purchase.DoesNotExist:
+        messages.error(request, 'You are not authorised to conduct this sale.')
+        return redirect('fantasybumps:index')
+    
+    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
+    market_url_name = 'fantasybumps:' + gender_string
+    market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
+    
+    if not purchase.day.market_is_open:
+        messages.warning(request, 'Markets are not open for this sale.')
+        return market_redirect
+    
+    try:
+        transactions.sell_transaction(purchase, 150)
+    except AssertionError:
+        messages.error(request, 'An unknown error occurred processing this sale.')
+    else:
+        messages.success(request, 'Sale was completed successfully.')
+    
+    return market_redirect
 
 
 
