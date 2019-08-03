@@ -101,7 +101,7 @@ def seat_avatar(seat):
     <td>{{ seat|seat_avatar }}</td>
     <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
     <td>
-      <a href="{% url \'fantasybumps:sell\' %}" class="btn btn-sm btn-primary">Sell</a>
+      <a href="{% url \'fantasybumps:oldsell\' %}" class="btn btn-sm btn-primary">Sell</a>
     </td>
   </tr>
 '''))

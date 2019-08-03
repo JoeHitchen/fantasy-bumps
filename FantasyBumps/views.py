@@ -139,7 +139,7 @@ class BuyView(MarketActionMixin, FormView):
 
 
 
-class SellView(MarketActionMixin, FormView):
+class OldSellView(MarketActionMixin, FormView):
     
     # View settings
     form_class = forms.Sell

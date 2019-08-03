@@ -570,7 +570,7 @@ class Test__Buy__Unit(TestCase):
 
 
 
-class Test__Sell__Integration(TestCase, MessagesMixin):
+class Test__OldSell__Integration(TestCase, MessagesMixin):
     fixtures = [
         'dev_event',
         'dev_days',
@@ -581,7 +581,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
         'seats',
         'dev_team',
     ]
-    url = reverse('fantasybumps:sell')
+    url = reverse('fantasybumps:oldsell')
     
     @classmethod
     def setUpTestData(cls):
@@ -656,7 +656,7 @@ class Test__Sell__Integration(TestCase, MessagesMixin):
 
 
 
-class Test__Sell__Unit(TestCase):
+class Test__OldSell__Unit(TestCase):
     
     @classmethod
     def setUpTestData(cls):
@@ -670,7 +670,7 @@ class Test__Sell__Unit(TestCase):
     def test__get_success_url__men(self):
         """Returns a redirect to the relevant market place."""
         
-        view = views.SellView()
+        view = views.OldSellView()
         view.form_save_out = genders.MENS
         view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
@@ -684,7 +684,7 @@ class Test__Sell__Unit(TestCase):
     def test__get_success_url__women(self):
         """Returns a redirect to the relevant market place."""
         
-        view = views.SellView()
+        view = views.OldSellView()
         view.form_save_out = genders.WOMENS
         view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
@@ -698,14 +698,14 @@ class Test__Sell__Unit(TestCase):
     def test__get_success_message__rower(self):
         """Generates a success message including the team and seat."""
         
-        msg = views.SellView().get_success_message({'seat': self.stroke})
+        msg = views.OldSellView().get_success_message({'seat': self.stroke})
         self.assertEqual(msg, 'Successfully sold your stroke seat.')
     
     
     def test__get_success_message__cox(self):
         """Presents a slightly different seat description for coxes."""
         
-        msg = views.SellView().get_success_message({'seat': self.cox})
+        msg = views.OldSellView().get_success_message({'seat': self.cox})
         self.assertNotIn('your cox seat.', msg)
         self.assertIn('your cox.', msg)
 
