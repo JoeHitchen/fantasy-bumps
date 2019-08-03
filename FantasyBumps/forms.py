@@ -1,6 +1,5 @@
 from django import forms
 
-from .constants import genders
 from . import models
 
 
@@ -38,28 +37,4 @@ class Buy(MarketFormMixin, forms.ModelForm):
         purchase.day = self.day
         purchase.save()
         return purchase
-
-
-
-class Sell(MarketFormMixin, forms.Form):
-    
-    seat = forms.ModelChoiceField(queryset = models.Seat.objects.all())
-    gender = forms.ChoiceField(
-        choices = [
-            (genders.MENS, "Men's"),
-            (genders.WOMENS, "Women's"),
-        ],
-    )
-    
-    
-    def save(self):
-        """Delete all purchase instances matching the criteria provided. Return the gender."""
-        
-        models.Purchase.objects.filter(
-            team = self.team,
-            day = self.day,
-            seat = self.cleaned_data['seat'],
-            crew__gender = self.cleaned_data['gender'],
-        ).delete()
-        return self.cleaned_data['gender']
 

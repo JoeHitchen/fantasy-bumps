@@ -179,27 +179,3 @@ def sell(request):
     
     return market_redirect
 
-
-
-class OldSellView(MarketActionMixin, FormView):
-    
-    # View settings
-    form_class = forms.Sell
-    
-    def get_success_url(self):
-        """Returns the relevant market page for the gender sold."""
-        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out]
-        return reverse(
-            'fantasybumps:{}'.format(gender),
-            kwargs = {'event_tag': self.event.tag},
-        )
-    
-    
-    def get_success_message(self, cleaned_data):
-        """Generates the success message text."""
-        seat = cleaned_data['seat']
-        return 'Successfully sold your {}{}.'.format(
-            str(seat).lower(),
-            '' if seat.cox else ' seat',
-        )
-
