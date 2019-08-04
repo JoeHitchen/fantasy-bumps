@@ -1,9 +1,119 @@
 from django.test import TestCase, tag
 from django.contrib.auth import models as auth
+from django.db import IntegrityError
 
 from . import models
 from .constants import genders
-from .transactions import sell, _sell_body
+from .transactions import buy, sell, _sell_body
+
+
+class Test__Buy(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        cls.seat = models.Seat.objects.first()
+        cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
+        cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
+        
+        cls.crew.positions.create(day = cls.day, rank = 1)
+        cls.crew_mens.positions.create(day = cls.day, rank = 1)
+        
+        cls.budgets = cls.team.entries.create(event = cls.day.event)
+    
+    
+    def test__budgets_missing(self):
+        """Performs no action and raises an error."""
+        
+        self.budgets.delete()
+        
+        with self.assertRaises(models.GameEntry.DoesNotExist):
+            buy(self.team, self.day, self.seat, self.crew)
+        
+        self.assertEqual(self.team.purchases.count(), 0)
+    
+    
+    def test__insufficient_funds(self):
+        """Performs no action and fails an assertion."""
+        
+        self.budgets.womens_balance = 100
+        self.budgets.save()
+        
+        with self.assertRaisesMessage(AssertionError, 'Insufficient funds for this purchase.'):
+            buy(self.team, self.day, self.seat, self.crew)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, 1000)
+        self.assertEqual(self.budgets.womens_budget, 1000)
+        self.assertEqual(self.budgets.mens_balance, 1000)
+        self.assertEqual(self.budgets.womens_balance, 100)
+        
+        self.assertEqual(self.team.purchases.count(), 0)
+    
+    
+    def test__womens_crew(self):
+        """Deducts the crew's value from the women's balance and creates the purchase."""
+        
+        buy(self.team, self.day, self.seat, self.crew)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, 1000)
+        self.assertEqual(self.budgets.womens_budget, 1000)
+        self.assertEqual(self.budgets.mens_balance, 1000)
+        self.assertEqual(self.budgets.womens_balance, 850)
+        
+        self.assertEqual(self.team.purchases.count(), 1)
+    
+    
+    def test__mens_crew(self):
+        """Deducts the crew's value from the women's balance and creates the purchase."""
+        
+        buy(self.team, self.day, self.seat, self.crew_mens)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, 1000)
+        self.assertEqual(self.budgets.womens_budget, 1000)
+        self.assertEqual(self.budgets.mens_balance, 850)
+        self.assertEqual(self.budgets.womens_balance, 1000)
+        
+        self.assertEqual(self.team.purchases.count(), 1)
+    
+    
+    def test__already_filled(self):
+        """Rejects the purchase if the team/seat/day/gender combination is already occupied."""
+        
+        self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
+        
+        with self.assertRaises(IntegrityError):
+            buy(self.team, self.day, self.seat, self.crew)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, 1000)
+        self.assertEqual(self.budgets.womens_budget, 1000)
+        self.assertEqual(self.budgets.mens_balance, 1000)
+        self.assertEqual(self.budgets.womens_balance, 1000)
+        
+        self.assertEqual(self.team.purchases.count(), 1)
+    
+    
+    def test__other_gender_filled(self):
+        """Doesn't block a team/seat/day combination if the genders don't match."""
+        self.skipTest('See issue #4.')
+        
+        self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew_mens)
+        
+        buy(self.team, self.day, self.seat, self.crew)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, 1000)
+        self.assertEqual(self.budgets.womens_budget, 1000)
+        self.assertEqual(self.budgets.mens_balance, 1000)
+        self.assertEqual(self.budgets.womens_balance, 850)
+        
+        self.assertEqual(self.team.purchases.count(), 2)
+
 
 
 class Test__Sell(TestCase):
