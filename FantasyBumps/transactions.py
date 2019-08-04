@@ -7,6 +7,8 @@ def buy(team, day, seat, crew):
     
     Checks the team has sufficients funds and updates their balance, before creating the purchase.
     Rolls back both changes in the event either fails.
+    
+    Completes in (max) 4 db operations, if select_related called when fetching day object.
     """
     
     with transaction.atomic():

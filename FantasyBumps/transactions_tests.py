@@ -4,7 +4,7 @@ from django.db import IntegrityError
 
 from . import models
 from .constants import genders
-from .transactions import buy, sell, _sell_body
+from .transactions import buy, sell, _buy_body, _sell_body
 
 
 class Test__Buy(TestCase):
@@ -113,6 +113,22 @@ class Test__Buy(TestCase):
         self.assertEqual(self.budgets.womens_balance, 850)
         
         self.assertEqual(self.team.purchases.count(), 2)
+    
+    @tag('query-count')
+    def test__query_count(self):
+        """ Expect:
+            (1) SELECT day's event  (Can be avoided with select_related)
+            (1) SELECT budgets
+            (1) SELECT crew's position  (Affected by caching)
+            (1) UPDATE budgets
+            (1) INSERT new purchase
+        """
+        
+        fresh_day = models.Day.objects.get(id = self.day.id)
+        self.crew.value.cache_clear()
+        
+        with self.assertNumQueries(5):
+            _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
 
