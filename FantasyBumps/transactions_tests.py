@@ -3,7 +3,7 @@ from django.contrib.auth import models as auth
 
 from . import models
 from .constants import genders
-from .sell import sell_transaction, _sell_transaction_body
+from .transactions import sell, _sell_body
 
 
 class Test__Sell(TestCase):
@@ -32,7 +32,7 @@ class Test__Sell(TestCase):
         self.budgets.delete()  # Do not check for budget-update side effect
         
         with self.assertRaisesRegex(AssertionError, 'Sell failed - Did not update singular row.'):
-            sell_transaction(self.purchase, 150)
+            sell(self.purchase, 150)
         
         self.purchase.refresh_from_db()  # Does not fail
     
@@ -43,7 +43,7 @@ class Test__Sell(TestCase):
         self.purchase.delete()  # Do not check for purchase-delete side effect
         
         with self.assertRaisesRegex(AssertionError, 'Sell failed - Did not delete singular row.'):
-            sell_transaction(self.purchase, 150)
+            sell(self.purchase, 150)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, 1000)
@@ -61,7 +61,7 @@ class Test__Sell(TestCase):
             seat = self.seat,
             crew = self.crew_mens,
         )
-        sell_transaction(purchase, 150)
+        sell(purchase, 150)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, 1000)
@@ -76,7 +76,7 @@ class Test__Sell(TestCase):
     def test__womens_crew(self):
         """Adds the sale value to the women's balance and deletes the instance."""
         
-        sell_transaction(self.purchase, 150)
+        sell(self.purchase, 150)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, 1000)
@@ -106,7 +106,7 @@ class Test__Sell(TestCase):
                 models.Purchase.objects
                 .get(id = self.purchase.id)
             )
-            _sell_transaction_body(fresh_purchase, 150)
+            _sell_body(fresh_purchase, 150)
     
     
     @tag('query-count')
@@ -124,5 +124,5 @@ class Test__Sell(TestCase):
                 .select_related()
                 .get(id = self.purchase.id)
             )
-            _sell_transaction_body(fresh_purchase, 150)
+            _sell_body(fresh_purchase, 150)
 

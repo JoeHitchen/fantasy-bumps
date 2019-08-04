@@ -11,7 +11,7 @@ from .constants import genders
 from . import models
 from . import utils
 from . import views
-from . import sell
+from . import transactions
 from . import patching
 
 
@@ -687,7 +687,7 @@ class Test__Sell(TestCase, MessagesMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    @patch.object(sell, 'sell_transaction')
+    @patch.object(transactions, 'sell')
     def test__transaction_error(self, transaction_mock, market_closes_mock, markets_mock):
         """Does not complete the sale.
         

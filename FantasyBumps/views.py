@@ -13,7 +13,7 @@ from .constants import genders
 from . import models
 from . import forms
 from . import utils
-from . import sell as transactions
+from . import transactions
 
 
 class IndexView(TemplateView):
@@ -167,7 +167,7 @@ def sell(request):
     
     crew_value = purchase.crew.value(purchase.day)
     try:
-        transactions.sell_transaction(purchase, crew_value)
+        transactions.sell(purchase, crew_value)
     except AssertionError:
         messages.error(request, 'An unknown error occurred processing this sale.')
     else:
