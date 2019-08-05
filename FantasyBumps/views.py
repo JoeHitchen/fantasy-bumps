@@ -119,7 +119,7 @@ class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
 
 
 
-class BuyView(MarketActionMixin, FormView):
+class OldBuyView(MarketActionMixin, FormView):
     
     # View settings
     form_class = forms.Buy

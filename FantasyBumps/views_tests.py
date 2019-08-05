@@ -438,7 +438,7 @@ class Test__Buy__Integration(TestCase, MessagesMixin):
         'seats',
         'dev_team',
     ]
-    url = reverse('fantasybumps:buy')
+    url = reverse('fantasybumps:oldbuy')
     
     @classmethod
     def setUpTestData(cls):
@@ -525,7 +525,7 @@ class Test__Buy__Unit(TestCase):
         
         mens_crew = models.Crew(name = 'Hertford M1', gender = genders.MENS)
         
-        view = views.BuyView()
+        view = views.OldBuyView()
         view.form_save_out = models.Purchase(crew = mens_crew)
         view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
@@ -539,7 +539,7 @@ class Test__Buy__Unit(TestCase):
     def test__get_success_url__women(self):
         """Returns a redirect to the relevant market place."""
         
-        view = views.BuyView()
+        view = views.OldBuyView()
         view.form_save_out = models.Purchase(crew = self.crew)
         view.event = models.Event(tag = self.event_tag)
         url = view.get_success_url()
@@ -553,7 +553,7 @@ class Test__Buy__Unit(TestCase):
     def test__get_success_message__rower(self):
         """Generates a success message including the team and seat."""
         
-        msg = views.BuyView().get_success_message({
+        msg = views.OldBuyView().get_success_message({
             'crew': self.crew,
             'seat': self.stroke,
         })
@@ -563,7 +563,7 @@ class Test__Buy__Unit(TestCase):
     def test__get_success_message__cox(self):
         """Presents a slightly different seat description for coxes."""
         
-        msg = views.BuyView().get_success_message({
+        msg = views.OldBuyView().get_success_message({
             'crew': self.crew,
             'seat': self.cox,
         })

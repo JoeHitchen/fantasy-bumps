@@ -27,7 +27,7 @@ leaderboard_subpatterns = [
 ]
 
 urlpatterns = [
-    path('buy/', views.BuyView.as_view(), name = 'buy'),
+    path('oldbuy/', views.OldBuyView.as_view(), name = 'oldbuy'),
     path('sell', views.sell, name = 'sell'),
     path('<slug:event_tag>/', include([
         path('men/', views.MarketView.as_view(), {'gender': genders.MENS}, name = 'men'),
