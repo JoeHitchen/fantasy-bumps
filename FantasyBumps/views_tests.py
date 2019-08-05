@@ -572,6 +572,275 @@ class Test__Buy__Unit(TestCase):
 
 
 
+class Test__Buy(TestCase, MessagesMixin):
+    """Testing of transaction behaviour (including side effects) is delegated to the relevant
+    subroutine."""
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    url = reverse('fantasybumps:buy')
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        cls.crew = models.Crew.objects.first()
+        
+        cls.budgets = cls.team.entries.create(event = cls.day.event)
+        cls.crew.positions.create(day = cls.day, rank = 1)
+    
+    
+    def test__deny_get(self):
+        """Rejects non-POST requests."""
+        
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
+    
+    
+    def test__no_login(self):
+        """Redirects non-logged in users."""
+        
+        response = self.client.post(self.url)
+        self.assertRedirects(response, reverse('login'))
+    
+    
+    def test__missing_day(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'crew': self.crew.id})
+        
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
+        )
+
+    
+    def test__unknown_day(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': 10000, 'crew': self.crew.id})
+        
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
+        )
+    
+    
+    def test__missing_crew(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id})
+        
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
+        )
+
+    
+    def test__unknown_crew(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': 10000})
+        
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
+        )
+    
+    
+    @patching.market_is_open(False)
+    def test__markets_not_open(self, markets_mock):
+        """Denies request if market not open for intended day.
+        
+        Redirects to relevant market page and raises warning to user.
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Markets are not open for this sale.'}],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__budgets_missing(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
+        
+        Redirects to relevant market page and raises error to user.
+        """
+        
+        self.budgets.delete()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'error', 'message': 'An unknown error occurred processing this request.'}],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__insufficient_funds(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
+        
+        Redirects to relevant market page and raises warning to user.
+        """
+        
+        self.budgets.womens_balance = 0
+        self.budgets.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'warning',
+                'message': 'You do not have sufficient funds to make this purchase.',
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__valid_womens(self, market_closes_mock, markets_mock):
+        """Completes the purchase.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel W1 as your women's bow seat.",
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__valid_mens(self, market_closes_mock, markets_mock):
+        """Completes the purchase.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
+        mens_crew.positions.create(day = self.day, rank = 1)
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': mens_crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:men',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel M1 as your men's bow seat.",
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__valid_cox(self, market_closes_mock, markets_mock):
+        """Completes the purchase.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        self.skipTest('Work in progress')
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel W1 as your women's cox.",
+            }],
+        )
+
+
+
 class Test__Sell(TestCase, MessagesMixin):
     """Testing of transaction behaviour (including side effects) is delegated to the relevant
     subroutine."""
