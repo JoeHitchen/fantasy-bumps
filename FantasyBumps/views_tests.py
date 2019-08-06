@@ -838,6 +838,29 @@ class Test__Buy(TestCase, MessagesMixin):
                 'message': "Successfully bought Oriel W1 as your women's cox.",
             }],
         )
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock, markets_mock):
+        """ Expect:
+            (2) Django internals
+            (1) SELECT day, event
+            (1) SELECT crew
+            (1) SELECT user's team
+            (1) SELECT seat
+            (2) Transaction overhead
+            (1) Buy action - SELECT crew's position that day (Affected by caching)
+            (3) Buy action - Other queries
+        """
+        
+        models.Crew.value.cache_clear()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(12):
+            self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
 
