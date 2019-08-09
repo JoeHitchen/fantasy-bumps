@@ -818,7 +818,9 @@ class Test__Buy(TestCase, MessagesMixin):
         
         Redirects to relevant market page and raises success to user.
         """
-        self.skipTest('Work in progress')
+        
+        for seat in models.Seat.objects.exclude(cox = True):
+            self.team.purchases.create(day = self.day, seat = seat, crew = self.crew)
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
@@ -840,6 +842,37 @@ class Test__Buy(TestCase, MessagesMixin):
         )
     
     
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__all_seats_filled(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
+        
+        Redirects to relevant market page and raises warning to user.
+        """
+        
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, seat = seat, crew = self.crew)
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'warning',
+                'message': "You have already filled your women's crew.",
+            }],
+        )
+    
+    
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
@@ -849,7 +882,7 @@ class Test__Buy(TestCase, MessagesMixin):
             (1) SELECT day, event
             (1) SELECT crew
             (1) SELECT user's team
-            (1) SELECT seat
+            (1) SELECT seat - 'filled_seats' not evaluated separately
             (2) Transaction overhead
             (1) Buy action - SELECT crew's position that day (Affected by caching)
             (3) Buy action - Other queries

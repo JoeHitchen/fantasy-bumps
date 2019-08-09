@@ -125,6 +125,7 @@ class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
 def buy(request):
     
     try:
+        team = request.user.team
         day = models.Day.objects.select_related().get(id = request.POST.get('day'))
         crew = models.Crew.objects.get(id = request.POST.get('crew'))
     
@@ -140,10 +141,14 @@ def buy(request):
         messages.warning(request, 'Markets are not open for this sale.')
         return market_redirect
     
-    seat = models.Seat.objects.first()
+    filled_seats = team.get_crew(day, crew.gender).values_list('seat', flat = True)
+    seat = models.Seat.objects.exclude(id__in = filled_seats).first()
+    if not seat:
+        messages.warning(request, "You have already filled your {}'s crew.".format(gender_string))
+        return market_redirect
     
     try:
-        transactions.buy(request.user.team, day, seat, crew)
+        transactions.buy(team, day, seat, crew)
     except models.GameEntry.DoesNotExist:
         messages.error(request, 'An unknown error occurred processing this request.')
     except AssertionError:
