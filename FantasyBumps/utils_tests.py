@@ -3,6 +3,7 @@ from django.test import TestCase, tag
 from .constants import genders
 from . import models
 from . import utils
+from . import errors
 
 
 @tag('game-core')
@@ -109,7 +110,7 @@ class Test__Has_All_Seats(TestCase):
             seat = extra_seat,
         ).save()
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(errors.DuplicateSeatError):
             utils.has_all_seats(models.Purchase.objects.all())
     
     def test__extra_seat__bow(self):

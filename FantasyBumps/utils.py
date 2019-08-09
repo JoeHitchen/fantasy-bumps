@@ -2,6 +2,7 @@ from django.db.models import Count
 
 from .constants import genders
 from . import models
+from . import errors
 
 
 def has_all_seats(purchases):
@@ -12,7 +13,7 @@ def has_all_seats(purchases):
     seats_filled = [seats_filled.get(seat.id, 0) for seat in models.Seat.objects.all()]
     
     if any([count > 1 for count in seats_filled]):
-        raise ValueError('Seat filled too many times.')
+        raise errors.DuplicateSeatError
     
     return all(seats_filled)
 
