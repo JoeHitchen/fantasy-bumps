@@ -5,13 +5,12 @@ from django.test import TestCase, tag
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth import models as auth
-from django.urls import reverse, resolve
+from django.urls import reverse
 
 from .constants import genders
 from . import models
 from . import utils
-from . import views
-from . import sell
+from . import transactions
 from . import patching
 
 
@@ -427,148 +426,328 @@ class MessagesMixin:
 
 
 
-class Test__Buy__Integration(TestCase, MessagesMixin):
-    fixtures = [
-        'dev_event',
-        'dev_days',
-        'dev_crews',
-        'dev_start_day1',
-        'dev_start_day2',
-        'dev_start_day3',
-        'seats',
-        'dev_team',
-    ]
+class Test__Buy(TestCase, MessagesMixin):
+    """Testing of transaction behaviour (including side effects) is delegated to the relevant
+    subroutine."""
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     url = reverse('fantasybumps:buy')
     
     @classmethod
     def setUpTestData(cls):
-        
-        cls.event = models.Event.objects.first()
-        cls.day = cls.event.active_day
-        
         cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        cls.crew = models.Crew.objects.first()
         
-        cls.crew = models.Crew(name = 'A', gender = genders.MENS)
-        cls.crew.save()
+        cls.budgets = cls.team.entries.create(event = cls.day.event)
+        cls.crew.positions.create(day = cls.day, rank = 1)
+    
+    
+    def test__deny_get(self):
+        """Rejects non-POST requests."""
         
-        cls.seat = models.Seat.objects.get(name = 'Stroke')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
     
     
     def test__no_login(self):
-        """Requires a log in."""
+        """Redirects non-logged in users."""
         
-        response = self.client.get(self.url)
+        response = self.client.post(self.url)
         self.assertRedirects(response, reverse('login'))
     
     
-    def test__get(self):
-        """Renders the form page for GET requests."""
+    def test__missing_day(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
         
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'crew': self.crew.id})
         
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/form.html')
-    
-    
-    def test__invalid_post(self):
-        """Renders the form page for invalid POST requests."""
+        self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.post(self.url, {})
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/form.html')
-    
-    
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
-    def test__valid_post(self, market_closes_mock, markets_mock):
-        """Creates the object and redirects to the relevant market page."""
-        
-        self.assertEqual(models.Purchase.objects.count(), 0)
-        
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.post(
-            self.url,
-            {'crew': str(self.crew.id), 'seat': str(self.seat.id)},
-            follow = True,
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
         )
+
+    
+    def test__unknown_day(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': 10000, 'crew': self.crew.id})
+        
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
+        )
+    
+    
+    def test__missing_crew(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id})
+        
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
+        )
+
+    
+    def test__unknown_crew(self):
+        """Denies request - Redirects to fantasy root and raises error to user."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': 10000})
+        
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'error',
+                'message': 'An error occurred processing the request data.',
+            }],
+        )
+    
+    
+    @patching.market_is_open(False)
+    def test__markets_not_open(self, markets_mock):
+        """Denies request if market not open for intended day.
+        
+        Redirects to relevant market page and raises warning to user.
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         
         self.assertRedirects(
             response,
-            reverse('fantasybumps:men', kwargs = {'event_tag': self.event.tag}),
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
         )
-        self.assertEqual(models.Purchase.objects.count(), 1)
         
         self.check_messages(
-            response.context['messages'],
-            [{'level': 'success', 'message': 'Successfully added A to your crew at stroke.'}],
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Markets are not open for this sale.'}],
         )
-
-
-        
-class Test__Buy__Unit(TestCase):
-    
-    @classmethod
-    def setUpTestData(cls):
-        """N.B. Saving objects not necessary since no database lookups performed."""
-        cls.event_tag = 'testevent'
-        cls.crew = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
-        
-        cls.stroke = models.Seat(name = 'Stroke', cox = False)
-        cls.cox = models.Seat(name = 'Cox', cox = True)
     
     
-    def test__get_success_url__men(self):
-        """Returns a redirect to the relevant market place."""
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__budgets_missing(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
         
-        mens_crew = models.Crew(name = 'Hertford M1', gender = genders.MENS)
+        Redirects to relevant market page and raises error to user.
+        """
         
-        view = views.BuyView()
-        view.form_save_out = models.Purchase(crew = mens_crew)
-        view.event = models.Event(tag = self.event_tag)
-        url = view.get_success_url()
+        self.budgets.delete()
         
-        resolved = resolve(url)
-        self.assertEqual(resolved.namespaces, ['fantasybumps'])
-        self.assertEqual(resolved.url_name, 'men')
-        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'error', 'message': 'An unknown error occurred processing this request.'}],
+        )
     
     
-    def test__get_success_url__women(self):
-        """Returns a redirect to the relevant market place."""
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__insufficient_funds(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
         
-        view = views.BuyView()
-        view.form_save_out = models.Purchase(crew = self.crew)
-        view.event = models.Event(tag = self.event_tag)
-        url = view.get_success_url()
+        Redirects to relevant market page and raises warning to user.
+        """
         
-        resolved = resolve(url)
-        self.assertEqual(resolved.namespaces, ['fantasybumps'])
-        self.assertEqual(resolved.url_name, 'women')
-        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
+        self.budgets.womens_balance = 0
+        self.budgets.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'warning',
+                'message': 'You do not have sufficient funds to make this purchase.',
+            }],
+        )
     
     
-    def test__get_success_message__rower(self):
-        """Generates a success message including the team and seat."""
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__valid_womens(self, market_closes_mock, markets_mock):
+        """Completes the purchase.
         
-        msg = views.BuyView().get_success_message({
-            'crew': self.crew,
-            'seat': self.stroke,
-        })
-        self.assertEqual(msg, 'Successfully added Hertford W1 to your crew at stroke.')
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel W1 as your women's bow seat.",
+            }],
+        )
     
     
-    def test__get_success_message__cox(self):
-        """Presents a slightly different seat description for coxes."""
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__valid_mens(self, market_closes_mock, markets_mock):
+        """Completes the purchase.
         
-        msg = views.BuyView().get_success_message({
-            'crew': self.crew,
-            'seat': self.cox,
-        })
-        self.assertNotIn('at cox.', msg)
-        self.assertIn('as the cox.', msg)
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
+        mens_crew.positions.create(day = self.day, rank = 1)
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': mens_crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:men',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel M1 as your men's bow seat.",
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__valid_cox(self, market_closes_mock, markets_mock):
+        """Completes the purchase.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        for seat in models.Seat.objects.exclude(cox = True):
+            self.team.purchases.create(day = self.day, seat = seat, crew = self.crew)
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel W1 as your women's cox.",
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__all_seats_filled(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
+        
+        Redirects to relevant market page and raises warning to user.
+        """
+        
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, seat = seat, crew = self.crew)
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'warning',
+                'message': "You have already filled your women's crew.",
+            }],
+        )
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock, markets_mock):
+        """ Expect:
+            (2) Django internals
+            (1) SELECT day, event
+            (1) SELECT crew
+            (1) SELECT user's team
+            (1) SELECT seat - 'filled_seats' not evaluated separately
+            (2) Transaction overhead
+            (1) Buy action - SELECT crew's position that day (Affected by caching)
+            (3) Buy action - Other queries
+        """
+        
+        models.Crew.value.cache_clear()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(12):
+            self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
 
@@ -687,7 +866,7 @@ class Test__Sell(TestCase, MessagesMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    @patch.object(sell, 'sell_transaction')
+    @patch.object(transactions, 'sell')
     def test__transaction_error(self, transaction_mock, market_closes_mock, markets_mock):
         """Does not complete the sale.
         

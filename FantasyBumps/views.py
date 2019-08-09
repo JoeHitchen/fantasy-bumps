@@ -1,19 +1,17 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
-from django.views.generic.edit import FormView
 from django.views.decorators.http import require_POST
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.urls import reverse
 
 from .constants import genders
 from . import models
-from . import forms
 from . import utils
-from . import sell as transactions
+from . import transactions
 
 
 class IndexView(TemplateView):
@@ -119,28 +117,48 @@ class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
 
 
 
-class BuyView(MarketActionMixin, FormView):
+@require_POST
+@login_required(redirect_field_name = None)
+def buy(request):
     
-    # View settings
-    form_class = forms.Buy
+    try:
+        team = request.user.team
+        day = models.Day.objects.select_related().get(id = request.POST.get('day'))
+        crew = models.Crew.objects.get(id = request.POST.get('crew'))
     
-    def get_success_url(self):
-        """Returns the relevant market page for the gender purchased."""
-        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out.crew.gender]
-        return reverse(
-            'fantasybumps:{}'.format(gender),
-            kwargs = {'event_tag': self.event.tag},
-        )
+    except ObjectDoesNotExist:
+        messages.error(request, 'An error occurred processing the request data.')
+        return redirect('fantasybumps:index')
     
+    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[crew.gender]
+    market_url_name = 'fantasybumps:' + gender_string
+    market_redirect = redirect(market_url_name, event_tag = day.event.tag)
     
-    def get_success_message(self, cleaned_data):
-        """Generates the success message text."""
-        seat = cleaned_data['seat']
-        return 'Successfully added {} to your crew {} {}.'.format(
-            cleaned_data['crew'],
-            'as the' if seat.cox else 'at',
+    if not day.market_is_open:
+        messages.warning(request, 'Markets are not open for this sale.')
+        return market_redirect
+    
+    filled_seats = team.get_crew(day, crew.gender).values_list('seat', flat = True)
+    seat = models.Seat.objects.exclude(id__in = filled_seats).first()
+    if not seat:
+        messages.warning(request, "You have already filled your {}'s crew.".format(gender_string))
+        return market_redirect
+    
+    try:
+        transactions.buy(team, day, seat, crew)
+    except models.GameEntry.DoesNotExist:
+        messages.error(request, 'An unknown error occurred processing this request.')
+    except AssertionError:
+        messages.warning(request, 'You do not have sufficient funds to make this purchase.')
+    else:
+        messages.success(request, 'Successfully bought {} as your {} {}{}.'.format(
+            crew,
+            {genders.MENS: "men's", genders.WOMENS: "women's"}[crew.gender],
             str(seat).lower(),
-        )
+            '' if seat.cox else ' seat',
+        ))
+    
+    return market_redirect
 
 
 
@@ -167,7 +185,7 @@ def sell(request):
     
     crew_value = purchase.crew.value(purchase.day)
     try:
-        transactions.sell_transaction(purchase, crew_value)
+        transactions.sell(purchase, crew_value)
     except AssertionError:
         messages.error(request, 'An unknown error occurred processing this sale.')
     else:
