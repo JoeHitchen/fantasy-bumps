@@ -739,14 +739,14 @@ class Test__Buy(TestCase, MessagesMixin):
             (1) SELECT seat - 'filled_seats' not evaluated separately
             (2) Transaction overhead
             (1) Buy action - SELECT crew's position that day (Affected by caching)
-            (3) Buy action - Other queries
+            (4) Buy action - Other queries
         """
         
         models.Crew.value.cache_clear()
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(13):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
     
     
@@ -755,7 +755,7 @@ class Test__Buy(TestCase, MessagesMixin):
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__query_count__without_budgets(self, market_closes_mock, markets_mock):
         """ Expect:
-            (12) Queried as standard
+            (13) Queried as standard
             (3) Extra action queries
         """
         
@@ -764,7 +764,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
@@ -942,7 +942,6 @@ class Test__Sell(TestCase, MessagesMixin):
         
         Redirects to relevant market page and raises success to user.
         """
-        self.skipTest('See issue #4.')
         
         mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
         purchase_men = self.team.purchases.create(

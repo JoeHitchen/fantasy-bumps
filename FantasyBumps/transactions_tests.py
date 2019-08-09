@@ -1,6 +1,5 @@
 from django.test import TestCase, tag
 from django.contrib.auth import models as auth
-from django.db import IntegrityError
 
 from . import models
 from . import errors
@@ -76,7 +75,7 @@ class Test__Buy(TestCase):
         
         self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
         
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(errors.DuplicateSeatError):
             buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
@@ -90,7 +89,6 @@ class Test__Buy(TestCase):
     
     def test__other_gender_filled(self):
         """Doesn't block a team/seat/day combination if the genders don't match."""
-        self.skipTest('See issue #4.')
         
         self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew_mens)
         
@@ -130,19 +128,20 @@ class Test__Buy(TestCase):
             (1) SELECT crew's position  (Affected by caching)
             (1) UPDATE budgets
             (1) INSERT new purchase
+            (1) SELECT day/seat/gender duplication check
         """
         
         fresh_day = models.Day.objects.get(id = self.day.id)
         self.crew.value.cache_clear()
         
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
     
     
     @tag('query-count')
     def test__query_count__without_budgets(self):
         """ Expect:
-            (5) Queried as standard
+            (6) Queried as standard
             (2) Internal transaction overhead
             (1) INSERT new budget
         """
@@ -151,7 +150,7 @@ class Test__Buy(TestCase):
         self.crew.value.cache_clear()
         self.budgets.delete()
         
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
@@ -204,7 +203,6 @@ class Test__Sell(TestCase):
     
     def test__mens_crew(self):
         """Adds the sale value to the men's balance and deletes the instance."""
-        self.skipTest('See issue #4.')
         
         purchase = self.user.team.purchases.create(
             day = self.day,
