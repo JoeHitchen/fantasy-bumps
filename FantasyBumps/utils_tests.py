@@ -88,6 +88,65 @@ class Test__Has_All_Seats(TestCase):
     def test__missing_seat__cox(self):
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('cox')
+    
+    
+    def subtest__extra_seat(self, extra_seat):
+        """Raises ValueError if any seat present twice."""
+        
+        for seat in models.Seat.objects.all():
+            models.Purchase(
+                team = self.team,
+                day = self.day,
+                crew = self.crew,
+                seat = seat,
+            ).save()
+        
+        extra_seat = models.Seat.objects.get(name__iexact = extra_seat)
+        models.Purchase(
+            team = self.team,
+            day = self.day,
+            crew = self.crew,
+            seat = extra_seat,
+        ).save()
+        
+        with self.assertRaises(ValueError):
+            utils.has_all_seats(models.Purchase.objects.all())
+    
+    def test__extra_seat__bow(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('bow')
+    
+    def test__extra_seat__2(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('2')
+    
+    def test__extra_seat__3(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('3')
+    
+    def test__extra_seat__4(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('4')
+    
+    def test__extra_seat__5(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('5')
+    
+    def test__extra_seat__6(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('6')
+    
+    def test__extra_seat__7(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('7')
+    
+    def test__extra_seat__stroke(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('stroke')
+    
+    def test__extra_seat__cox(self):
+        """Raises ValueError if any seat present twice."""
+        self.subtest__extra_seat('cox')
 
 
 
