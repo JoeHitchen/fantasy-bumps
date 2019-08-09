@@ -61,15 +61,28 @@ def bungline_avatar(bungline):
 
 
 @register.inclusion_tag(template.Template('''
+  <form action="{% url 'fantasybumps:buy' %}" method="post">
+    {% csrf_token %}
+    <input name="day" type="hidden" value="{{ day.id }}"/>
+    <input name="crew" type="hidden" value="{{ crew.id }}"/>
+    <button class="btn btn-primary btn-sm" type="submit">Buy</button>
+  </form>
+'''))
+def buy_button(day, crew):
+    return {'day': day, 'crew': crew}
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
   <tr>
     <td>{{ bungline }}</td>
     <td>{{ tag_crew }}</td>
     <td>£100</td>
-    <td><a href="{% url \'fantasybumps:oldbuy\' %}" class="btn btn-sm btn-primary">Buy</a></td>
+    <td>{% buy_button day tag_crew %}</td>
   </tr>
 '''))
-def market_division_row(bungline, crew):
-    return {'bungline': bungline, 'tag_crew': crew}
+def market_division_row(day, bungline, crew):
+    return {'day': day, 'bungline': bungline, 'tag_crew': crew}
 
 
 @register.inclusion_tag(template.Template('''
@@ -80,13 +93,13 @@ def market_division_row(bungline, crew):
     </thead>
     <tbody>
     {% for position in division %}
-      {% market_division_row forloop.counter position.crew %}
+      {% market_division_row day forloop.counter position.crew %}
     {% endfor %}
     </tbody>
   </table>
 '''))
-def market_division_box(division, gender, number):
-    return {'division': division, 'gender': gender, 'number': number}
+def market_division_box(day, division, gender, number):
+    return {'day': day, 'division': division, 'gender': gender, 'number': number}
 
 
 @register.filter
