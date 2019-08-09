@@ -12,6 +12,7 @@ from .constants import genders
 from . import models
 from . import utils
 from . import transactions
+from . import errors
 
 
 class IndexView(TemplateView):
@@ -134,6 +135,7 @@ def buy(request):
     market_url_name = 'fantasybumps:' + gender_string
     market_redirect = redirect(market_url_name, event_tag = day.event.tag)
     
+    
     if not day.market_is_open:
         messages.warning(request, 'Markets are not open for this sale.')
         return market_redirect
@@ -144,12 +146,16 @@ def buy(request):
         messages.warning(request, "You have already filled your {}'s crew.".format(gender_string))
         return market_redirect
     
+    
     try:
         transactions.buy(team, day, seat, crew)
+    
     except models.GameEntry.DoesNotExist:
         messages.error(request, 'An unknown error occurred processing this request.')
-    except AssertionError:
+    
+    except errors.InsufficientFundsError:
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
+    
     else:
         messages.success(request, 'Successfully bought {} as your {} {}{}.'.format(
             crew,

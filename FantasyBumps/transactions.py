@@ -1,6 +1,8 @@
 from django.db import transaction
 from django.db.models import F
 
+from . import errors
+
 
 def buy(team, day, seat, crew):
     """Transaction-wrapped buy action.
@@ -26,7 +28,9 @@ def _buy_body(team, day, seat, crew):
     }[crew.gender]
     
     new_balance = getattr(budgets, balance_field) - crew.value(day)
-    assert new_balance >= 0, 'Insufficient funds for this purchase.'
+    if new_balance < 0:
+        raise errors.InsufficientFundsError
+    
     setattr(budgets, balance_field, new_balance)
     budgets.save()
     

@@ -3,6 +3,7 @@ from django.contrib.auth import models as auth
 from django.db import IntegrityError
 
 from . import models
+from . import errors
 from .constants import genders
 from .transactions import buy, sell, _buy_body, _sell_body
 
@@ -41,7 +42,7 @@ class Test__Buy(TestCase):
         self.budgets.womens_balance = 100
         self.budgets.save()
         
-        with self.assertRaisesMessage(AssertionError, 'Insufficient funds for this purchase.'):
+        with self.assertRaises(errors.InsufficientFundsError):
             buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
