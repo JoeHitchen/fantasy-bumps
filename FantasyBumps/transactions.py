@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import F
 
+from . import models
 from . import errors
 
 
@@ -20,7 +21,10 @@ def buy(team, day, seat, crew):
 def _buy_body(team, day, seat, crew):
     """INTERNAL METHOD allowing non-transaction access to buy action for query counting."""
     
-    budgets = team.entries.select_for_update().get(event = day.event)
+    budgets = models.GameEntry.objects.select_for_update().get_or_create(
+        team = team,
+        event = day.event,
+    )[0]
     
     balance_field = {
         'M': 'mens_balance',

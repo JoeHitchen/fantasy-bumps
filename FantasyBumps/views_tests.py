@@ -550,33 +550,6 @@ class Test__Buy(TestCase, MessagesMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    def test__budgets_missing(self, market_closes_mock, markets_mock):
-        """Does not complete the sale.
-        
-        Redirects to relevant market page and raises error to user.
-        """
-        
-        self.budgets.delete()
-        
-        self.client.login(username = 'DevTeam', password = 'password')
-        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
-        
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'error', 'message': 'An unknown error occurred processing this request.'}],
-        )
-    
-    
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__insufficient_funds(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         
@@ -727,10 +700,37 @@ class Test__Buy(TestCase, MessagesMixin):
         )
     
     
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__budgets_missing(self, market_closes_mock, markets_mock):
+        """Completes the purchase as normal, creating the missing budgets."""
+        
+        self.budgets.delete()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel W1 as your women's bow seat.",
+            }],
+        )
+    
+    
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    def test__query_count(self, market_closes_mock, markets_mock):
+    def test__query_count__standard(self, market_closes_mock, markets_mock):
         """ Expect:
             (2) Django internals
             (1) SELECT day, event
@@ -747,6 +747,24 @@ class Test__Buy(TestCase, MessagesMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         
         with self.assertNumQueries(12):
+            self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__query_count__without_budgets(self, market_closes_mock, markets_mock):
+        """ Expect:
+            (12) Queried as standard
+            (3) Extra action queries
+        """
+        
+        models.Crew.value.cache_clear()
+        self.budgets.delete()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(15):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 

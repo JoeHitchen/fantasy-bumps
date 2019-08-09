@@ -25,17 +25,6 @@ class Test__Buy(TestCase):
         cls.budgets = cls.team.entries.create(event = cls.day.event)
     
     
-    def test__budgets_missing(self):
-        """Performs no action and raises an error."""
-        
-        self.budgets.delete()
-        
-        with self.assertRaises(models.GameEntry.DoesNotExist):
-            buy(self.team, self.day, self.seat, self.crew)
-        
-        self.assertEqual(self.team.purchases.count(), 0)
-    
-    
     def test__insufficient_funds(self):
         """Performs no action and fails an assertion."""
         
@@ -115,8 +104,26 @@ class Test__Buy(TestCase):
         
         self.assertEqual(self.team.purchases.count(), 2)
     
+    
+    def test__budgets_missing(self):
+        """Creates the missing budgets and then performs the standard action."""
+        
+        self.budgets.delete()
+        self.assertEqual(models.GameEntry.objects.count(), 0)
+        
+        buy(self.team, self.day, self.seat, self.crew)
+        
+        new_budgets = self.team.entries.get(event = self.day.event)
+        self.assertEqual(new_budgets.mens_budget, 1000)
+        self.assertEqual(new_budgets.womens_budget, 1000)
+        self.assertEqual(new_budgets.mens_balance, 1000)
+        self.assertEqual(new_budgets.womens_balance, 850)
+        
+        self.assertEqual(self.team.purchases.count(), 1)
+    
+    
     @tag('query-count')
-    def test__query_count(self):
+    def test__query_count__standard(self):
         """ Expect:
             (1) SELECT day's event  (Can be avoided with select_related)
             (1) SELECT budgets
@@ -129,6 +136,22 @@ class Test__Buy(TestCase):
         self.crew.value.cache_clear()
         
         with self.assertNumQueries(5):
+            _buy_body(self.team, fresh_day, self.seat, self.crew)
+    
+    
+    @tag('query-count')
+    def test__query_count__without_budgets(self):
+        """ Expect:
+            (5) Queried as standard
+            (2) Internal transaction overhead
+            (1) INSERT new budget
+        """
+        
+        fresh_day = models.Day.objects.get(id = self.day.id)
+        self.crew.value.cache_clear()
+        self.budgets.delete()
+        
+        with self.assertNumQueries(8):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
