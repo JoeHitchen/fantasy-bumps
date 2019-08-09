@@ -90,7 +90,6 @@ class Test__Buy(TestCase):
     
     def test__other_gender_filled(self):
         """Doesn't block a team/seat/day combination if the genders don't match."""
-        self.skipTest('See issue #4.')
         
         self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew_mens)
         
@@ -204,7 +203,6 @@ class Test__Sell(TestCase):
     
     def test__mens_crew(self):
         """Adds the sale value to the men's balance and deletes the instance."""
-        self.skipTest('See issue #4.')
         
         purchase = self.user.team.purchases.create(
             day = self.day,
