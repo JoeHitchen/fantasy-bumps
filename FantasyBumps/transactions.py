@@ -39,6 +39,8 @@ def _buy_body(team, day, seat, crew):
     budgets.save()
     
     team.purchases.create(day = day, seat = seat, crew = crew)
+    if team.purchases.filter(day = day, seat = seat, crew__gender = crew.gender).count() > 1:
+        raise errors.DuplicateSeatError
 
 
 def sell(purchase, sale_value):
