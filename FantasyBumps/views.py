@@ -150,9 +150,6 @@ def buy(request):
     try:
         transactions.buy(team, day, seat, crew)
     
-    except models.GameEntry.DoesNotExist:
-        messages.error(request, 'An unknown error occurred processing this request.')
-    
     except errors.InsufficientFundsError:
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     

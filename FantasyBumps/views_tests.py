@@ -550,33 +550,6 @@ class Test__Buy(TestCase, MessagesMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    def test__budgets_missing(self, market_closes_mock, markets_mock):
-        """Does not complete the sale.
-        
-        Redirects to relevant market page and raises error to user.
-        """
-        
-        self.budgets.delete()
-        
-        self.client.login(username = 'DevTeam', password = 'password')
-        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
-        
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'error', 'message': 'An unknown error occurred processing this request.'}],
-        )
-    
-    
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__insufficient_funds(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         
@@ -723,6 +696,33 @@ class Test__Buy(TestCase, MessagesMixin):
             [{
                 'level': 'warning',
                 'message': "You have already filled your women's crew.",
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__budgets_missing(self, market_closes_mock, markets_mock):
+        """Completes the purchase as normal, creating the missing budgets."""
+        
+        self.budgets.delete()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Successfully bought Oriel W1 as your women's bow seat.",
             }],
         )
     
