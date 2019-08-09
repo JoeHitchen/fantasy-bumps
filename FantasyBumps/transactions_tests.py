@@ -123,7 +123,7 @@ class Test__Buy(TestCase):
     
     
     @tag('query-count')
-    def test__query_count(self):
+    def test__query_count__standard(self):
         """ Expect:
             (1) SELECT day's event  (Can be avoided with select_related)
             (1) SELECT budgets
@@ -136,6 +136,22 @@ class Test__Buy(TestCase):
         self.crew.value.cache_clear()
         
         with self.assertNumQueries(5):
+            _buy_body(self.team, fresh_day, self.seat, self.crew)
+    
+    
+    @tag('query-count')
+    def test__query_count__without_budgets(self):
+        """ Expect:
+            (5) Queried as standard
+            (2) Internal transaction overhead
+            (1) INSERT new budget
+        """
+        
+        fresh_day = models.Day.objects.get(id = self.day.id)
+        self.crew.value.cache_clear()
+        self.budgets.delete()
+        
+        with self.assertNumQueries(8):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 

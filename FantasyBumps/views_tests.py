@@ -730,7 +730,7 @@ class Test__Buy(TestCase, MessagesMixin):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    def test__query_count(self, market_closes_mock, markets_mock):
+    def test__query_count__standard(self, market_closes_mock, markets_mock):
         """ Expect:
             (2) Django internals
             (1) SELECT day, event
@@ -747,6 +747,24 @@ class Test__Buy(TestCase, MessagesMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         
         with self.assertNumQueries(12):
+            self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__query_count__without_budgets(self, market_closes_mock, markets_mock):
+        """ Expect:
+            (12) Queried as standard
+            (3) Extra action queries
+        """
+        
+        models.Crew.value.cache_clear()
+        self.budgets.delete()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(15):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
