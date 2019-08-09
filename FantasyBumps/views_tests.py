@@ -5,12 +5,11 @@ from django.test import TestCase, tag
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth import models as auth
-from django.urls import reverse, resolve
+from django.urls import reverse
 
 from .constants import genders
 from . import models
 from . import utils
-from . import views
 from . import transactions
 from . import patching
 
@@ -424,151 +423,6 @@ class MessagesMixin:
                     msg.message,
                     expected[i]['message'],
                 )
-
-
-
-class Test__Buy__Integration(TestCase, MessagesMixin):
-    fixtures = [
-        'dev_event',
-        'dev_days',
-        'dev_crews',
-        'dev_start_day1',
-        'dev_start_day2',
-        'dev_start_day3',
-        'seats',
-        'dev_team',
-    ]
-    url = reverse('fantasybumps:oldbuy')
-    
-    @classmethod
-    def setUpTestData(cls):
-        
-        cls.event = models.Event.objects.first()
-        cls.day = cls.event.active_day
-        
-        cls.team = models.Team.objects.first()
-        
-        cls.crew = models.Crew(name = 'A', gender = genders.MENS)
-        cls.crew.save()
-        
-        cls.seat = models.Seat.objects.get(name = 'Stroke')
-    
-    
-    def test__no_login(self):
-        """Requires a log in."""
-        
-        response = self.client.get(self.url)
-        self.assertRedirects(response, reverse('login'))
-    
-    
-    def test__get(self):
-        """Renders the form page for GET requests."""
-        
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/form.html')
-    
-    
-    def test__invalid_post(self):
-        """Renders the form page for invalid POST requests."""
-        
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.post(self.url, {})
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/form.html')
-    
-    
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
-    def test__valid_post(self, market_closes_mock, markets_mock):
-        """Creates the object and redirects to the relevant market page."""
-        
-        self.assertEqual(models.Purchase.objects.count(), 0)
-        
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.post(
-            self.url,
-            {'crew': str(self.crew.id), 'seat': str(self.seat.id)},
-            follow = True,
-        )
-        
-        self.assertRedirects(
-            response,
-            reverse('fantasybumps:men', kwargs = {'event_tag': self.event.tag}),
-        )
-        self.assertEqual(models.Purchase.objects.count(), 1)
-        
-        self.check_messages(
-            response.context['messages'],
-            [{'level': 'success', 'message': 'Successfully added A to your crew at stroke.'}],
-        )
-
-
-        
-class Test__Buy__Unit(TestCase):
-    
-    @classmethod
-    def setUpTestData(cls):
-        """N.B. Saving objects not necessary since no database lookups performed."""
-        cls.event_tag = 'testevent'
-        cls.crew = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
-        
-        cls.stroke = models.Seat(name = 'Stroke', cox = False)
-        cls.cox = models.Seat(name = 'Cox', cox = True)
-    
-    
-    def test__get_success_url__men(self):
-        """Returns a redirect to the relevant market place."""
-        
-        mens_crew = models.Crew(name = 'Hertford M1', gender = genders.MENS)
-        
-        view = views.OldBuyView()
-        view.form_save_out = models.Purchase(crew = mens_crew)
-        view.event = models.Event(tag = self.event_tag)
-        url = view.get_success_url()
-        
-        resolved = resolve(url)
-        self.assertEqual(resolved.namespaces, ['fantasybumps'])
-        self.assertEqual(resolved.url_name, 'men')
-        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
-    
-    
-    def test__get_success_url__women(self):
-        """Returns a redirect to the relevant market place."""
-        
-        view = views.OldBuyView()
-        view.form_save_out = models.Purchase(crew = self.crew)
-        view.event = models.Event(tag = self.event_tag)
-        url = view.get_success_url()
-        
-        resolved = resolve(url)
-        self.assertEqual(resolved.namespaces, ['fantasybumps'])
-        self.assertEqual(resolved.url_name, 'women')
-        self.assertEqual(resolved.kwargs['event_tag'], self.event_tag)
-    
-    
-    def test__get_success_message__rower(self):
-        """Generates a success message including the team and seat."""
-        
-        msg = views.OldBuyView().get_success_message({
-            'crew': self.crew,
-            'seat': self.stroke,
-        })
-        self.assertEqual(msg, 'Successfully added Hertford W1 to your crew at stroke.')
-    
-    
-    def test__get_success_message__cox(self):
-        """Presents a slightly different seat description for coxes."""
-        
-        msg = views.OldBuyView().get_success_message({
-            'crew': self.crew,
-            'seat': self.cox,
-        })
-        self.assertNotIn('at cox.', msg)
-        self.assertIn('as the cox.', msg)
 
 
 

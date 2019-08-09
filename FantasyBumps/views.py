@@ -1,6 +1,5 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
-from django.views.generic.edit import FormView
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,11 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.urls import reverse
 
 from .constants import genders
 from . import models
-from . import forms
 from . import utils
 from . import transactions
 
@@ -162,31 +159,6 @@ def buy(request):
         ))
     
     return market_redirect
-
-
-
-class OldBuyView(MarketActionMixin, FormView):
-    
-    # View settings
-    form_class = forms.Buy
-    
-    def get_success_url(self):
-        """Returns the relevant market page for the gender purchased."""
-        gender = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.form_save_out.crew.gender]
-        return reverse(
-            'fantasybumps:{}'.format(gender),
-            kwargs = {'event_tag': self.event.tag},
-        )
-    
-    
-    def get_success_message(self, cleaned_data):
-        """Generates the success message text."""
-        seat = cleaned_data['seat']
-        return 'Successfully added {} to your crew {} {}.'.format(
-            cleaned_data['crew'],
-            'as the' if seat.cox else 'at',
-            str(seat).lower(),
-        )
 
 
 
