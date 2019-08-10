@@ -154,9 +154,9 @@ def buy(request):
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     
     else:
-        messages.success(request, 'Successfully bought {} as your {} {}{}.'.format(
+        messages.success(request, "Successfully bought {} as your {}'s {}{}.".format(
             crew,
-            {genders.MENS: "men's", genders.WOMENS: "women's"}[crew.gender],
+            gender_string,
             str(seat).lower(),
             '' if seat.cox else ' seat',
         ))
@@ -196,8 +196,8 @@ def sell(request):
         messages.error(request, 'An unknown error occurred processing this sale.')
     
     else:
-        messages.success(request, 'Successfully sold your {} {}{}.'.format(
-            {genders.MENS: "men's", genders.WOMENS: "women's"}[purchase.crew.gender],
+        messages.success(request, "Successfully sold your {}'s {}{}.".format(
+            gender_string,
             str(purchase.seat).lower(),
             '' if purchase.seat.cox else ' seat',
         ))
