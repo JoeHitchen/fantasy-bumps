@@ -167,12 +167,13 @@ def buy(request):
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     
     else:
-        messages.success(request, "Successfully bought {} as your {}'s {}{}.".format(
+        success_text = "Successfully bought {} as your {}'s {}{}.".format(
             crew,
             gender_string,
             str(seat).lower(),
             '' if seat.cox else ' seat',
-        ))
+        )
+        messages.success(request, success_text)
     
     return market_redirect
 
@@ -221,11 +222,12 @@ def sell(request):
         messages.error(request, 'An unknown error occurred processing this sale.')
     
     else:
-        messages.success(request, "Successfully sold your {}'s {}{}.".format(
+        success_text = "Successfully sold your {}'s {}{}.".format(
             gender_string,
             str(purchase.seat).lower(),
             '' if purchase.seat.cox else ' seat',
-        ))
+        )
+        messages.success(request, success_text)
     
     return market_redirect
 

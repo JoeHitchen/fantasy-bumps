@@ -435,7 +435,7 @@ class Test__Buy(TestCase, MessagesMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
+        cls.day = models.Day.objects.select_related().first()
         cls.crew = models.Crew.objects.first()
         
         cls.budgets = cls.team.entries.create(event = cls.day.event)
@@ -733,7 +733,7 @@ class Test__Sell(TestCase, MessagesMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
+        cls.day = models.Day.objects.select_related().first()
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
         
