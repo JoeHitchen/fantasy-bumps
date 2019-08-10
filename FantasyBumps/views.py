@@ -186,9 +186,8 @@ def sell(request):
         messages.warning(request, 'Markets are not open for this sale.')
         return market_redirect
     
-    crew_value = purchase.crew.value(purchase.day)
     try:
-        transactions.sell(purchase, crew_value)
+        transactions.sell(purchase)
     
     except models.Purchase.DoesNotExist:
         messages.warning(request, 'This sale has already been completed.')

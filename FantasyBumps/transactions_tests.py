@@ -166,6 +166,9 @@ class Test__Sell(TestCase):
         cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
         cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
         
+        cls.crew.positions.create(day = cls.day, rank = 1)
+        cls.crew_mens.positions.create(day = cls.day, rank = 1)
+        
         cls.budgets = cls.user.team.entries.create(event = cls.day.event)
         
         cls.purchase = cls.user.team.purchases.create(
@@ -181,7 +184,7 @@ class Test__Sell(TestCase):
         self.budgets.delete()  # Do not check for budget-update side effect
         
         with self.assertRaises(models.GameEntry.DoesNotExist):
-            sell(self.purchase, 150)
+            sell(self.purchase)
         
         self.purchase.refresh_from_db()  # Does not fail
     
@@ -192,7 +195,7 @@ class Test__Sell(TestCase):
         self.purchase.delete()  # Do not check for purchase-delete side effect
         
         with self.assertRaises(models.Purchase.DoesNotExist):
-            sell(self.purchase, 150)
+            sell(self.purchase)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, 1000)
@@ -209,7 +212,7 @@ class Test__Sell(TestCase):
             seat = self.seat,
             crew = self.crew_mens,
         )
-        sell(purchase, 150)
+        sell(purchase)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, 1000)
@@ -224,7 +227,7 @@ class Test__Sell(TestCase):
     def test__womens_crew(self):
         """Adds the sale value to the women's balance and deletes the instance."""
         
-        sell(self.purchase, 150)
+        sell(self.purchase)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, 1000)
@@ -243,34 +246,40 @@ class Test__Sell(TestCase):
             2. SELECT crew
             3. SELECT team
             4. SELECT day
+            4a. SELECT crew's position on day (Affected by caching)
             5. SELECT event
             6. UPDATE budget/gameentry
             7. DELETE purchase
         """
         
-        with self.assertNumQueries(7):
+        self.crew.value.cache_clear()
+        
+        with self.assertNumQueries(8):
             
             fresh_purchase = (
                 models.Purchase.objects
                 .get(id = self.purchase.id)
             )
-            _sell_body(fresh_purchase, 150)
+            _sell_body(fresh_purchase)
     
     
     @tag('query-count')
     def test__query_count__with_related(self):
         """ Expect:
             1. SELECT purchase, crew, team, day, event
+            1a. SELECT crew's position on day (Affected by caching)
             2. UPDATE budget/gameentry
             3. DELETE purchase
         """
         
-        with self.assertNumQueries(3):
+        self.crew.value.cache_clear()
+        
+        with self.assertNumQueries(4):
             
             fresh_purchase = (
                 models.Purchase.objects
                 .select_related()
                 .get(id = self.purchase.id)
             )
-            _sell_body(fresh_purchase, 150)
+            _sell_body(fresh_purchase)
 

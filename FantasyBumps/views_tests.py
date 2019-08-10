@@ -1035,9 +1035,8 @@ class Test__Sell(TestCase, MessagesMixin):
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
             (1) SELECT purchase, crew, team, user, day, event
-            (1) SELECT crew's position that day  (Affected by caching)
             (2) Transaction overhead
-            (2) Sell action queries
+            (3) Sell action queries (2 with caching)
         """
         
         models.Crew.value.cache_clear()

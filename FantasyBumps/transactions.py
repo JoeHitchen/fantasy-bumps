@@ -44,7 +44,7 @@ def _buy_body(team, day, seat, crew):
         raise errors.DuplicateSeatError
 
 
-def sell(purchase, sale_value):
+def sell(purchase):
     """Transaction-wrapped sell action.
     
     Adds the sale value to the purchased crew's gender's balance, and deletes the purchase object.
@@ -54,10 +54,10 @@ def sell(purchase, sale_value):
     """
     
     with transaction.atomic():
-        _sell_body(purchase, sale_value)
+        _sell_body(purchase)
 
 
-def _sell_body(purchase, sale_value):
+def _sell_body(purchase):
     """INTERNAL METHOD allowing non-transaction access to sell action for query counting."""
     
     balance_field = {
@@ -65,7 +65,9 @@ def _sell_body(purchase, sale_value):
         'W': 'womens_balance',
     }[purchase.crew.gender]
     
+    sale_value = purchase.crew.value(purchase.day)
     balance_update = {balance_field: F(balance_field) + sale_value}
+    
     updated = purchase.team.entries.filter(event = purchase.day.event).update(**balance_update)
     if updated == 0:
         raise models.GameEntry.DoesNotExist
