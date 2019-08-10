@@ -429,7 +429,7 @@ class MessagesMixin:
 class Test__Buy(TestCase, MessagesMixin):
     """Testing of transaction behaviour (including side effects) is delegated to the relevant
     subroutine."""
-    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
     url = reverse('fantasybumps:buy')
     
     @classmethod
@@ -439,7 +439,6 @@ class Test__Buy(TestCase, MessagesMixin):
         cls.crew = models.Crew.objects.first()
         
         cls.budgets = cls.team.entries.create(event = cls.day.event)
-        cls.crew.positions.create(day = cls.day, rank = 1)
         
         cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
     
@@ -597,7 +596,6 @@ class Test__Buy(TestCase, MessagesMixin):
         """
         
         mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
-        mens_crew.positions.create(day = self.day, rank = 1)
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': mens_crew.id})
@@ -693,7 +691,7 @@ class Test__Buy(TestCase, MessagesMixin):
             (1) SELECT user's team
             (1) SELECT seat - 'filled_seats' not evaluated separately
             (2) Transaction overhead
-            (1) Buy action - SELECT crew's position that day (Affected by caching)
+            (2) Buy action - Get crew's value (Affected by caching)
             (4) Buy action - Other queries
         """
         
@@ -701,7 +699,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(14):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
     
     
@@ -710,7 +708,7 @@ class Test__Buy(TestCase, MessagesMixin):
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__query_count__without_budgets(self, market_closes_mock, markets_mock):
         """ Expect:
-            (13) Queried as standard
+            (14) Queried as standard
             (3) Extra action queries
         """
         
@@ -719,7 +717,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(17):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
@@ -727,7 +725,7 @@ class Test__Buy(TestCase, MessagesMixin):
 class Test__Sell(TestCase, MessagesMixin):
     """Testing of transaction behaviour (including side effects) is delegated to the relevant
     subroutine."""
-    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
     url = reverse('fantasybumps:sell')
     
     @classmethod
@@ -744,7 +742,6 @@ class Test__Sell(TestCase, MessagesMixin):
             seat = cls.seat,
             crew = cls.crew,
         )
-        cls.crew.positions.create(day = cls.day, rank = 1)
         
         cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
     
@@ -906,7 +903,6 @@ class Test__Sell(TestCase, MessagesMixin):
             seat = self.seat,
             crew = mens_crew,
         )
-        mens_crew.positions.create(day = self.day, rank = 1)
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': purchase_men.id})
@@ -953,13 +949,13 @@ class Test__Sell(TestCase, MessagesMixin):
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
             (1) SELECT purchase, crew, team, user, day, event
             (2) Transaction overhead
-            (3) Sell action queries (2 with caching)
+            (4) Sell action queries (2 with caching)
         """
         
         models.Crew.value.cache_clear()
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             self.client.post(self.url, {'purchase': self.purchase.id})
 
