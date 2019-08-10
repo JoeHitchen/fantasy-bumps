@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import F
+from django.core.exceptions import MultipleObjectsReturned
 
 from . import models
 from . import errors
@@ -66,7 +67,10 @@ def _sell_body(purchase, sale_value):
     
     balance_update = {balance_field: F(balance_field) + sale_value}
     updated = purchase.team.entries.filter(event = purchase.day.event).update(**balance_update)
-    assert updated == 1, 'Sell failed - Did not update singular row.'
+    if updated == 0:
+        raise models.GameEntry.DoesNotExist
+    elif updated > 1:  # Untested case - Should be blocked by database constraint.
+        raise MultipleObjectsReturned
     
     deleted = purchase.delete()
     if deleted[0] != 1:

@@ -913,14 +913,13 @@ class Test__Sell(TestCase, MessagesMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    @patch.object(transactions, 'sell')
-    def test__transaction_error(self, transaction_mock, market_closes_mock, markets_mock):
+    def test__missing_budgets(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         
         Redirects to relevant market page and raises error to user.
         """
         
-        transaction_mock.side_effect = AssertionError()
+        self.budgets.delete()
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': self.purchase.id})

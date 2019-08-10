@@ -180,7 +180,7 @@ class Test__Sell(TestCase):
         
         self.budgets.delete()  # Do not check for budget-update side effect
         
-        with self.assertRaisesRegex(AssertionError, 'Sell failed - Did not update singular row.'):
+        with self.assertRaises(models.GameEntry.DoesNotExist):
             sell(self.purchase, 150)
         
         self.purchase.refresh_from_db()  # Does not fail

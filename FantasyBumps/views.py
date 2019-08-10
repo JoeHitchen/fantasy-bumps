@@ -1,7 +1,7 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.decorators.http import require_POST
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
@@ -193,8 +193,9 @@ def sell(request):
     except models.Purchase.DoesNotExist:
         messages.warning(request, 'This sale has already been completed.')
     
-    except AssertionError:
+    except (models.GameEntry.DoesNotExist, MultipleObjectsReturned):
         messages.error(request, 'An unknown error occurred processing this sale.')
+    
     else:
         messages.success(request, 'Successfully sold your {} {}{}.'.format(
             {genders.MENS: "men's", genders.WOMENS: "women's"}[purchase.crew.gender],
