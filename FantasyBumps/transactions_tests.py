@@ -1,8 +1,8 @@
 from django.test import TestCase, tag
 from django.contrib.auth import models as auth
-from django.db import IntegrityError
 
 from . import models
+from . import errors
 from .constants import genders
 from .transactions import buy, sell, _buy_body, _sell_body
 
@@ -24,24 +24,13 @@ class Test__Buy(TestCase):
         cls.budgets = cls.team.entries.create(event = cls.day.event)
     
     
-    def test__budgets_missing(self):
-        """Performs no action and raises an error."""
-        
-        self.budgets.delete()
-        
-        with self.assertRaises(models.GameEntry.DoesNotExist):
-            buy(self.team, self.day, self.seat, self.crew)
-        
-        self.assertEqual(self.team.purchases.count(), 0)
-    
-    
     def test__insufficient_funds(self):
         """Performs no action and fails an assertion."""
         
         self.budgets.womens_balance = 100
         self.budgets.save()
         
-        with self.assertRaisesMessage(AssertionError, 'Insufficient funds for this purchase.'):
+        with self.assertRaises(errors.InsufficientFundsError):
             buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
@@ -86,7 +75,7 @@ class Test__Buy(TestCase):
         
         self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
         
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(errors.DuplicateSeatError):
             buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
@@ -100,7 +89,6 @@ class Test__Buy(TestCase):
     
     def test__other_gender_filled(self):
         """Doesn't block a team/seat/day combination if the genders don't match."""
-        self.skipTest('See issue #4.')
         
         self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew_mens)
         
@@ -114,20 +102,55 @@ class Test__Buy(TestCase):
         
         self.assertEqual(self.team.purchases.count(), 2)
     
+    
+    def test__budgets_missing(self):
+        """Creates the missing budgets and then performs the standard action."""
+        
+        self.budgets.delete()
+        self.assertEqual(models.GameEntry.objects.count(), 0)
+        
+        buy(self.team, self.day, self.seat, self.crew)
+        
+        new_budgets = self.team.entries.get(event = self.day.event)
+        self.assertEqual(new_budgets.mens_budget, 1000)
+        self.assertEqual(new_budgets.womens_budget, 1000)
+        self.assertEqual(new_budgets.mens_balance, 1000)
+        self.assertEqual(new_budgets.womens_balance, 850)
+        
+        self.assertEqual(self.team.purchases.count(), 1)
+    
+    
     @tag('query-count')
-    def test__query_count(self):
+    def test__query_count__standard(self):
         """ Expect:
             (1) SELECT day's event  (Can be avoided with select_related)
             (1) SELECT budgets
             (1) SELECT crew's position  (Affected by caching)
             (1) UPDATE budgets
             (1) INSERT new purchase
+            (1) SELECT day/seat/gender duplication check
         """
         
         fresh_day = models.Day.objects.get(id = self.day.id)
         self.crew.value.cache_clear()
         
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
+            _buy_body(self.team, fresh_day, self.seat, self.crew)
+    
+    
+    @tag('query-count')
+    def test__query_count__without_budgets(self):
+        """ Expect:
+            (6) Queried as standard
+            (2) Internal transaction overhead
+            (1) INSERT new budget
+        """
+        
+        fresh_day = models.Day.objects.get(id = self.day.id)
+        self.crew.value.cache_clear()
+        self.budgets.delete()
+        
+        with self.assertNumQueries(9):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
@@ -157,7 +180,7 @@ class Test__Sell(TestCase):
         
         self.budgets.delete()  # Do not check for budget-update side effect
         
-        with self.assertRaisesRegex(AssertionError, 'Sell failed - Did not update singular row.'):
+        with self.assertRaises(models.GameEntry.DoesNotExist):
             sell(self.purchase, 150)
         
         self.purchase.refresh_from_db()  # Does not fail
@@ -168,7 +191,7 @@ class Test__Sell(TestCase):
         
         self.purchase.delete()  # Do not check for purchase-delete side effect
         
-        with self.assertRaisesRegex(AssertionError, 'Sell failed - Did not delete singular row.'):
+        with self.assertRaises(models.Purchase.DoesNotExist):
             sell(self.purchase, 150)
         
         self.budgets.refresh_from_db()
@@ -180,7 +203,6 @@ class Test__Sell(TestCase):
     
     def test__mens_crew(self):
         """Adds the sale value to the men's balance and deletes the instance."""
-        self.skipTest('See issue #4.')
         
         purchase = self.user.team.purchases.create(
             day = self.day,

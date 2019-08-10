@@ -1,7 +1,7 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.decorators.http import require_POST
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.messages.views import SuccessMessageMixin
@@ -12,6 +12,7 @@ from .constants import genders
 from . import models
 from . import utils
 from . import transactions
+from . import errors
 
 
 class IndexView(TemplateView):
@@ -134,6 +135,7 @@ def buy(request):
     market_url_name = 'fantasybumps:' + gender_string
     market_redirect = redirect(market_url_name, event_tag = day.event.tag)
     
+    
     if not day.market_is_open:
         messages.warning(request, 'Markets are not open for this sale.')
         return market_redirect
@@ -144,12 +146,13 @@ def buy(request):
         messages.warning(request, "You have already filled your {}'s crew.".format(gender_string))
         return market_redirect
     
+    
     try:
         transactions.buy(team, day, seat, crew)
-    except models.GameEntry.DoesNotExist:
-        messages.error(request, 'An unknown error occurred processing this request.')
-    except AssertionError:
+    
+    except errors.InsufficientFundsError:
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
+    
     else:
         messages.success(request, 'Successfully bought {} as your {} {}{}.'.format(
             crew,
@@ -186,8 +189,13 @@ def sell(request):
     crew_value = purchase.crew.value(purchase.day)
     try:
         transactions.sell(purchase, crew_value)
-    except AssertionError:
+    
+    except models.Purchase.DoesNotExist:
+        messages.warning(request, 'This sale has already been completed.')
+    
+    except (models.GameEntry.DoesNotExist, MultipleObjectsReturned):
         messages.error(request, 'An unknown error occurred processing this sale.')
+    
     else:
         messages.success(request, 'Successfully sold your {} {}{}.'.format(
             {genders.MENS: "men's", genders.WOMENS: "women's"}[purchase.crew.gender],

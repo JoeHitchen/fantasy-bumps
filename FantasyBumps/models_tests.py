@@ -765,38 +765,3 @@ class Test__GameEntry(TestCase):
             [self.game_entry_1, self.game_entry_3, self.game_entry_2],
         )
 
-
-
-@tag('game-core')
-class Test__Purchase(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
-    
-    @classmethod
-    def setUpTestData(cls):
-        cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
-        
-        cls.crew1 = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
-        cls.crew1.save()
-        cls.crew2 = models.Crew(name = 'Hertford W2', gender = genders.WOMENS)
-        cls.crew2.save()
-        
-        cls.seat = models.Seat.objects.first()
-    
-    
-    def test__unique_group(self):
-        """Raises a DB IntegrityError if a duplicate team/day/seat group created."""
-        
-        self.team.purchases.create(
-            day = self.day,
-            crew = self.crew1,
-            seat = self.seat,
-        )
-        
-        with self.assertRaises(IntegrityError):
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew2,
-                seat = self.seat,
-            )
-

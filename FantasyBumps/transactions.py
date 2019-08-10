@@ -1,5 +1,9 @@
 from django.db import transaction
 from django.db.models import F
+from django.core.exceptions import MultipleObjectsReturned
+
+from . import models
+from . import errors
 
 
 def buy(team, day, seat, crew):
@@ -18,7 +22,10 @@ def buy(team, day, seat, crew):
 def _buy_body(team, day, seat, crew):
     """INTERNAL METHOD allowing non-transaction access to buy action for query counting."""
     
-    budgets = team.entries.select_for_update().get(event = day.event)
+    budgets = models.GameEntry.objects.select_for_update().get_or_create(
+        team = team,
+        event = day.event,
+    )[0]
     
     balance_field = {
         'M': 'mens_balance',
@@ -26,11 +33,15 @@ def _buy_body(team, day, seat, crew):
     }[crew.gender]
     
     new_balance = getattr(budgets, balance_field) - crew.value(day)
-    assert new_balance >= 0, 'Insufficient funds for this purchase.'
+    if new_balance < 0:
+        raise errors.InsufficientFundsError
+    
     setattr(budgets, balance_field, new_balance)
     budgets.save()
     
     team.purchases.create(day = day, seat = seat, crew = crew)
+    if team.purchases.filter(day = day, seat = seat, crew__gender = crew.gender).count() > 1:
+        raise errors.DuplicateSeatError
 
 
 def sell(purchase, sale_value):
@@ -56,8 +67,12 @@ def _sell_body(purchase, sale_value):
     
     balance_update = {balance_field: F(balance_field) + sale_value}
     updated = purchase.team.entries.filter(event = purchase.day.event).update(**balance_update)
-    assert updated == 1, 'Sell failed - Did not update singular row.'
+    if updated == 0:
+        raise models.GameEntry.DoesNotExist
+    elif updated > 1:  # Untested case - Should be blocked by database constraint.
+        raise MultipleObjectsReturned
     
     deleted = purchase.delete()
-    assert deleted[0] == 1, 'Sell failed - Did not delete singular row.'
+    if deleted[0] != 1:
+        raise purchase.DoesNotExist
 
