@@ -128,6 +128,9 @@ def buy(request):
                       Markets must be open for that day.
         POST 'crew' - ID of Crew to purchase.
                       Must be racing on said day.
+    
+    Requires 13 base queries. Caching crew values reduces this by one. Adding team budgets
+    increases this by three.
     """
     
     # Process inputs
@@ -188,6 +191,8 @@ def sell(request):
         POST 'purchase' - ID of the Purchase object to sell.
                           Must belong to user's team.
                           Must be for day that has currently open markets.
+    
+    Requires nine base queries. Caching crew values reduces this by one.
     """
     
     # Process input data
