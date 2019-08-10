@@ -12,7 +12,14 @@ def buy(team, day, seat, crew):
     Checks the team has sufficients funds and updates their balance, before creating the purchase.
     Rolls back both changes in the event either fails.
     
-    Completes in (max) 4 db operations, if select_related called when fetching day object.
+    Optimised when:
+        select_related called when retrieving day
+        purchase.crew.value(day) is cached
+        team's budgets for day exist
+    
+    Specific possible errors:
+        InsufficientFundsError (standard)
+        DuplicateSeatError (severe)
     """
     
     with transaction.atomic():
@@ -50,7 +57,14 @@ def sell(purchase):
     Adds the sale value to the purchased crew's gender's balance, and deletes the purchase object.
     Rolls back both changes in the event either fails.
     
-    Completes in two db operations, if select_related() called when fetching purchase object.
+    Optimised when:
+        select_related called when retrieving purchase
+        purchase.crew.value(day) is cached
+    
+    Specific possible errors:
+        Purchase.DoesNotExist (standard)
+        GameEntry.DoesNotExist (severe)
+        MultipleObjectsReturned (severe)
     """
     
     with transaction.atomic():

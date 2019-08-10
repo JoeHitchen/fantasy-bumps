@@ -435,11 +435,13 @@ class Test__Buy(TestCase, MessagesMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
+        cls.day = models.Day.objects.select_related().first()
         cls.crew = models.Crew.objects.first()
         
         cls.budgets = cls.team.entries.create(event = cls.day.event)
         cls.crew.positions.create(day = cls.day, rank = 1)
+        
+        cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
     def test__deny_get(self):
@@ -533,14 +535,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -561,14 +556,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -589,14 +577,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -621,13 +602,8 @@ class Test__Buy(TestCase, MessagesMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': mens_crew.id})
         
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:men',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        mens_url = reverse('fantasybumps:men', kwargs = {'event_tag': self.day.event.tag})
+        self.assertRedirects(response, mens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -651,14 +627,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -682,14 +651,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -709,14 +671,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -778,7 +733,7 @@ class Test__Sell(TestCase, MessagesMixin):
     @classmethod
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
+        cls.day = models.Day.objects.select_related().first()
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
         
@@ -790,6 +745,8 @@ class Test__Sell(TestCase, MessagesMixin):
             crew = cls.crew,
         )
         cls.crew.positions.create(day = cls.day, rank = 1)
+        
+        cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
     def test__deny_get(self):
@@ -867,14 +824,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': self.purchase.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -896,14 +846,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': self.purchase.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -923,14 +866,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': self.purchase.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -948,14 +884,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': self.purchase.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -982,13 +911,8 @@ class Test__Sell(TestCase, MessagesMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': purchase_men.id})
         
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:men',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        mens_url = reverse('fantasybumps:men', kwargs = {'event_tag': self.day.event.tag})
+        self.assertRedirects(response, mens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
@@ -1012,14 +936,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': coxing_purchase.id})
-        
-        self.assertRedirects(
-            response,
-            reverse(
-                'fantasybumps:women',
-                kwargs = {'event_tag': self.day.event.tag},
-            ),
-        )
+        self.assertRedirects(response, self.womens_url)
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),

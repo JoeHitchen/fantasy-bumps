@@ -121,7 +121,19 @@ class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
 @require_POST
 @login_required(redirect_field_name = None)
 def buy(request):
+    """Purchas a new athlete for the user's team, if they have sufficient funds.
     
+    Inputs:
+        POST 'day'  - ID of Day on which to conduct purchase.
+                      Markets must be open for that day.
+        POST 'crew' - ID of Crew to purchase.
+                      Must be racing on said day.
+    
+    Requires 13 base queries. Caching crew values reduces this by one. Adding team budgets
+    increases this by three.
+    """
+    
+    # Process inputs
     try:
         team = request.user.team
         day = models.Day.objects.select_related().get(id = request.POST.get('day'))
@@ -131,15 +143,18 @@ def buy(request):
         messages.error(request, 'An error occurred processing the request data.')
         return redirect('fantasybumps:index')
     
+    
+    # Check market status
     gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[crew.gender]
     market_url_name = 'fantasybumps:' + gender_string
     market_redirect = redirect(market_url_name, event_tag = day.event.tag)
-    
     
     if not day.market_is_open:
         messages.warning(request, 'Markets are not open for this sale.')
         return market_redirect
     
+    
+    # Get seat to fill
     filled_seats = team.get_crew(day, crew.gender).values_list('seat', flat = True)
     seat = models.Seat.objects.exclude(id__in = filled_seats).first()
     if not seat:
@@ -147,6 +162,7 @@ def buy(request):
         return market_redirect
     
     
+    # Perform transaction
     try:
         transactions.buy(team, day, seat, crew)
     
@@ -154,12 +170,13 @@ def buy(request):
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     
     else:
-        messages.success(request, 'Successfully bought {} as your {} {}{}.'.format(
+        success_text = "Successfully bought {} as your {}'s {}{}.".format(
             crew,
-            {genders.MENS: "men's", genders.WOMENS: "women's"}[crew.gender],
+            gender_string,
             str(seat).lower(),
             '' if seat.cox else ' seat',
-        ))
+        )
+        messages.success(request, success_text)
     
     return market_redirect
 
@@ -168,7 +185,17 @@ def buy(request):
 @require_POST
 @login_required(redirect_field_name = None)
 def sell(request):
+    """Sell a previously bought athlete, to release the cash and seat.
     
+    Inputs:
+        POST 'purchase' - ID of the Purchase object to sell.
+                          Must belong to user's team.
+                          Must be for day that has currently open markets.
+    
+    Requires nine base queries. Caching crew values reduces this by one.
+    """
+    
+    # Process input data
     try:
         purchase = models.Purchase.objects.select_related().get(
             id = request.POST.get('purchase'),
@@ -178,6 +205,8 @@ def sell(request):
         messages.error(request, 'You are not authorised to conduct this sale.')
         return redirect('fantasybumps:index')
     
+    
+    # Check market status
     gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
     market_url_name = 'fantasybumps:' + gender_string
     market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
@@ -186,6 +215,8 @@ def sell(request):
         messages.warning(request, 'Markets are not open for this sale.')
         return market_redirect
     
+    
+    # Perform transaction
     try:
         transactions.sell(purchase)
     
@@ -196,11 +227,12 @@ def sell(request):
         messages.error(request, 'An unknown error occurred processing this sale.')
     
     else:
-        messages.success(request, 'Successfully sold your {} {}{}.'.format(
-            {genders.MENS: "men's", genders.WOMENS: "women's"}[purchase.crew.gender],
+        success_text = "Successfully sold your {}'s {}{}.".format(
+            gender_string,
             str(purchase.seat).lower(),
             '' if purchase.seat.cox else ' seat',
-        ))
+        )
+        messages.success(request, success_text)
     
     return market_redirect
 

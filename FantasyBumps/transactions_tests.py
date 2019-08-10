@@ -13,7 +13,7 @@ class Test__Buy(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
+        cls.day = models.Day.objects.select_related().first()
         cls.seat = models.Seat.objects.first()
         cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
         cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
@@ -25,9 +25,9 @@ class Test__Buy(TestCase):
     
     
     def test__insufficient_funds(self):
-        """Performs no action and fails an assertion."""
+        """Performs no action and raises an error."""
         
-        self.budgets.womens_balance = 100
+        self.budgets.womens_balance = 0
         self.budgets.save()
         
         with self.assertRaises(errors.InsufficientFundsError):
@@ -37,7 +37,7 @@ class Test__Buy(TestCase):
         self.assertEqual(self.budgets.mens_budget, 1000)
         self.assertEqual(self.budgets.womens_budget, 1000)
         self.assertEqual(self.budgets.mens_balance, 1000)
-        self.assertEqual(self.budgets.womens_balance, 100)
+        self.assertEqual(self.budgets.womens_balance, 0)
         
         self.assertEqual(self.team.purchases.count(), 0)
     
@@ -123,7 +123,6 @@ class Test__Buy(TestCase):
     @tag('query-count')
     def test__query_count__standard(self):
         """ Expect:
-            (1) SELECT day's event  (Can be avoided with select_related)
             (1) SELECT budgets
             (1) SELECT crew's position  (Affected by caching)
             (1) UPDATE budgets
@@ -131,26 +130,26 @@ class Test__Buy(TestCase):
             (1) SELECT day/seat/gender duplication check
         """
         
-        fresh_day = models.Day.objects.get(id = self.day.id)
+        fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         self.crew.value.cache_clear()
         
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(5):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
     
     
     @tag('query-count')
     def test__query_count__without_budgets(self):
         """ Expect:
-            (6) Queried as standard
+            (5) Queried as standard
             (2) Internal transaction overhead
             (1) INSERT new budget
         """
         
-        fresh_day = models.Day.objects.get(id = self.day.id)
+        fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         self.crew.value.cache_clear()
         self.budgets.delete()
         
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(8):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
@@ -161,7 +160,7 @@ class Test__Sell(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = auth.User.objects.first()
-        cls.day = models.Day.objects.first()
+        cls.day = models.Day.objects.select_related().first()
         cls.seat = models.Seat.objects.first()
         cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
         cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
@@ -179,7 +178,7 @@ class Test__Sell(TestCase):
     
     
     def test__missing_budgets(self):
-        """Performs no action and fails an assertion."""
+        """Performs no action and raises an error."""
         
         self.budgets.delete()  # Do not check for budget-update side effect
         
@@ -190,7 +189,7 @@ class Test__Sell(TestCase):
     
     
     def test__already_deleted(self):
-        """Performs no action and fails an assertion."""
+        """Performs no action and raises an error."""
         
         self.purchase.delete()  # Do not check for purchase-delete side effect
         
@@ -240,46 +239,16 @@ class Test__Sell(TestCase):
     
     
     @tag('query-count')
-    def test__query_count__without_related(self):
+    def test__query_count(self):
         """ Expect:
-            1. SELECT purchase
-            2. SELECT crew
-            3. SELECT team
-            4. SELECT day
-            4a. SELECT crew's position on day (Affected by caching)
-            5. SELECT event
-            6. UPDATE budget/gameentry
-            7. DELETE purchase
+            (1) SELECT crew's position  (Affected by caching)
+            (1) UPDATE budget/gameentry
+            (1) DELETE purchase
         """
         
         self.crew.value.cache_clear()
         
-        with self.assertNumQueries(8):
-            
-            fresh_purchase = (
-                models.Purchase.objects
-                .get(id = self.purchase.id)
-            )
-            _sell_body(fresh_purchase)
-    
-    
-    @tag('query-count')
-    def test__query_count__with_related(self):
-        """ Expect:
-            1. SELECT purchase, crew, team, day, event
-            1a. SELECT crew's position on day (Affected by caching)
-            2. UPDATE budget/gameentry
-            3. DELETE purchase
-        """
-        
-        self.crew.value.cache_clear()
-        
-        with self.assertNumQueries(4):
-            
-            fresh_purchase = (
-                models.Purchase.objects
-                .select_related()
-                .get(id = self.purchase.id)
-            )
+        fresh_purchase = models.Purchase.objects.select_related().get(id = self.purchase.id)
+        with self.assertNumQueries(3):
             _sell_body(fresh_purchase)
 
