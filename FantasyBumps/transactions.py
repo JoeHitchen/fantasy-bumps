@@ -69,5 +69,6 @@ def _sell_body(purchase, sale_value):
     assert updated == 1, 'Sell failed - Did not update singular row.'
     
     deleted = purchase.delete()
-    assert deleted[0] == 1, 'Sell failed - Did not delete singular row.'
+    if deleted[0] != 1:
+        raise purchase.DoesNotExist
 

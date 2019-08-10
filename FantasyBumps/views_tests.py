@@ -885,6 +885,35 @@ class Test__Sell(TestCase, MessagesMixin):
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     @patch.object(transactions, 'sell')
+    def test__race_condition(self, transaction_mock, market_closes_mock, markets_mock):
+        """Does not complete the sale.
+        
+        Occurs when another thread deletes the purchase after it has been retrieved.
+        Redirects to relevant market page and raises error to user.
+        """
+        
+        transaction_mock.side_effect = models.Purchase.DoesNotExist()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'purchase': self.purchase.id})
+        
+        self.assertRedirects(
+            response,
+            reverse(
+                'fantasybumps:women',
+                kwargs = {'event_tag': self.day.event.tag},
+            ),
+        )
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'This sale has already been completed.'}],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patch.object(transactions, 'sell')
     def test__transaction_error(self, transaction_mock, market_closes_mock, markets_mock):
         """Does not complete the sale.
         

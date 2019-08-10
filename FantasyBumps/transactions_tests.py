@@ -191,7 +191,7 @@ class Test__Sell(TestCase):
         
         self.purchase.delete()  # Do not check for purchase-delete side effect
         
-        with self.assertRaisesRegex(AssertionError, 'Sell failed - Did not delete singular row.'):
+        with self.assertRaises(models.Purchase.DoesNotExist):
             sell(self.purchase, 150)
         
         self.budgets.refresh_from_db()

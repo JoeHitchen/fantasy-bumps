@@ -189,6 +189,10 @@ def sell(request):
     crew_value = purchase.crew.value(purchase.day)
     try:
         transactions.sell(purchase, crew_value)
+    
+    except models.Purchase.DoesNotExist:
+        messages.warning(request, 'This sale has already been completed.')
+    
     except AssertionError:
         messages.error(request, 'An unknown error occurred processing this sale.')
     else:
