@@ -64,12 +64,12 @@ def bungline_avatar(bungline):
   <form action="{% url 'fantasybumps:buy' %}" method="post">
     {% csrf_token %}
     <input name="day" type="hidden" value="{{ day.id }}"/>
-    <input name="crew" type="hidden" value="{{ crew.id }}"/>
+    <input name="crew" type="hidden" value="{{ btn_crew.id }}"/>
     <button class="btn btn-primary btn-sm" type="submit">Buy</button>
   </form>
 '''))
 def buy_button(day, crew):
-    return {'day': day, 'crew': crew}
+    return {'day': day, 'btn_crew': crew}
 
 
 @register.inclusion_tag(template.Template('''
