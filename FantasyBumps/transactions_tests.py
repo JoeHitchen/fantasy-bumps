@@ -3,12 +3,12 @@ from django.contrib.auth import models as auth
 
 from . import models
 from . import errors
-from .constants import genders
+from .constants import genders, money
 from .transactions import buy, sell, _buy_body, _sell_body
 
 
 class Test__Buy(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
     
     @classmethod
     def setUpTestData(cls):
@@ -17,9 +17,6 @@ class Test__Buy(TestCase):
         cls.seat = models.Seat.objects.first()
         cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
         cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
-        
-        cls.crew.positions.create(day = cls.day, rank = 1)
-        cls.crew_mens.positions.create(day = cls.day, rank = 1)
         
         cls.budgets = cls.team.entries.create(event = cls.day.event)
     
@@ -34,9 +31,9 @@ class Test__Buy(TestCase):
             buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 1000)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.womens_balance, 0)
         
         self.assertEqual(self.team.purchases.count(), 0)
@@ -48,10 +45,10 @@ class Test__Buy(TestCase):
         buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 1000)
-        self.assertEqual(self.budgets.womens_balance, 850)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
         
         self.assertEqual(self.team.purchases.count(), 1)
     
@@ -62,10 +59,10 @@ class Test__Buy(TestCase):
         buy(self.team, self.day, self.seat, self.crew_mens)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 850)
-        self.assertEqual(self.budgets.womens_balance, 1000)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
         
         self.assertEqual(self.team.purchases.count(), 1)
     
@@ -79,10 +76,10 @@ class Test__Buy(TestCase):
             buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 1000)
-        self.assertEqual(self.budgets.womens_balance, 1000)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
         
         self.assertEqual(self.team.purchases.count(), 1)
     
@@ -95,10 +92,10 @@ class Test__Buy(TestCase):
         buy(self.team, self.day, self.seat, self.crew)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 1000)
-        self.assertEqual(self.budgets.womens_balance, 850)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
         
         self.assertEqual(self.team.purchases.count(), 2)
     
@@ -112,10 +109,10 @@ class Test__Buy(TestCase):
         buy(self.team, self.day, self.seat, self.crew)
         
         new_budgets = self.team.entries.get(event = self.day.event)
-        self.assertEqual(new_budgets.mens_budget, 1000)
-        self.assertEqual(new_budgets.womens_budget, 1000)
-        self.assertEqual(new_budgets.mens_balance, 1000)
-        self.assertEqual(new_budgets.womens_balance, 850)
+        self.assertEqual(new_budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(new_budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(new_budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(new_budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
         
         self.assertEqual(self.team.purchases.count(), 1)
     
@@ -125,6 +122,7 @@ class Test__Buy(TestCase):
         """ Expect:
             (1) SELECT budgets
             (1) SELECT crew's position  (Affected by caching)
+            (1) SELECT day's maximum rank  (Affected by caching)
             (1) UPDATE budgets
             (1) INSERT new purchase
             (1) SELECT day/seat/gender duplication check
@@ -133,14 +131,14 @@ class Test__Buy(TestCase):
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         self.crew.value.cache_clear()
         
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
     
     
     @tag('query-count')
     def test__query_count__without_budgets(self):
         """ Expect:
-            (5) Queried as standard
+            (6) Queried as standard
             (2) Internal transaction overhead
             (1) INSERT new budget
         """
@@ -149,13 +147,13 @@ class Test__Buy(TestCase):
         self.crew.value.cache_clear()
         self.budgets.delete()
         
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
 
 class Test__Sell(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
     
     @classmethod
     def setUpTestData(cls):
@@ -164,9 +162,6 @@ class Test__Sell(TestCase):
         cls.seat = models.Seat.objects.first()
         cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
         cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
-        
-        cls.crew.positions.create(day = cls.day, rank = 1)
-        cls.crew_mens.positions.create(day = cls.day, rank = 1)
         
         cls.budgets = cls.user.team.entries.create(event = cls.day.event)
         
@@ -197,10 +192,10 @@ class Test__Sell(TestCase):
             sell(self.purchase)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 1000)
-        self.assertEqual(self.budgets.womens_balance, 1000)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
     
     
     def test__mens_crew(self):
@@ -214,10 +209,10 @@ class Test__Sell(TestCase):
         sell(purchase)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 1150)
-        self.assertEqual(self.budgets.womens_balance, 1000)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE + money.PRICE_MAX)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
         
         with self.assertRaises(models.Purchase.DoesNotExist):
             purchase.refresh_from_db()
@@ -229,10 +224,10 @@ class Test__Sell(TestCase):
         sell(self.purchase)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, 1000)
-        self.assertEqual(self.budgets.womens_budget, 1000)
-        self.assertEqual(self.budgets.mens_balance, 1000)
-        self.assertEqual(self.budgets.womens_balance, 1150)
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + money.PRICE_MAX)
         
         with self.assertRaises(models.Purchase.DoesNotExist):
             self.purchase.refresh_from_db()
@@ -242,6 +237,7 @@ class Test__Sell(TestCase):
     def test__query_count(self):
         """ Expect:
             (1) SELECT crew's position  (Affected by caching)
+            (1) SELECT day's maximum rank  (Affected by caching)
             (1) UPDATE budget/gameentry
             (1) DELETE purchase
         """
@@ -249,6 +245,6 @@ class Test__Sell(TestCase):
         self.crew.value.cache_clear()
         
         fresh_purchase = models.Purchase.objects.select_related().get(id = self.purchase.id)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             _sell_body(fresh_purchase)
 

@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db import IntegrityError
 from django.contrib.auth import models as auth
 
-from .constants import genders
+from .constants import genders, money
 from . import models
 from . import patching
 
@@ -477,8 +477,19 @@ class Test__Crew(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        cls.crew = models.Crew.objects.first()
         cls.day = models.Day.objects.first()
+        crews = models.Crew.objects.filter(gender = genders.WOMENS)
+        
+        cls.crew_top = crews[0]
+        cls.crew_top.positions.create(day = cls.day, rank = 1)
+        
+        cls.crew_middle = crews[1]
+        cls.crew_middle.positions.create(day = cls.day, rank = 2)
+        
+        cls.crew_bottom = crews[2]
+        cls.crew_bottom.positions.create(day = cls.day, rank = 3)
+        
+        cls.crew_unranked = crews[3]
     
     
     def test__string(self):
@@ -496,14 +507,24 @@ class Test__Crew(TestCase):
         """Raises an error if the crew does not have a position for the day provided."""
         
         with self.assertRaises(models.Position.DoesNotExist):
-            self.crew.value(self.day)
+            self.crew_unranked.value(self.day)
     
     
-    def test__value__with_ranking(self):
-        """Returns a fixed value."""
-        
-        self.crew.positions.create(day = self.day, rank = 1)
-        self.assertEqual(self.crew.value(self.day), 150)
+    def test__value__top_crew(self):
+        """Returns the maximum price."""
+        self.assertEqual(self.crew_top.value(self.day), money.PRICE_MAX)
+    
+    
+    def test__value__bottom_crew(self):
+        """Returns the minimum price."""
+        self.assertEqual(self.crew_bottom.value(self.day), money.PRICE_MIN)
+    
+    
+    def test__value__middle_crew(self):
+        """Returns a price according to a geometric progression."""
+        ratio = (money.PRICE_MIN / money.PRICE_MAX) ** 0.5
+        expected_price = round(money.PRICE_MAX * ratio)
+        self.assertEqual(self.crew_middle.value(self.day), expected_price)
 
 
 

@@ -60,6 +60,11 @@ def bungline_avatar(bungline):
     return format_html('<span class="bungline-avatar">{}</span>', text)
 
 
+@register.filter
+def value(crew, day):
+    return format_html('<span class="crew-value">฿{}</span>', crew.value(day))
+
+
 @register.inclusion_tag(template.Template('''
   <form action="{% url 'fantasybumps:buy' %}" method="post">
     {% csrf_token %}
@@ -77,7 +82,7 @@ def buy_button(day, crew):
   <tr>
     <td>{{ bungline }}</td>
     <td>{{ tag_crew }}</td>
-    <td>£100</td>
+    <td>{{ tag_crew|value:day }}</td>
     <td>{% buy_button day tag_crew %}</td>
   </tr>
 '''))
@@ -124,6 +129,7 @@ def sell_button(purchase):
   <tr class="table-{% if rower %}primary{% else %}danger{% endif %}">
     <td>{{ seat|seat_avatar }}</td>
     <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
+    <td>{% if rower %}{{ rower.crew|value:rower.day }}{% endif %}</td>
     <td>
       {% sell_button rower %}
     </td>
@@ -138,7 +144,7 @@ def crew_list_row(seat, rower):
       {% load fantasy_tags %}
       <table class="table table-sm table-bordered table-hover">
         <thead class="thead-dark">
-          <tr><th colspan="3">Your crew</th></tr>
+          <tr><th colspan="4">Your crew</th></tr>
         </thead>
         <tbody>
         {% for seat, rower in crew %}
@@ -147,12 +153,12 @@ def crew_list_row(seat, rower):
         </tbody>
         <tfoot>
           <tr class="table-{% if crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="3">
+            <th colspan="4">
               This crew is {% if not crew_valid %}not {% endif %}ready to race.
             </th>
           </tr>
           <tr class="table-{% if other_crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="3">
+            <th colspan="4">
               Your other crew is {% if not other_crew_valid %}not {% endif %}ready to race.
             </th>
           </tr>
