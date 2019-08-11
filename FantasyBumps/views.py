@@ -2,9 +2,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib import messages
 from django.shortcuts import redirect
 
@@ -92,29 +90,6 @@ class LeaderboardView(EventView):
         context['fantasies'] = self.event.fantasies.extend_financials().rank_by(ranking)
         
         return context
-
-
-
-class MarketActionMixin(LoginRequiredMixin, SuccessMessageMixin):
-    
-    # Mixin settings
-    template_name = 'fantasybumps/form.html'
-    redirect_field_name = None  # Don't include return path in login redirect
-    
-    def get_form_kwargs(self):
-        """Supplies team information to the form."""
-        kwargs = super().get_form_kwargs()
-        self.event = models.Event.objects.first()
-        kwargs.update({
-            'team': self.request.user.team,
-            'day': self.event.active_day,
-        })
-        return kwargs
-    
-    def form_valid(self, form):
-        """Saves the valid form."""
-        self.form_save_out = form.save()
-        return super().form_valid(form)
 
 
 
