@@ -59,8 +59,8 @@ class GamePageBase():
         
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
-        cls.crew_mens = models.Crew.objects.create(gender = genders.MENS)
-        cls.crew_womens = models.Crew.objects.create(gender = genders.WOMENS)
+        cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
+        cls.crew_womens = models.Crew.objects.filter(gender = genders.WOMENS).first()
     
     
     def test__generic__unknown_event(self):
