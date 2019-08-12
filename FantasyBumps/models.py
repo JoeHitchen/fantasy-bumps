@@ -290,8 +290,8 @@ class GameEntry(models.Model):
 class Purchase(models.Model):
     """A purchase for a fantasy team."""
     
-    team = models.ForeignKey(Team, models.CASCADE, related_name='purchases')
-    day = models.ForeignKey(Day, models.CASCADE)
+    team = models.ForeignKey(Team, models.CASCADE, related_name = 'purchases')
+    day = models.ForeignKey(Day, models.CASCADE, related_name = 'purchases')
     crew = models.ForeignKey(Crew, models.PROTECT)
     seat = models.ForeignKey(Seat, models.PROTECT)
 
