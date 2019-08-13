@@ -468,6 +468,11 @@ class Test__Buy(TestCase, MessagesMixin):
         cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
+    def setUp(self):
+        models.Crew.value.cache_clear()
+        self.budgets.refresh_from_db()
+    
+    
     def test__deny_get(self):
         """Rejects non-POST requests."""
         
@@ -576,7 +581,6 @@ class Test__Buy(TestCase, MessagesMixin):
         """
         
         self.crew.positions.filter(day = self.day).delete()
-        models.Crew.value.cache_clear()
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
@@ -744,8 +748,6 @@ class Test__Buy(TestCase, MessagesMixin):
             (4) Buy action - Other queries
         """
         
-        models.Crew.value.cache_clear()
-        
         self.client.login(username = 'DevTeam', password = 'password')
         
         with self.assertNumQueries(14):
@@ -761,7 +763,6 @@ class Test__Buy(TestCase, MessagesMixin):
             (3) Extra action queries
         """
         
-        models.Crew.value.cache_clear()
         self.budgets.delete()
         
         self.client.login(username = 'DevTeam', password = 'password')
