@@ -87,7 +87,12 @@ class LeaderboardView(EventView):
         
         ranking = self.kwargs.get('gender', genders.TOTALS)
         context['ranking'] = ranking
-        context['fantasies'] = self.event.fantasies.extend_financials().rank_by(ranking)
+        context['fantasies'] = (
+            self.event.fantasies
+            .select_related('team', 'team__user')
+            .extend_financials()
+            .rank_by(ranking)
+        )
         
         return context
 

@@ -366,6 +366,31 @@ class LeaderboardPageBase(GamePageBase):
         self.assertEqual(context['genders'], genders)
         self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
+    
+    
+    @tag('query-count')
+    def test__query_count__without_login(self):
+        """ Expect:
+            (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
+            (1) Get rankings
+        """
+        
+        with self.assertNumQueries(4):
+            self.client.get(self.url)
+    
+    
+    @tag('query-count')
+    def test__query_count__with_login(self):
+        """ Expect:
+            (4) Base queries
+            (2) Django Auth overheard
+            (1) Get user's team
+        """
+        
+        self.client.login(username='DevTeam', password='password')
+        
+        with self.assertNumQueries(7):
+            self.client.get(self.url)
 
 
 
