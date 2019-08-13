@@ -504,10 +504,8 @@ class Test__Crew(TestCase):
     
     
     def test__value__no_ranking(self):
-        """Raises an error if the crew does not have a position for the day provided."""
-        
-        with self.assertRaises(models.Position.DoesNotExist):
-            self.crew_unranked.value(self.day)
+        """Returns zero if the crew has no position for that day."""
+        self.assertEqual(self.crew_unranked.value(self.day), 0)
     
     
     def test__value__top_crew(self):
