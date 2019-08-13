@@ -569,6 +569,30 @@ class Test__Buy(TestCase, MessagesMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__not_racing(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
+        
+        Redirects to relevant market page and raises warning to user.
+        """
+        
+        self.crew.positions.filter(day = self.day).delete()
+        models.Crew.value.cache_clear()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        self.assertRedirects(response, self.womens_url)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'warning',
+                'message': 'Cannot buy a crew on a day they are not racing.',
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__insufficient_funds(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         

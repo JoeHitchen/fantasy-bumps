@@ -19,6 +19,7 @@ def buy(team, day, seat, crew):
     
     Specific possible errors:
         InsufficientFundsError (standard)
+        NotRacingError (standard)
         DuplicateSeatError (severe)
     """
     
@@ -39,7 +40,11 @@ def _buy_body(team, day, seat, crew):
         'W': 'womens_balance',
     }[crew.gender]
     
-    new_balance = getattr(budgets, balance_field) - crew.value(day)
+    crew_value = crew.value(day)
+    if not crew_value:
+        raise errors.NotRacingError
+    
+    new_balance = getattr(budgets, balance_field) - crew_value
     if new_balance < 0:
         raise errors.InsufficientFundsError
     
