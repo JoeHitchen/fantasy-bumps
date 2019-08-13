@@ -21,6 +21,28 @@ class Test__Buy(TestCase):
         cls.budgets = cls.team.entries.create(event = cls.day.event)
     
     
+    def setUp(self):
+        models.Crew.value.cache_clear()
+        self.budgets.refresh_from_db()
+    
+    
+    def test__not_racing(self):
+        """Performs no action and raises an error."""
+        
+        self.crew.positions.filter(day = self.day).delete()
+        
+        with self.assertRaises(errors.NotRacingError):
+            buy(self.team, self.day, self.seat, self.crew)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+        
+        self.assertEqual(self.team.purchases.count(), 0)
+    
+    
     def test__insufficient_funds(self):
         """Performs no action and raises an error."""
         
@@ -129,7 +151,6 @@ class Test__Buy(TestCase):
         """
         
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
-        self.crew.value.cache_clear()
         
         with self.assertNumQueries(6):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
@@ -144,7 +165,6 @@ class Test__Buy(TestCase):
         """
         
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
-        self.crew.value.cache_clear()
         self.budgets.delete()
         
         with self.assertNumQueries(9):

@@ -181,8 +181,12 @@ class Crew(models.Model):
     def value(self, day):
         """The price of the crew for a given day."""
         
-        rank = self.positions.get(day = day).rank
         total_crews = day.ranking.aggregate(models.Max('rank'))['rank__max']
+        
+        try:
+            rank = self.positions.get(day = day).rank
+        except Position.DoesNotExist:
+            return 0
         
         ratio = (money.PRICE_MIN / money.PRICE_MAX) ** (1 / (total_crews - 1))
         return round(money.PRICE_MAX * ratio ** (rank - 1))

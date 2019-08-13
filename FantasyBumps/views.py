@@ -146,6 +146,9 @@ def buy(request):
     try:
         transactions.buy(team, day, seat, crew)
     
+    except errors.NotRacingError:
+        messages.warning(request, 'Cannot buy a crew on a day they are not racing.')
+    
     except errors.InsufficientFundsError:
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     

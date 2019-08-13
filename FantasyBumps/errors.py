@@ -11,3 +11,8 @@ class InsufficientFundsError(ValueError):
     """Raised if a team does not have sufficient funds for a purchase."""
     message = 'Insufficient funds for this purchase.'
 
+
+class NotRacingError(ValueError):
+    """Raised if an action is attempted involving a crew on a day they are not racing."""
+    message = 'Invalid crew/day combination.'
+

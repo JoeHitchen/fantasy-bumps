@@ -468,6 +468,11 @@ class Test__Buy(TestCase, MessagesMixin):
         cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
+    def setUp(self):
+        models.Crew.value.cache_clear()
+        self.budgets.refresh_from_db()
+    
+    
     def test__deny_get(self):
         """Rejects non-POST requests."""
         
@@ -564,6 +569,29 @@ class Test__Buy(TestCase, MessagesMixin):
         self.check_messages(
             messages.get_messages(response.wsgi_request),
             [{'level': 'warning', 'message': 'Markets are not open for this sale.'}],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__not_racing(self, market_closes_mock, markets_mock):
+        """Does not complete the sale.
+        
+        Redirects to relevant market page and raises warning to user.
+        """
+        
+        self.crew.positions.filter(day = self.day).delete()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        self.assertRedirects(response, self.womens_url)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'warning',
+                'message': 'Cannot buy a crew on a day they are not racing.',
+            }],
         )
     
     
@@ -720,8 +748,6 @@ class Test__Buy(TestCase, MessagesMixin):
             (4) Buy action - Other queries
         """
         
-        models.Crew.value.cache_clear()
-        
         self.client.login(username = 'DevTeam', password = 'password')
         
         with self.assertNumQueries(14):
@@ -737,7 +763,6 @@ class Test__Buy(TestCase, MessagesMixin):
             (3) Extra action queries
         """
         
-        models.Crew.value.cache_clear()
         self.budgets.delete()
         
         self.client.login(username = 'DevTeam', password = 'password')
