@@ -490,6 +490,9 @@ class Test__Crew(TestCase):
         cls.crew_bottom.positions.create(day = cls.day, rank = 3)
         
         cls.crew_unranked = crews[3]
+        
+        crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
+        crew_mens.positions.create(day = cls.day, rank = 4)  # Added to ensure gender isolation
     
     
     def test__string(self):
