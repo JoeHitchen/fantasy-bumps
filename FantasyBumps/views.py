@@ -70,6 +70,22 @@ class MarketView(EventView):
             other_gender = utils.reverse_gender(gender)
             other_crew = user.team.get_crew(self.day, other_gender)
             context['other_crew_valid'] = utils.has_all_seats(other_crew)
+            
+            finances = self.team.entries.extend_financials().filter(event = self.event)
+            if finances:
+                finances = finances[0]
+                context['finances'] = {
+                    genders.MENS: {
+                        'budget': finances.mens_budget,
+                        'crew_value': finances.mens_crew_value,
+                        'balance': finances.mens_balance,
+                    },
+                    genders.WOMENS: {
+                        'budget': finances.womens_budget,
+                        'crew_value': finances.womens_crew_value,
+                        'balance': finances.womens_balance,
+                    },
+                }[gender]
         
         return context
 

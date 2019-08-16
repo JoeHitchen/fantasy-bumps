@@ -12,6 +12,9 @@
 {% endfor %}
 
 {% if user.is_authenticated %}
+  Balance: ฿{{ finances.budget }}<br/>
+  Crew Value: ฿{{ finances.crew_value }}<br/>
+  Remaining Cash: ฿{{ finances.balance }}<br/>
   {% crew_list_box %}
 {% endif %}
 <br/>
