@@ -1,0 +1,10 @@
+#### Development
+Install the pre-requisites with: `pip install -r requirements.txt`
+
+This project defines useful commands via `project.py`, (which also provides a gateway to Django's `manage.py`). Hereafter, these commands are written as `ppy xyz`.
+
+A development game can be initiated & advanced 24 hours with:
+`ppy devgame:start`
+`ppy devgame:advance`
+
+If required, a user/team can be created with: `ppy loaddata dev_team`
