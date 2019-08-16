@@ -1,7 +1,7 @@
 {% extends 'registration/base.html' %}
 
 {% block form %}
-<form method="post" action="{% url 'login' %}">
+<form method="post" action="{% url 'signup' %}">
   {% csrf_token %}
   {{ form.non_field_errors }}
   <table>
@@ -11,15 +11,20 @@
       <td>{{ form.username.errors }}</td>
     </tr>
     <tr>
-      <td>{{ form.password.label_tag }}</td>
-      <td>{{ form.password }}</td>
-      <td>{{ form.password.errors }}</td>
+      <td>{{ form.password1.label_tag }}</td>
+      <td>{{ form.password1 }}</td>
+      <td>{{ form.password1.errors }}</td>
+    </tr>
+    <tr>
+      <td>{{ form.password2.label_tag }}</td>
+      <td>{{ form.password2 }}</td>
+      <td>{{ form.password2.errors }}</td>
     </tr>
   </table>
-  <input type="submit" value="login">
+  <input type="submit" value="Signup">
   <input type="hidden" name="next" value="{{ next }}">
 </form>
 
-<p><a href="{% url 'signup' %}">No account?</a></p>
+<p><a href="{% url 'login' %}">Have account?</a></p>
 <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
 {% endblock %}
