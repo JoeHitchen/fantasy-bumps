@@ -418,6 +418,43 @@ class Test__Day__Market_Status(TestCase):
 
 
 
+@tag('game-core')
+class Test__Day__Advance(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    
+    def test__purchases(self):
+        """Copies any purchases onto the next day
+        
+        Expected Queries:
+            (2) Access day.next  (Affected by .next caching, or fetching day with select_related)
+            (1) SELECT purchases for current day
+            (1) INSERT purchases for next day
+        """
+    
+        day = models.Day.objects.first()
+        
+        # Create simple set of purchases
+        team = models.Team.objects.first()
+        crews = models.Crew.objects.all()
+        
+        for seat in models.Seat.objects.all():
+            team.purchases.create(
+                day = day,
+                seat = seat,
+                crew = crews[seat.id],
+            )
+        
+        # Test method
+        with self.assertNumQueries(4):
+            day.advance_purchases_to_next()
+        
+        self.assertEqual(
+            list(day.purchases.values('team', 'crew', 'seat')),
+            list(day.next.purchases.values('team', 'crew', 'seat')),
+        )
+
+
+
 @tag('events-core')
 class Test__Division(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1']

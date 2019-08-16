@@ -131,6 +131,23 @@ class Day(models.Model):
         if not self.first_race:
             return False
         return self.market_opens <= timezone.now() < self.market_closes
+    
+    
+    def advance_purchases_to_next(self):
+        """Creates a copy of all purchase records for today on the next day.
+        
+        MAX four queries. Recommend fetching day with select_related.
+        """
+        
+        Purchase.objects.bulk_create([
+            Purchase(
+                team = purchase.team,
+                day = self.next,
+                crew = purchase.crew,
+                seat = purchase.seat,
+            )
+            for purchase in self.purchases.select_related().all()
+        ])
 
 
 
@@ -295,8 +312,8 @@ class GameEntry(models.Model):
 class Purchase(models.Model):
     """A purchase for a fantasy team."""
     
-    team = models.ForeignKey(Team, models.CASCADE, related_name='purchases')
-    day = models.ForeignKey(Day, models.CASCADE)
+    team = models.ForeignKey(Team, models.CASCADE, related_name = 'purchases')
+    day = models.ForeignKey(Day, models.CASCADE, related_name = 'purchases')
     crew = models.ForeignKey(Crew, models.PROTECT)
     seat = models.ForeignKey(Seat, models.PROTECT)
 

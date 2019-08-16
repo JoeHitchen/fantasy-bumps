@@ -6,6 +6,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from ... import models
+from ...utils import evaluate_all_investments
 
 
 class Command(BaseCommand):
@@ -27,6 +28,8 @@ class Command(BaseCommand):
                 'loaddata',
                 'dev_start_day{}'.format(event.active_day.id + 1),
             )
+            event.active_day.advance_purchases_to_next()
+            evaluate_all_investments(event.active_day)
         
         event.days.update(date = F('date') - timedelta(1))
         
