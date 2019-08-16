@@ -1,8 +1,14 @@
+from datetime import time
+
 
 class genders:
     MENS = 'M'
     WOMENS = 'W'
     TOTALS = 'T'
+
+
+class timings:
+    MARKET_OPENS = time(20, 00)
 
 
 class money:

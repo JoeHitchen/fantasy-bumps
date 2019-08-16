@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import genders, money
+from .constants import genders, timings, money
 
 
 class Event(models.Model):
@@ -34,7 +34,7 @@ class Event(models.Model):
         """
         
         now = timezone.now()
-        day_shift = timedelta(1) if now.time() >= time(20, 00) else timedelta(0)
+        day_shift = timedelta(1) if now.time() >= timings.MARKET_OPENS else timedelta(0)
         date = now.date() + day_shift
         
         day = self.days.filter(date__gte = date).first()
@@ -114,7 +114,7 @@ class Day(models.Model):
         
         return datetime.combine(
             self.date - timedelta(1 if earlier_days else 4),
-            time(hour = 20),
+            timings.MARKET_OPENS,
             timezone.now().tzinfo,
         )
     
