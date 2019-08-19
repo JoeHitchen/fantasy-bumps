@@ -1,0 +1,13 @@
+[
+{
+  "model": "FantasyBumps.event",
+  "pk": 1,
+  "fields": {
+    "name": "Torpids 2020",
+    "tag": "demogame",
+    "mens_divisions": 6,
+    "womens_divisions": 5,
+    "boats_per_division": 12
+  }
+}
+]

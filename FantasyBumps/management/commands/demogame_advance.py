@@ -26,12 +26,12 @@ class Command(BaseCommand):
         if first_race and first_race - timezone.now() < timedelta(1):
             call_command(
                 'loaddata',
-                'dev_start_day{}'.format(event.active_day.id + 1),
+                'demo_start_day{}'.format(event.active_day.id + 1),
             )
             event.active_day.advance_purchases_to_next()
             evaluate_all_investments(event.active_day)
         
         event.days.update(date = F('date') - timedelta(1))
         
-        self.stdout.write('Successfully advanced the development game by 24 hours.')
+        self.stdout.write('Successfully advanced the demonstration by 24 hours.')
 

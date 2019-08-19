@@ -1,0 +1,1208 @@
+[
+{
+  "model": "FantasyBumps.position",
+  "pk": 269,
+  "fields": {
+    "day": 3,
+    "crew": 1,
+    "rank": 1
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 270,
+  "fields": {
+    "day": 3,
+    "crew": 2,
+    "rank": 2
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 271,
+  "fields": {
+    "day": 3,
+    "crew": 3,
+    "rank": 3
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 272,
+  "fields": {
+    "day": 3,
+    "crew": 4,
+    "rank": 4
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 273,
+  "fields": {
+    "day": 3,
+    "crew": 5,
+    "rank": 7
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 274,
+  "fields": {
+    "day": 3,
+    "crew": 6,
+    "rank": 5
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 275,
+  "fields": {
+    "day": 3,
+    "crew": 7,
+    "rank": 13
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 276,
+  "fields": {
+    "day": 3,
+    "crew": 8,
+    "rank": 6
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 277,
+  "fields": {
+    "day": 3,
+    "crew": 9,
+    "rank": 9
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 278,
+  "fields": {
+    "day": 3,
+    "crew": 10,
+    "rank": 8
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 279,
+  "fields": {
+    "day": 3,
+    "crew": 11,
+    "rank": 11
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 280,
+  "fields": {
+    "day": 3,
+    "crew": 12,
+    "rank": 14
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 281,
+  "fields": {
+    "day": 3,
+    "crew": 13,
+    "rank": 10
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 282,
+  "fields": {
+    "day": 3,
+    "crew": 14,
+    "rank": 19
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 283,
+  "fields": {
+    "day": 3,
+    "crew": 15,
+    "rank": 12
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 284,
+  "fields": {
+    "day": 3,
+    "crew": 16,
+    "rank": 16
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 285,
+  "fields": {
+    "day": 3,
+    "crew": 17,
+    "rank": 22
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 286,
+  "fields": {
+    "day": 3,
+    "crew": 18,
+    "rank": 15
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 287,
+  "fields": {
+    "day": 3,
+    "crew": 19,
+    "rank": 17
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 288,
+  "fields": {
+    "day": 3,
+    "crew": 20,
+    "rank": 18
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 289,
+  "fields": {
+    "day": 3,
+    "crew": 21,
+    "rank": 25
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 290,
+  "fields": {
+    "day": 3,
+    "crew": 22,
+    "rank": 21
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 291,
+  "fields": {
+    "day": 3,
+    "crew": 23,
+    "rank": 20
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 292,
+  "fields": {
+    "day": 3,
+    "crew": 24,
+    "rank": 27
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 293,
+  "fields": {
+    "day": 3,
+    "crew": 25,
+    "rank": 24
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 294,
+  "fields": {
+    "day": 3,
+    "crew": 26,
+    "rank": 29
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 295,
+  "fields": {
+    "day": 3,
+    "crew": 27,
+    "rank": 23
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 296,
+  "fields": {
+    "day": 3,
+    "crew": 28,
+    "rank": 26
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 297,
+  "fields": {
+    "day": 3,
+    "crew": 29,
+    "rank": 28
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 298,
+  "fields": {
+    "day": 3,
+    "crew": 30,
+    "rank": 33
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 299,
+  "fields": {
+    "day": 3,
+    "crew": 31,
+    "rank": 31
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 300,
+  "fields": {
+    "day": 3,
+    "crew": 32,
+    "rank": 32
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 301,
+  "fields": {
+    "day": 3,
+    "crew": 33,
+    "rank": 30
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 302,
+  "fields": {
+    "day": 3,
+    "crew": 34,
+    "rank": 37
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 303,
+  "fields": {
+    "day": 3,
+    "crew": 35,
+    "rank": 39
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 304,
+  "fields": {
+    "day": 3,
+    "crew": 36,
+    "rank": 34
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 305,
+  "fields": {
+    "day": 3,
+    "crew": 37,
+    "rank": 35
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 306,
+  "fields": {
+    "day": 3,
+    "crew": 38,
+    "rank": 36
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 307,
+  "fields": {
+    "day": 3,
+    "crew": 39,
+    "rank": 38
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 308,
+  "fields": {
+    "day": 3,
+    "crew": 40,
+    "rank": 41
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 309,
+  "fields": {
+    "day": 3,
+    "crew": 41,
+    "rank": 43
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 310,
+  "fields": {
+    "day": 3,
+    "crew": 42,
+    "rank": 40
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 311,
+  "fields": {
+    "day": 3,
+    "crew": 43,
+    "rank": 42
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 312,
+  "fields": {
+    "day": 3,
+    "crew": 44,
+    "rank": 49
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 313,
+  "fields": {
+    "day": 3,
+    "crew": 45,
+    "rank": 52
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 314,
+  "fields": {
+    "day": 3,
+    "crew": 46,
+    "rank": 44
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 315,
+  "fields": {
+    "day": 3,
+    "crew": 47,
+    "rank": 45
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 316,
+  "fields": {
+    "day": 3,
+    "crew": 48,
+    "rank": 46
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 317,
+  "fields": {
+    "day": 3,
+    "crew": 49,
+    "rank": 47
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 318,
+  "fields": {
+    "day": 3,
+    "crew": 50,
+    "rank": 48
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 319,
+  "fields": {
+    "day": 3,
+    "crew": 51,
+    "rank": 50
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 320,
+  "fields": {
+    "day": 3,
+    "crew": 52,
+    "rank": 51
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 321,
+  "fields": {
+    "day": 3,
+    "crew": 53,
+    "rank": 54
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 322,
+  "fields": {
+    "day": 3,
+    "crew": 54,
+    "rank": 57
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 323,
+  "fields": {
+    "day": 3,
+    "crew": 55,
+    "rank": 53
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 324,
+  "fields": {
+    "day": 3,
+    "crew": 56,
+    "rank": 56
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 325,
+  "fields": {
+    "day": 3,
+    "crew": 57,
+    "rank": 55
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 326,
+  "fields": {
+    "day": 3,
+    "crew": 58,
+    "rank": 60
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 327,
+  "fields": {
+    "day": 3,
+    "crew": 59,
+    "rank": 61
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 328,
+  "fields": {
+    "day": 3,
+    "crew": 60,
+    "rank": 58
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 329,
+  "fields": {
+    "day": 3,
+    "crew": 61,
+    "rank": 59
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 330,
+  "fields": {
+    "day": 3,
+    "crew": 62,
+    "rank": 1
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 331,
+  "fields": {
+    "day": 3,
+    "crew": 63,
+    "rank": 3
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 332,
+  "fields": {
+    "day": 3,
+    "crew": 64,
+    "rank": 2
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 333,
+  "fields": {
+    "day": 3,
+    "crew": 65,
+    "rank": 4
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 334,
+  "fields": {
+    "day": 3,
+    "crew": 66,
+    "rank": 6
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 335,
+  "fields": {
+    "day": 3,
+    "crew": 67,
+    "rank": 8
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 336,
+  "fields": {
+    "day": 3,
+    "crew": 68,
+    "rank": 5
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 337,
+  "fields": {
+    "day": 3,
+    "crew": 69,
+    "rank": 14
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 338,
+  "fields": {
+    "day": 3,
+    "crew": 70,
+    "rank": 7
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 339,
+  "fields": {
+    "day": 3,
+    "crew": 71,
+    "rank": 11
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 340,
+  "fields": {
+    "day": 3,
+    "crew": 72,
+    "rank": 9
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 341,
+  "fields": {
+    "day": 3,
+    "crew": 73,
+    "rank": 13
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 342,
+  "fields": {
+    "day": 3,
+    "crew": 74,
+    "rank": 10
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 343,
+  "fields": {
+    "day": 3,
+    "crew": 75,
+    "rank": 12
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 344,
+  "fields": {
+    "day": 3,
+    "crew": 76,
+    "rank": 16
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 345,
+  "fields": {
+    "day": 3,
+    "crew": 77,
+    "rank": 18
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 346,
+  "fields": {
+    "day": 3,
+    "crew": 78,
+    "rank": 15
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 347,
+  "fields": {
+    "day": 3,
+    "crew": 79,
+    "rank": 17
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 348,
+  "fields": {
+    "day": 3,
+    "crew": 80,
+    "rank": 19
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 349,
+  "fields": {
+    "day": 3,
+    "crew": 81,
+    "rank": 24
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 350,
+  "fields": {
+    "day": 3,
+    "crew": 82,
+    "rank": 20
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 351,
+  "fields": {
+    "day": 3,
+    "crew": 83,
+    "rank": 21
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 352,
+  "fields": {
+    "day": 3,
+    "crew": 84,
+    "rank": 25
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 353,
+  "fields": {
+    "day": 3,
+    "crew": 85,
+    "rank": 22
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 354,
+  "fields": {
+    "day": 3,
+    "crew": 86,
+    "rank": 27
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 355,
+  "fields": {
+    "day": 3,
+    "crew": 87,
+    "rank": 23
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 356,
+  "fields": {
+    "day": 3,
+    "crew": 88,
+    "rank": 26
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 357,
+  "fields": {
+    "day": 3,
+    "crew": 89,
+    "rank": 29
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 358,
+  "fields": {
+    "day": 3,
+    "crew": 90,
+    "rank": 28
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 359,
+  "fields": {
+    "day": 3,
+    "crew": 91,
+    "rank": 33
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 360,
+  "fields": {
+    "day": 3,
+    "crew": 92,
+    "rank": 30
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 361,
+  "fields": {
+    "day": 3,
+    "crew": 93,
+    "rank": 31
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 362,
+  "fields": {
+    "day": 3,
+    "crew": 94,
+    "rank": 32
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 363,
+  "fields": {
+    "day": 3,
+    "crew": 95,
+    "rank": 35
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 364,
+  "fields": {
+    "day": 3,
+    "crew": 96,
+    "rank": 36
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 365,
+  "fields": {
+    "day": 3,
+    "crew": 97,
+    "rank": 49
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 366,
+  "fields": {
+    "day": 3,
+    "crew": 98,
+    "rank": 34
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 367,
+  "fields": {
+    "day": 3,
+    "crew": 99,
+    "rank": 37
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 368,
+  "fields": {
+    "day": 3,
+    "crew": 100,
+    "rank": 51
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 369,
+  "fields": {
+    "day": 3,
+    "crew": 101,
+    "rank": 38
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 370,
+  "fields": {
+    "day": 3,
+    "crew": 102,
+    "rank": 40
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 371,
+  "fields": {
+    "day": 3,
+    "crew": 103,
+    "rank": 39
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 372,
+  "fields": {
+    "day": 3,
+    "crew": 104,
+    "rank": 41
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 373,
+  "fields": {
+    "day": 3,
+    "crew": 105,
+    "rank": 43
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 374,
+  "fields": {
+    "day": 3,
+    "crew": 106,
+    "rank": 42
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 375,
+  "fields": {
+    "day": 3,
+    "crew": 107,
+    "rank": 46
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 376,
+  "fields": {
+    "day": 3,
+    "crew": 108,
+    "rank": 44
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 377,
+  "fields": {
+    "day": 3,
+    "crew": 109,
+    "rank": 48
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 378,
+  "fields": {
+    "day": 3,
+    "crew": 110,
+    "rank": 62
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 379,
+  "fields": {
+    "day": 3,
+    "crew": 111,
+    "rank": 45
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 380,
+  "fields": {
+    "day": 3,
+    "crew": 112,
+    "rank": 54
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 381,
+  "fields": {
+    "day": 3,
+    "crew": 113,
+    "rank": 50
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 382,
+  "fields": {
+    "day": 3,
+    "crew": 114,
+    "rank": 52
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 383,
+  "fields": {
+    "day": 3,
+    "crew": 115,
+    "rank": 47
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 384,
+  "fields": {
+    "day": 3,
+    "crew": 116,
+    "rank": 56
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 385,
+  "fields": {
+    "day": 3,
+    "crew": 117,
+    "rank": 53
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 386,
+  "fields": {
+    "day": 3,
+    "crew": 118,
+    "rank": 55
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 387,
+  "fields": {
+    "day": 3,
+    "crew": 119,
+    "rank": 57
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 388,
+  "fields": {
+    "day": 3,
+    "crew": 120,
+    "rank": 61
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 389,
+  "fields": {
+    "day": 3,
+    "crew": 121,
+    "rank": 58
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 390,
+  "fields": {
+    "day": 3,
+    "crew": 122,
+    "rank": 72
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 391,
+  "fields": {
+    "day": 3,
+    "crew": 123,
+    "rank": 59
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 392,
+  "fields": {
+    "day": 3,
+    "crew": 124,
+    "rank": 60
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 393,
+  "fields": {
+    "day": 3,
+    "crew": 125,
+    "rank": 64
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 394,
+  "fields": {
+    "day": 3,
+    "crew": 126,
+    "rank": 65
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 395,
+  "fields": {
+    "day": 3,
+    "crew": 127,
+    "rank": 63
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 396,
+  "fields": {
+    "day": 3,
+    "crew": 128,
+    "rank": 67
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 397,
+  "fields": {
+    "day": 3,
+    "crew": 129,
+    "rank": 69
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 398,
+  "fields": {
+    "day": 3,
+    "crew": 130,
+    "rank": 66
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 399,
+  "fields": {
+    "day": 3,
+    "crew": 131,
+    "rank": 68
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 400,
+  "fields": {
+    "day": 3,
+    "crew": 132,
+    "rank": 73
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 401,
+  "fields": {
+    "day": 3,
+    "crew": 133,
+    "rank": 70
+  }
+},
+{
+  "model": "FantasyBumps.position",
+  "pk": 402,
+  "fields": {
+    "day": 3,
+    "crew": 134,
+    "rank": 71
+  }
+}
+]

@@ -9,7 +9,7 @@ from ... import models
 
 class Command(BaseCommand):
     def handle(self, *args, **kwags):
-        """Prepares a dev game.
+        """Prepares a demonstration game.
         
         Requires a database with no pre-existing events.
         """
@@ -17,30 +17,44 @@ class Command(BaseCommand):
         if models.Event.objects.exists():
             raise CommandError('An event already exists')
         
-        call_command('loaddata', 'seats', 'dev_crews', 'dev_event')
+        call_command('loaddata', 'seats', 'demo_crews', 'demo_event')
         
         event = models.Event.objects.first()
         event.days.create(
             id = 1,
-            name = 'Day One',
+            name = 'Wednesday',
             date = timezone.now() + timedelta(5),
             first_race_time = time(12, 00),
         )
         
         event.days.create(
             id = 2,
-            name = 'Day Two',
+            name = 'Thursday',
             date = timezone.now() + timedelta(6),
             first_race_time = time(12, 00),
         )
         
         event.days.create(
             id = 3,
-            name = 'Day Three',
+            name = 'Friday',
             date = timezone.now() + timedelta(7),
+            first_race_time = time(12, 00),
         )
         
-        call_command('loaddata', 'dev_start_day1')
+        event.days.create(
+            id = 4,
+            name = 'Saturday',
+            date = timezone.now() + timedelta(8),
+            first_race_time = time(12, 00),
+        )
         
-        self.stdout.write('Successfully created a development game.')
+        event.days.create(
+            id = 5,
+            name = 'Finish',
+            date = timezone.now() + timedelta(9),
+        )
+        
+        call_command('loaddata', 'demo_start_day1')
+        
+        self.stdout.write('Successfully created a demonstration game.')
 
