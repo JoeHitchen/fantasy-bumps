@@ -3,168 +3,189 @@
     "model": "FantasyBumps.Crew",
     "pk": 1,
     "fields": {
-      "name": "Oriel W1",
-      "gender": "W"
+      "name": "Oriel",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 2,
     "fields": {
-      "name": "Wadham W1",
-      "gender": "W"
+      "name": "Wadham",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 3,
     "fields": {
-      "name": "Pembroke W1",
-      "gender": "W"
+      "name": "Pembroke",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 4,
     "fields": {
-      "name": "Christ Church W1",
-      "gender": "W"
+      "name": "Christ Church",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 5,
     "fields": {
-      "name": "Keble W1",
-      "gender": "W"
+      "name": "Keble",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 6,
     "fields": {
-      "name": "Hertford W1",
-      "gender": "W"
+      "name": "Hertford",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 7,
     "fields": {
-      "name": "Wolfson W1",
-      "gender": "W"
+      "name": "Wolfson",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 8,
     "fields": {
-      "name": "St John's W1",
-      "gender": "W"
+      "name": "St John's",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 19,
     "fields": {
-      "name": "New College W1",
-      "gender": "W"
+      "name": "New College",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 20,
     "fields": {
-      "name": "Green Templeton W1",
-      "gender": "W"
+      "name": "Green Templeton",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 9,
     "fields": {
-      "name": "Magdalen W1",
-      "gender": "W"
+      "name": "Magdalen",
+      "gender": "W",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 10,
     "fields": {
-      "name": "Oriel M1",
-      "gender": "M"
+      "name": "Oriel",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 11,
     "fields": {
-      "name": "Pembroke M1",
-      "gender": "M"
+      "name": "Pembroke",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 12,
     "fields": {
-      "name": "Wadham M1",
-      "gender": "M"
+      "name": "Wadham",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 13,
     "fields": {
-      "name": "Christ Church M1",
-      "gender": "M"
+      "name": "Christ Church",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 14,
     "fields": {
-      "name": "St Catherine's M1",
-      "gender": "M"
+      "name": "St Catherine's",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 15,
     "fields": {
-      "name": "Wolfson M1",
-      "gender": "M"
+      "name": "Wolfson",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 16,
     "fields": {
-      "name": "Hertford M1",
-      "gender": "M"
+      "name": "Hertford",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 17,
     "fields": {
-      "name": "Balliol M1",
-      "gender": "M"
+      "name": "Balliol",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 18,
     "fields": {
-      "name": "Jesus M1",
-      "gender": "M"
+      "name": "Jesus",
+      "gender": "M",
+      "rank": 1
     }
   },
   {
     "model": "FantasyBumps.Crew",
     "pk": 21,
     "fields": {
-      "name": "SEH M1",
-      "gender": "M"
+      "name": "SEH",
+      "gender": "M",
+      "rank": 1
     }
   }
 ]

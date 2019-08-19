@@ -189,9 +189,10 @@ class Crew(models.Model):
         ],
         db_index = True,
     )
+    rank = models.PositiveSmallIntegerField()
     
     def __str__(self):
-        return self.name
+        return '{} {}{}'.format(self.name, self.gender, self.rank)
     
     
     @lru_cache(maxsize = 10)

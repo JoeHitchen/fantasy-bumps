@@ -532,15 +532,37 @@ class Test__Crew(TestCase):
         crew_mens.positions.create(day = cls.day, rank = 4)  # Added to ensure gender isolation
     
     
-    def test__string(self):
-        """Returns a crew's name as it's string representation."""
+    def test__string__womens_first(self):
+        """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
-            name = 'New College W1',
+            name = 'New College',
             gender = genders.WOMENS,
+            rank = 1,
         )
-        crew_str = str(crew)
-        self.assertEqual(crew_str, crew.name)
+        self.assertEqual(str(crew), 'New College W1')
+    
+    
+    def test__string__mens_first(self):
+        """Displays a crew's club, gender, and rank."""
+        
+        crew = models.Crew(
+            name = 'New College',
+            gender = genders.MENS,
+            rank = 1,
+        )
+        self.assertEqual(str(crew), 'New College M1')
+    
+    
+    def test__string__lower_boat(self):
+        """Displays a crew's club, gender, and rank."""
+        
+        crew = models.Crew(
+            name = 'New College',
+            gender = genders.WOMENS,
+            rank = 2,
+        )
+        self.assertEqual(str(crew), 'New College W2')
     
     
     def test__value__no_ranking(self):
@@ -573,7 +595,7 @@ class Test__Position(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew(name = 'Hertford W1', gender = genders.WOMENS)
+        cls.crew = models.Crew(name = 'Hertford', gender = genders.WOMENS, rank = 1)
         cls.crew.save()
     
     
@@ -629,7 +651,7 @@ class Test__Team(TestCase):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         
-        cls.crew = models.Crew.objects.create(gender = genders.WOMENS)
+        cls.crew = models.Crew.objects.create(gender = genders.WOMENS, rank = 1)
         cls.bow = models.Seat.objects.get(name = 'Bow')
         
     
