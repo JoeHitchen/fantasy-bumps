@@ -15,8 +15,7 @@ class Test__Has_All_Seats(TestCase):
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew(gender = genders.MENS)
-        cls.crew.save()
+        cls.crew = models.Crew.objects.create(gender = genders.MENS)
     
     
     def test__empty_crew(self):
@@ -30,12 +29,7 @@ class Test__Has_All_Seats(TestCase):
         """Returns true if all seats are present exactly once."""
         
         for seat in models.Seat.objects.all():
-            models.Purchase(
-                team = self.team,
-                day = self.day,
-                crew = self.crew,
-                seat = seat,
-            ).save()
+            self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
         value = utils.has_all_seats(models.Purchase.objects.all())
         self.assertTrue(value)
@@ -45,12 +39,7 @@ class Test__Has_All_Seats(TestCase):
         """Returns false if a specific seat is missing."""
         
         for seat in models.Seat.objects.exclude(name__iexact = missing_seat):
-            models.Purchase(
-                team = self.team,
-                day = self.day,
-                crew = self.crew,
-                seat = seat,
-            ).save()
+            self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
         value = utils.has_all_seats(models.Purchase.objects.all())
         self.assertFalse(value)
@@ -96,20 +85,10 @@ class Test__Has_All_Seats(TestCase):
         """Raises ValueError if any seat present twice."""
         
         for seat in models.Seat.objects.all():
-            models.Purchase(
-                team = self.team,
-                day = self.day,
-                crew = self.crew,
-                seat = seat,
-            ).save()
+            self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
         extra_seat = models.Seat.objects.get(name__iexact = extra_seat)
-        models.Purchase(
-            team = self.team,
-            day = self.day,
-            crew = self.crew,
-            seat = extra_seat,
-        ).save()
+        self.team.purchases.create(day = self.day, crew = self.crew, seat = extra_seat)
         
         with self.assertRaises(errors.DuplicateSeatError):
             utils.has_all_seats(models.Purchase.objects.all())
