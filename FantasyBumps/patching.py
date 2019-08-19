@@ -1,12 +1,12 @@
 from unittest.mock import patch, PropertyMock
-from datetime import datetime, time
+from datetime import datetime, timedelta
 
 from django.utils import timezone
 
 from . import models
 
 
-def timezone_now_time(hour, minute = 0, second = 0):
+def timezone_now_time(time, shift = timedelta(0)):
     
     now = timezone.now()
     
@@ -14,9 +14,9 @@ def timezone_now_time(hour, minute = 0, second = 0):
         'django.utils.timezone.now',
         return_value = datetime.combine(
             now.date(),
-            time(hour, minute, second),
+            time,
             tzinfo = now.tzinfo,
-        ),
+        ) + shift,
     )
 
 

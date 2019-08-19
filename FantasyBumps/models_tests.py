@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db import IntegrityError
 from django.contrib.auth import models as auth
 
-from .constants import genders, money
+from .constants import genders, timings, money
 from . import models
 from . import patching
 
@@ -58,7 +58,7 @@ class Test__Event(TestCase):
         self.assertEqual(str(self.event), self.event.name)
     
     
-    @patching.timezone_now_time(19, 59)
+    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
     def test__before_rollover(self, timezone_mock):
         """Returns first day from today onwards before 8pm."""
         
@@ -68,7 +68,7 @@ class Test__Event(TestCase):
         )
     
     
-    @patching.timezone_now_time(20, 00)
+    @patching.timezone_now_time(timings.MARKET_OPENS)
     def test__after_rollover(self, timezone_mock):
         """Returns first day from tomorrow onwards after 8pm."""
         
@@ -78,7 +78,7 @@ class Test__Event(TestCase):
         )
     
     
-    @patching.timezone_now_time(20, 00)
+    @patching.timezone_now_time(timings.MARKET_OPENS)
     def test__after_event(self, timezone_mock):
         """Returns last day of the event, if all have passed."""
         
@@ -287,7 +287,7 @@ class Test__Day__Market_Status(TestCase):
         # Test property
         open = day.market_opens
         self.assertEqual(open.date() - now.date(), timedelta(-4))
-        self.assertEqual(open.time(), time(hour = 20))
+        self.assertEqual(open.time(), timings.MARKET_OPENS)
     
     
     def test__market_opens__later_race_day(self):
@@ -309,7 +309,7 @@ class Test__Day__Market_Status(TestCase):
         # Test property
         open = day.market_opens
         self.assertEqual(open.date() - now.date(), timedelta(-1))
-        self.assertEqual(open.time(), time(hour = 20))
+        self.assertEqual(open.time(), timings.MARKET_OPENS)
     
     
     def test__market_opens__non_race_day(self):

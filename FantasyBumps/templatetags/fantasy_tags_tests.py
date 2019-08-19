@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from .. import models
 from .. import patching
+from ..constants import timings
 from . import fantasy_tags as tags
 
 
@@ -191,7 +192,9 @@ class Test__Market_Status_Box(TestCase):
         self.assertFalse(props['dismissable'])
         self.assertEqual(
             props['message'],
-            'The market is closed, and will open at 20:00 tomorrow.',
+            'The market is closed, and will open at {:%H:%M} tomorrow.'.format(
+                timings.MARKET_OPENS,
+            ),
         )
     
     
