@@ -536,7 +536,7 @@ class Test__Crew(TestCase):
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
-            name = 'New College',
+            club = 'newc',
             gender = genders.WOMENS,
             rank = 1,
         )
@@ -547,7 +547,7 @@ class Test__Crew(TestCase):
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
-            name = 'New College',
+            club = 'newc',
             gender = genders.MENS,
             rank = 1,
         )
@@ -558,7 +558,7 @@ class Test__Crew(TestCase):
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
-            name = 'New College',
+            club = 'newc',
             gender = genders.WOMENS,
             rank = 2,
         )
@@ -595,7 +595,7 @@ class Test__Position(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew(name = 'Hertford', gender = genders.WOMENS, rank = 1)
+        cls.crew = models.Crew(club = 'hert', gender = genders.WOMENS, rank = 1)
         cls.crew.save()
     
     
@@ -651,7 +651,7 @@ class Test__Team(TestCase):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         
-        cls.crew = models.Crew.objects.create(gender = genders.WOMENS, rank = 1)
+        cls.crew = models.Crew.objects.create(club = 'newc', gender = genders.WOMENS, rank = 1)
         cls.bow = models.Seat.objects.get(name = 'Bow')
         
     

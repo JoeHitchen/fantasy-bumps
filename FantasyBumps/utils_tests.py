@@ -15,7 +15,7 @@ class Test__Has_All_Seats(TestCase):
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew(gender = genders.MENS, rank = 1)
+        cls.crew = models.Crew(club = 'newc', gender = genders.MENS, rank = 1)
         cls.crew.save()
     
     
@@ -185,9 +185,9 @@ class Test__All_Investments(TestCase):
         cls.day3 = days[2]
         
         # Hertford bump both days; Oriel got bumped both days; Wolfson rowed over day 1
-        cls.crew_hert = models.Crew.objects.get(name = 'Hertford', gender = genders.WOMENS)
-        cls.crew_orie = models.Crew.objects.get(name = 'Oriel', gender = genders.WOMENS)
-        cls.crew_wolf = models.Crew.objects.get(name = 'Wolfson', gender = genders.WOMENS)
+        cls.crew_hert = models.Crew.objects.get(club = 'hert', gender = genders.WOMENS)
+        cls.crew_orie = models.Crew.objects.get(club = 'orie', gender = genders.WOMENS)
+        cls.crew_wolf = models.Crew.objects.get(club = 'wolf', gender = genders.WOMENS)
         
         cls.team = models.Team.objects.first()
         cls.budgets = cls.team.entries.create(event = cls.event)

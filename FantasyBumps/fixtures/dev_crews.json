@@ -3,7 +3,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 1,
     "fields": {
-      "name": "Oriel",
+      "club": "orie",
       "gender": "W",
       "rank": 1
     }
@@ -12,7 +12,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 2,
     "fields": {
-      "name": "Wadham",
+      "club": "wadh",
       "gender": "W",
       "rank": 1
     }
@@ -21,7 +21,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 3,
     "fields": {
-      "name": "Pembroke",
+      "club": "pemb",
       "gender": "W",
       "rank": 1
     }
@@ -30,7 +30,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 4,
     "fields": {
-      "name": "Christ Church",
+      "club": "chri",
       "gender": "W",
       "rank": 1
     }
@@ -39,7 +39,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 5,
     "fields": {
-      "name": "Keble",
+      "club": "kebl",
       "gender": "W",
       "rank": 1
     }
@@ -48,7 +48,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 6,
     "fields": {
-      "name": "Hertford",
+      "club": "hert",
       "gender": "W",
       "rank": 1
     }
@@ -57,7 +57,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 7,
     "fields": {
-      "name": "Wolfson",
+      "club": "wolf",
       "gender": "W",
       "rank": 1
     }
@@ -66,7 +66,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 8,
     "fields": {
-      "name": "St John's",
+      "club": "sjoh",
       "gender": "W",
       "rank": 1
     }
@@ -75,7 +75,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 19,
     "fields": {
-      "name": "New College",
+      "club": "newc",
       "gender": "W",
       "rank": 1
     }
@@ -84,7 +84,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 20,
     "fields": {
-      "name": "Green Templeton",
+      "club": "grte",
       "gender": "W",
       "rank": 1
     }
@@ -93,7 +93,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 9,
     "fields": {
-      "name": "Magdalen",
+      "club": "magd",
       "gender": "W",
       "rank": 1
     }
@@ -102,7 +102,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 10,
     "fields": {
-      "name": "Oriel",
+      "club": "orie",
       "gender": "M",
       "rank": 1
     }
@@ -111,7 +111,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 11,
     "fields": {
-      "name": "Pembroke",
+      "club": "pemb",
       "gender": "M",
       "rank": 1
     }
@@ -120,7 +120,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 12,
     "fields": {
-      "name": "Wadham",
+      "club": "wadh",
       "gender": "M",
       "rank": 1
     }
@@ -129,7 +129,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 13,
     "fields": {
-      "name": "Christ Church",
+      "club": "chri",
       "gender": "M",
       "rank": 1
     }
@@ -138,7 +138,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 14,
     "fields": {
-      "name": "St Catherine's",
+      "club": "scat",
       "gender": "M",
       "rank": 1
     }
@@ -147,7 +147,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 15,
     "fields": {
-      "name": "Wolfson",
+      "club": "wolf",
       "gender": "M",
       "rank": 1
     }
@@ -156,7 +156,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 16,
     "fields": {
-      "name": "Hertford",
+      "club": "hert",
       "gender": "M",
       "rank": 1
     }
@@ -165,7 +165,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 17,
     "fields": {
-      "name": "Balliol",
+      "club": "ball",
       "gender": "M",
       "rank": 1
     }
@@ -174,7 +174,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 18,
     "fields": {
-      "name": "Jesus",
+      "club": "jesu",
       "gender": "M",
       "rank": 1
     }
@@ -183,7 +183,7 @@
     "model": "FantasyBumps.Crew",
     "pk": 21,
     "fields": {
-      "name": "SEH",
+      "club": "sedm",
       "gender": "M",
       "rank": 1
     }

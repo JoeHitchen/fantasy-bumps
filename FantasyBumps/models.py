@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import genders, timings, money
+from .constants import genders, timings, money, clubs
 
 
 class Event(models.Model):
@@ -180,7 +180,11 @@ class Division:
 class Crew(models.Model):
     """Describes a crew (e.g. New College W1)"""
     
-    name = models.CharField(max_length = 40)
+    club = models.CharField(
+        max_length = 4,
+        choices = clubs,
+        db_index = True,
+    )
     gender = models.CharField(
         max_length = 1,
         choices = [
@@ -192,7 +196,7 @@ class Crew(models.Model):
     rank = models.PositiveSmallIntegerField()
     
     def __str__(self):
-        return '{} {}{}'.format(self.name, self.gender, self.rank)
+        return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
     
     
     @lru_cache(maxsize = 10)
