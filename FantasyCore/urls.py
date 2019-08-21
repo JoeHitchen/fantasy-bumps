@@ -1,6 +1,9 @@
 from django.urls import path, include, reverse_lazy
 from django.views.generic.edit import CreateView
 from django.contrib.auth.forms import UserCreationForm
+from django.conf.urls.static import static
+
+from . import settings
 
 urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
@@ -15,3 +18,6 @@ urlpatterns = [
     ),
     path('', include('FantasyBumps.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
