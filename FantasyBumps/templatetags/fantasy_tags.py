@@ -62,19 +62,27 @@ def avatar(text, club = None):
 
 @register.filter
 def value(crew, day):
-    return format_html('<span class="crew-value">฿{}</span>', crew.value(day))
+    return format_html('<span class="currency">₢ {}</span>', crew.value(day))
 
 
 @register.inclusion_tag(template.Template('''
-  <form action="{% url 'fantasybumps:buy' %}" method="post">
-    {% csrf_token %}
-    <input name="day" type="hidden" value="{{ day.id }}"/>
-    <input name="crew" type="hidden" value="{{ btn_crew.id }}"/>
-    <button class="btn btn-primary btn-sm" type="submit">Buy</button>
-  </form>
+  {% load fantasy_tags %}
+  <button class="btn btn-primary btn-sm btn-buy" onclick="buy({{ day.id }}, {{ crew.id }})">
+    Buy {{ crew|value:day }}
+  </button>
 '''))
 def buy_button(day, crew):
-    return {'day': day, 'btn_crew': crew}
+    return {'day': day, 'crew': crew}
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <button class="btn btn-primary btn-sm btn-sell" onclick="sell({{ purchase.id }})">
+    Sell {{ purchase.crew|value:purchase.day }}
+  </button>
+'''))
+def sell_button(purchase):
+    return {'purchase': purchase}
 
 
 @register.inclusion_tag(template.Template('''
@@ -82,7 +90,6 @@ def buy_button(day, crew):
   <tr>
     <td>{{ bungline|avatar:tag_crew.club }}</td>
     <td>{{ tag_crew }}</td>
-    <td>{{ tag_crew|value:day }}</td>
     <td>{% buy_button day tag_crew %}</td>
   </tr>
 '''))
@@ -94,7 +101,7 @@ def market_division_row(day, bungline, crew):
   {% load fantasy_tags %}
   <table class="table table-sm table-bordered table-hover">
     <thead class="thead-dark">
-      <tr><th colspan="4">{{ gender }}\'s Division {{ number }}</th></tr>
+      <tr><th colspan="3">{{ gender }}\'s Division {{ number }}</th></tr>
     </thead>
     <tbody>
     {% for position in division %}
@@ -108,25 +115,11 @@ def market_division_box(day, division, gender, number):
 
 
 @register.inclusion_tag(template.Template('''
-  <form action="{% url 'fantasybumps:sell' %}" method="post">
-    {% csrf_token %}
-    <input name="purchase" type="hidden" value="{{ purchase.id }}"/>
-    <button class="btn btn-primary btn-sm" type="submit">Sell</button>
-  </form>
-'''))
-def sell_button(purchase):
-    return {'purchase': purchase}
-
-
-@register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <tr class="table-{% if rower %}primary{% else %}danger{% endif %}">
     <td>{{ seat|avatar:club }}</td>
     <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
-    <td>{% if rower %}{{ rower.crew|value:rower.day }}{% endif %}</td>
-    <td>
-      {% sell_button rower %}
-    </td>
+    <td>{% if rower %}{% sell_button rower %}{% endif %}</td>
   </tr>
 '''))
 def crew_list_row(seat, rower):
@@ -138,7 +131,7 @@ def crew_list_row(seat, rower):
       {% load fantasy_tags %}
       <table class="table table-sm table-bordered table-hover">
         <thead class="thead-dark">
-          <tr><th colspan="4">Your crew</th></tr>
+          <tr><th colspan="3">Your crew</th></tr>
         </thead>
         <tbody>
         {% for seat, rower in crew %}
@@ -147,12 +140,12 @@ def crew_list_row(seat, rower):
         </tbody>
         <tfoot>
           <tr class="table-{% if crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="4">
+            <th colspan="3">
               This crew is {% if not crew_valid %}not {% endif %}ready to race.
             </th>
           </tr>
           <tr class="table-{% if other_crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="4">
+            <th colspan="3">
               Your other crew is {% if not other_crew_valid %}not {% endif %}ready to race.
             </th>
           </tr>

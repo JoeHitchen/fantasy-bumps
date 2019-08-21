@@ -19,7 +19,32 @@
     
     box-shadow: 4px 4px 4px grey;
   }
+  
+  .btn-buy {
+    width: 6.3em;
+  }
+  
+  .btn-sell {
+    width: 6.1em;
+  }
+  
+  .btn-buy .currency,.btn-sell .currency {
+    margin-left: 0.5em;
+  }
 </style>
+
+<script type="text/javascript">
+  function buy(day, crew) {
+    document.getElementById("buy-day").value = day;
+    document.getElementById("buy-crew").value = crew;
+    document.getElementById("buy-form").submit();
+  };
+
+  function sell(purchase) {
+    document.getElementById("sell-purchase").value = purchase;
+    document.getElementById("sell-form").submit();
+  };
+</script>
 {% endblock %}
 
 
@@ -40,5 +65,16 @@
   {% crew_list_box %}
 {% endif %}
 <br/>
+
+<form id="buy-form" action="{% url 'fantasybumps:buy' %}" method="post">
+  {% csrf_token %}
+  <input id="buy-day" name="day" type="hidden" value=""/>
+  <input id="buy-crew" name="crew" type="hidden" value=""/>
+</form>
+
+<form id="sell-form" action="{% url 'fantasybumps:sell' %}" method="post">
+  {% csrf_token %}
+  <input id="sell-purchase" name="purchase" type="hidden" value=""/>
+</form>
 
 {% endblock%}

@@ -1,7 +1,9 @@
 from datetime import time, timedelta
+from xml.etree import ElementTree as ET
 
 from django.test import TestCase, tag
 from django.utils import timezone
+from django import template
 
 from .. import models
 from .. import patching
@@ -251,4 +253,88 @@ class Test__Avatar(TestCase):
             tags.avatar(7, 'newc'),
             '<span class="avatar club-newc">7</span>',
         )
+
+
+
+@tag('frontend')
+class Test__Misc(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        cls.crew = models.Crew.objects.first()
+        cls.seat = models.Seat.objects.first()
+    
+    
+    def test__value_filter(self):
+        """Renders a styled span containing the crew value."""
+        
+        html = tags.value(self.crew, self.day)
+        span = ET.fromstring(html)
+        
+        self.assertEqual(span.tag, 'span')
+        self.assertEqual(span.get('class'), 'currency')
+        
+        value = self.crew.value(self.day)
+        self.assertIn(str(value), span.text)
+    
+    
+    def test__buy_button(self):
+        """Renders a styled button with an attached function call."""
+        
+        testing_template = template.Template('{% load fantasy_tags %}{% buy_button day crew %}')
+        context = template.Context({
+            'day': self.day,
+            'crew': self.crew,
+        })
+        
+        html = testing_template.render(context)
+        button = ET.fromstring(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-buy', classes)
+        
+        self.assertEqual(
+            button.get('onclick'),
+            'buy({}, {})'.format(self.day.id, self.crew.id),
+        )
+        
+        self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
+    
+    
+    def test__sell_button(self):
+        """Renders a styled button with an attached function call."""
+        
+        purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat,
+            crew = self.crew,
+        )
+        
+        testing_template = template.Template('{% load fantasy_tags %}{% sell_button purchase %}')
+        context = template.Context({
+            'purchase': purchase,
+        })
+        
+        html = testing_template.render(context)
+        button = ET.fromstring(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        
+        self.assertEqual(
+            button.get('onclick'),
+            'sell({})'.format(purchase.id),
+        )
+        
+        self.assertInHTML('Sell' + tags.value(self.crew, self.day), html)
 
