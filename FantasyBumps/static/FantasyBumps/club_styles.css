@@ -1,0 +1,123 @@
+
+/* white-on-navy */
+.club-chri, .club-quee, .club-shil, .club-sjoh, .club-trin {
+  background-color: darkblue;
+  color: white;
+}
+
+/* yellow-on-navy */
+.club-lady, .club-shug, .club-univ {
+  background-color: darkblue;
+  color: yellow;
+}
+
+/* red-on-navy */
+.club-ball, .club-corp {
+  background-color: darkblue;
+  color: #c00;
+}
+
+/* red-on-white */
+.club-kebl, .club-osle {
+  background-color: white;
+  color: #c00;
+}
+
+/* navy-on-white */
+.club-orie, .club-sben {
+  background-color: white;
+  color: darkblue;
+  border-color: darkblue;
+}
+
+/* white-on-red */
+.club-exet, .club-rege {
+  background-color: #c00;
+  color: white;
+}
+
+/* yellow-on-red */
+.club-mans, .club-sant {
+  background-color: #c00;
+  color: yellow;
+}
+
+
+.club-bras {
+  background-color: black;
+  color: #c00;
+  border-color: goldenrod;
+}
+
+.club-gtre {
+  background-color: darkblue;
+  color: #098137;
+  border-color: yellow;
+}
+.club-hert { /* Source: Wiki */
+  background-color: #600;
+  color: white;
+}
+.club-jesu { /* Source: Wiki */
+  background-color: darkgreen;
+  color: white;
+}
+.club-lina {
+  background-color: yellow;
+  color: black;
+}
+.club-linc {
+  background-color: darkblue;
+  color: lightblue;
+}
+.club-magd {
+  background-color: black;
+  color: white;
+  border-color: #444;
+}
+.club-mert { /* Source: Wiki */
+  background-color: white;
+  color: #906;
+  border-color: #906;
+}
+.club-newc { /* Source: Wiki */ 
+  background-color: purple;
+  color: goldenrod;  /* Not gold as per Wiki */
+  border-color: goldenrod;
+}
+.club-pemb {
+  background-color: pink;
+  color: white;
+}
+.club-some { /* Source: Wiki */
+  background-color: red;
+  color: black;
+}
+.club-sann {
+  background-color: #c00;
+  color: darkblue;
+}
+.club-scat { /* Source: Wiki */
+  background-color: skyblue;
+  color: darkred;
+}
+.club-sedm { /* Source: Wiki */
+  background-color: #f0dc82;
+  color: #801213;
+}
+.club-spet { /* Source: Wiki */
+  background-color: #060;
+  color: #fc0;
+}
+.club-wadh { /* Source: Wiki */
+  background-color: lightblue;
+  color: white;
+}
+.club-wolf {
+  background-color: yellow;
+  color: #c00;
+}
+.club-worc {
+  background-color: hotpink;
+  color: black;
+}
