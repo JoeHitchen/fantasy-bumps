@@ -6,6 +6,7 @@ if not args:
 
 commands = {
     'test': 'python manage.py test --pattern=*tests.py',
+    'test:ff': 'python project.py test --failfast',
     'lint': 'flake8',
     'devgame:start': 'python manage.py devgame_start',
     'devgame:advance': 'python manage.py devgame_advance',
