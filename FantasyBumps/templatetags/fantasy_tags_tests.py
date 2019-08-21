@@ -222,48 +222,33 @@ class Test__Market_Status_Box(TestCase):
         )
 
 
-class Test__Bungline_Avatar(TestCase):
-    
-    def test__standard_use(self):
-        """Returns a span with the 'bungline-avatar' class, and containing the bungline number."""
-        
-        self.assertHTMLEqual(
-            tags.bungline_avatar(7),
-            '<span class="bungline-avatar">7</span>',
-        )
-    
-    
-    def test__not_seat(self):
-        """Replaces seat.short with an error indicator if the object passed is not a Seat."""
-        
-        self.assertHTMLEqual(
-            tags.bungline_avatar(None),
-            '<span class="bungline-avatar">E</span>',
-        )
 
-
-class Test__Seat_Avatar(TestCase):
+@tag('frontend')
+class Test__Avatar(TestCase):
     
-    def test__standard_use(self):
-        """Returns a span with the 'seat-avatar' class, and containing seat.short."""
-        
-        seat = models.Seat(
-            name = 'Seat',
-            cox = False,
-        )
-        seat.save()
+    def test__string(self):
+        """Puts the received text in the middle of a avatar span."""
         
         self.assertHTMLEqual(
-            tags.seat_avatar(seat),
-            '<span class="seat-avatar">S</span>',
+            tags.avatar('C'),
+            '<span class="avatar">C</span>',
         )
     
     
-    def test__not_seat(self):
-        """Replaces seat.short with an error indicator if the object passed is not a Seat."""
+    def test__int(self):
+        """Will accept an integer value."""
         
         self.assertHTMLEqual(
-            tags.seat_avatar(None),
-            '<span class="seat-avatar">E</span>',
+            tags.avatar(7),
+            '<span class="avatar">7</span>',
+        )
+    
+    
+    def test__with_club(self):
+        """Converts the second argument into an additional class."""
+        
+        self.assertHTMLEqual(
+            tags.avatar(7, 'newc'),
+            '<span class="avatar club-newc">7</span>',
         )
 

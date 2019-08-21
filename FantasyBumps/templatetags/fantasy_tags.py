@@ -55,9 +55,9 @@ def market_status_box(day):
 
 
 @register.filter
-def bungline_avatar(bungline):
-    text = bungline if isinstance(bungline, int) else 'E'
-    return format_html('<span class="bungline-avatar">{}</span>', text)
+def avatar(text, club = None):
+    classes = 'avatar' + (' club-' + club if club else '')
+    return format_html('<span class="{1}">{0}</span>', text, classes)
 
 
 @register.filter
@@ -80,7 +80,7 @@ def buy_button(day, crew):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <tr>
-    <td>{{ bungline }}</td>
+    <td>{{ bungline|avatar:tag_crew.club }}</td>
     <td>{{ tag_crew }}</td>
     <td>{{ tag_crew|value:day }}</td>
     <td>{% buy_button day tag_crew %}</td>
@@ -107,12 +107,6 @@ def market_division_box(day, division, gender, number):
     return {'day': day, 'division': division, 'gender': gender, 'number': number}
 
 
-@register.filter
-def seat_avatar(seat):
-    text = seat.short if isinstance(seat, models.Seat) else 'E'
-    return format_html('<span class="seat-avatar">{}</span>', text)
-
-
 @register.inclusion_tag(template.Template('''
   <form action="{% url 'fantasybumps:sell' %}" method="post">
     {% csrf_token %}
@@ -127,7 +121,7 @@ def sell_button(purchase):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <tr class="table-{% if rower %}primary{% else %}danger{% endif %}">
-    <td>{{ seat|seat_avatar }}</td>
+    <td>{{ seat|avatar:club }}</td>
     <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
     <td>{% if rower %}{{ rower.crew|value:rower.day }}{% endif %}</td>
     <td>
@@ -136,7 +130,7 @@ def sell_button(purchase):
   </tr>
 '''))
 def crew_list_row(seat, rower):
-    return {'seat': seat, 'rower': rower}
+    return {'seat': seat, 'rower': rower, 'club': rower.crew.club if rower else None}
 
 
 @register.inclusion_tag(
