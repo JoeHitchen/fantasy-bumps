@@ -268,6 +268,18 @@ class Test__Misc(TestCase):
         cls.seat = models.Seat.objects.first()
     
     
+    def test__currency_filter(self):
+        """Renders a styled span containing the crew value."""
+        
+        html = tags.currency(100)
+        span = ET.fromstring(html)
+        
+        self.assertEqual(span.tag, 'span')
+        self.assertEqual(span.get('class'), 'currency')
+        
+        self.assertIn('100', span.text)
+    
+    
     def test__value_filter(self):
         """Renders a styled span containing the crew value."""
         

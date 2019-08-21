@@ -61,8 +61,13 @@ def avatar(text, club = None):
 
 
 @register.filter
+def currency(amount):
+    return format_html('<span class="currency">₢ {}</span>', amount)
+
+
+@register.filter
 def value(crew, day):
-    return format_html('<span class="currency">₢ {}</span>', crew.value(day))
+    return currency(crew.value(day))
 
 
 @register.inclusion_tag(template.Template('''
