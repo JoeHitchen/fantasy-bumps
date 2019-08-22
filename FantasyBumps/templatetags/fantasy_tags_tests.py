@@ -281,7 +281,7 @@ class Test__Misc(TestCase):
         self.assertIn(str(value), span.text)
     
     
-    def test__buy_button(self):
+    def test__buy_button__standard(self):
         """Renders a styled button with an attached function call."""
         
         testing_template = template.Template('{% load fantasy_tags %}{% buy_button day crew %}')
@@ -299,11 +299,40 @@ class Test__Misc(TestCase):
         self.assertIn('btn', classes)
         self.assertIn('btn-sm', classes)
         self.assertIn('btn-buy', classes)
+        self.assertNotIn('disabled', classes)
         
         self.assertEqual(
             button.get('onclick'),
             'buy({}, {})'.format(self.day.id, self.crew.id),
         )
+        
+        self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
+    
+    
+    def test__buy_button__disabled(self):
+        """Includes the disabled class and does not have a function call."""
+        
+        testing_template = template.Template('''
+            {% load fantasy_tags %}
+            {% buy_button day crew True %}
+        ''')
+        context = template.Context({
+            'day': self.day,
+            'crew': self.crew,
+        })
+        
+        html = testing_template.render(context)
+        button = ET.fromstring(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-buy', classes)
+        self.assertIn('disabled', classes)
+        
+        self.assertFalse('onclick' in button.attrib)
         
         self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
     

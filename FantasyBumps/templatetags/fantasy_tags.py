@@ -67,12 +67,15 @@ def value(crew, day):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <button class="btn btn-primary btn-sm btn-buy" onclick="buy({{ day.id }}, {{ crew.id }})">
+  <button
+    class="btn btn-primary btn-sm btn-buy{{ disabled }}"
+    {% if not disabled %}onclick="buy({{ day.id }}, {{ crew.id }})"{% endif %}
+  >
     Buy {{ crew|value:day }}
   </button>
 '''))
-def buy_button(day, crew):
-    return {'day': day, 'crew': crew}
+def buy_button(day, crew, disabled = False):
+    return {'day': day, 'crew': crew, 'disabled': ' disabled' if disabled else ''}
 
 
 @register.inclusion_tag(template.Template('''
@@ -90,11 +93,12 @@ def sell_button(purchase):
   <tr>
     <td>{{ bungline|avatar:tag_crew.club }}</td>
     <td>{{ tag_crew }}</td>
-    <td>{% buy_button day tag_crew %}</td>
+    <td>{% buy_button day tag_crew disabled %}</td>
   </tr>
 '''))
-def market_division_row(day, bungline, crew):
-    return {'day': day, 'bungline': bungline, 'tag_crew': crew}
+def market_division_row(day, bungline, crew, balance):
+    disabled = crew.value(day) >= balance
+    return {'day': day, 'bungline': bungline, 'tag_crew': crew, 'disabled': disabled}
 
 
 @register.inclusion_tag(template.Template('''
@@ -105,13 +109,19 @@ def market_division_row(day, bungline, crew):
     </thead>
     <tbody>
     {% for position in division %}
-      {% market_division_row day forloop.counter position.crew %}
+      {% market_division_row day forloop.counter position.crew balance %}
     {% endfor %}
     </tbody>
   </table>
 '''))
-def market_division_box(day, division, gender, number):
-    return {'day': day, 'division': division, 'gender': gender, 'number': number}
+def market_division_box(day, division, gender, number, balance):
+    return {
+        'day': day,
+        'division': division,
+        'gender': gender,
+        'number': number,
+        'balance': balance,
+    }
 
 
 @register.inclusion_tag(template.Template('''
