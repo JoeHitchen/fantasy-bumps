@@ -95,77 +95,58 @@ def sell_button(purchase):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <tr>
-    <td>{{ bungline|avatar:tag_crew.club }}</td>
-    <td>{{ tag_crew }}</td>
-    <td>{% buy_button day tag_crew disabled %}</td>
-  </tr>
+  <div class="list-group-item market-row">
+    {{ position.bungline|avatar:position.crew.club }}
+    <div class="flex-grow-1">{{ position.crew }}</div>
+    {% buy_button position.day position.crew disabled %}
+  </div>
 '''))
-def market_division_row(day, bungline, crew, balance):
-    disabled = crew.value(day) >= balance
-    return {'day': day, 'bungline': bungline, 'tag_crew': crew, 'disabled': disabled}
+def market_row(position, balance):
+    disabled = position.crew.value(position.day) >= balance
+    return {'position': position, 'disabled': disabled}
 
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <table class="table table-sm table-bordered table-hover">
-    <thead class="thead-dark">
-      <tr><th colspan="3">{{ gender }}\'s Division {{ number }}</th></tr>
-    </thead>
-    <tbody>
-    {% for position in division %}
-      {% market_division_row day forloop.counter position.crew balance %}
-    {% endfor %}
-    </tbody>
-  </table>
+  <div class="list-group">
+    <div class="list-group-item list-group-item-dark">
+      {{ gender }}'s Division {{ number }}
+    </div>
+    {% for position in division %}{% market_row position balance %}{% endfor %}
+  </div>
 '''))
-def market_division_box(day, division, gender, number, balance):
-    return {
-        'day': day,
-        'division': division,
-        'gender': gender,
-        'number': number,
-        'balance': balance,
-    }
+def market_division_box(division, gender, number, balance):
+    return {'division': division, 'gender': gender, 'number': number, 'balance': balance}
 
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <tr class="table-{% if rower %}primary{% else %}danger{% endif %}">
-    <td>{{ seat|avatar:club }}</td>
-    <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
-    <td>{% if rower %}{% sell_button rower %}{% endif %}</td>
-  </tr>
+  <div class="list-group-item{% if not purchase %} list-group-item-danger{% endif %} crew-row">
+    {{ seat.short|avatar:club }}
+    {% if purchase %}
+    <div class="flex-grow-1">{{ purchase.crew }}</div>
+    {% sell_button purchase %}
+    {% endif %}
+  </div>
 '''))
-def crew_list_row(seat, rower):
-    return {'seat': seat, 'rower': rower, 'club': rower.crew.club if rower else None}
+def crew_row(seat, purchase):
+    return {'seat': seat, 'purchase': purchase, 'club': purchase.crew.club if purchase else None}
 
 
 @register.inclusion_tag(
     template.Template('''
       {% load fantasy_tags %}
-      <table class="table table-sm table-bordered table-hover">
-        <thead class="thead-dark">
-          <tr><th colspan="3">Your crew</th></tr>
-        </thead>
-        <tbody>
+      <div class="list-group sticky-top">
+        <div class="list-group-item list-group-item-dark">
+          <div class="container"><div class="row justify-content-between">
+          <span>Crew Value: {{ finances.crew_value|currency }}</span>
+          <span>Cash: {{ finances.balance|currency }}</span>
+          </div></div>
+        </div>
         {% for seat, rower in crew %}
-          {% crew_list_row seat rower %}
+          {% crew_row seat rower %}
         {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr class="table-{% if crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="3">
-              This crew is {% if not crew_valid %}not {% endif %}ready to race.
-            </th>
-          </tr>
-          <tr class="table-{% if other_crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="3">
-              Your other crew is {% if not other_crew_valid %}not {% endif %}ready to race.
-            </th>
-          </tr>
-        </tfoot>
-      </table>
+      </div>
     '''),
     takes_context = True,
 )
