@@ -95,15 +95,15 @@ def sell_button(purchase):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <tr>
-    <td>{{ bungline|avatar:tag_crew.club }}</td>
-    <td>{{ tag_crew }}</td>
-    <td>{% buy_button day tag_crew disabled %}</td>
-  </tr>
+  <div class="list-group-item market-row">
+    {{ position.bungline|avatar:position.crew.club }}
+    <div class="flex-grow-1">{{ position.crew }}</div>
+    {% buy_button position.day position.crew disabled %}
+  </div>
 '''))
-def market_division_row(day, bungline, crew, balance):
-    disabled = crew.value(day) >= balance
-    return {'day': day, 'bungline': bungline, 'tag_crew': crew, 'disabled': disabled}
+def market_row(position, balance):
+    disabled = position.crew.value(position.day) >= balance
+    return {'position': position, 'disabled': disabled}
 
 
 @register.inclusion_tag(template.Template('''
@@ -131,14 +131,16 @@ def market_division_box(day, division, gender, number, balance):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <tr class="table-{% if rower %}primary{% else %}danger{% endif %}">
-    <td>{{ seat|avatar:club }}</td>
-    <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
-    <td>{% if rower %}{% sell_button rower %}{% endif %}</td>
-  </tr>
+  <div class="list-group-item{% if not purchase %} list-group-item-danger{% endif %} crew-row">
+    {{ seat.short|avatar:club }}
+    {% if purchase %}
+    <div class="flex-grow-1">{{ purchase.crew }}</div>
+    {% sell_button purchase %}
+    {% endif %}
+  </div>
 '''))
-def crew_list_row(seat, rower):
-    return {'seat': seat, 'rower': rower, 'club': rower.crew.club if rower else None}
+def crew_row(seat, purchase):
+    return {'seat': seat, 'purchase': purchase, 'club': purchase.crew.club if purchase else None}
 
 
 @register.inclusion_tag(
