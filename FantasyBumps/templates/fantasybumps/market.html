@@ -1,22 +1,100 @@
 {% extends 'core/base.html' %}
 {% load fantasy_tags %}
+{% load static %}
+
+{% block page_head %}
+<link rel="stylesheet" type="text/css" href="{% static 'FantasyBumps/club_styles.css' %}">
+
+<style type="text/css">
+  .avatar {
+    display: table-cell;
+    height: 1.9em;
+    width: 1.9em;
+    border: 0.2em solid black;
+    border-radius: 50%;
+    
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    
+    box-shadow: 4px 4px 4px grey;
+  }
+  
+  .btn-buy {
+    width: 6.3em;
+  }
+  
+  .btn-sell {
+    width: 6.1em;
+  }
+  
+  .btn-buy .currency,.btn-sell .currency {
+    margin-left: 0.5em;
+  }
+  
+  .market-row, .crew-row {
+    display: flex;
+    align-items: center;
+  }
+  .market-row .avatar,
+  .crew-row .avatar {
+    margin-right: 1em;
+  }
+  
+  .crew-row button {
+    margin-left: 1em;
+  }
+</style>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $(".btn-sell").click(sell);
+    $(".btn-buy:not(.disabled)").click(buy);
+  });
+
+  function buy(event) {
+    $("#buy-day").val($(event.target).data('day'));
+    $("#buy-crew").val($(event.target).data('crew'));
+    $("#buy-form").submit();
+  };
+
+  function sell(event){
+    $("#sell-purchase").val($(event.target).data('purchase'));
+    $("#sell-form").submit();
+  };
+</script>
+{% endblock %}
+
 
 {% block content %}
 
-<br/>
 {% market_status_box day %}
 <h3>{{ gender }}'s market for {{ day }}</h3>
-{% for division in start_order %}
-  {% market_division_box day division gender forloop.counter %}
-<br/>
-{% endfor %}
 
-{% if user.is_authenticated %}
-  Balance: ฿{{ finances.budget }}<br/>
-  Crew Value: ฿{{ finances.crew_value }}<br/>
-  Remaining Cash: ฿{{ finances.balance }}<br/>
-  {% crew_list_box %}
-{% endif %}
-<br/>
+<div class="row">
+  <div class="col-sm">
+    {% for division in start_order %}
+      {% market_division_box division gender forloop.counter finances.balance %}
+      <br/>
+    {% endfor %}
+  </div>
+
+  <div class="col-xs">
+    {% if user.is_authenticated %}
+      {% crew_list_box %}
+    {% endif %}
+  </div>
+</div>
+
+<form id="buy-form" action="{% url 'fantasybumps:buy' %}" method="post">
+  {% csrf_token %}
+  <input id="buy-day" name="day" type="hidden" value=""/>
+  <input id="buy-crew" name="crew" type="hidden" value=""/>
+</form>
+
+<form id="sell-form" action="{% url 'fantasybumps:sell' %}" method="post">
+  {% csrf_token %}
+  <input id="sell-purchase" name="purchase" type="hidden" value=""/>
+</form>
 
 {% endblock%}

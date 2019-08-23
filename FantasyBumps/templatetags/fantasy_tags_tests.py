@@ -1,7 +1,9 @@
 from datetime import time, timedelta
+from xml.etree import ElementTree as ET
 
 from django.test import TestCase, tag
 from django.utils import timezone
+from django import template
 
 from .. import models
 from .. import patching
@@ -222,48 +224,263 @@ class Test__Market_Status_Box(TestCase):
         )
 
 
-class Test__Bungline_Avatar(TestCase):
+
+@tag('frontend')
+class Test__Avatar(TestCase):
     
-    def test__standard_use(self):
-        """Returns a span with the 'bungline-avatar' class, and containing the bungline number."""
+    def test__string(self):
+        """Puts the received text in the middle of a avatar span."""
         
         self.assertHTMLEqual(
-            tags.bungline_avatar(7),
-            '<span class="bungline-avatar">7</span>',
+            tags.avatar('C'),
+            '<span class="avatar">C</span>',
         )
     
     
-    def test__not_seat(self):
-        """Replaces seat.short with an error indicator if the object passed is not a Seat."""
+    def test__int(self):
+        """Will accept an integer value."""
         
         self.assertHTMLEqual(
-            tags.bungline_avatar(None),
-            '<span class="bungline-avatar">E</span>',
+            tags.avatar(7),
+            '<span class="avatar">7</span>',
+        )
+    
+    
+    def test__with_club(self):
+        """Converts the second argument into an additional class."""
+        
+        self.assertHTMLEqual(
+            tags.avatar(7, 'newc'),
+            '<span class="avatar club-newc">7</span>',
         )
 
 
-class Test__Seat_Avatar(TestCase):
+
+@tag('frontend')
+class Test__Misc(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
     
-    def test__standard_use(self):
-        """Returns a span with the 'seat-avatar' class, and containing seat.short."""
-        
-        seat = models.Seat(
-            name = 'Seat',
-            cox = False,
-        )
-        seat.save()
-        
-        self.assertHTMLEqual(
-            tags.seat_avatar(seat),
-            '<span class="seat-avatar">S</span>',
-        )
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        cls.crew = models.Crew.objects.first()
+        cls.seat = models.Seat.objects.first()
     
     
-    def test__not_seat(self):
-        """Replaces seat.short with an error indicator if the object passed is not a Seat."""
-        
-        self.assertHTMLEqual(
-            tags.seat_avatar(None),
-            '<span class="seat-avatar">E</span>',
+    @staticmethod
+    def buy_button(day, crew, disabled = False):
+        """A helper function that renders a buy button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% buy_button day crew disabled %}')
+            .render(template.Context({'day': day, 'crew': crew, 'disabled': disabled}))
         )
+    
+    
+    @staticmethod
+    def sell_button(purchase):
+        """A helper function that renders a sell button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% sell_button purchase %}')
+            .render(template.Context({'purchase': purchase}))
+        )
+    
+    
+    @staticmethod
+    def market_row(position, balance):
+        """A helper function that renders a market row."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% market_row position balance %}')
+            .render(template.Context({'position': position, 'balance': balance}))
+        )
+    
+    
+    @staticmethod
+    def crew_row(seat, purchase):
+        """A helper function that renders a crew row."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% crew_row seat purchase %}')
+            .render(template.Context({'seat': seat, 'purchase': purchase}))
+        )
+    
+    
+    def test__currency_filter(self):
+        """Renders a styled span containing the crew value."""
+        
+        html = tags.currency(100)
+        span = ET.fromstring(html)
+        
+        self.assertEqual(span.tag, 'span')
+        self.assertEqual(span.get('class'), 'currency')
+        
+        self.assertIn('100', span.text)
+    
+    
+    def test__value_filter(self):
+        """Renders a styled span containing the crew value."""
+        
+        html = tags.value(self.crew, self.day)
+        span = ET.fromstring(html)
+        
+        self.assertEqual(span.tag, 'span')
+        self.assertEqual(span.get('class'), 'currency')
+        
+        value = self.crew.value(self.day)
+        self.assertIn(str(value), span.text)
+    
+    
+    def test__buy_button__standard(self):
+        """Renders a styled button with an attached function call."""
+        
+        html = self.buy_button(self.day, self.crew, disabled = False)
+        button = ET.fromstring(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-buy', classes)
+        self.assertNotIn('disabled', classes)
+        
+        self.assertEqual(button.get('data-day'), str(self.day.id))
+        self.assertEqual(button.get('data-crew'), str(self.crew.id))
+        
+        self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
+    
+    
+    def test__buy_button__disabled(self):
+        """Includes the disabled class and does not have a function call."""
+        
+        html = self.buy_button(self.day, self.crew, disabled = True)
+        button = ET.fromstring(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-buy', classes)
+        self.assertIn('disabled', classes)
+        
+        self.assertFalse('data-day' in button.attrib)
+        self.assertFalse('data-crew' in button.attrib)
+        
+        self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
+    
+    
+    def test__sell_button(self):
+        """Renders a styled button with an attached function call."""
+        
+        purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat,
+            crew = self.crew,
+        )
+        html = self.sell_button(purchase)
+        button = ET.fromstring(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        
+        self.assertEqual(button.get('data-purchase'), str(purchase.id))
+        
+        self.assertInHTML('Sell' + tags.value(self.crew, self.day), html)
+    
+    
+    def test__market_row__standard(self):
+        """Renders a styled div, that contains an avatar, crew box, and buy button."""
+        
+        position = models.Position.objects.first()
+        position.bungline = 1  # Expected to be set
+        html = self.market_row(position, 675)
+        
+        # Test root
+        row = ET.fromstring(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('market-row', row.get('class').split())
+        
+        # Test containments
+        avatar = tags.avatar(position.bungline, position.crew.club)
+        self.assertInHTML(avatar, html)
+        
+        crew = '<div class="flex-grow-1">{}</div>'.format(position.crew)
+        self.assertInHTML(crew, html)
+        
+        buy_button = self.buy_button(position.day, position.crew)
+        self.assertInHTML(buy_button, html)
+    
+    
+    def test__market_row__cant_afford(self):
+        """Renders a styled div, that contains an avatar, crew box, and disabled buy button."""
+        
+        position = models.Position.objects.first()
+        position.bungline = 1  # Expected to be set
+        html = self.market_row(position, 1)
+        
+        # Test root
+        row = ET.fromstring(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('market-row', row.get('class').split())
+        
+        # Test containments
+        avatar = tags.avatar(position.bungline, position.crew.club)
+        self.assertInHTML(avatar, html)
+        
+        crew = '<div class="flex-grow-1">{}</div>'.format(position.crew)
+        self.assertInHTML(crew, html)
+        
+        buy_button = self.buy_button(position.day, position.crew, disabled = True)
+        self.assertInHTML(buy_button, html)
+    
+    
+    def test__crew_row__no_purchase(self):
+        """Renders a styled div, that contains an avatar."""
+        
+        html = self.crew_row(self.seat, None)
+        
+        # Test root
+        row = ET.fromstring(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class').split())
+        
+        # Test containments
+        avatar = tags.avatar(self.seat.short)
+        self.assertInHTML(avatar, html)
+        
+        self.assertNotIn('<div class="flex-grow-1">', html)
+        self.assertNotIn('btn', html)
+    
+    
+    def test__crew_row__with_purchase(self):
+        """Renders a styled div, that contains an avatar, crew box, and a sell button."""
+        
+        purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat,
+            crew = self.crew,
+        )
+        html = self.crew_row(self.seat, purchase)
+        
+        # Test root
+        row = ET.fromstring(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class').split())
+        
+        # Test containments
+        avatar = tags.avatar(self.seat.short, self.crew.club)
+        self.assertInHTML(avatar, html)
+        
+        crew = '<div class="flex-grow-1">{}</div>'.format(self.crew)
+        self.assertInHTML(crew, html)
+        
+        sell_button = self.sell_button(purchase)
+        self.assertInHTML(sell_button, html)
 

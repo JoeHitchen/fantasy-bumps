@@ -55,70 +55,39 @@ def market_status_box(day):
 
 
 @register.filter
-def bungline_avatar(bungline):
-    text = bungline if isinstance(bungline, int) else 'E'
-    return format_html('<span class="bungline-avatar">{}</span>', text)
+def avatar(text, club = None):
+    classes = 'avatar' + (' club-' + club if club else '')
+    return format_html('<span class="{1}">{0}</span>', text, classes)
+
+
+@register.filter
+def currency(amount):
+    return format_html('<span class="currency">₢ {}</span>', amount)
 
 
 @register.filter
 def value(crew, day):
-    return format_html('<span class="crew-value">฿{}</span>', crew.value(day))
-
-
-@register.inclusion_tag(template.Template('''
-  <form action="{% url 'fantasybumps:buy' %}" method="post">
-    {% csrf_token %}
-    <input name="day" type="hidden" value="{{ day.id }}"/>
-    <input name="crew" type="hidden" value="{{ btn_crew.id }}"/>
-    <button class="btn btn-primary btn-sm" type="submit">Buy</button>
-  </form>
-'''))
-def buy_button(day, crew):
-    return {'day': day, 'btn_crew': crew}
+    return currency(crew.value(day))
 
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <tr>
-    <td>{{ bungline }}</td>
-    <td>{{ tag_crew }}</td>
-    <td>{{ tag_crew|value:day }}</td>
-    <td>{% buy_button day tag_crew %}</td>
-  </tr>
+  <button
+    class="btn btn-primary btn-sm btn-buy{{ disabled }}"
+    {% if not disabled %}data-day="{{ day.id }}" data-crew="{{ crew.id }}"{% endif %}
+  >
+    Buy {{ crew|value:day }}
+  </button>
 '''))
-def market_division_row(day, bungline, crew):
-    return {'day': day, 'bungline': bungline, 'tag_crew': crew}
+def buy_button(day, crew, disabled = False):
+    return {'day': day, 'crew': crew, 'disabled': ' disabled' if disabled else ''}
 
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <table class="table table-sm table-bordered table-hover">
-    <thead class="thead-dark">
-      <tr><th colspan="4">{{ gender }}\'s Division {{ number }}</th></tr>
-    </thead>
-    <tbody>
-    {% for position in division %}
-      {% market_division_row day forloop.counter position.crew %}
-    {% endfor %}
-    </tbody>
-  </table>
-'''))
-def market_division_box(day, division, gender, number):
-    return {'day': day, 'division': division, 'gender': gender, 'number': number}
-
-
-@register.filter
-def seat_avatar(seat):
-    text = seat.short if isinstance(seat, models.Seat) else 'E'
-    return format_html('<span class="seat-avatar">{}</span>', text)
-
-
-@register.inclusion_tag(template.Template('''
-  <form action="{% url 'fantasybumps:sell' %}" method="post">
-    {% csrf_token %}
-    <input name="purchase" type="hidden" value="{{ purchase.id }}"/>
-    <button class="btn btn-primary btn-sm" type="submit">Sell</button>
-  </form>
+  <button class="btn btn-primary btn-sm btn-sell" data-purchase="{{ purchase.id }}">
+    Sell {{ purchase.crew|value:purchase.day }}
+  </button>
 '''))
 def sell_button(purchase):
     return {'purchase': purchase}
@@ -126,44 +95,58 @@ def sell_button(purchase):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <tr class="table-{% if rower %}primary{% else %}danger{% endif %}">
-    <td>{{ seat|seat_avatar }}</td>
-    <td>{% if rower %}{{ rower.crew }}{% else %}Empty{% endif %}</td>
-    <td>{% if rower %}{{ rower.crew|value:rower.day }}{% endif %}</td>
-    <td>
-      {% sell_button rower %}
-    </td>
-  </tr>
+  <div class="list-group-item market-row">
+    {{ position.bungline|avatar:position.crew.club }}
+    <div class="flex-grow-1">{{ position.crew }}</div>
+    {% buy_button position.day position.crew disabled %}
+  </div>
 '''))
-def crew_list_row(seat, rower):
-    return {'seat': seat, 'rower': rower}
+def market_row(position, balance):
+    disabled = position.crew.value(position.day) >= balance
+    return {'position': position, 'disabled': disabled}
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="list-group">
+    <div class="list-group-item list-group-item-dark">
+      {{ gender }}'s Division {{ number }}
+    </div>
+    {% for position in division %}{% market_row position balance %}{% endfor %}
+  </div>
+'''))
+def market_division_box(division, gender, number, balance):
+    return {'division': division, 'gender': gender, 'number': number, 'balance': balance}
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="list-group-item{% if not purchase %} list-group-item-danger{% endif %} crew-row">
+    {{ seat.short|avatar:club }}
+    {% if purchase %}
+    <div class="flex-grow-1">{{ purchase.crew }}</div>
+    {% sell_button purchase %}
+    {% endif %}
+  </div>
+'''))
+def crew_row(seat, purchase):
+    return {'seat': seat, 'purchase': purchase, 'club': purchase.crew.club if purchase else None}
 
 
 @register.inclusion_tag(
     template.Template('''
       {% load fantasy_tags %}
-      <table class="table table-sm table-bordered table-hover">
-        <thead class="thead-dark">
-          <tr><th colspan="4">Your crew</th></tr>
-        </thead>
-        <tbody>
+      <div class="list-group sticky-top">
+        <div class="list-group-item list-group-item-dark">
+          <div class="container"><div class="row justify-content-between">
+          <span>Crew Value: {{ finances.crew_value|currency }}</span>
+          <span>Cash: {{ finances.balance|currency }}</span>
+          </div></div>
+        </div>
         {% for seat, rower in crew %}
-          {% crew_list_row seat rower %}
+          {% crew_row seat rower %}
         {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr class="table-{% if crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="4">
-              This crew is {% if not crew_valid %}not {% endif %}ready to race.
-            </th>
-          </tr>
-          <tr class="table-{% if other_crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="4">
-              Your other crew is {% if not other_crew_valid %}not {% endif %}ready to race.
-            </th>
-          </tr>
-        </tfoot>
-      </table>
+      </div>
     '''),
     takes_context = True,
 )
