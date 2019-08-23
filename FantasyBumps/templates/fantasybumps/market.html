@@ -63,21 +63,23 @@
 
 {% block content %}
 
-<br/>
 {% market_status_box day %}
 <h3>{{ gender }}'s market for {{ day }}</h3>
-{% for division in start_order %}
-  {% market_division_box day division gender forloop.counter finances.balance %}
-<br/>
-{% endfor %}
 
-{% if user.is_authenticated %}
-  Balance: {{ finances.budget|currency }}<br/>
-  Crew Value: {{ finances.crew_value|currency }}<br/>
-  Remaining Cash: {{ finances.balance|currency }}<br/>
-  {% crew_list_box %}
-{% endif %}
-<br/>
+<div class="row">
+  <div class="col-sm">
+    {% for division in start_order %}
+      {% market_division_box division gender forloop.counter finances.balance %}
+      <br/>
+    {% endfor %}
+  </div>
+
+  <div class="col-xs">
+    {% if user.is_authenticated %}
+      {% crew_list_box %}
+    {% endif %}
+  </div>
+</div>
 
 <form id="buy-form" action="{% url 'fantasybumps:buy' %}" method="post">
   {% csrf_token %}

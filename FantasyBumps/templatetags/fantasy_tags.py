@@ -108,25 +108,15 @@ def market_row(position, balance):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <table class="table table-sm table-bordered table-hover">
-    <thead class="thead-dark">
-      <tr><th colspan="3">{{ gender }}\'s Division {{ number }}</th></tr>
-    </thead>
-    <tbody>
-    {% for position in division %}
-      {% market_division_row day forloop.counter position.crew balance %}
-    {% endfor %}
-    </tbody>
-  </table>
+  <div class="list-group">
+    <div class="list-group-item list-group-item-dark">
+      {{ gender }}'s Division {{ number }}
+    </div>
+    {% for position in division %}{% market_row position balance %}{% endfor %}
+  </div>
 '''))
-def market_division_box(day, division, gender, number, balance):
-    return {
-        'day': day,
-        'division': division,
-        'gender': gender,
-        'number': number,
-        'balance': balance,
-    }
+def market_division_box(division, gender, number, balance):
+    return {'division': division, 'gender': gender, 'number': number, 'balance': balance}
 
 
 @register.inclusion_tag(template.Template('''
@@ -146,28 +136,17 @@ def crew_row(seat, purchase):
 @register.inclusion_tag(
     template.Template('''
       {% load fantasy_tags %}
-      <table class="table table-sm table-bordered table-hover">
-        <thead class="thead-dark">
-          <tr><th colspan="3">Your crew</th></tr>
-        </thead>
-        <tbody>
+      <div class="list-group sticky-top">
+        <div class="list-group-item list-group-item-dark">
+          <div class="container"><div class="row justify-content-between">
+          <span>Crew Value: {{ finances.crew_value|currency }}</span>
+          <span>Cash: {{ finances.balance|currency }}</span>
+          </div></div>
+        </div>
         {% for seat, rower in crew %}
-          {% crew_list_row seat rower %}
+          {% crew_row seat rower %}
         {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr class="table-{% if crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="3">
-              This crew is {% if not crew_valid %}not {% endif %}ready to race.
-            </th>
-          </tr>
-          <tr class="table-{% if other_crew_valid %}success{% else %}danger{% endif %}">
-            <th colspan="3">
-              Your other crew is {% if not other_crew_valid %}not {% endif %}ready to race.
-            </th>
-          </tr>
-        </tfoot>
-      </table>
+      </div>
     '''),
     takes_context = True,
 )
