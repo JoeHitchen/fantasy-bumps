@@ -347,10 +347,8 @@ class Test__Misc(TestCase):
         self.assertIn('btn-buy', classes)
         self.assertNotIn('disabled', classes)
         
-        self.assertEqual(
-            button.get('onclick'),
-            'buy({}, {})'.format(self.day.id, self.crew.id),
-        )
+        self.assertEqual(button.get('data-day'), str(self.day.id))
+        self.assertEqual(button.get('data-crew'), str(self.crew.id))
         
         self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
     
@@ -369,7 +367,8 @@ class Test__Misc(TestCase):
         self.assertIn('btn-buy', classes)
         self.assertIn('disabled', classes)
         
-        self.assertFalse('onclick' in button.attrib)
+        self.assertFalse('data-day' in button.attrib)
+        self.assertFalse('data-crew' in button.attrib)
         
         self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
     
@@ -391,10 +390,7 @@ class Test__Misc(TestCase):
         self.assertIn('btn', classes)
         self.assertIn('btn-sm', classes)
         
-        self.assertEqual(
-            button.get('onclick'),
-            'sell({})'.format(purchase.id),
-        )
+        self.assertEqual(button.get('data-purchase'), str(purchase.id))
         
         self.assertInHTML('Sell' + tags.value(self.crew, self.day), html)
     

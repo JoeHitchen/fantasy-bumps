@@ -47,15 +47,20 @@
 </style>
 
 <script type="text/javascript">
-  function buy(day, crew) {
-    document.getElementById("buy-day").value = day;
-    document.getElementById("buy-crew").value = crew;
-    document.getElementById("buy-form").submit();
+  $(document).ready(function () {
+    $(".btn-sell").click(sell);
+    $(".btn-buy:not(.disabled)").click(buy);
+  });
+
+  function buy(event) {
+    $("#buy-day").val($(event.target).data('day'));
+    $("#buy-crew").val($(event.target).data('crew'));
+    $("#buy-form").submit();
   };
 
-  function sell(purchase) {
-    document.getElementById("sell-purchase").value = purchase;
-    document.getElementById("sell-form").submit();
+  function sell(event){
+    $("#sell-purchase").val($(event.target).data('purchase'));
+    $("#sell-form").submit();
   };
 </script>
 {% endblock %}

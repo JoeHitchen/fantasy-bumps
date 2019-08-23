@@ -74,7 +74,7 @@ def value(crew, day):
   {% load fantasy_tags %}
   <button
     class="btn btn-primary btn-sm btn-buy{{ disabled }}"
-    {% if not disabled %}onclick="buy({{ day.id }}, {{ crew.id }})"{% endif %}
+    {% if not disabled %}data-day="{{ day.id }}" data-crew="{{ crew.id }}"{% endif %}
   >
     Buy {{ crew|value:day }}
   </button>
@@ -85,7 +85,7 @@ def buy_button(day, crew, disabled = False):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <button class="btn btn-primary btn-sm btn-sell" onclick="sell({{ purchase.id }})">
+  <button class="btn btn-primary btn-sm btn-sell" data-purchase="{{ purchase.id }}">
     Sell {{ purchase.crew|value:purchase.day }}
   </button>
 '''))
