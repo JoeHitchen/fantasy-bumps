@@ -514,22 +514,28 @@ class Test__Crew(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        cls.day = models.Day.objects.first()
+        days = models.Day.objects.all()
+        cls.day1 = days[0]
+        cls.day2 = days[1]
+        cls.day3 = days[2]
+        
         crews = models.Crew.objects.filter(gender = genders.WOMENS)
         
         cls.crew_top = crews[0]
-        cls.crew_top.positions.create(day = cls.day, rank = 1)
+        cls.crew_top.positions.create(day = cls.day1, rank = 1)
+        cls.crew_top.positions.create(day = cls.day2, rank = 2)
+        cls.crew_top.positions.create(day = cls.day3, rank = 4)
         
         cls.crew_middle = crews[1]
-        cls.crew_middle.positions.create(day = cls.day, rank = 2)
+        cls.crew_middle.positions.create(day = cls.day1, rank = 2)
         
         cls.crew_bottom = crews[2]
-        cls.crew_bottom.positions.create(day = cls.day, rank = 3)
+        cls.crew_bottom.positions.create(day = cls.day1, rank = 3)
         
         cls.crew_unranked = crews[3]
         
         crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
-        crew_mens.positions.create(day = cls.day, rank = 4)  # Added to ensure gender isolation
+        crew_mens.positions.create(day = cls.day1, rank = 4)  # Added to ensure gender isolation
     
     
     def test__string__womens_first(self):
@@ -567,24 +573,50 @@ class Test__Crew(TestCase):
     
     def test__value__no_ranking(self):
         """Returns zero if the crew has no position for that day."""
-        self.assertEqual(self.crew_unranked.value(self.day), 0)
+        self.assertEqual(self.crew_unranked.value(self.day1), 0)
     
     
     def test__value__top_crew(self):
         """Returns the maximum price."""
-        self.assertEqual(self.crew_top.value(self.day), money.PRICE_MAX)
+        self.assertEqual(self.crew_top.value(self.day1), money.PRICE_MAX)
     
     
     def test__value__bottom_crew(self):
         """Returns the minimum price."""
-        self.assertEqual(self.crew_bottom.value(self.day), money.PRICE_MIN)
+        self.assertEqual(self.crew_bottom.value(self.day1), money.PRICE_MIN)
     
     
     def test__value__middle_crew(self):
         """Returns a price according to a geometric progression."""
         ratio = (money.PRICE_MIN / money.PRICE_MAX) ** 0.5
         expected_price = round(money.PRICE_MAX * ratio)
-        self.assertEqual(self.crew_middle.value(self.day), expected_price)
+        self.assertEqual(self.crew_middle.value(self.day1), expected_price)
+    
+    
+    def test__results__first_day(self):
+        """Calculates the change in positions, noting signs are reversed since small is good."""
+        self.assertEqual(self.crew_top.results(self.day1), {'week': 0, 'yesterday': 0})
+    
+    
+    def test__results__second_day(self):
+        """Calculates the change in positions, noting signs are reversed since small is good."""
+        self.assertEqual(self.crew_top.results(self.day2), {'week': -1, 'yesterday': -1})
+    
+    
+    def test__results__later_day(self):
+        """Calculates the change in positions, noting signs are reversed since small is good."""
+        self.assertEqual(self.crew_top.results(self.day3), {'week': -3, 'yesterday': -2})
+    
+    
+    @tag('query-count')
+    def test__results__query_count(self):
+        """Expect:
+            (2) SELECT days that aren't today
+            (3) SELECT positions
+        """
+        
+        with self.assertNumQueries(5):
+            self.crew_top.results(self.day3)
 
 
 
