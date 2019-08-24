@@ -87,6 +87,7 @@ class MarketView(EventView):
                     },
                 }[gender]
         
+        context['show_actions'] = user.is_authenticated and self.day.market_is_open
         return context
 
 

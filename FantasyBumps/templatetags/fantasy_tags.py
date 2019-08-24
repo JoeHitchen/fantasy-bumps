@@ -98,12 +98,12 @@ def sell_button(purchase):
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
-    {% buy_button position.day position.crew disabled %}
+    {% if show_actions %}{% buy_button position.day position.crew disabled %}{% endif %}
   </div>
 '''))
-def market_row(position, balance):
-    disabled = position.crew.value(position.day) >= balance
-    return {'position': position, 'disabled': disabled}
+def market_row(position, balance, show_actions):
+    disabled = show_actions and position.crew.value(position.day) >= balance
+    return {'position': position, 'disabled': disabled, 'show_actions': show_actions}
 
 
 @register.inclusion_tag(template.Template('''
@@ -112,11 +112,17 @@ def market_row(position, balance):
     <div class="list-group-item list-group-item-dark">
       {{ gender }}'s Division {{ number }}
     </div>
-    {% for position in division %}{% market_row position balance %}{% endfor %}
+    {% for position in division %}{% market_row position balance show_actions %}{% endfor %}
   </div>
 '''))
-def market_division_box(division, gender, number, balance):
-    return {'division': division, 'gender': gender, 'number': number, 'balance': balance}
+def market_division_box(division, gender, number, balance, show_actions):
+    return {
+        'division': division,
+        'gender': gender,
+        'number': number,
+        'balance': balance,
+        'show_actions': show_actions,
+    }
 
 
 @register.inclusion_tag(template.Template('''
@@ -125,12 +131,17 @@ def market_division_box(division, gender, number, balance):
     {{ seat.short|avatar:club }}
     {% if purchase %}
     <div class="flex-grow-1">{{ purchase.crew }}</div>
-    {% sell_button purchase %}
+    {% if show_actions %}{% sell_button purchase %}{% endif %}
     {% endif %}
   </div>
 '''))
-def crew_row(seat, purchase):
-    return {'seat': seat, 'purchase': purchase, 'club': purchase.crew.club if purchase else None}
+def crew_row(seat, purchase, show_actions):
+    return {
+        'seat': seat,
+        'purchase': purchase,
+        'club': purchase.crew.club if purchase else None,
+        'show_actions': show_actions,
+    }
 
 
 @register.inclusion_tag(
@@ -144,7 +155,7 @@ def crew_row(seat, purchase):
           </div></div>
         </div>
         {% for seat, rower in crew %}
-          {% crew_row seat rower %}
+          {% crew_row seat rower show_actions %}
         {% endfor %}
       </div>
     '''),
