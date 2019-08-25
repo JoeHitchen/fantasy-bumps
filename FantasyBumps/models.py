@@ -63,6 +63,12 @@ class Day(models.Model):
     
     
     @cached_property
+    def prev(self):
+        """The previous day of the event."""
+        return self.event.days.filter(date__lt = self.date).order_by('-date').first()
+    
+    
+    @cached_property
     def first_race(self):
         """The datetime for the first race of the day, or None if not racing day."""
         return datetime.combine(
@@ -225,8 +231,7 @@ class Crew(models.Model):
         position_start = self.positions.get(day = day.event.days.first())
         position_today = self.positions.get(day = day)
         
-        yesterday = day.event.days.filter(date__lt = day.date).last()
-        position_yest = self.positions.filter(day = yesterday)
+        position_yest = self.positions.filter(day = day.prev)
         if not position_yest:
             return {'week': 0, 'yesterday': 0}
         else:

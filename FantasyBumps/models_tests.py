@@ -113,7 +113,7 @@ class Test__Day__Core(TestCase):
         self.assertEqual(day_str, day.name)
     
     
-    def test__next__past(self):
+    def test__next__past_only(self):
         """Returns None if there are no days in the future."""
         
         self.event.days.create(
@@ -153,6 +153,48 @@ class Test__Day__Core(TestCase):
         )
         
         self.assertEqual(curr.next, future_1)
+    
+    
+    def test__prev__past(self):
+        """Returns the previous day in the series if there are days in the past."""
+        
+        self.event.days.create(
+            name = 'Prev 2',
+            date = timezone.now() - timedelta(2),
+            first_race_time = time(hour = 12),
+        )
+        
+        prev_1 = self.event.days.create(
+            name = 'Prev 1',
+            date = timezone.now() - timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.assertEqual(curr.prev, prev_1)
+    
+    
+    def test__prev__future_only(self):
+        """Returns None if there are no days in the past."""
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Next',
+            date = timezone.now() + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.assertIsNone(curr.prev)
     
     
     def test__first_race(self):
@@ -611,9 +653,11 @@ class Test__Crew(TestCase):
     @tag('query-count')
     def test__results__query_count(self):
         """Expect:
-            (2) SELECT days that aren't today
+            (2) SELECT days that aren't today (Day.prev call is avoided if cached)
             (3) SELECT positions
         """
+        
+        del self.day3.prev
         
         with self.assertNumQueries(5):
             self.crew_top.results(self.day3)
