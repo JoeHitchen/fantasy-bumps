@@ -73,7 +73,7 @@ def value(crew, day):
 @register.filter
 def results_item(places, default_align):
     
-    if places == 0:
+    if not places:
         text = format_html('&minus;')
         background = 'bg-warning'
         align = 'text-center'
