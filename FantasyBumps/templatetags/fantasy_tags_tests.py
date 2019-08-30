@@ -11,6 +11,15 @@ from ..constants import timings
 from . import fantasy_tags as tags
 
 
+def parser(string):
+    return ET.fromstring('''
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"
+  [<!ENTITY nbsp ' '> <!ENTITY minus '-'> <!ENTITY plus '+'>]
+>
+''' + string)
+
+
 @tag('market-status')
 class Test__Market_Status_Box(TestCase):
     fixtures = ['dev_event']
@@ -320,7 +329,7 @@ class Test__Misc(TestCase):
         """Renders a styled span containing the crew value."""
         
         html = tags.currency(100)
-        span = ET.fromstring(html)
+        span = parser(html)
         
         self.assertEqual(span.tag, 'span')
         self.assertEqual(span.get('class'), 'currency')
@@ -332,7 +341,7 @@ class Test__Misc(TestCase):
         """Renders a styled span containing the crew value."""
         
         html = tags.value(self.crew, self.day)
-        span = ET.fromstring(html)
+        span = parser(html)
         
         self.assertEqual(span.tag, 'span')
         self.assertEqual(span.get('class'), 'currency')
@@ -345,7 +354,7 @@ class Test__Misc(TestCase):
         """Renders a styled button with an attached function call."""
         
         html = self.buy_button(self.day, self.crew, disabled = False)
-        button = ET.fromstring(html)
+        button = parser(html)
         
         self.assertEqual(button.tag, 'button')
         
@@ -365,7 +374,7 @@ class Test__Misc(TestCase):
         """Includes the disabled class and does not have a function call."""
         
         html = self.buy_button(self.day, self.crew, disabled = True)
-        button = ET.fromstring(html)
+        button = parser(html)
         
         self.assertEqual(button.tag, 'button')
         
@@ -390,7 +399,7 @@ class Test__Misc(TestCase):
             crew = self.crew,
         )
         html = self.sell_button(purchase)
-        button = ET.fromstring(html)
+        button = parser(html)
         
         self.assertEqual(button.tag, 'button')
         
@@ -411,7 +420,7 @@ class Test__Misc(TestCase):
         html = self.market_row(position, 675)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('market-row', row.get('class').split())
         
@@ -434,7 +443,7 @@ class Test__Misc(TestCase):
         html = self.market_row(position, 1)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('market-row', row.get('class').split())
         
@@ -469,7 +478,7 @@ class Test__Misc(TestCase):
         html = self.crew_row(self.seat, None)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('crew-row', row.get('class').split())
         
@@ -492,7 +501,7 @@ class Test__Misc(TestCase):
         html = self.crew_row(self.seat, purchase)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('crew-row', row.get('class').split())
         
@@ -518,7 +527,7 @@ class Test__Misc(TestCase):
         html = self.crew_row(self.seat, purchase, show_actions = False)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('crew-row', row.get('class').split())
         
