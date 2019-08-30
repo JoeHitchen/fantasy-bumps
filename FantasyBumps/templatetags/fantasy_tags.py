@@ -94,7 +94,7 @@ def results_item(places, default_align):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div class="crew-results row">
+  <div class="results-pill row">
     {{ results.week|results_item:'text-right' }}
     <div class="bg-dark"></div>
     {{ results.yesterday|results_item:'text-left' }}
