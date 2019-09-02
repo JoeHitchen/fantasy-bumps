@@ -73,24 +73,6 @@
   },
   {
     "model": "FantasyBumps.Crew",
-    "pk": 19,
-    "fields": {
-      "club": "newc",
-      "gender": "W",
-      "rank": 1
-    }
-  },
-  {
-    "model": "FantasyBumps.Crew",
-    "pk": 20,
-    "fields": {
-      "club": "grte",
-      "gender": "W",
-      "rank": 1
-    }
-  },
-  {
-    "model": "FantasyBumps.Crew",
     "pk": 9,
     "fields": {
       "club": "magd",
@@ -175,15 +157,6 @@
     "pk": 18,
     "fields": {
       "club": "jesu",
-      "gender": "M",
-      "rank": 1
-    }
-  },
-  {
-    "model": "FantasyBumps.Crew",
-    "pk": 21,
-    "fields": {
-      "club": "sedm",
       "gender": "M",
       "rank": 1
     }

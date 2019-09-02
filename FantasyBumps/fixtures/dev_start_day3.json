@@ -67,7 +67,7 @@
     "pk": 44,
     "fields": {
       "day": 3,
-      "crew": 20,
+      "crew": 8,
       "rank": 9
     }
   },
@@ -157,7 +157,7 @@
     "pk": 54,
     "fields": {
       "day": 3,
-      "crew": 21,
+      "crew": 18,
       "rank": 9
     }
   }
