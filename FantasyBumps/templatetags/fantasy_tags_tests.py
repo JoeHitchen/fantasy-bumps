@@ -11,6 +11,15 @@ from ..constants import timings
 from . import fantasy_tags as tags
 
 
+def parser(string):
+    return ET.fromstring('''
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"
+  [<!ENTITY nbsp ' '> <!ENTITY minus '-'> <!ENTITY plus '+'>]
+>
+''' + string)
+
+
 @tag('market-status')
 class Test__Market_Status_Box(TestCase):
     fixtures = ['dev_event']
@@ -269,6 +278,15 @@ class Test__Misc(TestCase):
     
     
     @staticmethod
+    def results_pill(results):
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% results_pill results %}')
+            .render(template.Context({'results': results}))
+        )
+    
+    
+    @staticmethod
     def buy_button(day, crew, disabled = False):
         """A helper function that renders a buy button."""
         return (
@@ -320,7 +338,7 @@ class Test__Misc(TestCase):
         """Renders a styled span containing the crew value."""
         
         html = tags.currency(100)
-        span = ET.fromstring(html)
+        span = parser(html)
         
         self.assertEqual(span.tag, 'span')
         self.assertEqual(span.get('class'), 'currency')
@@ -332,7 +350,7 @@ class Test__Misc(TestCase):
         """Renders a styled span containing the crew value."""
         
         html = tags.value(self.crew, self.day)
-        span = ET.fromstring(html)
+        span = parser(html)
         
         self.assertEqual(span.tag, 'span')
         self.assertEqual(span.get('class'), 'currency')
@@ -341,11 +359,95 @@ class Test__Misc(TestCase):
         self.assertIn(str(value), span.text)
     
     
+    def test__results_item__row_over(self):
+        """Renders a styled center-aligned span indicating the row over."""
+        
+        html = tags.results_item(0, 'align-class')
+        span = parser(html)
+        
+        self.assertEqual(span.tag, 'div')
+        
+        classes = span.get('class').split()
+        self.assertIn('bg-warning', classes)
+        self.assertIn('font-weight-bold', classes)
+        self.assertIn('text-center', classes)
+        
+        self.assertIn('-', span.text)
+    
+    
+    def test__results_item__bumped_up(self):
+        """Renders a styled span with specified alignment indicating positive gains."""
+        
+        html = tags.results_item(3, 'align-class')
+        span = parser(html)
+        
+        self.assertEqual(span.tag, 'div')
+        
+        classes = span.get('class').split()
+        self.assertIn('bg-success', classes)
+        self.assertIn('font-weight-bold', classes)
+        self.assertIn('align-class', classes)
+        
+        self.assertIn('+3', span.text)
+    
+    
+    def test__results_item__got_bumped(self):
+        """Renders a styled span with specified alignment indicating negative losses."""
+        
+        html = tags.results_item(-4, 'align-class')
+        span = parser(html)
+        
+        self.assertEqual(span.tag, 'div')
+        
+        classes = span.get('class').split()
+        self.assertIn('bg-danger', classes)
+        self.assertIn('font-weight-bold', classes)
+        self.assertIn('align-class', classes)
+        
+        self.assertIn('-4', span.text)
+    
+    
+    def test__results_item__blank_places(self):
+        """Defaults to a row-over style."""
+        
+        self.assertEqual(
+            tags.results_item('', 'align-class'),
+            tags.results_item(0, 'align-class'),
+        )
+    
+    
+    def test__results_pill__standard(self):
+        """Renders a styled div that contains results items for 'week' and 'yesterday' data.
+        
+        'week' item should be right-aligned, 'yesterday' item should be left-aligned.
+        """
+        
+        html = self.results_pill({'week': 3, 'yesterday': -4})
+        pill = parser(html)
+        
+        self.assertEqual(pill.tag, 'div')
+        
+        classes = pill.get('class').split()
+        self.assertIn('results-pill', classes)
+        
+        self.assertInHTML(tags.results_item(3, 'text-right'), html)
+        self.assertInHTML(tags.results_item(-4, 'text-left'), html)
+    
+    
+    def test__results_pill__missing_keys(self):
+        """Can safely handle an input with missing keys."""
+        
+        html = self.results_pill({})
+        
+        self.assertInHTML(tags.results_item('', 'text-right'), html)
+        self.assertInHTML(tags.results_item('', 'text-left'), html)
+    
+    
     def test__buy_button__standard(self):
         """Renders a styled button with an attached function call."""
         
         html = self.buy_button(self.day, self.crew, disabled = False)
-        button = ET.fromstring(html)
+        button = parser(html)
         
         self.assertEqual(button.tag, 'button')
         
@@ -365,7 +467,7 @@ class Test__Misc(TestCase):
         """Includes the disabled class and does not have a function call."""
         
         html = self.buy_button(self.day, self.crew, disabled = True)
-        button = ET.fromstring(html)
+        button = parser(html)
         
         self.assertEqual(button.tag, 'button')
         
@@ -390,7 +492,7 @@ class Test__Misc(TestCase):
             crew = self.crew,
         )
         html = self.sell_button(purchase)
-        button = ET.fromstring(html)
+        button = parser(html)
         
         self.assertEqual(button.tag, 'button')
         
@@ -411,7 +513,7 @@ class Test__Misc(TestCase):
         html = self.market_row(position, 675)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('market-row', row.get('class').split())
         
@@ -434,7 +536,7 @@ class Test__Misc(TestCase):
         html = self.market_row(position, 1)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('market-row', row.get('class').split())
         
@@ -469,7 +571,7 @@ class Test__Misc(TestCase):
         html = self.crew_row(self.seat, None)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('crew-row', row.get('class').split())
         
@@ -492,7 +594,7 @@ class Test__Misc(TestCase):
         html = self.crew_row(self.seat, purchase)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('crew-row', row.get('class').split())
         
@@ -518,7 +620,7 @@ class Test__Misc(TestCase):
         html = self.crew_row(self.seat, purchase, show_actions = False)
         
         # Test root
-        row = ET.fromstring(html)
+        row = parser(html)
         self.assertEqual(row.tag, 'div')
         self.assertIn('crew-row', row.get('class').split())
         
