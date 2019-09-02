@@ -2,6 +2,7 @@ django
 
 # Development
 flake8
+flake8-print
 flake8-commas
 flake8-quotes
 flake8-import-order
