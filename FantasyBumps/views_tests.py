@@ -126,6 +126,11 @@ class MarketPageBase(GamePageBase):
     # Test group settings
     template = 'fantasybumps/market.html'
     
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.team.entries.create(event = cls.event)
+    
     def extra_context_without_user(self, context):
         """Extra context tests for without_user base test."""
         
