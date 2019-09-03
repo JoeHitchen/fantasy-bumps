@@ -3,7 +3,7 @@ from django.views.generic.base import TemplateView
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch, prefetch_related_objects
+from django.db.models import Prefetch, prefetch_related_objects, Count
 from django.contrib import messages
 from django.shortcuts import redirect
 
@@ -70,6 +70,7 @@ class MarketView(EventView):
             position_prefetch(self.day.event.days.first(), '_posn_start'),
             position_prefetch(self.day.prev, '_posn_yest'),
             position_prefetch(self.day, '_posn_today'),
+            Prefetch('purchase_set', models.Purchase.objects.filter(day = self.day), to_attr = '_purchases'),
         )
         
         user = self.request.user

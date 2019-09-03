@@ -132,6 +132,7 @@ def sell_button(purchase):
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
+    <div style="padding-right:3em">{{ popularity }}</div>
     {% results_pill results %}
     {% if show_actions %}{% buy_button position.day position.crew disabled %}{% endif %}
   </div>
@@ -139,11 +140,13 @@ def sell_button(purchase):
 def market_row(position, balance, show_actions):
     disabled = show_actions and position.crew.value(position.day) >= balance
     results = position.crew.results(position.day)
+    popularity = len(position.crew._purchases)
     return {
         'position': position,
         'disabled': disabled,
         'show_actions': show_actions,
         'results': results,
+        'popularity': popularity,
     }
 
 
