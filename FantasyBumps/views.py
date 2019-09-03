@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from .constants import genders
+from .constants import genders, money
 from . import models
 from . import utils
 from . import transactions
@@ -86,6 +86,12 @@ class MarketView(EventView):
                         'balance': finances.womens_balance,
                     },
                 }[gender]
+            else:
+                context['finances'] = {
+                    'budget': money.INITIAL_BALANCE,
+                    'crew_value': 0,
+                    'balance': money.INITIAL_BALANCE,
+                }
         
         context['show_actions'] = user.is_authenticated and self.day.market_is_open
         return context
