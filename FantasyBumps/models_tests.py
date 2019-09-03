@@ -661,6 +661,22 @@ class Test__Crew(TestCase):
         
         with self.assertNumQueries(5):
             self.crew_top.results(self.day3)
+    
+    
+    @tag('query-count')
+    def test__results__query_count__prefetched(self):
+        """Expect no queries."""
+        
+        self.crew_top._posn_start = list(self.crew_top.positions.filter(day = self.day1))
+        self.crew_top._posn_yest = list(self.crew_top.positions.filter(day = self.day2))
+        self.crew_top._posn_today = list(self.crew_top.positions.filter(day = self.day3))
+        
+        with self.assertNumQueries(0):
+            self.crew_top.results(self.day3)
+        
+        del self.crew_top._posn_start
+        del self.crew_top._posn_yest
+        del self.crew_top._posn_today
 
 
 
