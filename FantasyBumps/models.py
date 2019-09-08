@@ -235,7 +235,10 @@ class Crew(models.Model):
             position_start = self.positions.get(day = day.event.days.first())
         
         # Yesterday's position
-        position_yest_queryset = self._posn_yest if hasattr(self, '_posn_yest') else self.positions.filter(day = day.prev)
+        if hasattr(self, '_posn_yest'):
+            position_yest_queryset = self._posn_yest
+        else:
+            position_yest_queryset = self.positions.filter(day = day.prev)
         if not position_yest_queryset:
             return {'week': 0, 'yesterday': 0}
         else:
