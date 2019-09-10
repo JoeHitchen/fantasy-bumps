@@ -185,32 +185,29 @@ def crew_row(seat, purchase, show_actions):
     }
 
 
-@register.inclusion_tag(
-    template.Template('''
-      {% load fantasy_tags %}
-      <div class="list-group sticky-top">
-        <div class="list-group-item list-group-item-dark">
-          <div class="container"><div class="row justify-content-between">
-          <span>Crew Value: {{ finances.crew_value|currency }}</span>
-          <span>Cash: {{ finances.balance|currency }}</span>
-          </div></div>
-        </div>
-        {% for seat, rower in crew %}
-          {% crew_row seat rower show_actions %}
-        {% endfor %}
-      </div>
-    '''),
-    takes_context = True,
-)
-def crew_list_box(context):
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="list-group sticky-top">
+    <div class="list-group-item list-group-item-dark">
+      <div class="container"><div class="row justify-content-between">
+        <span>Crew Value: {{ finances.crew_value|currency }}</span>
+        <span>Cash: {{ finances.balance|currency }}</span>
+      </div></div>
+    </div>
+    {% for seat, rower in crew %}
+      {% crew_row seat rower show_actions %}
+    {% endfor %}
+  </div>
+'''))
+def crew_list_box(crew, finances):
     seat_rowers = {seat: [
-        rower for rower in context['crew'] if rower.seat == seat
+        rower for rower in crew if rower.seat == seat
     ] for seat in models.Seat.objects.all()}
     
-    context['crew'] = [(
+    crew = [(
         seat,
         rowers[0] if rowers else None,
     ) for seat, rowers in seat_rowers.items()]
     
-    return context
+    return {'crew': crew, 'finances': finances}
 
