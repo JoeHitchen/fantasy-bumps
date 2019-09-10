@@ -199,7 +199,7 @@ def crew_row(seat, purchase, show_actions):
     {% endfor %}
   </div>
 '''))
-def crew_list_box(crew, finances = None):
+def crew_list_box(crew, finances = None, show_actions = False):
     seat_rowers = {seat: [
         rower for rower in crew if rower.seat == seat
     ] for seat in models.Seat.objects.all()}
@@ -209,5 +209,5 @@ def crew_list_box(crew, finances = None):
         rowers[0] if rowers else None,
     ) for seat, rowers in seat_rowers.items()]
     
-    return {'crew': crew, 'finances': finances}
+    return {'crew': crew, 'finances': finances, 'show_actions': show_actions}
 
