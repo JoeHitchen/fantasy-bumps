@@ -543,11 +543,11 @@ class Test__Crew_List(TestCase):
     
     
     @staticmethod
-    def crew_row(seat, purchase, show_actions = True):
+    def crew_list_row(seat, purchase, show_actions = True):
         """A helper function that renders a crew row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_row seat purchase show_actions %}')
+            .Template('{% load fantasy_tags %}{% crew_list_row seat purchase show_actions %}')
             .render(template.Context({
                 'seat': seat,
                 'purchase': purchase,
@@ -557,7 +557,7 @@ class Test__Crew_List(TestCase):
     
     
     @staticmethod
-    def crew_list(crew_list, show_actions = False):
+    def crew_list_box(crew_list, show_actions = False):
         """A helper function that renders a crew list."""
         return (
             template
@@ -592,10 +592,10 @@ class Test__Crew_List(TestCase):
         self.assertInHTML('Sell' + tags.value(self.crew, self.day), html)
     
     
-    def test__crew_row__no_purchase(self):
+    def test__crew_list_row__no_purchase(self):
         """Renders a styled div, that contains an avatar."""
         
-        html = self.crew_row(self.seat, None)
+        html = self.crew_list_row(self.seat, None)
         
         # Test root
         row = parser(html)
@@ -610,7 +610,7 @@ class Test__Crew_List(TestCase):
         self.assertNotIn('btn', html)
     
     
-    def test__crew_row__with_purchase(self):
+    def test__crew_list_row__with_purchase(self):
         """Renders a styled div, that contains an avatar, crew box, and a sell button."""
         
         purchase = self.team.purchases.create(
@@ -618,7 +618,7 @@ class Test__Crew_List(TestCase):
             seat = self.seat,
             crew = self.crew,
         )
-        html = self.crew_row(self.seat, purchase)
+        html = self.crew_list_row(self.seat, purchase)
         
         # Test root
         row = parser(html)
@@ -636,7 +636,7 @@ class Test__Crew_List(TestCase):
         self.assertInHTML(sell_button, html)
     
     
-    def test__crew_row__show_actions_false(self):
+    def test__crew_list_row__show_actions_false(self):
         """Renders a styled div, that contains an avatar and crew box, but not a sell button."""
         
         purchase = self.team.purchases.create(
@@ -644,7 +644,7 @@ class Test__Crew_List(TestCase):
             seat = self.seat,
             crew = self.crew,
         )
-        html = self.crew_row(self.seat, purchase, show_actions = False)
+        html = self.crew_list_row(self.seat, purchase, show_actions = False)
         
         # Test root
         row = parser(html)
@@ -661,10 +661,10 @@ class Test__Crew_List(TestCase):
         self.assertNotIn('btn', html)
     
     
-    def test__crew_list__empty_list(self):
+    def test__crew_list_box__empty_list(self):
         """Renders a styled div that always has all seats."""
         
-        html = self.crew_list([])
+        html = self.crew_list_box([])
         
         # Test root
         crew_list = parser(html)
@@ -674,16 +674,16 @@ class Test__Crew_List(TestCase):
         for seat in models.Seat.objects.all():
             with self.subTest(seat = seat.name):
                 self.assertInHTML(
-                    self.crew_row(seat, None),
+                    self.crew_list_row(seat, None),
                     html,
                 )
     
     
-    def test__crew_list__with_purchase(self):
+    def test__crew_list_box__with_purchase(self):
         """Renders a styled div that includes any purchases provided."""
         
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list([purchase])
+        html = self.crew_list_box([purchase])
         
         # Test root
         crew_list = parser(html)
@@ -691,28 +691,28 @@ class Test__Crew_List(TestCase):
         
         # Test containments
         self.assertInHTML(
-            self.crew_row(purchase.seat, purchase, show_actions = False),
+            self.crew_list_row(purchase.seat, purchase, show_actions = False),
             html,
         )
         
         for seat in models.Seat.objects.exclude(id = purchase.seat.id):
             with self.subTest(seat = seat.name):
                 self.assertInHTML(
-                    self.crew_row(seat, None),
+                    self.crew_list_row(seat, None),
                     html,
                 )
     
     
-    def test__crew_list__finances(self):
+    def test__crew_list_box__finances(self):
         """Shows information about finances at the top of the box."""
         self.skipTest('This feature has not been finalised.')
     
     
-    def test__crew_list__show_actions(self):
+    def test__crew_list_box__show_actions(self):
         """Propagates the show_actions flag."""
         
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list([purchase], show_actions = True)
+        html = self.crew_list_box([purchase], show_actions = True)
         
         # Test root
         crew_list = parser(html)
@@ -720,14 +720,14 @@ class Test__Crew_List(TestCase):
         
         # Test containments
         self.assertInHTML(
-            self.crew_row(purchase.seat, purchase, show_actions = True),
+            self.crew_list_row(purchase.seat, purchase, show_actions = True),
             html,
         )
         
         for seat in models.Seat.objects.exclude(id = purchase.seat.id):
             with self.subTest(seat = seat.name):
                 self.assertInHTML(
-                    self.crew_row(seat, None),
+                    self.crew_list_row(seat, None),
                     html,
                 )
 

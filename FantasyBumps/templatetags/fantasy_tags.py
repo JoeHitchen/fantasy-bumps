@@ -176,7 +176,7 @@ def market_division_box(division, gender, number, balance, show_actions):
     {% endif %}
   </div>
 '''))
-def crew_row(seat, purchase, show_actions):
+def crew_list_row(seat, purchase, show_actions):
     return {
         'seat': seat,
         'purchase': purchase,
@@ -194,20 +194,20 @@ def crew_row(seat, purchase, show_actions):
         <span>Cash: {{ finances.balance|currency }}</span>
       </div></div>
     </div>{% endif %}
-    {% for seat, rower in crew %}
-      {% crew_row seat rower show_actions %}
+    {% for seat, rower in crew_list %}
+      {% crew_list_row seat rower show_actions %}
     {% endfor %}
   </div>
 '''))
-def crew_list_box(crew, finances = None, show_actions = False):
+def crew_list_box(crew_list, finances = None, show_actions = False):
     seat_rowers = {seat: [
-        rower for rower in crew if rower.seat == seat
+        rower for rower in crew_list if rower.seat == seat
     ] for seat in models.Seat.objects.all()}
     
-    crew = [(
+    crew_list = [(
         seat,
         rowers[0] if rowers else None,
     ) for seat, rowers in seat_rowers.items()]
     
-    return {'crew': crew, 'finances': finances, 'show_actions': show_actions}
+    return {'crew_list': crew_list, 'finances': finances, 'show_actions': show_actions}
 
