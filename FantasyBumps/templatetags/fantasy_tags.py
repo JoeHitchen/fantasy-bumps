@@ -188,18 +188,18 @@ def crew_row(seat, purchase, show_actions):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <div class="list-group sticky-top">
-    <div class="list-group-item list-group-item-dark">
+    {% if finances %}<div class="list-group-item list-group-item-dark">
       <div class="container"><div class="row justify-content-between">
         <span>Crew Value: {{ finances.crew_value|currency }}</span>
         <span>Cash: {{ finances.balance|currency }}</span>
       </div></div>
-    </div>
+    </div>{% endif %}
     {% for seat, rower in crew %}
       {% crew_row seat rower show_actions %}
     {% endfor %}
   </div>
 '''))
-def crew_list_box(crew, finances):
+def crew_list_box(crew, finances = None):
     seat_rowers = {seat: [
         rower for rower in crew if rower.seat == seat
     ] for seat in models.Seat.objects.all()}
