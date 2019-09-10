@@ -145,6 +145,8 @@ class TeamView(EventView):
         team = get_object_or_404(models.Team, user__username = self.kwargs['team_name'])
         
         context['team'] = team
+        context['mens_crew'] = team.get_crew(self.day, genders.MENS)
+        context['womens_crew'] = team.get_crew(self.day, genders.WOMENS)
         return context
 
 
