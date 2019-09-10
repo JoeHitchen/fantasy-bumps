@@ -297,16 +297,6 @@ class Test__Misc(TestCase):
     
     
     @staticmethod
-    def sell_button(purchase):
-        """A helper function that renders a sell button."""
-        return (
-            template
-            .Template('{% load fantasy_tags %}{% sell_button purchase %}')
-            .render(template.Context({'purchase': purchase}))
-        )
-    
-    
-    @staticmethod
     def market_row(position, balance, show_actions = True):
         """A helper function that renders a market row."""
         return (
@@ -315,20 +305,6 @@ class Test__Misc(TestCase):
             .render(template.Context({
                 'position': position,
                 'balance': balance,
-                'show_actions': show_actions,
-            }))
-        )
-    
-    
-    @staticmethod
-    def crew_row(seat, purchase, show_actions = True):
-        """A helper function that renders a crew row."""
-        return (
-            template
-            .Template('{% load fantasy_tags %}{% crew_row seat purchase show_actions %}')
-            .render(template.Context({
-                'seat': seat,
-                'purchase': purchase,
                 'show_actions': show_actions,
             }))
         )
@@ -483,28 +459,6 @@ class Test__Misc(TestCase):
         self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
     
     
-    def test__sell_button(self):
-        """Renders a styled button with an attached function call."""
-        
-        purchase = self.team.purchases.create(
-            day = self.day,
-            seat = self.seat,
-            crew = self.crew,
-        )
-        html = self.sell_button(purchase)
-        button = parser(html)
-        
-        self.assertEqual(button.tag, 'button')
-        
-        classes = button.get('class').split()
-        self.assertIn('btn', classes)
-        self.assertIn('btn-sm', classes)
-        
-        self.assertEqual(button.get('data-purchase'), str(purchase.id))
-        
-        self.assertInHTML('Sell' + tags.value(self.crew, self.day), html)
-    
-    
     def test__market_row__standard(self):
         """Renders a styled div, that contains an avatar, crew box, and buy button."""
         
@@ -563,6 +517,79 @@ class Test__Misc(TestCase):
         
         # Test containments
         self.assertNotIn('btn-buy', html)
+
+
+
+@tag('frontend')
+class Test__Crew_List(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        cls.crew = models.Crew.objects.first()
+        cls.seat = models.Seat.objects.first()
+    
+    
+    @staticmethod
+    def sell_button(purchase):
+        """A helper function that renders a sell button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% sell_button purchase %}')
+            .render(template.Context({'purchase': purchase}))
+        )
+    
+    
+    @staticmethod
+    def crew_row(seat, purchase, show_actions = True):
+        """A helper function that renders a crew row."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% crew_row seat purchase show_actions %}')
+            .render(template.Context({
+                'seat': seat,
+                'purchase': purchase,
+                'show_actions': show_actions,
+            }))
+        )
+    
+    
+    @staticmethod
+    def crew_list(crew_list, show_actions = False):
+        """A helper function that renders a crew list."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% crew_list_box crew_list None show_actions %}')
+            .render(template.Context({
+                'crew_list': crew_list,
+                'show_actions': show_actions,
+            }))
+        )
+    
+    
+    def test__sell_button(self):
+        """Renders a styled button."""
+        
+        purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat,
+            crew = self.crew,
+        )
+        html = self.sell_button(purchase)
+        button = parser(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-sell', classes)
+        
+        self.assertEqual(button.get('data-purchase'), str(purchase.id))
+        
+        self.assertInHTML('Sell' + tags.value(self.crew, self.day), html)
     
     
     def test__crew_row__no_purchase(self):
@@ -632,4 +659,75 @@ class Test__Misc(TestCase):
         self.assertInHTML(crew, html)
         
         self.assertNotIn('btn', html)
+    
+    
+    def test__crew_list__empty_list(self):
+        """Renders a styled div that always has all seats."""
+        
+        html = self.crew_list([])
+        
+        # Test root
+        crew_list = parser(html)
+        self.assertEqual(crew_list.tag, 'div')
+        
+        # Test containments
+        for seat in models.Seat.objects.all():
+            with self.subTest(seat = seat.name):
+                self.assertInHTML(
+                    self.crew_row(seat, None),
+                    html,
+                )
+    
+    
+    def test__crew_list__with_purchase(self):
+        """Renders a styled div that includes any purchases provided."""
+        
+        purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
+        html = self.crew_list([purchase])
+        
+        # Test root
+        crew_list = parser(html)
+        self.assertEqual(crew_list.tag, 'div')
+        
+        # Test containments
+        self.assertInHTML(
+            self.crew_row(purchase.seat, purchase, show_actions = False),
+            html,
+        )
+        
+        for seat in models.Seat.objects.exclude(id = purchase.seat.id):
+            with self.subTest(seat = seat.name):
+                self.assertInHTML(
+                    self.crew_row(seat, None),
+                    html,
+                )
+    
+    
+    def test__crew_list__finances(self):
+        """Shows information about finances at the top of the box."""
+        self.skipTest('This feature has not been finalised.')
+    
+    
+    def test__crew_list__show_actions(self):
+        """Propagates the show_actions flag."""
+        
+        purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
+        html = self.crew_list([purchase], show_actions = True)
+        
+        # Test root
+        crew_list = parser(html)
+        self.assertEqual(crew_list.tag, 'div')
+        
+        # Test containments
+        self.assertInHTML(
+            self.crew_row(purchase.seat, purchase, show_actions = True),
+            html,
+        )
+        
+        for seat in models.Seat.objects.exclude(id = purchase.seat.id):
+            with self.subTest(seat = seat.name):
+                self.assertInHTML(
+                    self.crew_row(seat, None),
+                    html,
+                )
 
