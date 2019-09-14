@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch, prefetch_related_objects
 from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 
 from .constants import genders, money
 from . import models
@@ -129,6 +129,30 @@ class LeaderboardView(EventView):
             .rank_by(ranking)
         )
         
+        return context
+
+
+
+class TeamView(EventView):
+    """Presents a team's crews for an event."""
+    
+    # View settings
+    template_name = 'fantasybumps/team.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        finances = get_object_or_404(
+            models.GameEntry.objects.select_related().extend_financials(),
+            team__user__username = self.kwargs['team_name'],
+            event = self.event,
+        )
+        team = finances.team
+        
+        context['team'] = team
+        context['finances'] = finances
+        context['mens_crew'] = team.get_crew(self.day, genders.MENS)
+        context['womens_crew'] = team.get_crew(self.day, genders.WOMENS)
         return context
 
 

@@ -33,6 +33,7 @@ urlpatterns = [
         path('men/', views.MarketView.as_view(), {'gender': genders.MENS}, name = 'men'),
         path('women/', views.MarketView.as_view(), {'gender': genders.WOMENS}, name = 'women'),
         path('leaderboard/', include(leaderboard_subpatterns)),
+        path('teams/<team_name>/', views.TeamView.as_view(), name = 'team'),
         path('', views.EventView.as_view(), name = 'event'),
     ])),
     path('', views.IndexView.as_view(), name = 'index'),
