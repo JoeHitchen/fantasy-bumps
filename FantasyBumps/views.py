@@ -142,9 +142,15 @@ class TeamView(EventView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        team = get_object_or_404(models.Team, user__username = self.kwargs['team_name'])
+        finances = get_object_or_404(
+            models.GameEntry.objects.select_related().extend_financials(),
+            team__user__username = self.kwargs['team_name'],
+            event = self.event,
+        )
+        team = finances.team
         
         context['team'] = team
+        context['finances'] = finances
         context['mens_crew'] = team.get_crew(self.day, genders.MENS)
         context['womens_crew'] = team.get_crew(self.day, genders.WOMENS)
         return context

@@ -481,6 +481,7 @@ class Test__Team(TestCase):
         cls.day = cls.event.active_day
         
         cls.view_team = auth.User.objects.create_user('Target', '', '').team
+        cls.budgets = cls.view_team.entries.create(event = cls.event)
         
         cls.url = reverse(
             cls.url_name,
@@ -508,6 +509,18 @@ class Test__Team(TestCase):
         self.assertEqual(response.status_code, 404)
     
     
+    def test__not_entered(self):
+        """Returns a 404 response if the team has no entry for the event."""
+        
+        self.budgets.delete()
+        
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+        ))
+        self.assertEqual(response.status_code, 404)
+    
+    
     def test__without_login(self):
         """Generates a context containing the selected team, their financials, and their crews."""
         
@@ -515,6 +528,7 @@ class Test__Team(TestCase):
         self.assertEqual(response.status_code, 200)
         
         self.assertEqual(response.context['team'], self.view_team)
+        self.assertEqual(response.context['finances'], self.budgets)
         self.assertIn('mens_crew', response.context)
         self.assertIn('womens_crew', response.context)
     
@@ -527,6 +541,7 @@ class Test__Team(TestCase):
         self.assertEqual(response.status_code, 200)
         
         self.assertEqual(response.context['team'], self.view_team)
+        self.assertEqual(response.context['finances'], self.budgets)
         self.assertIn('mens_crew', response.context)
         self.assertIn('womens_crew', response.context)
     
