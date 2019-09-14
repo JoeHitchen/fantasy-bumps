@@ -462,6 +462,93 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
 
 
 
+class Test__Team(TestCase):
+    fixtures = [
+        'dev_event',
+        'dev_days',
+        'dev_team',
+    ]
+
+    # Test settings
+    url_name = 'fantasybumps:team'
+    
+    
+    @classmethod
+    def setUpTestData(cls):
+        
+        cls.event = models.Event.objects.first()
+        cls.user_team = models.Team.objects.select_related().first()
+        cls.day = cls.event.active_day
+        
+        cls.view_team = auth.User.objects.create_user('Target', '', '').team
+        
+        cls.url = reverse(
+            cls.url_name,
+            kwargs = {'event_tag': cls.event.tag, 'team_name': cls.view_team},
+        )
+    
+    
+    def test__unknown_event(self):
+        """Returns a 404 response if the event tag is not recognised."""
+        
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': 'Unknown', 'team_name': self.view_team},
+        ))
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__unknown_team(self):
+        """Returns a 404 response if the team not recognised."""
+        
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': self.event.tag, 'team_name': 'Unknown'},
+        ))
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__without_login(self):
+        """Generates a context containing the selected team, their financials, and their crews."""
+        
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        
+        self.assertEqual(response.context['team'], self.view_team)
+        self.assertIn('mens_crew', response.context)
+        self.assertIn('womens_crew', response.context)
+    
+    
+    def test__with_login(self):
+        """Does not replace the requested team with the viewer's own team."""
+        
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        
+        self.assertEqual(response.context['team'], self.view_team)
+        self.assertIn('mens_crew', response.context)
+        self.assertIn('womens_crew', response.context)
+    
+    
+    @tag('query-count')
+    def test__query_count(self):
+        """ Expect:
+            (3) SELECT event and active day
+            (1) SELECT team to view
+            (2) SELECT all seats (twice, once for each crew list)
+            (2) SELECT purchases for crew lists (one for each crew lists)
+        """
+        
+        with self.assertNumQueries(8):
+            response = self.client.get(self.url)
+            
+            # Needed to force crew list queries
+            list(response.context['mens_crew'])
+            list(response.context['womens_crew'])
+
+
+
 class MessagesMixin:
     
     def check_messages(self, msgs, expected):
