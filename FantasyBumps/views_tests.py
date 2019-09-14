@@ -521,7 +521,8 @@ class Test__Team(TestCase):
         self.assertEqual(response.status_code, 404)
     
     
-    def test__without_login(self):
+    @patching.team_get_crew
+    def test__without_login(self, get_crew_mock):
         """Generates a context containing the selected team, their financials, and their crews."""
         
         response = self.client.get(self.url)
@@ -529,11 +530,19 @@ class Test__Team(TestCase):
         
         self.assertEqual(response.context['team'], self.view_team)
         self.assertEqual(response.context['finances'], self.budgets)
-        self.assertIn('mens_crew', response.context)
-        self.assertIn('womens_crew', response.context)
+        
+        self.assertEqual(
+            response.context['mens_crew'],
+            (self.view_team, self.day, genders.MENS),
+        )
+        self.assertEqual(
+            response.context['womens_crew'],
+            (self.view_team, self.day, genders.WOMENS),
+        )
     
     
-    def test__with_login(self):
+    @patching.team_get_crew
+    def test__with_login(self, get_crew_mock):
         """Does not replace the requested team with the viewer's own team."""
         
         self.client.login(username='DevTeam', password='password')
@@ -542,8 +551,15 @@ class Test__Team(TestCase):
         
         self.assertEqual(response.context['team'], self.view_team)
         self.assertEqual(response.context['finances'], self.budgets)
-        self.assertIn('mens_crew', response.context)
-        self.assertIn('womens_crew', response.context)
+        
+        self.assertEqual(
+            response.context['mens_crew'],
+            (self.view_team, self.day, genders.MENS),
+        )
+        self.assertEqual(
+            response.context['womens_crew'],
+            (self.view_team, self.day, genders.WOMENS),
+        )
     
     
     @tag('query-count')
