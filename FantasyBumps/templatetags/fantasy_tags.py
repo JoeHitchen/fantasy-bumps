@@ -168,6 +168,23 @@ def market_division_box(division, gender, number, balance, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
+  <div class="list-group-item list-group-item-dark">
+    <div class="container"><div class="row justify-content-between">
+      <span>Crew Value: {{ crew_value|currency }}</span>
+      <span>Cash: {{ balance|currency }}</span>
+    </div></div>
+  </div>
+'''))
+def crew_list_header(finances):
+    return {
+        'budget': finances['budget'],
+        'crew_value': finances['crew_value'],
+        'balance': finances['balance'],
+    }
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
   <div class="list-group-item{% if not purchase %} list-group-item-danger{% endif %} crew-row">
     {{ seat.short|avatar:club }}
     {% if purchase %}
@@ -188,12 +205,9 @@ def crew_list_row(seat, purchase, show_actions):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <div class="list-group sticky-top">
-    {% if finances %}<div class="list-group-item list-group-item-dark">
-      <div class="container"><div class="row justify-content-between">
-        <span>Crew Value: {{ finances.crew_value|currency }}</span>
-        <span>Cash: {{ finances.balance|currency }}</span>
-      </div></div>
-    </div>{% endif %}
+    {% if finances %}
+      {% crew_list_header finances %}
+    {% endif %}
     {% for seat, rower in crew_list %}
       {% crew_list_row seat rower show_actions %}
     {% endfor %}

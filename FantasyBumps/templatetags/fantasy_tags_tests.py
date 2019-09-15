@@ -543,6 +543,16 @@ class Test__Crew_List(TestCase):
     
     
     @staticmethod
+    def crew_list_header(finances):
+        """A helper function that renders a crew list header."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% crew_list_header finances %}')
+            .render(template.Context({'finances': finances}))
+        )
+    
+    
+    @staticmethod
     def crew_list_row(seat, purchase, show_actions = True):
         """A helper function that renders a crew row."""
         return (
@@ -557,13 +567,14 @@ class Test__Crew_List(TestCase):
     
     
     @staticmethod
-    def crew_list_box(crew_list, show_actions = False):
+    def crew_list_box(crew_list, finances = {}, show_actions = False):
         """A helper function that renders a crew list."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_list_box crew_list None show_actions %}')
+            .Template('{% load fantasy_tags %}{% crew_list_box crew_list finances show_actions %}')
             .render(template.Context({
                 'crew_list': crew_list,
+                'finances': finances,
                 'show_actions': show_actions,
             }))
         )
@@ -704,8 +715,14 @@ class Test__Crew_List(TestCase):
     
     
     def test__crew_list_box__finances(self):
-        """Shows information about finances at the top of the box."""
-        self.skipTest('This feature has not been finalised.')
+        """Includes financial information if provided."""
+        
+        finances = {'budget': 1079, 'crew_value': 856, 'balance': 223}
+        html = self.crew_list_box([], finances)
+        
+        # Test containments
+        self.assertInHTML(self.crew_list_header(finances), html)
+        
     
     
     def test__crew_list_box__show_actions(self):
