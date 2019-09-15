@@ -11,13 +11,14 @@
 {% block content %}
 
 <h1>Current crew lists for {{ team }}</h1>
-<br/>
 
 <div class="row">
-  <div class="col-sm">
+  <div class="col-md">
+    <h3 style="margin-top: 1em">Men's Crew</h3>
     {% crew_list_box mens_crew %}
   </div>
-  <div class="col-sm">
+  <div class="col-md">
+    <h3 style="margin-top: 1em">Women's Crew</h3>
     {% crew_list_box womens_crew %}
   </div>
 </div>
