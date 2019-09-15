@@ -133,6 +133,7 @@ def sell_button(purchase):
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
     {% results_pill results %}
+    <span style="width: 1em">&nbsp;</span>
     {% if show_actions %}{% buy_button position.day position.crew disabled %}{% endif %}
   </div>
 '''))

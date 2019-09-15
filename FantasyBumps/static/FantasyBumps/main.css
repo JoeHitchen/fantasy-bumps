@@ -39,6 +39,7 @@
 
 .results-pill {
   font-size: 10pt;
+  margin: 0em;
 }
 .results-pill :first-child {
   border-radius: 1em 0em 0em 1em;
