@@ -1,5 +1,5 @@
 from datetime import datetime, time, timedelta
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch
 
 from django.test import TestCase, tag
 from django.utils import timezone
@@ -285,24 +285,27 @@ class Test__Day__Start_Orders(TestCase):
         self.day.divisions.assert_called_once_with(genders.WOMENS)
     
     
-    @patch.object(
-        models.Division,
-        'start_order',
-        new_callable = PropertyMock,
-        side_effect = ['Call 1', 'Call 2', 'Call 3'],
+    @patch(
+        'FantasyBumps.models.Division.start_order',
+        autospec = True,
+        side_effect = lambda self: self,
     )
     def test__start_order__behaviour(self, start_order_mock):
         """Iteratively calls `start_order` on each division.
         
-        ## Only tests that Division.start_order used three times. ##
+        A mocked Division.start_order returns the division instance it is called on.
         """
         
         # Get start orders
-        start_order = self.day.start_order(genders.WOMENS)
-        self.assertEqual(
-            start_order,
-            ['Call 1', 'Call 2', 'Call 3'],
-        )
+        day_divisions = self.day.divisions(genders.WOMENS)
+        day_start_order = self.day.start_order(genders.WOMENS)
+        
+        self.assertEqual(start_order_mock.call_count, 3)
+        for index, call in enumerate(start_order_mock.call_args_list):
+            with self.subTest(call_index = index):
+                self.assertEqual(call, ((day_divisions[index],),))
+        
+        self.assertEqual(day_start_order, day_divisions)
 
 
 
@@ -514,7 +517,7 @@ class Test__Division(TestCase):
             gender = genders.WOMENS,
             top_bungline = 3,
             bottom_bungline = 8,
-        ).start_order
+        ).start_order()
         
         self.assertEqual(start_order.count(), 6)
         
@@ -541,7 +544,7 @@ class Test__Division(TestCase):
             gender = genders.WOMENS,
             top_bungline = 3,
             bottom_bungline = 8,
-        ).start_order
+        ).start_order()
         
         # Check for missing bungline
         self.assertEqual(start_order.count(), 5)

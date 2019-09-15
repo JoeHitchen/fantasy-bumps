@@ -103,7 +103,7 @@ class Day(models.Model):
     
     def start_order(self, gender):
         """Builds the day and gender's start order from the start order of each division."""
-        return [division.start_order for division in self.divisions(gender)]
+        return [division.start_order() for division in self.divisions(gender)]
     
     
     @cached_property
@@ -169,7 +169,6 @@ class Division:
         self.bottom_bungline = bottom_bungline
     
     
-    @cached_property
     def start_order(self):
         """Generates start order and bungline numbers (excluding sandwich boat)."""
         

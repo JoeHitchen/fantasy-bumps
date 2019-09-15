@@ -131,11 +131,27 @@ class MarketPageBase(GamePageBase):
         super().setUpTestData()
         cls.team.entries.create(event = cls.event)
     
+    
+    def assertStartOrdersEqual(self, received, expected):
+        """A helper method to compare if two start orders are equal."""
+        
+        self.assertEqual(len(received), len(expected))
+        
+        for index in range(0, len(expected)):
+            with self.subTest(division_index = index):
+                
+                self.assertQuerysetEqual(
+                    received[index],
+                    expected[index],
+                    transform = lambda item: item,
+                )
+    
+    
     def extra_context_without_user(self, context):
         """Extra context tests for without_user base test."""
         
         self.assertEqual(context['gender'], self.gender_info['text'])
-        self.assertEqual(
+        self.assertStartOrdersEqual(
             context['start_order'],
             self.day.start_order(self.gender_info['code']),
         )
@@ -154,7 +170,7 @@ class MarketPageBase(GamePageBase):
         """
         
         self.assertEqual(context['gender'], self.gender_info['text'])
-        self.assertEqual(
+        self.assertStartOrdersEqual(
             context['start_order'],
             self.day.start_order(self.gender_info['code']),
         )
