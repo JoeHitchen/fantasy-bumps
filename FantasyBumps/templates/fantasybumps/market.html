@@ -40,7 +40,7 @@
   </div>
 
   {% if user.is_authenticated %}<div class="col-auto">
-    <div style="width: 23em">
+    <div class="list-group sticky-top" style="width:23em">
       {% crew_list_box crew finances show_actions %}
     </div>
   </div>{% endif %}

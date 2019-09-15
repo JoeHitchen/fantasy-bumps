@@ -204,7 +204,7 @@ def crew_list_row(seat, purchase, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div class="list-group sticky-top">
+  <div>
     {% if finances %}
       {% crew_list_header finances %}
     {% endif %}
