@@ -6,7 +6,7 @@ from . import models
 from . import errors
 
 
-def buy(team, day, seat, crew):
+def buy(team, day, seat, crew, athlete = None):
     """Transaction-wrapped buy action.
     
     Checks the team has sufficients funds and updates their balance, before creating the purchase.
@@ -24,10 +24,10 @@ def buy(team, day, seat, crew):
     """
     
     with transaction.atomic():
-        _buy_body(team, day, seat, crew)
+        _buy_body(team, day, seat, crew, athlete)
 
 
-def _buy_body(team, day, seat, crew):
+def _buy_body(team, day, seat, crew, athlete = None):
     """INTERNAL METHOD allowing non-transaction access to buy action for query counting."""
     
     budgets = models.GameEntry.objects.select_for_update().get_or_create(
@@ -51,7 +51,7 @@ def _buy_body(team, day, seat, crew):
     setattr(budgets, balance_field, new_balance)
     budgets.save()
     
-    team.purchases.create(day = day, seat = seat, crew = crew)
+    team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
     if team.purchases.filter(day = day, seat = seat, crew__gender = crew.gender).count() > 1:
         raise errors.DuplicateSeatError
 

@@ -139,6 +139,23 @@ class Test__Buy(TestCase):
         self.assertEqual(self.team.purchases.count(), 1)
     
     
+    def test__with_athlete(self):
+        """Performs the standard action and creates a Purchase that references the Athlete."""
+        
+        athlete = models.Athlete.objects.create(name = 'Test Athlete')
+        
+        buy(self.team, self.day, self.seat, self.crew, athlete)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
+        
+        self.assertEqual(self.team.purchases.count(), 1)
+        self.assertEqual(self.team.purchases.first().athlete, athlete)
+    
+    
     @tag('query-count')
     def test__query_count__standard(self):
         """ Expect:
