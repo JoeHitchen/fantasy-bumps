@@ -915,12 +915,12 @@ class Test__Buy(TestCase, MessagesMixin):
             (1) SELECT athlete
             (2) Transaction overhead
             (2) Buy action - Get crew's value (Affected by caching)
-            (4) Buy action - Other queries
+            (5) Buy action - Other queries
         """
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
     
     
@@ -929,7 +929,7 @@ class Test__Buy(TestCase, MessagesMixin):
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__query_count__without_budgets(self, market_closes_mock, markets_mock):
         """ Expect:
-            (15) Queried as standard
+            (16) Queried as standard
             (3) Extra action queries
         """
         
@@ -937,7 +937,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(19):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
     
     
@@ -946,7 +946,7 @@ class Test__Buy(TestCase, MessagesMixin):
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__query_count__with_athlete(self, market_closes_mock, markets_mock):
         """ Expect:
-            (15) Queried as standard
+            (16) Queried as standard
         """
         
         athlete = models.Athlete.objects.create(name = 'Test Athlete')
@@ -955,7 +955,7 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
