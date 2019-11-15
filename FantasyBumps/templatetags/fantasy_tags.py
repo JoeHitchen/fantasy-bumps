@@ -189,7 +189,10 @@ def crew_list_header(finances):
   <div class="list-group-item{% if not purchase %} list-group-item-danger{% endif %} crew-row">
     {{ seat.short|avatar:club }}
     {% if purchase %}
-    <div class="flex-grow-1">{{ purchase.crew }}</div>
+    <div class="flex-grow-1{% if purchase.athlete %} crew-row-athlete{% endif %}">
+      {% if purchase.athlete %}<div>{{ purchase.athlete }}</div>{% endif %}
+      <div>{{ purchase.crew }}</div>
+    </div>
     {% if show_actions %}{% sell_button purchase %}{% endif %}
     {% endif %}
   </div>
