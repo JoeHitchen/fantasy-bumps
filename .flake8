@@ -22,5 +22,6 @@ application-package-names =
     Bumps,
     FantasyCore,
     FantasyBumps,
+    parsing,
 
 multiline-quotes = '''
