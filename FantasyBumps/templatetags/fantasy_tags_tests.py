@@ -640,7 +640,40 @@ class Test__Crew_List(TestCase):
         avatar = tags.avatar(self.seat.short, self.crew.club)
         self.assertInHTML(avatar, html)
         
-        crew = '<div class="flex-grow-1">{}</div>'.format(self.crew)
+        crew = '<div class="flex-grow-1"><div>{}</div></div>'.format(self.crew)
+        self.assertInHTML(crew, html)
+        
+        sell_button = self.sell_button(purchase)
+        self.assertInHTML(sell_button, html)
+    
+    
+    def test__crew_list_row__with_athlete(self):
+        """Renders a styled div, that contains an avatar, crew & athlete box, and a sell button."""
+        
+        athlete = models.Athlete.objects.create(name = 'Test Athlete')
+        
+        purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat,
+            crew = self.crew,
+            athlete = athlete,
+        )
+        html = self.crew_list_row(self.seat, purchase)
+        
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class').split())
+        
+        # Test containments
+        avatar = tags.avatar(self.seat.short, self.crew.club)
+        self.assertInHTML(avatar, html)
+        
+        crew = '''
+          <div class="flex-grow-1 crew-row-athlete">
+            <div>{}</div>
+            <div>{}</div>
+          </div>'''.format(athlete.name, self.crew)
         self.assertInHTML(crew, html)
         
         sell_button = self.sell_button(purchase)
@@ -666,7 +699,7 @@ class Test__Crew_List(TestCase):
         avatar = tags.avatar(self.seat.short, self.crew.club)
         self.assertInHTML(avatar, html)
         
-        crew = '<div class="flex-grow-1">{}</div>'.format(self.crew)
+        crew = '<div class="flex-grow-1"><div>{}</div></div>'.format(self.crew)
         self.assertInHTML(crew, html)
         
         self.assertNotIn('btn', html)

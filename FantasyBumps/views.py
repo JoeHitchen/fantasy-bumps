@@ -201,9 +201,21 @@ def buy(request):
         return market_redirect
     
     
+    # Get athlete
+    try:
+        athlete = (
+            crew.crew_lists
+            .select_related('athlete')
+            .get(event = day.event, seat = seat)
+            .athlete
+        )
+    except models.CrewEventAthlete.DoesNotExist:
+        athlete = None
+    
+    
     # Perform transaction
     try:
-        transactions.buy(team, day, seat, crew)
+        transactions.buy(team, day, seat, crew, athlete)
     
     except errors.NotRacingError:
         messages.warning(request, 'Cannot buy a crew on a day they are not racing.')

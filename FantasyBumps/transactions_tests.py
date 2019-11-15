@@ -139,6 +139,64 @@ class Test__Buy(TestCase):
         self.assertEqual(self.team.purchases.count(), 1)
     
     
+    def test__with_athlete(self):
+        """Performs the standard action and creates a Purchase that references the Athlete."""
+        
+        athlete = models.Athlete.objects.create(name = 'Test Athlete')
+        
+        buy(self.team, self.day, self.seat, self.crew, athlete)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
+        
+        self.assertEqual(self.team.purchases.count(), 1)
+        self.assertEqual(self.team.purchases.first().athlete, athlete)
+    
+    
+    def test__with_duplicate_athlete(self):
+        """Rejects the purchase if the team/athlete/day/gender combination is already occupied."""
+        
+        athlete = models.Athlete.objects.create(name = 'Test Athlete')
+        self.team.purchases.create(
+            day = self.day,
+            crew = self.crew,
+            seat = models.Seat.objects.last(),
+            athlete = athlete,
+        )
+
+        with self.assertRaises(errors.DuplicateAthleteError):
+            buy(self.team, self.day, self.seat, self.crew, athlete)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__with_duplicate_absent_athlete(self):
+        """Performs the standard action and creates a second Purchase with no athlete."""
+        
+        athlete = None
+        self.team.purchases.create(
+            day = self.day,
+            crew = self.crew,
+            seat = models.Seat.objects.last(),
+            athlete = athlete,
+        )
+
+        buy(self.team, self.day, self.seat, self.crew, athlete)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
+    
+    
     @tag('query-count')
     def test__query_count__standard(self):
         """ Expect:
@@ -147,19 +205,20 @@ class Test__Buy(TestCase):
             (1) SELECT day's maximum rank  (Affected by caching)
             (1) UPDATE budgets
             (1) INSERT new purchase
-            (1) SELECT day/seat/gender duplication check
+            (1) SELECT team/day/seat/gender duplication check
+            (1) SELECT tea/day/athlete/gender duplication check
         """
         
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(7):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
     
     
     @tag('query-count')
     def test__query_count__without_budgets(self):
         """ Expect:
-            (6) Queried as standard
+            (7) Queried as standard
             (2) Internal transaction overhead
             (1) INSERT new budget
         """
@@ -167,7 +226,7 @@ class Test__Buy(TestCase):
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         self.budgets.delete()
         
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
