@@ -28,3 +28,17 @@ def club_parser(club_str):
         'st joh': 'sjoh',
         'st pet': 'spet',
     }.get(club_str[0:6].lower(), club_str[0:4].lower())
+
+
+def boat_code_parser(boat_code):
+    return {
+        'BAL': 'ball', 'BRC': 'bras', 'CHB': 'chri', 'COO': 'corp',
+        'EXC': 'exet', 'GTM': 'grte', 'HEC': 'hert', 'JEO': 'jesu',
+        'KEB': 'kebl', 'LMH': 'lady', 'LIN': 'lina', 'LIC': 'linc',
+        'MAG': 'magd', 'MAN': 'mans', 'MER': 'mert', 'NEC': 'newc',
+        'ORO': 'orie', 'OSG': 'osle', 'PMB': 'pemb', 'QCO': 'quee',
+        'RPC': 'rege', 'SOM': 'some', 'SAC': 'sann', 'SAY': 'sant',
+        'SBH': 'sben', 'SCO': 'scat', 'SEH': 'sedm', 'SHI': 'shil',
+        'SHG': 'shug', 'SJO': 'sjoh', 'SPC': 'spet', 'TRO': 'trin',
+        'UCO': 'univ', 'WAD': 'wadh', 'WOO': 'wolf', 'WRO': 'worc',
+    }[boat_code.upper()]
