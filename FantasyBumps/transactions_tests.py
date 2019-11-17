@@ -142,7 +142,12 @@ class Test__Buy(TestCase):
     def test__with_athlete(self):
         """Performs the standard action and creates a Purchase that references the Athlete."""
         
-        athlete = models.Athlete.objects.create(name = 'Test Athlete')
+        athlete = models.Athlete.objects.create(
+            event = self.day.event,
+            crew = self.crew,
+            seat = self.seat,
+            name = 'Test Athlete',
+        )
         
         buy(self.team, self.day, self.seat, self.crew, athlete)
         
@@ -159,7 +164,12 @@ class Test__Buy(TestCase):
     def test__with_duplicate_athlete(self):
         """Rejects the purchase if the team/athlete/day/gender combination is already occupied."""
         
-        athlete = models.Athlete.objects.create(name = 'Test Athlete')
+        athlete = models.Athlete.objects.create(
+            event = self.day.event,
+            crew = self.crew,
+            seat = self.seat,
+            name = 'Test Athlete',
+        )
         self.team.purchases.create(
             day = self.day,
             crew = self.crew,

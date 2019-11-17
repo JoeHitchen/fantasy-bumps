@@ -949,9 +949,8 @@ class Test__Buy(TestCase, MessagesMixin):
             (16) Queried as standard
         """
         
-        athlete = models.Athlete.objects.create(name = 'Test Athlete')
         for seat in models.Seat.objects.all():
-            self.crew.crew_lists.create(event = self.day.event, seat = seat, athlete = athlete)
+            self.crew.crew_lists.create(event = self.day.event, seat = seat, name = 'Test Athlete')
         
         self.client.login(username = 'DevTeam', password = 'password')
         
