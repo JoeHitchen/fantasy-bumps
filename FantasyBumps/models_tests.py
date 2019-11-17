@@ -737,6 +737,38 @@ class Test__Seat(TestCase):
 
 
 
+class Test__Athlete(TestCase):
+    fixtures = ['dev_event', 'dev_crews', 'seats']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
+        cls.crew = models.Crew.objects.first()
+        cls.seat = models.Seat.objects.first()
+    
+    
+    def test__string(self):
+        """Returns a athlete's name as their string representation."""
+        
+        athlete = models.Athlete(name = 'Test Athlete')
+        athlete_str = str(athlete)
+        self.assertEqual(athlete_str, athlete.name)
+    
+    
+    def test__unique_pair(self):
+        """Raises a DB IntegrityError if a duplicate event/crew/seat pairing created."""
+        
+        self.event.crew_lists.create(crew = self.crew, seat = self.seat, name = 'Test Athlete')
+        
+        with self.assertRaises(IntegrityError):
+            self.event.crew_lists.create(
+                crew = self.crew,
+                seat = self.seat,
+                name = 'Test Athlete',
+            )
+
+
+
 @tag('game-core')
 class Test__Team(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
