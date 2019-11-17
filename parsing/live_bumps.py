@@ -3,6 +3,38 @@ import requests
 from .common import seat_parser, boat_code_parser
 
 
+def _crew_results(crew_data):
+    positions = [crew_data['start']]
+    
+    for move in crew_data['moves']:
+        positions.append(positions[-1] - move['moves'])  # Sign reversed
+    
+    return positions
+
+
+def get_results(series, year):
+    event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
+    print('Retriving results for {} {} via Live Bumps'.format(event_string, year))  # noqa: T001
+    
+    url = 'https://bumps.live/data/{}_{}.json'.format(event_string.lower(), year)
+    response = requests.get(url)
+    
+    if not response.status_code == 200:
+        raise IOError('Could not load crew lists page')
+    
+    crews = {}
+    for boat_code, club_data in response.json().items():
+        club = boat_code_parser(boat_code)
+        
+        for index, crew_data in enumerate(club_data['men']):
+            crews[(club, 'M', index + 1)] = _crew_results(crew_data)
+        
+        for index, crew_data in enumerate(club_data['women']):
+            crews[(club, 'W', index + 1)] = _crew_results(crew_data)
+    
+    return crews
+
+
 def get_crew_lists(series, year):
     event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
     print('Retriving crew lists for {} {} via Live Bumps'.format(event_string, year))  # noqa: T001
