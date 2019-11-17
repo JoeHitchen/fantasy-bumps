@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from parsing import ourcs
 
+from .common import add_athletes
 from ... import models
 
 
@@ -58,31 +59,10 @@ class Command(BaseCommand):
         
         call_command('loaddata', 'demo_start_day1')
         
-        seats = {seat.id: seat for seat in models.Seat.objects.all()}
         crews = {(crew.club, crew.gender, crew.rank): crew for crew in models.Crew.objects.all()}
-        
         crew_lists = ourcs.get_crew_lists(event_id = 103)
         
-        athlete_id = 0
-        athletes = []
-        crew_athletes = []
-        for crew_id, crew in crews.items():
-            for seat_id, seat in seats.items():
-                athlete_id += 1
-                athlete = models.Athlete(
-                    id = athlete_id,
-                    name = crew_lists[crew_id][seat_id],
-                )
-                athletes.append(athlete)
-                crew_athletes.append(models.CrewEventAthlete(
-                    event = event,
-                    crew = crew,
-                    seat = seat,
-                    athlete_id = athlete_id,
-                ))
-        
-        models.Athlete.objects.bulk_create(athletes)
-        models.CrewEventAthlete.objects.bulk_create(crew_athletes)
+        add_athletes(event, crews, crew_lists)
         
         self.stdout.write('Successfully created a demonstration game.')
 
