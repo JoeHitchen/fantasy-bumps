@@ -650,7 +650,11 @@ class Test__Crew_List(TestCase):
     def test__crew_list_row__with_athlete(self):
         """Renders a styled div, that contains an avatar, crew & athlete box, and a sell button."""
         
-        athlete = models.Athlete.objects.create(name = 'Test Athlete')
+        athlete = self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat,
+            name = 'Test Athlete',
+        )
         
         purchase = self.team.purchases.create(
             day = self.day,

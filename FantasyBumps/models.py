@@ -285,26 +285,19 @@ class Seat(models.Model):
 
 
 class Athlete(models.Model):
-    """Describes an athlete related to OURCs events."""
-    
-    name = models.CharField(max_length = 100)
-    
-    def __str__(self):
-        return self.name
-
-
-
-class CrewEventAthlete(models.Model):
-    """Describes the seat occupation for a crew in an event."""
+    """Describes an athlete competing in a event."""
     
     event = models.ForeignKey(Event, models.PROTECT, related_name = 'crew_lists')
     crew = models.ForeignKey(Crew, models.PROTECT, related_name = 'crew_lists')
     seat = models.ForeignKey(Seat, models.PROTECT)
-    athlete = models.ForeignKey(Athlete, models.CASCADE, related_name = 'entries', null = True)
+    name = models.CharField(max_length = 100)
     
     class Meta:
         ordering = ['event', 'crew', 'seat']
         unique_together = ['event', 'crew', 'seat']
+    
+    def __str__(self):
+        return self.name
 
 
 

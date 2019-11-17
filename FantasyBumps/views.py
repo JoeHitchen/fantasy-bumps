@@ -203,13 +203,8 @@ def buy(request):
     
     # Get athlete
     try:
-        athlete = (
-            crew.crew_lists
-            .select_related('athlete')
-            .get(event = day.event, seat = seat)
-            .athlete
-        )
-    except models.CrewEventAthlete.DoesNotExist:
+        athlete = crew.crew_lists.get(event = day.event, seat = seat)
+    except models.Athlete.DoesNotExist:
         athlete = None
     
     
