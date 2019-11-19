@@ -55,7 +55,7 @@ class Test__Event(TestCase):
     def test__string(self):
         """Returns an event's name as its string representation."""
         
-        self.assertEqual(str(self.event), self.event.name)
+        self.assertEqual(str(self.event), 'Demo 2019')
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
