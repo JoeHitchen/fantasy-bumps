@@ -43,12 +43,13 @@ def add_athletes(event, crews, crew_lists):
     athletes = []
     for crew_id, crew in crews.items():
         for seat_id, seat in seats.items():
-            athletes.append(models.Athlete(
-                event = event,
-                crew = crew,
-                seat = seat,
-                name = crew_lists[crew_id][seat_id],
-            ))
+            if 'crew_id' in crew_lists and 'seat_id' in crew_lists[crew_id]:
+                athletes.append(models.Athlete(
+                    event = event,
+                    crew = crew,
+                    seat = seat,
+                    name = crew_lists[crew_id][seat_id],
+                ))
     
     models.Athlete.objects.bulk_create(athletes)
 
