@@ -8,6 +8,17 @@ With the `--dev-team` flag, a user/team can also be loaded for development.
     Username: DevTeam
     Password: password
 
+Games are created with:
+
+    ppy game_start --eights | --torpids | --demo [--date YYYY-MM-DD | --year YYYY]
+
+where the first flag (e.g. `--torpids`, `--eights`) indicates which series the event belongs to.
+`--demo` is also available as a series option which will use fixed data for demonstration/testing purposes.
+However, it requires an empty database and further options are ignored.
+By default, the created event will start in five days time, but this can be overridden with the `--date` flag.
+Alternatively, to create an event using data from an event in a previous year, use the `--year` flag.
+These latter two options cannot be used simultaneously.
+
 
 #### Development
 Install the pre-requisites with: `pip install -r requirements.txt`
