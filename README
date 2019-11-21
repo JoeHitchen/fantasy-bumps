@@ -19,6 +19,10 @@ By default, the created event will start in five days time, but this can be over
 Alternatively, to create an event using data from an event in a previous year, use the `--year` flag.
 These latter two options cannot be used simultaneously.
 
+Games are advanced with `ppy game_advance [--forced]`.
+A `cron` job should be scheduled to run this command after the end of racing, but before the market open/day tickover time (8pm at time of writing).
+With the `--forced` flag, the days of any current events are shifted forwards by one day before running the advance, to allow development/demonstration games to progress faster.
+
 
 #### Development
 Install the pre-requisites with: `pip install -r requirements.txt`
