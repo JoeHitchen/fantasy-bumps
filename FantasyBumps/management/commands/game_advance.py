@@ -9,7 +9,7 @@ from parsing import live_bumps
 
 from ... import models
 from ...constants import series as event_series
-from ...game_tools import get_all_crews, add_rankings, evaluate_all_investments
+from ...game_tools import get_all_crews, add_rankings, roll_over_purchases, evaluate_all_investments
 
 
 class Command(BaseCommand):
@@ -78,7 +78,7 @@ class Command(BaseCommand):
                 crews = get_all_crews(results.keys())
                 add_rankings(new_day, crews, results)
             
-            old_day.advance_purchases_to_next()
+            roll_over_purchases(old_day)
             evaluate_all_investments(old_day)
             self.stdout.write('Completed!')
 

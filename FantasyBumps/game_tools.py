@@ -57,6 +57,23 @@ def add_athletes(event, crews, crew_lists):
     models.Athlete.objects.bulk_create(athletes)
 
 
+def roll_over_purchases(day):
+    """Creates a copy of all purchase records for today on the next day.
+    
+    MAX four queries. Recommend fetching day with select_related.
+    """
+    
+    models.Purchase.objects.bulk_create([
+        models.Purchase(
+            team = purchase.team,
+            day = day.next,
+            crew = purchase.crew,
+            seat = purchase.seat,
+        )
+        for purchase in day.purchases.select_related().all()
+    ])
+
+
 def evaluate_all_investments(day):
     """Update entered teams budgets for changes in crew value from places gained/lost on day."""
     

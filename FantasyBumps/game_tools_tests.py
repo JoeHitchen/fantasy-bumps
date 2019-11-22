@@ -6,6 +6,43 @@ from . import models
 from . import game_tools as tools
 
 
+@tag('game-core')
+class Test__Purchase_Rollover(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    
+    def test__purchases(self):
+        """Copies any purchases onto the next day
+        
+        Expected Queries:
+            (2) Access day.next  (Affected by .next caching, or fetching day with select_related)
+            (1) SELECT purchases for current day
+            (1) INSERT purchases for next day
+        """
+    
+        day = models.Day.objects.first()
+        
+        # Create simple set of purchases
+        team = models.Team.objects.first()
+        crews = models.Crew.objects.all()
+        
+        for seat in models.Seat.objects.all():
+            team.purchases.create(
+                day = day,
+                seat = seat,
+                crew = crews[seat.id],
+            )
+        
+        # Test method
+        with self.assertNumQueries(4):
+            tools.roll_over_purchases(day)
+        
+        self.assertEqual(
+            list(day.purchases.values('team', 'crew', 'seat')),
+            list(day.next.purchases.values('team', 'crew', 'seat')),
+        )
+
+
+
 class Test__All_Investments(TestCase):
     fixtures = [
         'dev_event',
