@@ -43,6 +43,7 @@ class Test__Purchase_Rollover(TestCase):
 
 
 
+@tag('game-core')
 class Test__All_Investments(TestCase):
     fixtures = [
         'dev_event',
