@@ -1,6 +1,12 @@
 from datetime import time
 
 
+class series:
+    DEMO = 'D'
+    TORPIDS = 'T'
+    EIGHTS = 'E'
+
+
 class genders:
     MENS = 'M'
     WOMENS = 'W'

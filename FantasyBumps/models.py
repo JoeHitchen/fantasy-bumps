@@ -7,13 +7,22 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import genders, timings, money, clubs
+from .constants import series, genders, timings, money, clubs
 
 
 class Event(models.Model):
     """A bumps competition, with simple division information."""
     
-    name = models.CharField(max_length = 20)
+    series = models.CharField(
+        max_length = 1,
+        choices = [
+            (series.DEMO, 'Demo'),
+            (series.TORPIDS, 'Torpids'),
+            (series.EIGHTS, 'Eights'),
+        ],
+        db_index = True,
+    )
+    year = models.PositiveSmallIntegerField(db_index = True)
     tag = models.SlugField(max_length = 15, unique = True)  # Implicit db index
     
     mens_divisions = models.PositiveSmallIntegerField()
@@ -21,7 +30,7 @@ class Event(models.Model):
     boats_per_division = models.PositiveSmallIntegerField()
     
     def __str__(self):
-        return self.name
+        return '{} {}'.format(self.get_series_display(), self.year)
     
     
     @cached_property
@@ -137,23 +146,6 @@ class Day(models.Model):
         if not self.first_race:
             return False
         return self.market_opens <= timezone.now() < self.market_closes
-    
-    
-    def advance_purchases_to_next(self):
-        """Creates a copy of all purchase records for today on the next day.
-        
-        MAX four queries. Recommend fetching day with select_related.
-        """
-        
-        Purchase.objects.bulk_create([
-            Purchase(
-                team = purchase.team,
-                day = self.next,
-                crew = purchase.crew,
-                seat = purchase.seat,
-            )
-            for purchase in self.purchases.select_related().all()
-        ])
 
 
 
