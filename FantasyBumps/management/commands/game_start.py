@@ -8,7 +8,7 @@ from parsing import ourcs, live_bumps
 
 from ... import models
 from ...constants import series as event_series
-from ...game_tools import get_all_crews, add_rankings, add_athletes
+from ... import game_tools as tools
 
 
 class Command(BaseCommand):
@@ -124,14 +124,14 @@ class Command(BaseCommand):
             
             crew_lists = ourcs.get_crew_lists(event_id = 103)
             
-            add_athletes(event, crews, crew_lists)
+            tools.add_athletes(event, crews, crew_lists)
             return
         
         # Bumps event via Live Bumps
         results = live_bumps.get_results(series, year)
-        crews = get_all_crews(results.keys())
-        add_rankings(weds, crews, results)
-        add_athletes(event, crews, live_bumps.get_crew_lists(series, year))
+        crews = tools.get_all_crews(results.keys())
+        tools.add_rankings(weds, crews, results)
+        tools.add_athletes(event, crews, live_bumps.get_crew_lists(series, year))
 
 
 def create_days(event, start_date):

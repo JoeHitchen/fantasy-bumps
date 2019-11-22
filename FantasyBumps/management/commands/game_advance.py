@@ -9,7 +9,7 @@ from parsing import live_bumps
 
 from ... import models
 from ...constants import series as event_series
-from ...game_tools import get_all_crews, add_rankings, roll_over_purchases, evaluate_all_investments
+from ... import game_tools as tools
 
 
 class Command(BaseCommand):
@@ -75,10 +75,10 @@ class Command(BaseCommand):
             # Bumps events
             else:
                 results = live_bumps.get_results(event.series, event.year)
-                crews = get_all_crews(results.keys())
-                add_rankings(new_day, crews, results)
+                crews = tools.get_all_crews(results.keys())
+                tools.add_rankings(new_day, crews, results)
             
-            roll_over_purchases(old_day)
-            evaluate_all_investments(old_day)
+            tools.roll_over_purchases(old_day)
+            tools.evaluate_all_investments(old_day)
             self.stdout.write('Completed!')
 
