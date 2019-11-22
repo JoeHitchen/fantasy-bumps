@@ -7,10 +7,10 @@ from django.utils import timezone
 
 from parsing import live_bumps
 
-from .common import get_all_crews, add_rankings
 from ... import models
 from ...constants import series as event_series
 from ...utils import evaluate_all_investments
+from ...game_tools import get_all_crews, add_rankings
 
 
 class Command(BaseCommand):

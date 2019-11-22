@@ -6,9 +6,9 @@ from django.utils import timezone
 
 from parsing import ourcs, live_bumps
 
-from .common import get_all_crews, add_rankings, add_athletes
 from ... import models
 from ...constants import series as event_series
+from ...game_tools import get_all_crews, add_rankings, add_athletes
 
 
 class Command(BaseCommand):
