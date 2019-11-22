@@ -43,7 +43,7 @@ def add_athletes(event, crews, crew_lists):
     athletes = []
     for crew_id, crew in crews.items():
         for seat_id, seat in seats.items():
-            if 'crew_id' in crew_lists and 'seat_id' in crew_lists[crew_id]:
+            if crew_id in crew_lists and seat_id in crew_lists[crew_id]:
                 athletes.append(models.Athlete(
                     event = event,
                     crew = crew,
