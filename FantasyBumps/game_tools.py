@@ -69,6 +69,7 @@ def roll_over_purchases(day):
             day = day.next,
             crew = purchase.crew,
             seat = purchase.seat,
+            athlete = purchase.athlete,
         )
         for purchase in day.purchases.select_related().all()
     ])

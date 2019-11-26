@@ -10,36 +10,81 @@ from . import game_tools as tools
 class Test__Purchase_Rollover(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     
-    def test__purchases(self):
-        """Copies any purchases onto the next day
+    @classmethod
+    def setUpTestData(cls):
+        cls.day = models.Day.objects.first()
+        cls.team = models.Team.objects.first()
+        cls.crews = models.Crew.objects.all()
+    
+    
+    def test__without_athlete(self):
+        """Copies all purchases to the next day, including null athlete references."""
         
-        Expected Queries:
+        # Create simple set of purchases
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.day,
+                seat = seat,
+                crew = self.crews[seat.id],
+            )
+        
+        # Test method
+        tools.roll_over_purchases(self.day)
+        
+        self.assertEqual(
+            list(self.day.purchases.values('team', 'crew', 'seat', 'athlete')),
+            list(self.day.next.purchases.values('team', 'crew', 'seat', 'athlete')),
+        )
+    
+    
+    def test__with_athlete(self):
+        """Copies all purchases to the next day, including athlete references."""
+        
+        # Create athlete
+        athlete = models.Athlete.objects.create(
+            event = self.day.event,
+            crew = self.crews[0],
+            seat = models.Seat.objects.first(),
+            name = 'Test Athlete',
+        )
+        
+        # Create simple set of purchases
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.day,
+                seat = seat,
+                crew = self.crews[seat.id],
+                athlete = athlete,
+            )
+        
+        # Test method
+        tools.roll_over_purchases(self.day)
+        
+        self.assertEqual(
+            list(self.day.purchases.values('team', 'crew', 'seat', 'athlete')),
+            list(self.day.next.purchases.values('team', 'crew', 'seat', 'athlete')),
+        )
+    
+    
+    @tag('query-count')
+    def test__query_count(self):
+        """Expect:
             (2) Access day.next  (Affected by .next caching, or fetching day with select_related)
             (1) SELECT purchases for current day
             (1) INSERT purchases for next day
         """
-    
-        day = models.Day.objects.first()
         
         # Create simple set of purchases
-        team = models.Team.objects.first()
-        crews = models.Crew.objects.all()
-        
         for seat in models.Seat.objects.all():
-            team.purchases.create(
-                day = day,
+            self.team.purchases.create(
+                day = self.day,
                 seat = seat,
-                crew = crews[seat.id],
+                crew = self.crews[seat.id],
             )
         
         # Test method
         with self.assertNumQueries(4):
-            tools.roll_over_purchases(day)
-        
-        self.assertEqual(
-            list(day.purchases.values('team', 'crew', 'seat')),
-            list(day.next.purchases.values('team', 'crew', 'seat')),
-        )
+            tools.roll_over_purchases(self.day)
 
 
 
