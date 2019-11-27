@@ -1,4 +1,5 @@
 import re
+import html
 
 from bs4 import BeautifulSoup
 import requests
@@ -14,7 +15,7 @@ def _crew_box(box, ext_club):
     rank = int(crew_header[-1])
     
     crew_list = {
-        seat_parser(crew_row.find('th').string): crew_row.find('td').string
+        seat_parser(crew_row.find('th').string): html.unescape(crew_row.find('td').string)
         for crew_row in box.find_all('tr')
     }
     
