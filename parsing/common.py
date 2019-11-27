@@ -41,4 +41,5 @@ def boat_code_parser(boat_code):
         'SBH': 'sben', 'SCO': 'scat', 'SEH': 'sedm', 'SHI': 'shil',
         'SHG': 'shug', 'SJO': 'sjoh', 'SPC': 'spet', 'TRO': 'trin',
         'UCO': 'univ', 'WAD': 'wadh', 'WOO': 'wolf', 'WRO': 'worc',
+        'OSL': 'osle',
     }[boat_code.upper()]
