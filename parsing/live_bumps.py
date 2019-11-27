@@ -1,3 +1,5 @@
+import html
+
 import requests
 
 from .common import seat_parser, boat_code_parser
@@ -52,7 +54,7 @@ def get_crew_lists(series, year):
         for crew_rank, crew_data in club_data['men'].items():
             
             crew_list = {
-                seat_parser(person['pos']): person['name']
+                seat_parser(person['pos']): html.unescape(person['name'])
                 for person in crew_data
             }
             crews[(club, 'M', int(crew_rank))] = crew_list
@@ -61,7 +63,7 @@ def get_crew_lists(series, year):
         for crew_rank, crew_data in club_data['women'].items():
             
             crew_list = {
-                seat_parser(person['pos']): person['name']
+                seat_parser(person['pos']): html.unescape(person['name'])
                 for person in crew_data
             }
             crews[(club, 'W', int(crew_rank))] = crew_list
