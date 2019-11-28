@@ -311,28 +311,17 @@ class Test__Misc(TestCase):
     
     
     def test__currency_filter(self):
-        """Renders a styled span containing the crew value."""
+        """Renders the amount with currency symbol."""
         
         html = tags.currency(100)
-        span = parser(html)
-        
-        self.assertEqual(span.tag, 'span')
-        self.assertEqual(span.get('class'), 'currency')
-        
-        self.assertIn('100', span.text)
+        self.assertEqual(html, '₢ 100')
     
     
     def test__value_filter(self):
-        """Renders a styled span containing the crew value."""
+        """Renders the crew value with currency symbol."""
         
         html = tags.value(self.crew, self.day)
-        span = parser(html)
-        
-        self.assertEqual(span.tag, 'span')
-        self.assertEqual(span.get('class'), 'currency')
-        
-        value = self.crew.value(self.day)
-        self.assertIn(str(value), span.text)
+        self.assertEqual(html, '₢ 300')
     
     
     def test__results_item__row_over(self):
@@ -436,7 +425,7 @@ class Test__Misc(TestCase):
         self.assertEqual(button.get('data-day'), str(self.day.id))
         self.assertEqual(button.get('data-crew'), str(self.crew.id))
         
-        self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
+        self.assertInHTML('Buy ' + tags.value(self.crew, self.day), html)
     
     
     def test__buy_button__disabled(self):
@@ -456,7 +445,7 @@ class Test__Misc(TestCase):
         self.assertFalse('data-day' in button.attrib)
         self.assertFalse('data-crew' in button.attrib)
         
-        self.assertInHTML('Buy' + tags.value(self.crew, self.day), html)
+        self.assertInHTML('Buy ' + tags.value(self.crew, self.day), html)
     
     
     def test__market_row__standard(self):
@@ -600,7 +589,7 @@ class Test__Crew_List(TestCase):
         
         self.assertEqual(button.get('data-purchase'), str(purchase.id))
         
-        self.assertInHTML('Sell' + tags.value(self.crew, self.day), html)
+        self.assertInHTML('Sell ' + tags.value(self.crew, self.day), html)
     
     
     def test__crew_list_row__no_purchase(self):
