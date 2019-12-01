@@ -36,6 +36,18 @@ class Test__Has_All_Seats(TestCase):
         self.assertTrue(value)
     
     
+    def test__all_seats_as_list(self):
+        """Returns true if all seats are present exactly once."""
+        
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
+        
+        purchase_list = list(models.Purchase.objects.all())
+        seat_list = list(self.all_seats)
+        value = utils.has_all_seats(purchase_list, seat_list)
+        self.assertTrue(value)
+    
+    
     def subtest__missing_seat(self, missing_seat):
         """Returns false if a specific seat is missing."""
         

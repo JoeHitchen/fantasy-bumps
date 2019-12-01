@@ -1,4 +1,6 @@
-from django.db.models import Prefetch, Count
+from collections import Counter
+
+from django.db.models import Prefetch
 
 from .constants import genders
 from . import models
@@ -6,11 +8,10 @@ from . import errors
 
 
 def has_all_seats(purchases, expected_seats):
-    """Checks that a queryset of purchase objects has every seat filled exactly once."""
+    """Checks that a set of purchase objects has every seat filled exactly once."""
     
-    seats_filled = purchases.values('seat').annotate(count = Count('seat'))
-    seats_filled = {seat['seat']: seat['count'] for seat in seats_filled}
-    seats_filled = [seats_filled.get(seat.id, 0) for seat in expected_seats]
+    seat_count = Counter(purchase.seat.id for purchase in purchases)
+    seats_filled = [seat_count.get(seat.id, 0) for seat in expected_seats]
     
     if any([count > 1 for count in seats_filled]):
         raise errors.DuplicateSeatError
