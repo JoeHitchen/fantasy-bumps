@@ -96,6 +96,7 @@ class Test__All_Investments(TestCase):
         'dev_crews',
         'dev_start_day1',
         'dev_start_day2',
+        'dev_start_day3',
         'seats',
         'dev_team',
     ]
@@ -174,12 +175,12 @@ class Test__All_Investments(TestCase):
     def test__different_day(self):
         """Ignores purchases for other days."""
         
-        value_change = self.crew_hert.value(self.day2) - self.crew_hert.value(self.day1)
+        value_change = self.crew_hert.value(self.day3) - self.crew_hert.value(self.day2)
         self.assertTrue(value_change > 0)
         
-        self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
+        self.team.purchases.create(day = self.day2, crew = self.crew_hert, seat = self.seat)
         
-        tools.evaluate_all_investments(self.day2)
+        tools.evaluate_all_investments(self.day1)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
@@ -213,6 +214,7 @@ class Test__All_Investments(TestCase):
             (1) SELECT entries
             (2) SELECT mens's & women's crews as prefetch objects
             (1) UPDATE entries
+            (3) Create payout matrix
             
             Assumes crew value lookups are query-free (e.g. from caching)
         """
@@ -222,6 +224,6 @@ class Test__All_Investments(TestCase):
         
         self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
         
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(7):
             tools.evaluate_all_investments(self.day1)
 

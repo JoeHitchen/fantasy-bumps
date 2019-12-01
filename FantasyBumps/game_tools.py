@@ -2,6 +2,7 @@ from django.db.models import Prefetch
 
 from .constants import genders
 from . import models
+from . import utils
 
 
 def get_all_crews(crews_in_event):
@@ -90,13 +91,9 @@ def evaluate_all_investments(day):
             to_attr = target,
         )
     
-    def return_on_investment(purchases, target_day):
+    def return_on_investment(purchases, payout_matrix):
         """Calculate the net change in value for a set of purchases advancing to the target day."""
-        return sum(
-            purchase.crew.value(target_day)
-            - purchase.crew.value(purchase.day)
-            for purchase in purchases
-        )
+        return sum(payout_matrix[purchase.crew]['value_change'] for purchase in purchases)
     
     # Main function body
     entries = (
@@ -109,9 +106,11 @@ def evaluate_all_investments(day):
         )
     )
     
+    payout_matrix = utils.create_payout_matrix(day)
+    
     for entry in entries:
-        entry.mens_budget += return_on_investment(entry.team.mens_crew, day.next)
-        entry.womens_budget += return_on_investment(entry.team.womens_crew, day.next)
+        entry.mens_budget += return_on_investment(entry.team.mens_crew, payout_matrix)
+        entry.womens_budget += return_on_investment(entry.team.womens_crew, payout_matrix)
     
     models.GameEntry.objects.bulk_update(entries, ['mens_budget', 'womens_budget'])
 

@@ -544,6 +544,8 @@ class Test__Crew(TestCase):
         
         crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
         crew_mens.positions.create(day = cls.day1, rank = 4)  # Added to ensure gender isolation
+        
+        models.Crew.value.cache_clear()
     
     
     def test__string__womens_first(self):
