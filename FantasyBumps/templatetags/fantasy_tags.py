@@ -138,7 +138,7 @@ def sell_button(purchase):
   </div>
 '''))
 def market_row(position, balance, show_actions):
-    disabled = show_actions and position.crew.value(position.day) >= balance
+    disabled = show_actions and position.crew.value(position.day) > balance
     results = position.crew.results(position.day)
     return {
         'position': position,
