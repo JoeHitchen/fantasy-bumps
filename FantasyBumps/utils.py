@@ -29,6 +29,7 @@ def reverse_gender(gender):
 def create_payout_matrix(day):
     """Calculates the value change and payout for every crew racing on the day provided."""
     
+    # Retrieve crews racing
     crews = (
         models.Crew.objects
         .filter(positions__day = day)
@@ -46,6 +47,7 @@ def create_payout_matrix(day):
         )
     )
     
+    # Generate payout matrix
     matrix = {}
     for crew in crews:
         
