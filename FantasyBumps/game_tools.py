@@ -103,6 +103,22 @@ def evaluate_all_investments(day):
             payout_matrix[purchase.crew]['value_change']
             for purchase in entry.team.womens_crew
         )
+        
+        if True:
+            mens_payout = sum(
+                payout_matrix[purchase.crew]['payout']
+                for purchase in entry.team.mens_crew
+            )
+            entry.mens_budget += mens_payout
+            entry.mens_balance += mens_payout
+        
+        if True:
+            womens_payout = sum(
+                payout_matrix[purchase.crew]['payout']
+                for purchase in entry.team.womens_crew
+            )
+            entry.womens_budget += womens_payout
+            entry.womens_balance += womens_payout
     
     
     # Main function body
@@ -121,5 +137,13 @@ def evaluate_all_investments(day):
     for entry in entries:
         update_entry_with_investment_outcome(entry)
     
-    models.GameEntry.objects.bulk_update(entries, ['mens_budget', 'womens_budget'])
+    models.GameEntry.objects.bulk_update(
+        entries,
+        [
+            'mens_budget',
+            'womens_budget',
+            'mens_balance',
+            'womens_balance',
+        ],
+    )
 

@@ -124,8 +124,11 @@ class Test__All_Investments(TestCase):
     def test__bump_up(self):
         """Increases the budget for the correct gender, but not the balance."""
         
-        value_change = self.crew_hert.value(self.day2) - self.crew_hert.value(self.day1)
+        start_value = self.crew_hert.value(self.day1)
+        value_change = self.crew_hert.value(self.day2) - start_value
         self.assertTrue(value_change > 0)
+        
+        bonus = round( 0.15 * start_value )  # noqa: E201 E202
         
         self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
         
@@ -133,16 +136,19 @@ class Test__All_Investments(TestCase):
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + value_change)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + value_change + bonus)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + bonus)
     
     
     def test__row_over(self):
         """Does not affect either the budget or the balance."""
         
-        value_change = self.crew_wolf.value(self.day2) - self.crew_wolf.value(self.day1)
+        start_value = self.crew_wolf.value(self.day1)
+        value_change = self.crew_wolf.value(self.day2) - start_value
         self.assertEqual(value_change, 0)
+        
+        bonus = round( 0.05 * start_value )  # noqa: E201 E202
         
         self.team.purchases.create(day = self.day1, crew = self.crew_wolf, seat = self.seat)
         
@@ -150,9 +156,9 @@ class Test__All_Investments(TestCase):
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + bonus)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + bonus)
     
     
     def test__bumped_down(self):
