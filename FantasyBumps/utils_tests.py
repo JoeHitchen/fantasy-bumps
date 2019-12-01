@@ -140,3 +140,64 @@ class Test__Reverse_Gender(TestCase):
         """Returns opposite gender."""
         self.assertEqual(utils.reverse_gender(genders.WOMENS), genders.MENS)
 
+
+
+@tag('game-core')
+class Test__Create_Payout_Matrix(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.day = models.Day.objects.first()
+    
+    
+    def test__row_over(self):
+        """No change in value but a small payout."""
+        
+        matrix = utils.create_payout_matrix(self.day)
+        crew = models.Crew.objects.get(club = 'jesu', gender = genders.MENS, rank = 1)
+        
+        crew_payout = matrix[crew]
+        self.assertEqual(crew_payout['value_change'], 0)
+        self.assertEqual(crew_payout['payout'], 1)
+    
+    
+    def test__bump_up(self):
+        """An increase in value and a larger payout."""
+        
+        matrix = utils.create_payout_matrix(self.day)
+        crew = models.Crew.objects.get(club = 'magd', gender = genders.WOMENS, rank = 1)
+        
+        crew_payout = matrix[crew]
+        self.assertEqual(crew_payout['value_change'], 8)
+        self.assertEqual(crew_payout['payout'], 3)
+    
+    
+    def test__bump_down(self):
+        """A decrease in value and no payout."""
+        
+        matrix = utils.create_payout_matrix(self.day)
+        crew = models.Crew.objects.get(club = 'orie', gender = genders.WOMENS, rank = 1)
+        
+        crew_payout = matrix[crew]
+        self.assertEqual(crew_payout['value_change'], -86)
+        self.assertEqual(crew_payout['payout'], 0)
+    
+    
+    @tag('query-count')
+    def test__query_count(self):
+        """Expect:
+            (1) SELECT crews with positions on day
+            (1) SELECT positions for crews on day
+            (1) SELECT positions for crews on the next day
+        
+        Assuming crew values are all previously cached.
+        """
+        
+        for crew in models.Crew.objects.all():
+            crew.value(self.day)
+            crew.value(self.day.next)
+        
+        with self.assertNumQueries(3):
+            utils.create_payout_matrix(self.day)
+
