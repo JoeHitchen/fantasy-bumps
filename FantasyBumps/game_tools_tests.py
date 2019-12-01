@@ -119,16 +119,15 @@ class Test__All_Investments(TestCase):
         cls.budgets = cls.team.entries.create(event = cls.event)
         
         cls.seat = models.Seat.objects.first()
+        cls.all_seats = models.Seat.objects.all()
     
     
-    def test__bump_up(self):
-        """Increases the budget for the correct gender, but not the balance."""
+    def test__bump_up__partial_crew(self):
+        """Increases the budget and balance for the correct gender."""
         
         start_value = self.crew_hert.value(self.day1)
         value_change = self.crew_hert.value(self.day2) - start_value
         self.assertTrue(value_change > 0)
-        
-        bonus = round( 0.15 * start_value )  # noqa: E201 E202
         
         self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
         
@@ -136,19 +135,41 @@ class Test__All_Investments(TestCase):
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + value_change + bonus)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + value_change)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + bonus)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
     
     
-    def test__row_over(self):
-        """Does not affect either the budget or the balance."""
+    def test__bump_up__full_crew(self):
+        """Increases the budget and balance for the correct gender."""
+        
+        start_value = self.crew_hert.value(self.day1)
+        value_change = self.crew_hert.value(self.day2) - start_value
+        self.assertTrue(value_change > 0)
+        
+        payout = round( 0.15 * start_value )  # noqa: E201 E202
+        
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = seat)
+        
+        tools.evaluate_all_investments(self.day1)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(
+            self.budgets.womens_budget,
+            money.INITIAL_BALANCE + 9 * value_change + 9 * payout,
+        )
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + 9 * payout)
+    
+    
+    def test__row_over__partial_crew(self):
+        """No changes to budgets or balance."""
         
         start_value = self.crew_wolf.value(self.day1)
         value_change = self.crew_wolf.value(self.day2) - start_value
         self.assertEqual(value_change, 0)
-        
-        bonus = round( 0.05 * start_value )  # noqa: E201 E202
         
         self.team.purchases.create(day = self.day1, crew = self.crew_wolf, seat = self.seat)
         
@@ -156,9 +177,30 @@ class Test__All_Investments(TestCase):
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + bonus)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + bonus)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__row_over__full_crew(self):
+        """Increases the budget and balance for the correct gender."""
+        
+        start_value = self.crew_wolf.value(self.day1)
+        value_change = self.crew_wolf.value(self.day2) - start_value
+        self.assertEqual(value_change, 0)
+        
+        payout = round( 0.05 * start_value )  # noqa: E201 E202
+        
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_wolf, seat = seat)
+        
+        tools.evaluate_all_investments(self.day1)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + 9 * payout)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + 9 * payout)
     
     
     def test__bumped_down(self):
@@ -219,8 +261,9 @@ class Test__All_Investments(TestCase):
         """ Expect:
             (1) SELECT entries
             (2) SELECT mens's & women's crews as prefetch objects
-            (1) UPDATE entries
+            (1) SELECT all seats
             (3) Create payout matrix
+            (1) UPDATE entries
             
             Assumes crew value lookups are query-free (e.g. from caching)
         """
@@ -230,6 +273,6 @@ class Test__All_Investments(TestCase):
         
         self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
         
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             tools.evaluate_all_investments(self.day1)
 
