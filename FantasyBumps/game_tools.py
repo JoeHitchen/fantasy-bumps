@@ -91,9 +91,19 @@ def evaluate_all_investments(day):
             to_attr = target,
         )
     
-    def return_on_investment(purchases, payout_matrix):
-        """Calculate the net change in value for a set of purchases advancing to the target day."""
-        return sum(payout_matrix[purchase.crew]['value_change'] for purchase in purchases)
+    def update_entry_with_investment_outcome(entry):
+        """Updates a GameEntry object's financials in-memory, but does not on the database."""
+        
+        # Crew appreciation/depreciation
+        entry.mens_budget += sum(
+            payout_matrix[purchase.crew]['value_change']
+            for purchase in entry.team.mens_crew
+        )
+        entry.womens_budget += sum(
+            payout_matrix[purchase.crew]['value_change']
+            for purchase in entry.team.womens_crew
+        )
+    
     
     # Main function body
     entries = (
@@ -109,8 +119,7 @@ def evaluate_all_investments(day):
     payout_matrix = utils.create_payout_matrix(day)
     
     for entry in entries:
-        entry.mens_budget += return_on_investment(entry.team.mens_crew, payout_matrix)
-        entry.womens_budget += return_on_investment(entry.team.womens_crew, payout_matrix)
+        update_entry_with_investment_outcome(entry)
     
     models.GameEntry.objects.bulk_update(entries, ['mens_budget', 'womens_budget'])
 
