@@ -10,7 +10,7 @@ from . import errors
 def has_all_seats(purchases, expected_seats):
     """Checks that a set of purchase objects has every seat filled exactly once."""
     
-    seat_count = Counter(purchase.seat.id for purchase in purchases)
+    seat_count = Counter(purchase.seat_id for purchase in purchases)
     seats_filled = [seat_count.get(seat.id, 0) for seat in expected_seats]
     
     if any([count > 1 for count in seats_filled]):

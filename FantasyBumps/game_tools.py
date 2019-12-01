@@ -104,7 +104,7 @@ def evaluate_all_investments(day):
             for purchase in entry.team.womens_crew
         )
         
-        if True:
+        if utils.has_all_seats(entry.team.mens_crew, all_seats):
             mens_payout = sum(
                 payout_matrix[purchase.crew]['payout']
                 for purchase in entry.team.mens_crew
@@ -112,7 +112,7 @@ def evaluate_all_investments(day):
             entry.mens_budget += mens_payout
             entry.mens_balance += mens_payout
         
-        if True:
+        if utils.has_all_seats(entry.team.womens_crew, all_seats):
             womens_payout = sum(
                 payout_matrix[purchase.crew]['payout']
                 for purchase in entry.team.womens_crew
@@ -133,6 +133,7 @@ def evaluate_all_investments(day):
     )
     
     payout_matrix = utils.create_payout_matrix(day)
+    all_seats = models.Seat.objects.all()
     
     for entry in entries:
         update_entry_with_investment_outcome(entry)
