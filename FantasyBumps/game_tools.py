@@ -91,6 +91,7 @@ def evaluate_all_investments(day):
             to_attr = target,
         )
     
+    
     def update_entry_with_investment_outcome(entry):
         """Updates a GameEntry object's financials in-memory, but does not on the database."""
         
@@ -104,6 +105,7 @@ def evaluate_all_investments(day):
             for purchase in entry.team.womens_crew
         )
         
+        # Men's payout
         if utils.has_all_seats(entry.team.mens_crew, all_seats):
             mens_payout = sum(
                 payout_matrix[purchase.crew]['payout']
@@ -112,6 +114,7 @@ def evaluate_all_investments(day):
             entry.mens_budget += mens_payout
             entry.mens_balance += mens_payout
         
+        # Women's payout
         if utils.has_all_seats(entry.team.womens_crew, all_seats):
             womens_payout = sum(
                 payout_matrix[purchase.crew]['payout']
@@ -121,7 +124,11 @@ def evaluate_all_investments(day):
             entry.womens_balance += womens_payout
     
     
-    # Main function body
+    # Preparation
+    payout_matrix = utils.create_payout_matrix(day)
+    all_seats = models.Seat.objects.all()
+    
+    # Main routine
     entries = (
         models.GameEntry.objects
         .select_related('team')
@@ -131,9 +138,6 @@ def evaluate_all_investments(day):
             purchases_prefetch(day, genders.WOMENS, 'womens_crew'),
         )
     )
-    
-    payout_matrix = utils.create_payout_matrix(day)
-    all_seats = models.Seat.objects.all()
     
     for entry in entries:
         update_entry_with_investment_outcome(entry)
