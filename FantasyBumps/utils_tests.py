@@ -15,12 +15,14 @@ class Test__Has_All_Seats(TestCase):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew.objects.create(club = 'newc', gender = genders.MENS, rank = 1)
+        
+        cls.all_seats = models.Seat.objects.all()
     
     
     def test__empty_crew(self):
         """Returns false if there are no seats filled."""
         
-        value = utils.has_all_seats(models.Purchase.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
         self.assertFalse(value)
     
     
@@ -30,7 +32,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in models.Seat.objects.all():
             self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
-        value = utils.has_all_seats(models.Purchase.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
         self.assertTrue(value)
     
     
@@ -40,7 +42,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in models.Seat.objects.exclude(name__iexact = missing_seat):
             self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
-        value = utils.has_all_seats(models.Purchase.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
         self.assertFalse(value)
     
     def test__missing_seat__bow(self):
@@ -90,7 +92,7 @@ class Test__Has_All_Seats(TestCase):
         self.team.purchases.create(day = self.day, crew = self.crew, seat = extra_seat)
         
         with self.assertRaises(errors.DuplicateSeatError):
-            utils.has_all_seats(models.Purchase.objects.all())
+            utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
     
     def test__extra_seat__bow(self):
         """Raises ValueError if any seat present twice."""
