@@ -15,12 +15,14 @@ class Test__Has_All_Seats(TestCase):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew.objects.create(club = 'newc', gender = genders.MENS, rank = 1)
+        
+        cls.all_seats = models.Seat.objects.all()
     
     
     def test__empty_crew(self):
         """Returns false if there are no seats filled."""
         
-        value = utils.has_all_seats(models.Purchase.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
         self.assertFalse(value)
     
     
@@ -30,7 +32,19 @@ class Test__Has_All_Seats(TestCase):
         for seat in models.Seat.objects.all():
             self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
-        value = utils.has_all_seats(models.Purchase.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
+        self.assertTrue(value)
+    
+    
+    def test__all_seats_as_list(self):
+        """Returns true if all seats are present exactly once."""
+        
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
+        
+        purchase_list = list(models.Purchase.objects.all())
+        seat_list = list(self.all_seats)
+        value = utils.has_all_seats(purchase_list, seat_list)
         self.assertTrue(value)
     
     
@@ -40,7 +54,7 @@ class Test__Has_All_Seats(TestCase):
         for seat in models.Seat.objects.exclude(name__iexact = missing_seat):
             self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
-        value = utils.has_all_seats(models.Purchase.objects.all())
+        value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
         self.assertFalse(value)
     
     def test__missing_seat__bow(self):
@@ -90,7 +104,7 @@ class Test__Has_All_Seats(TestCase):
         self.team.purchases.create(day = self.day, crew = self.crew, seat = extra_seat)
         
         with self.assertRaises(errors.DuplicateSeatError):
-            utils.has_all_seats(models.Purchase.objects.all())
+            utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
     
     def test__extra_seat__bow(self):
         """Raises ValueError if any seat present twice."""
@@ -139,4 +153,65 @@ class Test__Reverse_Gender(TestCase):
     def test__women_to_men(self):
         """Returns opposite gender."""
         self.assertEqual(utils.reverse_gender(genders.WOMENS), genders.MENS)
+
+
+
+@tag('game-core')
+class Test__Create_Payout_Matrix(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.day = models.Day.objects.first()
+    
+    
+    def test__row_over(self):
+        """No change in value but a small payout."""
+        
+        matrix = utils.create_payout_matrix(self.day)
+        crew = models.Crew.objects.get(club = 'jesu', gender = genders.MENS, rank = 1)
+        
+        crew_payout = matrix[crew]
+        self.assertEqual(crew_payout['value_change'], 0)
+        self.assertEqual(crew_payout['payout'], 1)
+    
+    
+    def test__bump_up(self):
+        """An increase in value and a larger payout."""
+        
+        matrix = utils.create_payout_matrix(self.day)
+        crew = models.Crew.objects.get(club = 'magd', gender = genders.WOMENS, rank = 1)
+        
+        crew_payout = matrix[crew]
+        self.assertEqual(crew_payout['value_change'], 8)
+        self.assertEqual(crew_payout['payout'], 3)
+    
+    
+    def test__bump_down(self):
+        """A decrease in value and no payout."""
+        
+        matrix = utils.create_payout_matrix(self.day)
+        crew = models.Crew.objects.get(club = 'orie', gender = genders.WOMENS, rank = 1)
+        
+        crew_payout = matrix[crew]
+        self.assertEqual(crew_payout['value_change'], -86)
+        self.assertEqual(crew_payout['payout'], 0)
+    
+    
+    @tag('query-count')
+    def test__query_count(self):
+        """Expect:
+            (1) SELECT crews with positions on day
+            (1) SELECT positions for crews on day
+            (1) SELECT positions for crews on the next day
+        
+        Assuming crew values are all previously cached.
+        """
+        
+        for crew in models.Crew.objects.all():
+            crew.value(self.day)
+            crew.value(self.day.next)
+        
+        with self.assertNumQueries(3):
+            utils.create_payout_matrix(self.day)
 

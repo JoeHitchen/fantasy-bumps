@@ -77,11 +77,14 @@ class MarketView(EventView):
             
             crew = user.team.get_crew(self.day, gender)
             context['crew'] = crew
-            context['crew_valid'] = utils.has_all_seats(crew)
+            context['crew_valid'] = utils.has_all_seats(crew, models.Seat.objects.all())
             
             other_gender = utils.reverse_gender(gender)
             other_crew = user.team.get_crew(self.day, other_gender)
-            context['other_crew_valid'] = utils.has_all_seats(other_crew)
+            context['other_crew_valid'] = utils.has_all_seats(
+                other_crew,
+                models.Seat.objects.all(),
+            )
             
             finances = self.team.entries.extend_financials().filter(event = self.event)
             if finances:

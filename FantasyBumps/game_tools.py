@@ -2,6 +2,7 @@ from django.db.models import Prefetch
 
 from .constants import genders
 from . import models
+from . import utils
 
 
 def get_all_crews(crews_in_event):
@@ -90,15 +91,44 @@ def evaluate_all_investments(day):
             to_attr = target,
         )
     
-    def return_on_investment(purchases, target_day):
-        """Calculate the net change in value for a set of purchases advancing to the target day."""
-        return sum(
-            purchase.crew.value(target_day)
-            - purchase.crew.value(purchase.day)
-            for purchase in purchases
-        )
     
-    # Main function body
+    def update_entry_with_investment_outcome(entry):
+        """Updates a GameEntry object's financials in-memory, but does not on the database."""
+        
+        # Crew appreciation/depreciation
+        entry.mens_budget += sum(
+            payout_matrix[purchase.crew]['value_change']
+            for purchase in entry.team.mens_crew
+        )
+        entry.womens_budget += sum(
+            payout_matrix[purchase.crew]['value_change']
+            for purchase in entry.team.womens_crew
+        )
+        
+        # Men's payout
+        if utils.has_all_seats(entry.team.mens_crew, all_seats):
+            mens_payout = sum(
+                payout_matrix[purchase.crew]['payout']
+                for purchase in entry.team.mens_crew
+            )
+            entry.mens_budget += mens_payout
+            entry.mens_balance += mens_payout
+        
+        # Women's payout
+        if utils.has_all_seats(entry.team.womens_crew, all_seats):
+            womens_payout = sum(
+                payout_matrix[purchase.crew]['payout']
+                for purchase in entry.team.womens_crew
+            )
+            entry.womens_budget += womens_payout
+            entry.womens_balance += womens_payout
+    
+    
+    # Preparation
+    payout_matrix = utils.create_payout_matrix(day)
+    all_seats = models.Seat.objects.all()
+    
+    # Main routine
     entries = (
         models.GameEntry.objects
         .select_related('team')
@@ -110,8 +140,15 @@ def evaluate_all_investments(day):
     )
     
     for entry in entries:
-        entry.mens_budget += return_on_investment(entry.team.mens_crew, day.next)
-        entry.womens_budget += return_on_investment(entry.team.womens_crew, day.next)
+        update_entry_with_investment_outcome(entry)
     
-    models.GameEntry.objects.bulk_update(entries, ['mens_budget', 'womens_budget'])
+    models.GameEntry.objects.bulk_update(
+        entries,
+        [
+            'mens_budget',
+            'womens_budget',
+            'mens_balance',
+            'womens_balance',
+        ],
+    )
 

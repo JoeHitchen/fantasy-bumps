@@ -1,16 +1,17 @@
-from django.db.models import Count
+from collections import Counter
+
+from django.db.models import Prefetch
 
 from .constants import genders
 from . import models
 from . import errors
 
 
-def has_all_seats(purchases):
-    """Checks that a queryset of purchase objects has every seat filled exactly once."""
+def has_all_seats(purchases, expected_seats):
+    """Checks that a set of purchase objects has every seat filled exactly once."""
     
-    seats_filled = purchases.values('seat').annotate(count = Count('seat'))
-    seats_filled = {seat['seat']: seat['count'] for seat in seats_filled}
-    seats_filled = [seats_filled.get(seat.id, 0) for seat in models.Seat.objects.all()]
+    seat_count = Counter(purchase.seat_id for purchase in purchases)
+    seats_filled = [seat_count.get(seat.id, 0) for seat in expected_seats]
     
     if any([count > 1 for count in seats_filled]):
         raise errors.DuplicateSeatError
@@ -24,4 +25,40 @@ def reverse_gender(gender):
         genders.MENS: genders.WOMENS,
         genders.WOMENS: genders.MENS,
     }[gender]
+
+
+def create_payout_matrix(day):
+    """Calculates the value change and payout for every crew racing on the day provided."""
+    
+    # Retrieve crews racing
+    crews = (
+        models.Crew.objects
+        .filter(positions__day = day)
+        .prefetch_related(
+            Prefetch(
+                'positions',
+                models.Position.objects.filter(day = day),
+                to_attr='posn_old',
+            ),
+            Prefetch(
+                'positions',
+                models.Position.objects.filter(day = day.next),
+                to_attr='posn_new',
+            ),
+        )
+    )
+    
+    # Generate payout matrix
+    matrix = {}
+    for crew in crews:
+        
+        crew_value = crew.value(day)
+        change = crew.posn_old[0].rank - crew.posn_new[0].rank  # Sign reversed
+        
+        matrix[crew] = {
+            'value_change': crew.value(day.next) - crew_value,
+            'payout': round( (0.1 * change + 0.05) * crew_value ) if change >= 0 else 0,  # noqa: E201 E202 E501
+        }
+    
+    return matrix
 

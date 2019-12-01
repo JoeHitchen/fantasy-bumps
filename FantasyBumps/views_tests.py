@@ -203,7 +203,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
         )
         
         crew = self.team.get_crew(self.day, genders.MENS)
-        self.assertFalse(utils.has_all_seats(crew))
+        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
@@ -227,7 +227,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             )
         
         crew = self.team.get_crew(self.day, genders.MENS)
-        self.assertTrue(utils.has_all_seats(crew))
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
@@ -251,7 +251,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             )
         
         other_crew = self.team.get_crew(self.day, genders.WOMENS)
-        self.assertTrue(utils.has_all_seats(other_crew))
+        self.assertTrue(utils.has_all_seats(other_crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
@@ -309,7 +309,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
         )
         
         crew = self.team.get_crew(self.day, genders.WOMENS)
-        self.assertFalse(utils.has_all_seats(crew))
+        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
@@ -333,7 +333,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             )
         
         crew = self.team.get_crew(self.day, genders.WOMENS)
-        self.assertTrue(utils.has_all_seats(crew))
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
@@ -357,7 +357,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             )
         
         other_crew = self.team.get_crew(self.day, genders.MENS)
-        self.assertTrue(utils.has_all_seats(other_crew))
+        self.assertTrue(utils.has_all_seats(other_crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
