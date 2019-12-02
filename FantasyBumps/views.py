@@ -267,7 +267,7 @@ def sell(request):
             return redirect(url_name, event_tag = event.tag)
         
         except (KeyError, models.Event.DoesNotExist):
-            return redirect('fantasybumps:index')    
+            return redirect('fantasybumps:index')
     
     
     # Check market status
