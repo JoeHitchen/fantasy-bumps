@@ -254,9 +254,20 @@ def sell(request):
             id = request.POST.get('purchase'),
             team = request.user.team,
         )
+    
     except models.Purchase.DoesNotExist:
+        
+        # Try elegent redirect back to market page using additional form data
         messages.error(request, 'You are not authorised to conduct this sale.')
-        return redirect('fantasybumps:index')
+        try:
+            gender_code = request.POST.get('gender')
+            gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[gender_code]
+            url_name = 'fantasybumps:{}'.format(gender_string)
+            event = models.Event.objects.get(tag = request.POST.get('event'))
+            return redirect(url_name, event_tag = event.tag)
+        
+        except (KeyError, models.Event.DoesNotExist):
+            return redirect('fantasybumps:index')    
     
     
     # Check market status
