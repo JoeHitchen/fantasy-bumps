@@ -57,6 +57,7 @@ class MarketView(EventView):
         context = super().get_context_data(**kwargs)
         
         gender = self.kwargs['gender']
+        context['gender_code'] = gender
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
         context['start_order'] = self.day.start_order(gender)

@@ -151,6 +151,7 @@ class MarketPageBase(GamePageBase):
         """Extra context tests for without_user base test."""
         
         self.assertEqual(context['gender'], self.gender_info['text'])
+        self.assertEqual(context['gender_code'], self.gender_info['code'])
         self.assertStartOrdersEqual(
             context['start_order'],
             self.day.start_order(self.gender_info['code']),
@@ -170,6 +171,7 @@ class MarketPageBase(GamePageBase):
         """
         
         self.assertEqual(context['gender'], self.gender_info['text'])
+        self.assertEqual(context['gender_code'], self.gender_info['code'])
         self.assertStartOrdersEqual(
             context['start_order'],
             self.day.start_order(self.gender_info['code']),
