@@ -1219,6 +1219,10 @@ class Test__Switch(TestCase, MessagesMixin):
         )
         
         cls.url = reverse(cls.url_name, kwargs = {'purchase_id': cls.purchase.id})
+        cls.market_page = reverse(
+            'fantasybumps:women',
+            kwargs = {'event_tag': cls.day.event.tag},
+        )
     
     
     def setUp(self):
@@ -1265,10 +1269,8 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.save()
         
         response = self.client.get(self.url)
-        self.assertRedirects(
-            response,
-            reverse('fantasybumps:women', kwargs = {'event_tag': self.day.event.tag}),
-        )
+        self.assertRedirects(response, self.market_page)
+        
         self.check_messages(
             messages.get_messages(response.wsgi_request),
             [{'level': 'warning', 'message': 'Markets are not open to alter this purchase.'}],
@@ -1286,10 +1288,8 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.save()
         
         response = self.client.get(self.url)
-        self.assertRedirects(
-            response,
-            reverse('fantasybumps:women', kwargs = {'event_tag': self.day.event.tag}),
-        )
+        self.assertRedirects(response, self.market_page)
+        
         self.check_messages(
             messages.get_messages(response.wsgi_request),
             [{'level': 'warning', 'message': 'Coxes must stay in their place.'}],
