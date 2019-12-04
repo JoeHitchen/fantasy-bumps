@@ -1198,3 +1198,78 @@ class Test__Sell(TestCase, MessagesMixin):
         with self.assertNumQueries(10):
             self.client.post(self.url, {'purchase': self.purchase.id})
 
+
+
+class Test__Switch(TestCase, MessagesMixin):
+    """."""
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    url_name = 'fantasybumps:switch'
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.select_related().first()
+        cls.crew = models.Crew.objects.first()
+        cls.seat = models.Seat.objects.first()
+        
+        cls.purchase = cls.team.purchases.create(
+            day = cls.day,
+            seat = cls.seat,
+            crew = cls.crew,
+        )
+        
+        cls.url = reverse(cls.url_name, kwargs = {'purchase_id': cls.purchase.id})
+    
+    
+    def setUp(self):
+        self.purchase.refresh_from_db()
+    
+    
+    def test__no_login(self):
+        """Redirects non-logged in users."""
+        
+        response = self.client.post(self.url)
+        self.assertRedirects(response, reverse('login'))
+    
+    
+    def test__unknown_purchases(self):
+        """Raises a 404 if the purchase is not recognised."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        url = reverse(self.url_name, kwargs = {'purchase_id': 1000})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__purchases_for_other_team(self):
+        """Raises a 404 if the purchase does not belong to the user's team."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        other_team = auth.User.objects.create_user('Other User', '', 'other').team
+        self.purchase.team = other_team
+        self.purchase.save()
+        
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 404)
+    
+    
+    def test__switching_coxes(self):
+        """Switching a cox purchase is not allowed, and redirects to the market page."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.purchase.seat = models.Seat.objects.get(cox = True)
+        self.purchase.save()
+        
+        response = self.client.post(self.url)
+        self.assertRedirects(
+            response,
+            reverse('fantasybumps:women', kwargs = {'event_tag': self.day.event.tag}),
+        )
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Coxes must stay in their place.'}],
+        )
+

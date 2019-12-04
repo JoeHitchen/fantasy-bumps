@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch, prefetch_related_objects
 from django.contrib import messages
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .constants import genders, money
 from . import models
@@ -299,4 +299,41 @@ def sell(request):
         messages.success(request, success_text)
     
     return market_redirect
+
+
+
+@login_required(redirect_field_name = None)
+def switch(request, purchase_id):
+    
+    # Look for purchase
+    purchase = get_object_or_404(
+        models.Purchase.objects.select_related(),
+        id = purchase_id,
+        team = request.user.team,
+    )
+    
+    # Cannot switch coxes
+    if purchase.seat.cox:
+        gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}.get(purchase.crew.gender)
+        market_page = 'fantasybumps:{}'.format(gender_string)
+        messages.warning(request, 'Coxes must stay in their place.')
+        return redirect(market_page, event_tag = purchase.day.event.tag)
+    
+    # List crew's rowers and already-purchased subset
+    rowers = purchase.crew.crew_lists.filter(event = purchase.day.event, seat__cox = False)
+    
+    other_purchased_rowers = rowers.filter(
+        purchases__team = purchase.team,
+        purchases__day = purchase.day,
+        purchases__crew = purchase.crew,
+        purchases__athlete__isnull = False,
+    ).exclude(purchases__athlete = purchase.athlete)
+    
+    # Generate response
+    context = {
+        'purchase': purchase,
+        'rowers': rowers,
+        'other_purchased_rowers': other_purchased_rowers,
+    }
+    return render(request, 'fantasybumps/switch.html', context)
 
