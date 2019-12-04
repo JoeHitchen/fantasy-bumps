@@ -1255,7 +1255,29 @@ class Test__Switch(TestCase, MessagesMixin):
         self.assertEqual(response.status_code, 404)
     
     
-    def test__switching_coxes(self):
+    @patching.market_is_open(False)
+    def test__market_closed(self, markets_mock):
+        """Switching a cox purchase is not allowed, and redirects to the market page."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.purchase.seat = models.Seat.objects.get(cox = True)
+        self.purchase.save()
+        
+        response = self.client.post(self.url)
+        self.assertRedirects(
+            response,
+            reverse('fantasybumps:women', kwargs = {'event_tag': self.day.event.tag}),
+        )
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Markets are not open to alter this purchase.'}],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__switching_coxes(self, market_closes_mock, markets_mock):
         """Switching a cox purchase is not allowed, and redirects to the market page."""
         
         self.client.login(username = 'DevTeam', password = 'password')

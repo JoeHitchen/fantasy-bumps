@@ -312,12 +312,19 @@ def switch(request, purchase_id):
         team = request.user.team,
     )
     
+    # Check market status
+    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
+    market_url_name = 'fantasybumps:' + gender_string
+    market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
+    
+    if not purchase.day.market_is_open:
+        messages.warning(request, 'Markets are not open to alter this purchase.')
+        return market_redirect
+    
     # Cannot switch coxes
     if purchase.seat.cox:
-        gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}.get(purchase.crew.gender)
-        market_page = 'fantasybumps:{}'.format(gender_string)
         messages.warning(request, 'Coxes must stay in their place.')
-        return redirect(market_page, event_tag = purchase.day.event.tag)
+        return market_redirect
     
     # List crew's rowers and already-purchased subset
     rowers = purchase.crew.crew_lists.filter(event = purchase.day.event, seat__cox = False)
