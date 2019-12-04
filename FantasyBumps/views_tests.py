@@ -1228,7 +1228,7 @@ class Test__Switch(TestCase, MessagesMixin):
     def test__no_login(self):
         """Redirects non-logged in users."""
         
-        response = self.client.post(self.url)
+        response = self.client.get(self.url)
         self.assertRedirects(response, reverse('login'))
     
     
@@ -1238,7 +1238,7 @@ class Test__Switch(TestCase, MessagesMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         
         url = reverse(self.url_name, kwargs = {'purchase_id': 1000})
-        response = self.client.post(url)
+        response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
     
     
@@ -1251,7 +1251,7 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.team = other_team
         self.purchase.save()
         
-        response = self.client.post(self.url)
+        response = self.client.get(self.url)
         self.assertEqual(response.status_code, 404)
     
     
@@ -1264,7 +1264,7 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.seat = models.Seat.objects.get(cox = True)
         self.purchase.save()
         
-        response = self.client.post(self.url)
+        response = self.client.get(self.url)
         self.assertRedirects(
             response,
             reverse('fantasybumps:women', kwargs = {'event_tag': self.day.event.tag}),
@@ -1285,7 +1285,7 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.seat = models.Seat.objects.get(cox = True)
         self.purchase.save()
         
-        response = self.client.post(self.url)
+        response = self.client.get(self.url)
         self.assertRedirects(
             response,
             reverse('fantasybumps:women', kwargs = {'event_tag': self.day.event.tag}),
