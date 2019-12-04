@@ -1209,6 +1209,7 @@ class Test__Switch(TestCase, MessagesMixin):
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.select_related().first()
+        cls.event = cls.day.event
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
         
@@ -1221,7 +1222,7 @@ class Test__Switch(TestCase, MessagesMixin):
         cls.url = reverse(cls.url_name, kwargs = {'purchase_id': cls.purchase.id})
         cls.market_page = reverse(
             'fantasybumps:women',
-            kwargs = {'event_tag': cls.day.event.tag},
+            kwargs = {'event_tag': cls.event.tag},
         )
     
     
