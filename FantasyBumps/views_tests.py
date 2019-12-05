@@ -1597,4 +1597,47 @@ class Test__Switch(TestCase, MessagesMixin):
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__seat__unoccupied(self, market_closes_mock, markets_mock):
+        """Moves athlete into empty seat."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'seat': self.seat_two.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_two)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__seat__occupied(self, market_closes_mock, markets_mock):
+        """Switches places with athlete in target seat."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        other_purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+            athlete = self.ath_two,
+        )
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_thr,
+            crew = self.crew,
+            athlete = self.ath_thr,
+        )
+        
+        response = self.client.post(self.url, {'seat': self.seat_two.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        other_purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_two)
+        self.assertEqual(other_purchase.seat, self.seat_bow)
 

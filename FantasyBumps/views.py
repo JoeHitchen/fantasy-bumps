@@ -369,6 +369,17 @@ def switch(request, purchase_id):
         elif any(seat.id == seat_id and seat.cox for seat in seats):
             messages.warning(request, "Rowers can't cox.")
         
+        elif not target_seat == purchase.seat:
+            (
+                purchase.team
+                .get_crew(purchase.day, purchase.crew.gender)
+                .exclude(id = purchase.id)
+                .filter(seat = target_seat)
+                .update(seat = purchase.seat)
+            )
+            purchase.seat = target_seat
+            
+        
         # Update and redirect
         purchase.save()
         return market_redirect
