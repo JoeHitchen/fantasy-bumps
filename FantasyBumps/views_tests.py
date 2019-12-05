@@ -1247,27 +1247,36 @@ class Test__Switch(TestCase, MessagesMixin):
     
     
     def setUp(self):
+        self.general_methods = [('GET', self.client.get), ('POST', self.client.post)]
         self.purchase.refresh_from_db()
     
     
-    def test__no_login(self):
+    def test__general__no_login(self):
         """Redirects non-logged in users."""
         
-        response = self.client.get(self.url)
-        self.assertRedirects(response, reverse('login'))
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertRedirects(response, reverse('login'))
     
     
-    def test__unknown_purchases(self):
+    def test__general__unknown_purchases(self):
         """Raises a 404 if the purchase is not recognised."""
         
         self.client.login(username = 'DevTeam', password = 'password')
-        
         url = reverse(self.url_name, kwargs = {'purchase_id': 1000})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 404)
+        
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(url)
+                self.assertEqual(response.status_code, 404)
     
     
-    def test__purchases_for_other_team(self):
+    def test__general__purchases_for_other_team(self):
         """Raises a 404 if the purchase does not belong to the user's team."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1276,12 +1285,16 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.team = other_team
         self.purchase.save()
         
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 404)
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertEqual(response.status_code, 404)
     
     
     @patching.market_is_open(False)
-    def test__market_closed(self, markets_mock):
+    def test__general__market_closed(self, markets_mock):
         """Switching a cox purchase is not allowed, and redirects to the market page."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1289,18 +1302,25 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.seat = models.Seat.objects.get(cox = True)
         self.purchase.save()
         
-        response = self.client.get(self.url)
-        self.assertRedirects(response, self.market_page)
-        
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Markets are not open to alter this purchase.'}],
-        )
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertRedirects(response, self.market_page)
+                
+                self.check_messages(
+                    messages.get_messages(response.wsgi_request),
+                    [{
+                        'level': 'warning',
+                        'message': 'Markets are not open to alter this purchase.',
+                    }],
+                )
     
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    def test__switching_coxes(self, market_closes_mock, markets_mock):
+    def test__general__switching_coxes(self, market_closes_mock, markets_mock):
         """Switching a cox purchase is not allowed, and redirects to the market page."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1308,13 +1328,17 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.seat = models.Seat.objects.get(cox = True)
         self.purchase.save()
         
-        response = self.client.get(self.url)
-        self.assertRedirects(response, self.market_page)
-        
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Coxes must stay in their place.'}],
-        )
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertRedirects(response, self.market_page)
+                
+                self.check_messages(
+                    messages.get_messages(response.wsgi_request),
+                    [{'level': 'warning', 'message': 'Coxes must stay in their place.'}],
+                )
     
     
     @patching.market_is_open(True)
