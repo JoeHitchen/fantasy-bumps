@@ -7,18 +7,24 @@
 Alter puchase of {{ purchase.athlete }} ({{ purchase.crew }})
 <br/><br/>
 
-Pick athlete<br/>
-<div class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
-  {% for rower in rowers %}
-    <label class="btn {% if rower not in other_purchased_rowers and not rower.seat.cox %}btn-primary{% else %}btn-secondary disabled{% endif %}{% if rower == purchase.athlete %} active{% endif %}">
-      {% if rower not in other_purchased_rowers and not rower.seat.cox %}
-        <input type="radio" name="options" value="{{ rower.id }}" {% if rower == purchase.athlete %}checked{% endif %} />
-      {% endif %}
-      {{ rower }}
-    </label>
-  {% endfor %}
-    <label class="btn btn-secondary{% if not purchase.athlete %} active{% endif %}">
-      <input type="radio" name="options" value="0"{% if not purchase.athlete %} checked{% endif %} /> No athlete
-    </label>
-</div>
+<form action="{% url 'fantasybumps:switch' purchase.id %}" method="post">
+  {% csrf_token %}
+
+  Pick athlete<br/>
+  <div class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
+    {% for rower in rowers %}
+      <label class="btn {% if rower not in other_purchased_rowers and not rower.seat.cox %}btn-primary{% else %}btn-secondary disabled{% endif %}{% if rower == purchase.athlete %} active{% endif %}">
+        {% if rower not in other_purchased_rowers and not rower.seat.cox %}
+          <input type="radio" name="athlete" value="{{ rower.id }}" {% if rower == purchase.athlete %}checked{% endif %} />
+        {% endif %}
+        {{ rower }}
+      </label>
+    {% endfor %}
+      <label class="btn btn-secondary{% if not purchase.athlete %} active{% endif %}">
+        <input type="radio" name="athlete" value="0"{% if not purchase.athlete %} checked{% endif %} /> No athlete
+      </label>
+  </div>
+  
+  <input class="btn btn-primary" type="submit" value="Make Change" />
+</form>
 {% endblock %}

@@ -336,6 +336,28 @@ def switch(request, purchase_id):
         purchases__athlete__isnull = False,
     ).exclude(purchases__athlete = purchase.athlete)
     
+    # Perform action
+    if request.method == 'POST':
+        
+        # Athlete switching
+        old_athlete_id = purchase.athlete.id if purchase.athlete else 0
+        athlete_id = request.POST.get('athlete', old_athlete_id)
+        athlete_id = int(athlete_id)
+        
+        if athlete_id and not any(rower.id == athlete_id for rower in rowers):
+            messages.warning(request, 'Must pick a rower from the purchased crew.')
+        
+        elif athlete_id and any(rower.id == athlete_id for rower in other_purchased_rowers):
+            messages.warning(request, 'Cannot pick the same rower twice.')
+        
+        else:
+            purchase.athlete_id = athlete_id if athlete_id else None
+        
+        
+        # Update and redirect
+        purchase.save()
+        return market_redirect
+    
     # Generate response
     context = {
         'purchase': purchase,
