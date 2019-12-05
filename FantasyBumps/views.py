@@ -363,6 +363,7 @@ def switch(request, purchase_id):
         'purchase': purchase,
         'rowers': rowers,
         'other_purchased_athletes': other_purchased_athletes,
+        'seats': models.Seat.objects.all(),
     }
     return render(request, 'fantasybumps/switch.html', context)
 

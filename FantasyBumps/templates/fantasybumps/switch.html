@@ -25,6 +25,17 @@ Alter puchase of {{ purchase.athlete }} ({{ purchase.crew }})
       </label>
   </div>
   
+  <div class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
+    {% for seat in seats %}
+      <label class="btn {% if not seat.cox %}btn-primary{% else %}btn-secondary disabled{% endif %}{% if seat == purchase.seat %} active{% endif %}">
+        {% if not seat.cox %}
+          <input type="radio" name="seat" value="{{ seat.id }}"{% if seat == purchase.seat %} checked{% endif %} />
+        {% endif %}
+        {{ seat }}
+      </label>
+    {% endfor %}
+  </div>
+  
   <input class="btn btn-primary" type="submit" value="Make Change" />
 </form>
 {% endblock %}

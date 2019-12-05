@@ -1354,6 +1354,7 @@ class Test__Switch(TestCase, MessagesMixin):
             * The main purchase
             * A list of rowers in the target crew (excluding the cox)
             * A list of athletes which have been purchased (excluding the main purchase)
+            * A list of seats
         """
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1379,6 +1380,13 @@ class Test__Switch(TestCase, MessagesMixin):
             response.context['other_purchased_athletes'],
             [self.ath_two],
             transform = lambda item: item,
+        )
+        
+        self.assertQuerysetEqual(
+            response.context['seats'],
+            models.Seat.objects.all(),
+            transform = lambda item: item,
+            ordered = False,
         )
     
     
