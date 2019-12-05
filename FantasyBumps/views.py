@@ -329,7 +329,7 @@ def switch(request, purchase_id):
     # List crew's rowers and already-purchased subset
     rowers = purchase.crew.crew_lists.filter(event = purchase.day.event, seat__cox = False)
     
-    other_purchased_rowers = rowers.filter(
+    other_purchased_athletes = rowers.filter(
         purchases__team = purchase.team,
         purchases__day = purchase.day,
         purchases__crew = purchase.crew,
@@ -347,7 +347,7 @@ def switch(request, purchase_id):
         if athlete_id and not any(rower.id == athlete_id for rower in rowers):
             messages.warning(request, 'Must pick a rower from the purchased crew.')
         
-        elif athlete_id and any(rower.id == athlete_id for rower in other_purchased_rowers):
+        elif athlete_id and any(rower.id == athlete_id for rower in other_purchased_athletes):
             messages.warning(request, 'Cannot pick the same rower twice.')
         
         else:
@@ -362,7 +362,7 @@ def switch(request, purchase_id):
     context = {
         'purchase': purchase,
         'rowers': rowers,
-        'other_purchased_rowers': other_purchased_rowers,
+        'other_purchased_athletes': other_purchased_athletes,
     }
     return render(request, 'fantasybumps/switch.html', context)
 

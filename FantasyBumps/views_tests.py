@@ -1214,6 +1214,7 @@ class Test__Switch(TestCase, MessagesMixin):
         
         cls.seat_bow = models.Seat.objects.get(name = 'Bow')
         cls.seat_two = models.Seat.objects.get(name = '2')
+        cls.seat_thr = models.Seat.objects.get(name = '3')
         cls.seat_cox = models.Seat.objects.get(name = 'Cox')
         
         cls.ath_bow = cls.crew.crew_lists.create(
@@ -1225,6 +1226,11 @@ class Test__Switch(TestCase, MessagesMixin):
             event = cls.event,
             seat = cls.seat_two,
             name = 'Athlete 2',
+        )
+        cls.ath_thr = cls.crew.crew_lists.create(
+            event = cls.event,
+            seat = cls.seat_thr,
+            name = 'Athlete 3',
         )
         cls.ath_cox = cls.crew.crew_lists.create(
             event = cls.event,
@@ -1339,6 +1345,41 @@ class Test__Switch(TestCase, MessagesMixin):
                     messages.get_messages(response.wsgi_request),
                     [{'level': 'warning', 'message': 'Coxes must stay in their place.'}],
                 )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__get(self, market_closes_mock, markets_mock):
+        """Provides the frontend with:
+            * The main purchase
+            * A list of rowers in the target crew (excluding the cox)
+            * A list of athletes which have been purchased (excluding the main purchase)
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+            athlete = self.ath_two,
+        )
+        
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        
+        self.assertEqual(response.context['purchase'], self.purchase)
+        self.assertQuerysetEqual(
+            response.context['rowers'],
+            [self.ath_bow, self.ath_two, self.ath_thr],  # Does not include ath_cox
+            transform = lambda item: item,
+        )
+        
+        self.assertQuerysetEqual(
+            response.context['other_purchased_athletes'],
+            [self.ath_two],
+            transform = lambda item: item,
+        )
     
     
     @patching.market_is_open(True)

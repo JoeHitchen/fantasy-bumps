@@ -13,8 +13,8 @@ Alter puchase of {{ purchase.athlete }} ({{ purchase.crew }})
   Pick athlete<br/>
   <div class="btn-group-vertical btn-group-toggle" data-toggle="buttons">
     {% for rower in rowers %}
-      <label class="btn {% if rower not in other_purchased_rowers and not rower.seat.cox %}btn-primary{% else %}btn-secondary disabled{% endif %}{% if rower == purchase.athlete %} active{% endif %}">
-        {% if rower not in other_purchased_rowers and not rower.seat.cox %}
+      <label class="btn {% if rower not in other_purchased_athletes and not rower.seat.cox %}btn-primary{% else %}btn-secondary disabled{% endif %}{% if rower == purchase.athlete %} active{% endif %}">
+        {% if rower not in other_purchased_athletes and not rower.seat.cox %}
           <input type="radio" name="athlete" value="{{ rower.id }}" {% if rower == purchase.athlete %}checked{% endif %} />
         {% endif %}
         {{ rower }}
