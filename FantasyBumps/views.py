@@ -326,7 +326,7 @@ def switch(request, purchase_id):
         messages.warning(request, 'Coxes must stay in their place.')
         return market_redirect
     
-    # List crew's rowers and already-purchased subset
+    # Get resources
     rowers = purchase.crew.crew_lists.filter(event = purchase.day.event, seat__cox = False)
     
     other_purchased_athletes = rowers.filter(
@@ -335,6 +335,8 @@ def switch(request, purchase_id):
         purchases__crew = purchase.crew,
         purchases__athlete__isnull = False,
     ).exclude(purchases__athlete = purchase.athlete)
+    
+    seats = models.Seat.objects.all()
     
     # Perform action
     if request.method == 'POST':
@@ -354,16 +356,30 @@ def switch(request, purchase_id):
             purchase.athlete_id = athlete_id if athlete_id else None
         
         
+        # Seat switching
+        seat_id = request.POST.get('seat', '0')
+        seat_id = int(seat_id)
+        
+        target_seat = [seat for seat in seats if seat.id == seat_id]
+        target_seat = target_seat[0] if target_seat else None
+        
+        if not target_seat:
+            messages.warning(request, 'Target seat does not exist.')
+        
+        elif any(seat.id == seat_id and seat.cox for seat in seats):
+            messages.warning(request, "Rowers can't cox.")
+        
         # Update and redirect
         purchase.save()
         return market_redirect
+    
     
     # Generate response
     context = {
         'purchase': purchase,
         'rowers': rowers,
         'other_purchased_athletes': other_purchased_athletes,
-        'seats': models.Seat.objects.all(),
+        'seats': seats,
     }
     return render(request, 'fantasybumps/switch.html', context)
 

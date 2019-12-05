@@ -1392,8 +1392,8 @@ class Test__Switch(TestCase, MessagesMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
-    def test__athlete__no_data(self, market_closes_mock, markets_mock):
-        """Does not change the athlete on the purchase."""
+    def test__post__no_data(self, market_closes_mock, markets_mock):
+        """Does not change the athlete or seat on the purchase."""
         
         self.client.login(username = 'DevTeam', password = 'password')
         
@@ -1402,6 +1402,7 @@ class Test__Switch(TestCase, MessagesMixin):
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_bow)
+        self.assertEqual(self.purchase.seat, self.seat_bow)
     
     
     @patching.market_is_open(True)
@@ -1419,7 +1420,8 @@ class Test__Switch(TestCase, MessagesMixin):
             name = 'Other',
         )
         
-        response = self.client.post(self.url, {'athlete': ath_other.id})
+        POST_data = {'athlete': ath_other.id, 'seat': self.seat_bow.id}
+        response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
         self.check_messages(
@@ -1438,7 +1440,8 @@ class Test__Switch(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        response = self.client.post(self.url, {'athlete': self.ath_cox.id})
+        POST_data = {'athlete': self.ath_cox.id, 'seat': self.seat_bow.id}
+        response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
         self.check_messages(
@@ -1460,7 +1463,8 @@ class Test__Switch(TestCase, MessagesMixin):
         self.purchase.athlete = None
         self.purchase.save()
         
-        response = self.client.post(self.url, {'athlete': self.ath_bow.id})
+        POST_data = {'athlete': self.ath_bow.id, 'seat': self.seat_bow.id}
+        response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
         self.purchase.refresh_from_db()
@@ -1474,7 +1478,7 @@ class Test__Switch(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        response = self.client.post(self.url, {'athlete': '0'})
+        response = self.client.post(self.url, {'athlete': '0', 'seat': self.seat_bow.id})
         self.assertRedirects(response, self.market_page)
         
         self.purchase.refresh_from_db()
@@ -1488,7 +1492,8 @@ class Test__Switch(TestCase, MessagesMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        response = self.client.post(self.url, {'athlete': self.ath_two.id})
+        POST_data = {'athlete': self.ath_two.id, 'seat': self.seat_bow.id}
+        response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
         self.purchase.refresh_from_db()
@@ -1509,7 +1514,8 @@ class Test__Switch(TestCase, MessagesMixin):
             athlete = self.ath_two,
         )
         
-        response = self.client.post(self.url, {'athlete': self.ath_two.id})
+        POST_data = {'athlete': self.ath_two.id, 'seat': self.seat_bow.id}
+        response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
         self.check_messages(
@@ -1534,9 +1540,61 @@ class Test__Switch(TestCase, MessagesMixin):
             crew = self.crew,
         )
         
-        response = self.client.post(self.url, {'athlete': '0'})
+        response = self.client.post(self.url, {'athlete': '0', 'seat': self.seat_bow.id})
         self.assertRedirects(response, self.market_page)
         
         self.purchase.refresh_from_db()
         self.assertIsNone(self.purchase.athlete)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__seat__unknown(self, market_closes_mock, markets_mock):
+        """Cannot switch an unknown seat."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'seat': '11'})
+        self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Target seat does not exist.'}],
+        )
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__seat__cox(self, market_closes_mock, markets_mock):
+        """Cannot switch to the coxing seat."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'seat': self.seat_cox.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': "Rowers can't cox."}],
+        )
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__seat__unchanged(self, market_closes_mock, markets_mock):
+        """Performs no action if switching to current seat."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'seat': self.seat_bow.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_bow)
 
