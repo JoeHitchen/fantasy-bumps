@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch, prefetch_related_objects
 from django.contrib import messages
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .constants import genders, money
 from . import models
@@ -299,4 +299,70 @@ def sell(request):
         messages.success(request, success_text)
     
     return market_redirect
+
+
+
+@login_required(redirect_field_name = None)
+def switch(request, purchase_id):
+    
+    # Look for purchase
+    purchase = get_object_or_404(
+        models.Purchase.objects.select_related(),
+        id = purchase_id,
+        team = request.user.team,
+    )
+    
+    # Check market status
+    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
+    market_url_name = 'fantasybumps:' + gender_string
+    market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
+    
+    if not purchase.day.market_is_open:
+        messages.warning(request, 'Markets are not open to alter this purchase.')
+        return market_redirect
+    
+    # Cannot switch coxes
+    if purchase.seat.cox:
+        messages.warning(request, 'Coxes must stay in their place.')
+        return market_redirect
+    
+    # List crew's rowers and already-purchased subset
+    rowers = purchase.crew.crew_lists.filter(event = purchase.day.event, seat__cox = False)
+    
+    other_purchased_athletes = rowers.filter(
+        purchases__team = purchase.team,
+        purchases__day = purchase.day,
+        purchases__crew = purchase.crew,
+        purchases__athlete__isnull = False,
+    ).exclude(purchases__athlete = purchase.athlete)
+    
+    # Perform action
+    if request.method == 'POST':
+        
+        # Athlete switching
+        old_athlete_id = purchase.athlete.id if purchase.athlete else 0
+        athlete_id = request.POST.get('athlete', old_athlete_id)
+        athlete_id = int(athlete_id)
+        
+        if athlete_id and not any(rower.id == athlete_id for rower in rowers):
+            messages.warning(request, 'Must pick a rower from the purchased crew.')
+        
+        elif athlete_id and any(rower.id == athlete_id for rower in other_purchased_athletes):
+            messages.warning(request, 'Cannot pick the same rower twice.')
+        
+        else:
+            purchase.athlete_id = athlete_id if athlete_id else None
+        
+        
+        # Update and redirect
+        purchase.save()
+        return market_redirect
+    
+    # Generate response
+    context = {
+        'purchase': purchase,
+        'rowers': rowers,
+        'other_purchased_athletes': other_purchased_athletes,
+    }
+    return render(request, 'fantasybumps/switch.html', context)
 

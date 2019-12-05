@@ -1198,3 +1198,337 @@ class Test__Sell(TestCase, MessagesMixin):
         with self.assertNumQueries(10):
             self.client.post(self.url, {'purchase': self.purchase.id})
 
+
+
+class Test__Switch(TestCase, MessagesMixin):
+    """."""
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    url_name = 'fantasybumps:switch'
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.select_related().first()
+        cls.event = cls.day.event
+        cls.crew = models.Crew.objects.first()
+        
+        cls.seat_bow = models.Seat.objects.get(name = 'Bow')
+        cls.seat_two = models.Seat.objects.get(name = '2')
+        cls.seat_thr = models.Seat.objects.get(name = '3')
+        cls.seat_cox = models.Seat.objects.get(name = 'Cox')
+        
+        cls.ath_bow = cls.crew.crew_lists.create(
+            event = cls.event,
+            seat = cls.seat_bow,
+            name = 'Athlete 1',
+        )
+        cls.ath_two = cls.crew.crew_lists.create(
+            event = cls.event,
+            seat = cls.seat_two,
+            name = 'Athlete 2',
+        )
+        cls.ath_thr = cls.crew.crew_lists.create(
+            event = cls.event,
+            seat = cls.seat_thr,
+            name = 'Athlete 3',
+        )
+        cls.ath_cox = cls.crew.crew_lists.create(
+            event = cls.event,
+            seat = cls.seat_cox,
+            name = 'Cox',
+        )
+        
+        cls.purchase = cls.team.purchases.create(
+            day = cls.day,
+            seat = cls.seat_bow,
+            crew = cls.crew,
+            athlete = cls.ath_bow,
+        )
+        
+        cls.url = reverse(cls.url_name, kwargs = {'purchase_id': cls.purchase.id})
+        cls.market_page = reverse(
+            'fantasybumps:women',
+            kwargs = {'event_tag': cls.event.tag},
+        )
+    
+    
+    def setUp(self):
+        self.general_methods = [('GET', self.client.get), ('POST', self.client.post)]
+        self.purchase.refresh_from_db()
+    
+    
+    def test__general__no_login(self):
+        """Redirects non-logged in users."""
+        
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertRedirects(response, reverse('login'))
+    
+    
+    def test__general__unknown_purchases(self):
+        """Raises a 404 if the purchase is not recognised."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        url = reverse(self.url_name, kwargs = {'purchase_id': 1000})
+        
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(url)
+                self.assertEqual(response.status_code, 404)
+    
+    
+    def test__general__purchases_for_other_team(self):
+        """Raises a 404 if the purchase does not belong to the user's team."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        other_team = auth.User.objects.create_user('Other User', '', 'other').team
+        self.purchase.team = other_team
+        self.purchase.save()
+        
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertEqual(response.status_code, 404)
+    
+    
+    @patching.market_is_open(False)
+    def test__general__market_closed(self, markets_mock):
+        """Switching a cox purchase is not allowed, and redirects to the market page."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.purchase.seat = models.Seat.objects.get(cox = True)
+        self.purchase.save()
+        
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertRedirects(response, self.market_page)
+                
+                self.check_messages(
+                    messages.get_messages(response.wsgi_request),
+                    [{
+                        'level': 'warning',
+                        'message': 'Markets are not open to alter this purchase.',
+                    }],
+                )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__general__switching_coxes(self, market_closes_mock, markets_mock):
+        """Switching a cox purchase is not allowed, and redirects to the market page."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.purchase.seat = models.Seat.objects.get(cox = True)
+        self.purchase.save()
+        
+        # Call both GET and POST
+        for method, call in self.general_methods:
+            with self.subTest(method = method):
+                
+                response = call(self.url)
+                self.assertRedirects(response, self.market_page)
+                
+                self.check_messages(
+                    messages.get_messages(response.wsgi_request),
+                    [{'level': 'warning', 'message': 'Coxes must stay in their place.'}],
+                )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__get(self, market_closes_mock, markets_mock):
+        """Provides the frontend with:
+            * The main purchase
+            * A list of rowers in the target crew (excluding the cox)
+            * A list of athletes which have been purchased (excluding the main purchase)
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+            athlete = self.ath_two,
+        )
+        
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        
+        self.assertEqual(response.context['purchase'], self.purchase)
+        self.assertQuerysetEqual(
+            response.context['rowers'],
+            [self.ath_bow, self.ath_two, self.ath_thr],  # Does not include ath_cox
+            transform = lambda item: item,
+        )
+        
+        self.assertQuerysetEqual(
+            response.context['other_purchased_athletes'],
+            [self.ath_two],
+            transform = lambda item: item,
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__no_data(self, market_closes_mock, markets_mock):
+        """Does not change the athlete on the purchase."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url)
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.ath_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__not_in_crew(self, market_closes_mock, markets_mock):
+        """Cannot switch to an athlete not in the crew."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        second_crew = models.Crew.objects.last()
+        self.assertNotEqual(second_crew, self.crew)
+        ath_other = second_crew.crew_lists.create(
+            event = self.event,
+            seat = self.seat_bow,
+            name = 'Other',
+        )
+        
+        response = self.client.post(self.url, {'athlete': ath_other.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Must pick a rower from the purchased crew.'}],
+        )
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.ath_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__cox(self, market_closes_mock, markets_mock):
+        """Cannot switch to the cox."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'athlete': self.ath_cox.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Must pick a rower from the purchased crew.'}],
+        )
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.ath_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__set(self, market_closes_mock, markets_mock):
+        """Adds an athlete to the purchase."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.purchase.athlete = None
+        self.purchase.save()
+        
+        response = self.client.post(self.url, {'athlete': self.ath_bow.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.ath_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__unset(self, market_closes_mock, markets_mock):
+        """Removes the athlete from the purchase."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'athlete': '0'})
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        self.assertIsNone(self.purchase.athlete)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__switch(self, market_closes_mock, markets_mock):
+        """Switches the athlete on the purchase."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'athlete': self.ath_two.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.ath_two)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__already_purchased(self, market_closes_mock, markets_mock):
+        """Cannot switch to a named athlete already purchased."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+            athlete = self.ath_two,
+        )
+        
+        response = self.client.post(self.url, {'athlete': self.ath_two.id})
+        self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'warning', 'message': 'Cannot pick the same rower twice.'}],
+        )
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.ath_bow)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__athlete__allow_double_unnamed(self, market_closes_mock, markets_mock):
+        """Can have multiple unnamed athletes."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+        )
+        
+        response = self.client.post(self.url, {'athlete': '0'})
+        self.assertRedirects(response, self.market_page)
+        
+        self.purchase.refresh_from_db()
+        self.assertIsNone(self.purchase.athlete)
+
