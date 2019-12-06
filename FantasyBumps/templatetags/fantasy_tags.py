@@ -129,9 +129,11 @@ def sell_button(purchase):
 
 @register.inclusion_tag(template.Template('''
   {% load static %}
-  {% if not purchase.seat.cox %}<a href="{% url 'fantasybumps:switch' purchase.id %}" class="btn btn-sm btn-primary">
-    <img class="btn-switch" src="{% static 'FantasyBumps/switch-white.svg' %}" />
-  </a>{% endif %}
+  {% if not purchase.seat.cox %}
+    <a href="{% url 'fantasybumps:switch' purchase.id %}" class="btn btn-sm btn-primary">
+      <img class="btn-switch" src="{% static 'FantasyBumps/switch-white.svg' %}" />
+    </a>
+  {% endif %}
 '''))
 def switch_button(purchase):
     return {'purchase': purchase}
