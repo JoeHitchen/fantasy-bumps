@@ -307,7 +307,7 @@ def switch(request, purchase_id):
     
     # Look for purchase
     purchase = get_object_or_404(
-        models.Purchase.objects.select_related(),
+        models.Purchase.objects.select_related(),  # Misses purchase.athlete, but simplier code
         id = purchase_id,
         team = request.user.team,
     )
@@ -327,7 +327,11 @@ def switch(request, purchase_id):
         return market_redirect
     
     # Get resources
-    rowers = purchase.crew.crew_lists.filter(event = purchase.day.event, seat__cox = False)
+    rowers = (
+        purchase.crew.crew_lists
+        .filter(event = purchase.day.event, seat__cox = False)
+        .select_related('seat')
+    )
     
     other_purchased_athletes = rowers.filter(
         purchases__team = purchase.team,

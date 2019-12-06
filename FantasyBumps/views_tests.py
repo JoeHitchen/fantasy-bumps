@@ -1640,4 +1640,52 @@ class Test__Switch(TestCase, MessagesMixin):
         other_purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_two)
         self.assertEqual(other_purchase.seat, self.seat_bow)
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__query_count__get(self, market_closes_mock, markets_mock):
+        """ Expect:
+            (2) Django internals
+            (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
+            (1) SELECT purchase, crew, day, event, and seat
+            (1) SELECT purchase.athlete  (Skipped by above, because nullable)
+            (1) SELECT list of crew's rowers
+            (1) SELECT list of other purchases
+            (1) SELECT list of seats
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(8):
+            self.client.get(self.url)
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__query_count__post(self, market_closes_mock, markets_mock):
+        """ Expect:
+            (8) As for GET
+            (1) UPDATE purchase of target seat
+            (1) UPDATE main purchase
+        """
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+            athlete = self.ath_two,
+        )
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_thr,
+            crew = self.crew,
+        )
+        
+        with self.assertNumQueries(10):
+            self.client.post(self.url, {'athlete': self.ath_thr.id, 'seat': self.seat_two.id})
 
