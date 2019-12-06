@@ -63,3 +63,9 @@
   border-radius: 0em 1em 1em 0em;
   width: 2.5em;
 }
+
+.btn-switch {
+  display: block;
+  width: 1.5em;
+  vertical-align: middle;
+}
