@@ -21,7 +21,6 @@ def buy(team, day, seat, crew, athlete = None):
         InsufficientFundsError (standard)
         NotRacingError (standard)
         DuplicateSeatError (severe)
-        DuplicateAthleteError (severe)
     """
     
     with transaction.atomic():
@@ -52,18 +51,20 @@ def _buy_body(team, day, seat, crew, athlete = None):
     setattr(budgets, balance_field, new_balance)
     budgets.save()
     
-    team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
-    if team.purchases.filter(day = day, seat = seat, crew__gender = crew.gender).count() > 1:
+    # Explicitly load crew lists - In-memory checks reduce queries and allow locking
+    crew_list = (
+        team.get_crew(day, crew.gender)
+        .select_for_update()
+        .select_related('seat', 'athlete')
+    )
+    
+    if any([purchase.seat == seat for purchase in crew_list]):
         raise errors.DuplicateSeatError
     
-    duplicate_not_null_athletes = team.purchases.filter(
-        day = day,
-        athlete = athlete,
-        athlete__isnull = False,
-        crew__gender = crew.gender,
-    )
-    if duplicate_not_null_athletes.count() > 1:
-        raise errors.DuplicateAthleteError
+    if athlete and any([purchase.athlete == athlete for purchase in crew_list]):
+        athlete = None
+    
+    team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
 
 
 def sell(purchase):
@@ -106,4 +107,65 @@ def _sell_body(purchase):
     deleted = purchase.delete()
     if deleted[0] != 1:
         raise purchase.DoesNotExist
+
+
+def switch(purchase, athlete_id, seat_id):
+    """Transaction-wrapped switch action.
+    
+    Changes the purchase's athlete to another member of the crew (or None for '0') and swaps the
+    purchase into the new seat.
+    Rolls back both changes in the event either fails.
+    
+    Optimised when:
+        select_related called when retrieving purchase
+    
+    Specific possible errors:
+        Athlete.DoesNotExist (standard)
+        DuplicateAthleteError (standard)
+        Seat.DoesNotExist (standard)
+        NinthSeatError (standard)
+    """
+    
+    with transaction.atomic():
+        _switch_body(purchase, athlete_id, seat_id)
+
+
+def _switch_body(purchase, athlete_id, seat_id):
+    """INTERNAL METHOD allowing non-transaction access to switch action for query counting."""
+    
+    # Athlete switching
+    purchase.athlete = models.Athlete.objects.get(
+        event = purchase.day.event,
+        crew = purchase.crew,
+        seat__cox = False,
+        id = athlete_id,
+    ) if int(athlete_id) else None
+    
+    other_purchases = (
+        purchase.team
+        .get_crew(purchase.day, purchase.crew.gender)
+        .exclude(id = purchase.id)
+        .select_related('athlete')
+        .select_for_update()
+    )
+    if purchase.athlete and any(p.athlete == purchase.athlete for p in other_purchases):
+        raise errors.DuplicateAthleteError
+    
+    # Seat switching
+    old_seat = purchase.seat
+    purchase.seat = models.Seat.objects.get(id = seat_id)
+    
+    if purchase.seat.cox:
+        raise errors.NinthSeatError
+    
+    (  # Perform reverse seat-switch
+        purchase.team
+        .get_crew(purchase.day, purchase.crew.gender)
+        .filter(seat = purchase.seat)
+        .exclude(id = purchase.id)
+        .update(seat = old_seat)
+    )
+    
+    # Perform update
+    purchase.save()
 

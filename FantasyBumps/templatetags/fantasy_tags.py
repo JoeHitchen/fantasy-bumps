@@ -128,6 +128,18 @@ def sell_button(purchase):
 
 
 @register.inclusion_tag(template.Template('''
+  {% load static %}
+  {% if not purchase.seat.cox %}
+    <a href="{% url 'fantasybumps:switch' purchase.id %}" class="btn btn-sm btn-primary">
+      <img class="btn-switch" src="{% static 'FantasyBumps/switch-white.svg' %}" />
+    </a>
+  {% endif %}
+'''))
+def switch_button(purchase):
+    return {'purchase': purchase}
+
+
+@register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
@@ -193,7 +205,10 @@ def crew_list_header(finances):
       {% if purchase.athlete %}<div>{{ purchase.athlete }}</div>{% endif %}
       <div>{{ purchase.crew }}</div>
     </div>
-    {% if show_actions %}{% sell_button purchase %}{% endif %}
+    {% if show_actions %}
+      {% switch_button purchase %}
+      {% sell_button purchase %}
+    {% endif %}
     {% endif %}
   </div>
 '''))
