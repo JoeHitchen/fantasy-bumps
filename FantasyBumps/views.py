@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch, prefetch_related_objects
 from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 
 from .constants import genders, money
 from . import models
@@ -304,6 +304,11 @@ def sell(request):
 
 
 class Switch(TemplateView):
+    """Presents athlete and seat selectors for a purchase to alter it.
+    
+    Additionally, has a POST action to perform the switch.
+    """
+    template_name = 'fantasybumps/switch.html'
     
     @method_decorator(login_required(redirect_field_name = None))
     def dispatch(self, request, *args, **kwargs):
@@ -332,33 +337,30 @@ class Switch(TemplateView):
         return super().dispatch(request, *args, **kwargs)
     
     
-    def get(self, request, purchase_id):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         
-        # Get resources
-        rowers = (
-            self.purchase.crew.crew_lists
-            .filter(event = self.purchase.day.event, seat__cox = False)
-            .select_related('seat')
+        context['purchase'] = self.purchase
+        
+        context['rowers'] = models.Athlete.objects.filter(
+            event = self.purchase.day.event,
+            crew = self.purchase.crew,
+            seat__cox = False,
+        ).select_related('seat')
+        
+        
+        other_purchases = self.purchase.team.get_crew(
+            day = self.purchase.day,
+            gender = self.purchase.crew.gender,
+        ).exclude(id = self.purchase.id)
+        
+        context['other_purchased_athletes'] = models.Athlete.objects.filter(
+            id__in = other_purchases.values_list('athlete', flat = True),
         )
         
-        other_purchased_athletes = rowers.filter(
-            purchases__team = self.purchase.team,
-            purchases__day = self.purchase.day,
-            purchases__crew = self.purchase.crew,
-            purchases__athlete__isnull = False,
-        ).exclude(purchases__athlete = self.purchase.athlete)
+        context['seats'] = models.Seat.objects.all()
         
-        seats = models.Seat.objects.all()
-        
-        
-        # Generate response
-        context = {
-            'purchase': self.purchase,
-            'rowers': rowers,
-            'other_purchased_athletes': other_purchased_athletes,
-            'seats': seats,
-        }
-        return render(request, 'fantasybumps/switch.html', context)
+        return context
     
     
     def post(self, request, purchase_id):
