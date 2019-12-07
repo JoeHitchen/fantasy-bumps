@@ -1,11 +1,12 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.base import TemplateView
 from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch, prefetch_related_objects
 from django.contrib import messages
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 
 from .constants import genders, money
 from . import models
@@ -302,54 +303,81 @@ def sell(request):
 
 
 
-@login_required(redirect_field_name = None)
-def switch(request, purchase_id):
+class Switch(TemplateView):
+    """Presents athlete and seat selectors for a purchase to alter it.
     
-    # Look for purchase
-    purchase = get_object_or_404(
-        models.Purchase.objects.select_related(),  # Misses purchase.athlete, but simplier code
-        id = purchase_id,
-        team = request.user.team,
-    )
+    Additionally, has a POST action to perform the switch.
+    """
+    template_name = 'fantasybumps/switch.html'
     
-    # Check market status
-    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
-    market_url_name = 'fantasybumps:' + gender_string
-    market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
-    
-    if not purchase.day.market_is_open:
-        messages.warning(request, 'Markets are not open to alter this purchase.')
-        return market_redirect
-    
-    # Cannot switch coxes
-    if purchase.seat.cox:
-        messages.warning(request, 'Coxes must stay in their place.')
-        return market_redirect
-    
-    # Get resources
-    rowers = (
-        purchase.crew.crew_lists
-        .filter(event = purchase.day.event, seat__cox = False)
-        .select_related('seat')
-    )
-    
-    other_purchased_athletes = rowers.filter(
-        purchases__team = purchase.team,
-        purchases__day = purchase.day,
-        purchases__crew = purchase.crew,
-        purchases__athlete__isnull = False,
-    ).exclude(purchases__athlete = purchase.athlete)
-    
-    seats = models.Seat.objects.all()
-    
-    # Perform action
-    if request.method == 'POST':
+    @method_decorator(login_required(redirect_field_name = None))
+    def dispatch(self, request, *args, **kwargs):
         
-        old_athlete_id = purchase.athlete.id if purchase.athlete else 0
+        # Look for purchase
+        self.purchase = get_object_or_404(
+            models.Purchase.objects.select_related(),  # Misses purchase.athlete, but simplier code
+            id = kwargs.get('purchase_id', None),
+            team = request.user.team,
+        )
+        
+        # Check market status
+        gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.purchase.crew.gender]
+        market_url_name = 'fantasybumps:' + gender_string
+        self.market_redirect = redirect(market_url_name, event_tag = self.purchase.day.event.tag)
+        
+        if not self.purchase.day.market_is_open:
+            messages.warning(request, 'Markets are not open to alter this purchase.')
+            return self.market_redirect
+        
+        # Cannot switch coxes
+        if self.purchase.seat.cox:
+            messages.warning(request, 'Coxes must stay in their place.')
+            return self.market_redirect
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['purchase'] = self.purchase
+        
+        context['rowers'] = models.Athlete.objects.filter(
+            event = self.purchase.day.event,
+            crew = self.purchase.crew,
+            seat__cox = False,
+        ).select_related('seat')
+        
+        
+        other_purchases = self.purchase.team.get_crew(
+            day = self.purchase.day,
+            gender = self.purchase.crew.gender,
+        ).exclude(id = self.purchase.id)
+        
+        context['other_purchased_athletes'] = models.Athlete.objects.filter(
+            id__in = other_purchases.values_list('athlete', flat = True),
+        )
+        
+        context['seats'] = models.Seat.objects.all()
+        
+        return context
+    
+    
+    def post(self, request, purchase_id):
+        """Move a purchase between rowing seats and select named athlete.
+        
+        Inputs:
+            POST 'athlete_id': ID of Athlete to occupy Seat (or '0' for unnamed athlete)
+            POST 'seat_id':    ID of Seat for Athlete to occupy
+        
+        Requires 12 queries.
+        """
+        
+        old_athlete_id = self.purchase.athlete.id if self.purchase.athlete else 0
         
         try:
             transactions.switch(
-                purchase,
+                self.purchase,
                 request.POST.get('athlete', old_athlete_id),
                 request.POST.get('seat', '0'),
             )
@@ -366,15 +394,6 @@ def switch(request, purchase_id):
         except errors.NinthSeatError:
             messages.warning(request, "Rowers can't cox.")
         
-        return market_redirect
-    
-    
-    # Generate response
-    context = {
-        'purchase': purchase,
-        'rowers': rowers,
-        'other_purchased_athletes': other_purchased_athletes,
-        'seats': seats,
-    }
-    return render(request, 'fantasybumps/switch.html', context)
+        
+        return self.market_redirect
 
