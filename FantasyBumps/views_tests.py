@@ -1201,7 +1201,6 @@ class Test__Sell(TestCase, MessagesMixin):
 
 
 class Test__Switch(TestCase, MessagesMixin):
-    """."""
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     url_name = 'fantasybumps:switch'
     
