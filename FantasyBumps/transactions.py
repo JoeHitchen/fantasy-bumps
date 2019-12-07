@@ -51,9 +51,10 @@ def _buy_body(team, day, seat, crew, athlete = None):
     setattr(budgets, balance_field, new_balance)
     budgets.save()
     
-    # Explicitly load crew lists - In-memory checks reduce queries
+    # Explicitly load crew lists - In-memory checks reduce queries and allow locking
     crew_list = (
         team.get_crew(day, crew.gender)
+        .select_for_update()
         .select_related('seat', 'athlete')
     )
     
