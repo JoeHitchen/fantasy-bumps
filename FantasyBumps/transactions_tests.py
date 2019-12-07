@@ -4,7 +4,7 @@ from django.contrib.auth import models as auth
 from . import models
 from . import errors
 from .constants import genders, money
-from .transactions import buy, sell, _buy_body, _sell_body
+from .transactions import buy, sell, switch, _buy_body, _sell_body
 
 
 class Test__Buy(TestCase):
@@ -351,4 +351,82 @@ class Test__Sell(TestCase):
         fresh_purchase = models.Purchase.objects.select_related().get(id = self.purchase.id)
         with self.assertNumQueries(4):
             _sell_body(fresh_purchase)
+
+
+
+class Test__Switch(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.team = models.Team.objects.first()
+        cls.day = models.Day.objects.first()
+        cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
+        cls.crew_alt = models.Crew.objects.filter(gender = genders.WOMENS).last()
+        
+        cls.seat_bow = models.Seat.objects.get(name = 'Bow')
+        cls.seat_two = models.Seat.objects.get(name = '2')
+        cls.seat_cox = models.Seat.objects.get(name = 'Cox')
+        
+        cls.purchase = cls.team.purchases.create(
+            day = cls.day,
+            seat = cls.seat_bow,
+            crew = cls.crew,
+        )
+    
+    def setUp(self):
+        self.purchase.refresh_from_db()
+        
+    
+    def test__seat__unknown(self):
+        """Performs no action and raises an error."""
+        
+        with self.assertRaises(models.Seat.DoesNotExist):
+            switch(self.purchase, None, '0')
+    
+    
+    def test__seat__cox(self):
+        """Performs no action and raises an error."""
+        
+        with self.assertRaises(errors.NinthSeatError):
+            switch(self.purchase, None, str(self.seat_cox.id))
+    
+    
+    def test__seat__unchanged(self):
+        """Makes no change."""
+        
+        switch(self.purchase, None, int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_bow)
+    
+    
+    def test__seat__unoccupied(self):
+        """Moves the purchase to the new seat and vacates the original seat."""
+        
+        switch(self.purchase, None, int(self.seat_two.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_two)
+        self.assertFalse(
+            self.team.get_crew(self.day, self.crew.gender).filter(seat = self.seat_bow).exists(),
+        )
+    
+    
+    def test__seat__occupied(self):
+        """Moves the purchase to the new seat, and moves the other purchase back."""
+        
+        other_purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew_alt,
+        )
+        
+        switch(self.purchase, None, int(self.seat_two.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.seat, self.seat_two)
+        
+        other_purchase.refresh_from_db()
+        self.assertEqual(other_purchase.seat, self.seat_bow)
 

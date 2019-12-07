@@ -108,3 +108,21 @@ def _sell_body(purchase):
     if deleted[0] != 1:
         raise purchase.DoesNotExist
 
+
+def switch(purchase, athlete_id, seat_id):
+    
+    old_seat = purchase.seat
+    purchase.seat = models.Seat.objects.get(id = seat_id)
+    
+    if purchase.seat.cox:
+        raise errors.NinthSeatError
+    
+    (  # Perform reverse seat-switch
+        purchase.team
+        .get_crew(purchase.day, purchase.crew.gender)
+        .filter(seat = purchase.seat)
+        .exclude(id = purchase.id)
+        .update(seat = old_seat)
+    )
+    purchase.save()
+
