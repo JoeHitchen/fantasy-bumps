@@ -110,12 +110,25 @@ def _sell_body(purchase):
 
 
 def switch(purchase, athlete_id, seat_id):
+    """Transaction-wrapped switch action.
+    
+    Changes the purchase's athlete to another member of the crew (or None for '0') and swaps the
+    purchase into the new seat.
+    Rolls back both changes in the event either fails.
+    
+    Specific possible errors:
+        Athlete.DoesNotExist (standard)
+        DuplicateAthleteError (standard)
+        Seat.DoesNotExist (standard)
+        NinthSeatError (standard)
+    """
     
     with transaction.atomic():
         _switch_body(purchase, athlete_id, seat_id)
 
 
 def _switch_body(purchase, athlete_id, seat_id):
+    """INTERNAL METHOD allowing non-transaction access to switch action for query counting."""
     
     # Athlete switching
     purchase.athlete = models.Athlete.objects.get(
