@@ -4,7 +4,7 @@ from django.contrib.auth import models as auth
 from . import models
 from . import errors
 from .constants import genders, money
-from .transactions import buy, sell, switch, _buy_body, _sell_body
+from .transactions import buy, sell, switch, _buy_body, _sell_body, _switch_body
 
 
 class Test__Buy(TestCase):
@@ -541,4 +541,35 @@ class Test__Switch(TestCase):
         
         other_purchase.refresh_from_db()
         self.assertEqual(other_purchase.seat, self.seat_bow)
+    
+    
+    @tag('query-count')
+    def test__query_count(self):
+        """Expect:
+            (1) SELECT new athlete
+            (1) SELECT other purchases, and athletes
+            (1) SELECT new seat
+            (1) UPDATE purchase of target seat
+            (1) UPDATE main purchase
+        """
+        
+        self.purchase.athlete = None
+        self.purchase.save()
+        
+        athlete_alt = self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat_two,
+            name = 'Alternative',
+        )
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+            athlete = athlete_alt,
+        )
+        
+        fresh_purchase = models.Purchase.objects.select_related().get(id = self.day.id)
+        
+        with self.assertNumQueries(5):
+            _switch_body(fresh_purchase, int(self.athlete.id), int(self.seat_two.id))
 

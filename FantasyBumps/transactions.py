@@ -116,6 +116,9 @@ def switch(purchase, athlete_id, seat_id):
     purchase into the new seat.
     Rolls back both changes in the event either fails.
     
+    Optimised when:
+        select_related called when retrieving purchase
+    
     Specific possible errors:
         Athlete.DoesNotExist (standard)
         DuplicateAthleteError (standard)
