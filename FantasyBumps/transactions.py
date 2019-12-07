@@ -111,6 +111,24 @@ def _sell_body(purchase):
 
 def switch(purchase, athlete_id, seat_id):
     
+    # Athlete switching
+    purchase.athlete = models.Athlete.objects.get(
+        event = purchase.day.event,
+        crew = purchase.crew,
+        seat__cox = False,
+        id = athlete_id,
+    ) if int(athlete_id) else None
+    
+    other_purchases = (
+        purchase.team
+        .get_crew(purchase.day, purchase.crew.gender)
+        .exclude(id = purchase.id)
+        .select_related('athlete')
+    )
+    if purchase.athlete and any(p.athlete == purchase.athlete for p in other_purchases):
+        raise errors.DuplicateAthleteError
+    
+    # Seat switching
     old_seat = purchase.seat
     purchase.seat = models.Seat.objects.get(id = seat_id)
     
@@ -124,5 +142,7 @@ def switch(purchase, athlete_id, seat_id):
         .exclude(id = purchase.id)
         .update(seat = old_seat)
     )
+    
+    # Perform update
     purchase.save()
 

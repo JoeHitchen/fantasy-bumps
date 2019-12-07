@@ -368,34 +368,146 @@ class Test__Switch(TestCase):
         cls.seat_two = models.Seat.objects.get(name = '2')
         cls.seat_cox = models.Seat.objects.get(name = 'Cox')
         
+        cls.athlete = cls.crew.crew_lists.create(
+            event = cls.day.event,
+            seat = cls.seat_bow,
+            name = 'Switch',
+        )
+        
         cls.purchase = cls.team.purchases.create(
             day = cls.day,
             seat = cls.seat_bow,
             crew = cls.crew,
+            athlete = cls.athlete,
         )
     
     def setUp(self):
         self.purchase.refresh_from_db()
+    
+    
+    def test__athlete__not_in_crew(self):
+        """Performs no action and raises an error."""
+        
+        ath_other = self.crew_alt.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat_bow,
+            name = 'Other',
+        )
+        
+        with self.assertRaises(models.Athlete.DoesNotExist):
+            switch(self.purchase, str(ath_other.id), int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.athlete)
+    
+    
+    def test__athlete__cox(self):
+        """Performs no action and raises an error."""
+        
+        cox = self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat_cox,
+            name = 'Cox',
+        )
+        
+        with self.assertRaises(models.Athlete.DoesNotExist):
+            switch(self.purchase, str(cox.id), int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.athlete)
+    
+    
+    def test__athlete__set(self):
+        """Adds an athlete to the purchase."""
+        
+        self.purchase.athlete = None
+        self.purchase.save()
+        
+        switch(self.purchase, str(self.athlete.id), int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.athlete)
+    
+    
+    def test__athlete__unset(self):
+        """Removes the athlete from the purchase."""
+        
+        switch(self.purchase, '0', int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertIsNone(self.purchase.athlete)
+    
+    
+    def test__athlete__switch(self):
+        """Switches the athlete on the purchase."""
+        
+        athlete_alt = self.purchase.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat_two,
+            name = 'Alternative',
+        )
+        
+        switch(self.purchase, str(athlete_alt.id), int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, athlete_alt)
+    
+    
+    def test__athlete__already_purchased(self):
+        """Performs no action and raises an error."""
+        
+        athlete_alt = self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat_two,
+            name = 'Alternative',
+        )
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+            athlete = athlete_alt,
+        )
+        
+        with self.assertRaises(errors.DuplicateAthleteError):
+            switch(self.purchase, str(athlete_alt.id), int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertEqual(self.purchase.athlete, self.athlete)
+    
+    
+    def test__athlete__allow_double_unnamed(self):
+        """Removes the athlete from the purchase."""
+        
+        self.team.purchases.create(
+            day = self.day,
+            seat = self.seat_two,
+            crew = self.crew,
+        )
+        
+        switch(self.purchase, '0', int(self.purchase.seat.id))
+        
+        self.purchase.refresh_from_db()
+        self.assertIsNone(self.purchase.athlete)
         
     
     def test__seat__unknown(self):
         """Performs no action and raises an error."""
         
         with self.assertRaises(models.Seat.DoesNotExist):
-            switch(self.purchase, None, '0')
+            switch(self.purchase, '0', '0')
     
     
     def test__seat__cox(self):
         """Performs no action and raises an error."""
         
         with self.assertRaises(errors.NinthSeatError):
-            switch(self.purchase, None, str(self.seat_cox.id))
+            switch(self.purchase, '0', str(self.seat_cox.id))
     
     
     def test__seat__unchanged(self):
         """Makes no change."""
         
-        switch(self.purchase, None, int(self.purchase.seat.id))
+        switch(self.purchase, '0', int(self.purchase.seat.id))
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_bow)
@@ -404,7 +516,7 @@ class Test__Switch(TestCase):
     def test__seat__unoccupied(self):
         """Moves the purchase to the new seat and vacates the original seat."""
         
-        switch(self.purchase, None, int(self.seat_two.id))
+        switch(self.purchase, '0', int(self.seat_two.id))
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_two)
@@ -422,7 +534,7 @@ class Test__Switch(TestCase):
             crew = self.crew_alt,
         )
         
-        switch(self.purchase, None, int(self.seat_two.id))
+        switch(self.purchase, '0', int(self.seat_two.id))
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_two)
