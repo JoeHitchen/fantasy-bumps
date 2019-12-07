@@ -111,6 +111,12 @@ def _sell_body(purchase):
 
 def switch(purchase, athlete_id, seat_id):
     
+    with transaction.atomic():
+        _switch_body(purchase, athlete_id, seat_id)
+
+
+def _switch_body(purchase, athlete_id, seat_id):
+    
     # Athlete switching
     purchase.athlete = models.Athlete.objects.get(
         event = purchase.day.event,
