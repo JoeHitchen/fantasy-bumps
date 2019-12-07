@@ -547,7 +547,7 @@ class Test__Switch(TestCase):
     def test__query_count(self):
         """Expect:
             (1) SELECT new athlete
-            (1) SELECT other purchases, and athletes
+            (1) SELECT and LOCK other purchases, and athletes
             (1) SELECT new seat
             (1) UPDATE purchase of target seat
             (1) UPDATE main purchase

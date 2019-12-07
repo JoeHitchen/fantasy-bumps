@@ -146,6 +146,7 @@ def _switch_body(purchase, athlete_id, seat_id):
         .get_crew(purchase.day, purchase.crew.gender)
         .exclude(id = purchase.id)
         .select_related('athlete')
+        .select_for_update()
     )
     if purchase.athlete and any(p.athlete == purchase.athlete for p in other_purchases):
         raise errors.DuplicateAthleteError
