@@ -224,11 +224,19 @@ def buy(request):
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     
     else:
-        success_text = "Successfully bought {} as your {}'s {}{}.".format(
-            crew,
+        athlete_string = '{} ({})'.format(athlete, crew) if athlete else crew
+        
+        if seat.cox:
+            seat_string = 'cox'
+        elif len(seat.name) == 1:
+            seat_string = seat.name.lower() + '-seat'
+        else:
+            seat_string = seat.name.lower() + ' seat'
+        
+        success_text = "Successfully bought {} as your {}'s {}.".format(
+            athlete_string,
             gender_string,
-            str(seat).lower(),
-            '' if seat.cox else ' seat',
+            seat_string,
         )
         messages.success(request, success_text)
     
