@@ -223,12 +223,21 @@ def buy(request):
     except errors.InsufficientFundsError:
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     
+    # Generate success message
     else:
-        success_text = "Successfully bought {} as your {}'s {}{}.".format(
-            crew,
+        athlete_string = '{} ({})'.format(athlete, crew) if athlete else crew
+        
+        if seat.cox:
+            seat_string = 'cox'
+        elif len(seat.name) == 1:
+            seat_string = seat.name.lower() + '-seat'
+        else:
+            seat_string = seat.name.lower() + ' seat'
+        
+        success_text = "Bought {} as your {}'s {}.".format(
+            athlete_string,
             gender_string,
-            str(seat).lower(),
-            '' if seat.cox else ' seat',
+            seat_string,
         )
         messages.success(request, success_text)
     
@@ -291,11 +300,24 @@ def sell(request):
     except (models.GameEntry.DoesNotExist, MultipleObjectsReturned):
         messages.error(request, 'An unknown error occurred processing this sale.')
     
+    # Generate success message
     else:
-        success_text = "Successfully sold your {}'s {}{}.".format(
+        if purchase.athlete:
+            athlete_string = '{} ({})'.format(purchase.athlete, purchase.crew)
+        else:
+            athlete_string = purchase.crew
+        
+        if purchase.seat.cox:
+            seat_string = 'coxing seat'
+        elif len(purchase.seat.name) == 1:
+            seat_string = purchase.seat.name.lower() + '-seat'
+        else:
+            seat_string = purchase.seat.name.lower() + ' seat'
+        
+        success_text = "Sold {} from your {}'s {}.".format(
+            athlete_string,
             gender_string,
-            str(purchase.seat).lower(),
-            '' if purchase.seat.cox else ' seat',
+            seat_string,
         )
         messages.success(request, success_text)
     
@@ -375,8 +397,9 @@ class Switch(TemplateView):
         
         old_athlete_id = self.purchase.athlete.id if self.purchase.athlete else 0
         
+        # Perform action
         try:
-            transactions.switch(
+            updated_purchase = transactions.switch(
                 self.purchase,
                 request.POST.get('athlete', old_athlete_id),
                 request.POST.get('seat', '0'),
@@ -393,6 +416,28 @@ class Switch(TemplateView):
         
         except errors.NinthSeatError:
             messages.warning(request, "Rowers can't cox.")
+        
+        # Generate success message
+        else:
+            
+            if updated_purchase.athlete:
+                crew_string = '{} ({})'.format(updated_purchase.athlete, updated_purchase.crew)
+            else:
+                crew_string = updated_purchase.crew
+            
+            gender_string = {
+                genders.MENS: 'men',
+                genders.WOMENS: 'women',
+            }[self.purchase.crew.gender]
+            
+            seat_string = updated_purchase.seat.name.lower()
+            seat_string = seat_string + ('-' if len(seat_string) == 1 else ' ') + 'seat'
+            
+            messages.success(request, "Selected {} for your {}'s {}.".format(
+                crew_string,
+                gender_string,
+                seat_string,
+            ))
         
         
         return self.market_redirect

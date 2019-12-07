@@ -127,7 +127,7 @@ def switch(purchase, athlete_id, seat_id):
     """
     
     with transaction.atomic():
-        _switch_body(purchase, athlete_id, seat_id)
+        return _switch_body(purchase, athlete_id, seat_id)
 
 
 def _switch_body(purchase, athlete_id, seat_id):
@@ -168,4 +168,5 @@ def _switch_body(purchase, athlete_id, seat_id):
     
     # Perform update
     purchase.save()
+    return purchase
 

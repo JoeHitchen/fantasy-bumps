@@ -806,7 +806,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel W1 as your women's bow seat.",
+                'message': "Bought Oriel W1 as your women's bow seat.",
             }],
         )
     
@@ -831,7 +831,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel M1 as your men's bow seat.",
+                'message': "Bought Oriel M1 as your men's bow seat.",
             }],
         )
     
@@ -855,7 +855,34 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel W1 as your women's cox.",
+                'message': "Bought Oriel W1 as your women's cox.",
+            }],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__with_athlete(self, market_closes_mock, markets_mock):
+        """Completes the purchase.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = models.Seat.objects.first(),
+            name = 'Test Athlete',
+        )
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
+        self.assertRedirects(response, self.womens_url)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Bought Test Athlete (Oriel W1) as your women's bow seat.",
             }],
         )
     
@@ -899,7 +926,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel W1 as your women's bow seat.",
+                'message': "Bought Oriel W1 as your women's bow seat.",
             }],
         )
     
@@ -1124,7 +1151,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Successfully sold your women's bow seat."}],
+            [{'level': 'success', 'message': "Sold Oriel W1 from your women's bow seat."}],
         )
     
     
@@ -1151,7 +1178,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Successfully sold your men's bow seat."}],
+            [{'level': 'success', 'message': "Sold Oriel M1 from your men's bow seat."}],
         )
     
     
@@ -1175,7 +1202,33 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Successfully sold your women's cox."}],
+            [{'level': 'success', 'message': "Sold Oriel W1 from your women's coxing seat."}],
+        )
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__with_athlete(self, market_closes_mock, markets_mock):
+        """Completes the sale.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        athlete = self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat,
+            name = 'Sale',
+        )
+        self.purchase.athlete = athlete
+        self.purchase.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'purchase': self.purchase.id})
+        self.assertRedirects(response, self.womens_url)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'success', 'message': "Sold Sale (Oriel W1) from your women's bow seat."}],
         )
     
     
@@ -1466,6 +1519,14 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 1 (Oriel W1) for your women's bow seat.",
+            }],
+        )
+        
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_bow)
     
@@ -1479,6 +1540,14 @@ class Test__Switch(TestCase, MessagesMixin):
         
         response = self.client.post(self.url, {'athlete': '0', 'seat': self.seat_bow.id})
         self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Oriel W1 for your women's bow seat.",
+            }],
+        )
         
         self.purchase.refresh_from_db()
         self.assertIsNone(self.purchase.athlete)
@@ -1494,6 +1563,14 @@ class Test__Switch(TestCase, MessagesMixin):
         POST_data = {'athlete': self.ath_two.id, 'seat': self.seat_bow.id}
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 2 (Oriel W1) for your women's bow seat.",
+            }],
+        )
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_two)
@@ -1608,6 +1685,14 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'seat': self.seat_two.id})
         self.assertRedirects(response, self.market_page)
         
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 1 (Oriel W1) for your women's 2-seat.",
+            }],
+        )
+        
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_two)
     
@@ -1634,6 +1719,14 @@ class Test__Switch(TestCase, MessagesMixin):
         
         response = self.client.post(self.url, {'seat': self.seat_two.id})
         self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 1 (Oriel W1) for your women's 2-seat.",
+            }],
+        )
         
         self.purchase.refresh_from_db()
         other_purchase.refresh_from_db()
