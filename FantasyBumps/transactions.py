@@ -51,12 +51,19 @@ def _buy_body(team, day, seat, crew, athlete = None):
     setattr(budgets, balance_field, new_balance)
     budgets.save()
     
-    if athlete and team.get_crew(day, crew.gender).filter(athlete = athlete).exists():
+    # Explicitly load crew lists - In-memory checks reduce queries
+    crew_list = (
+        team.get_crew(day, crew.gender)
+        .select_related('seat', 'athlete')
+    )
+    
+    if any([purchase.seat == seat for purchase in crew_list]):
+        raise errors.DuplicateSeatError
+    
+    if athlete and any([purchase.athlete == athlete for purchase in crew_list]):
         athlete = None
     
     team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
-    if team.purchases.filter(day = day, seat = seat, crew__gender = crew.gender).count() > 1:
-        raise errors.DuplicateSeatError
 
 
 def sell(purchase):
