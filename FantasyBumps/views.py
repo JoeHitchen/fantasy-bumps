@@ -361,27 +361,17 @@ class Switch(TemplateView):
         return render(request, 'fantasybumps/switch.html', context)
     
     
-    @method_decorator(login_required(redirect_field_name = None))
     def post(self, request, purchase_id):
+        """Move a purchase between rowing seats and select named athlete.
         
-        # Get resources
-        rowers = (
-            self.purchase.crew.crew_lists
-            .filter(event = self.purchase.day.event, seat__cox = False)
-            .select_related('seat')
-        )
+        Inputs:
+            POST 'athlete_id': ID of Athlete to occupy Seat (or '0' for unnamed athlete)
+            POST 'seat_id':    ID of Seat for Athlete to occupy
         
-        other_purchased_athletes = rowers.filter(
-            purchases__team = self.purchase.team,
-            purchases__day = self.purchase.day,
-            purchases__crew = self.purchase.crew,
-            purchases__athlete__isnull = False,
-        ).exclude(purchases__athlete = self.purchase.athlete)
-        
-        seats = models.Seat.objects.all()
+        Requires 12 queries.
+        """
         
         old_athlete_id = self.purchase.athlete.id if self.purchase.athlete else 0
-        
         
         try:
             transactions.switch(
