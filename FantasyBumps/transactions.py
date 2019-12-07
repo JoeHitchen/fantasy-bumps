@@ -21,7 +21,6 @@ def buy(team, day, seat, crew, athlete = None):
         InsufficientFundsError (standard)
         NotRacingError (standard)
         DuplicateSeatError (severe)
-        DuplicateAthleteError (severe)
     """
     
     with transaction.atomic():
@@ -52,18 +51,20 @@ def _buy_body(team, day, seat, crew, athlete = None):
     setattr(budgets, balance_field, new_balance)
     budgets.save()
     
-    team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
-    if team.purchases.filter(day = day, seat = seat, crew__gender = crew.gender).count() > 1:
+    # Explicitly load crew lists - In-memory checks reduce queries and allow locking
+    crew_list = (
+        team.get_crew(day, crew.gender)
+        .select_for_update()
+        .select_related('seat', 'athlete')
+    )
+    
+    if any([purchase.seat == seat for purchase in crew_list]):
         raise errors.DuplicateSeatError
     
-    duplicate_not_null_athletes = team.purchases.filter(
-        day = day,
-        athlete = athlete,
-        athlete__isnull = False,
-        crew__gender = crew.gender,
-    )
-    if duplicate_not_null_athletes.count() > 1:
-        raise errors.DuplicateAthleteError
+    if athlete and any([purchase.athlete == athlete for purchase in crew_list]):
+        athlete = None
+    
+    team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
 
 
 def sell(purchase):

@@ -162,7 +162,7 @@ class Test__Buy(TestCase):
     
     
     def test__with_duplicate_athlete(self):
-        """Rejects the purchase if the team/athlete/day/gender combination is already occupied."""
+        """Creates a purchase without a named athlete if athlete already picked."""
         
         athlete = models.Athlete.objects.create(
             event = self.day.event,
@@ -177,14 +177,17 @@ class Test__Buy(TestCase):
             athlete = athlete,
         )
 
-        with self.assertRaises(errors.DuplicateAthleteError):
-            buy(self.team, self.day, self.seat, self.crew, athlete)
+        buy(self.team, self.day, self.seat, self.crew, athlete)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
+        
+        self.assertEqual(self.team.purchases.count(), 2)
+        self.assertEqual(self.team.purchases.first().athlete, athlete)
+        self.assertIsNone(self.team.purchases.last().athlete)
     
     
     def test__with_duplicate_absent_athlete(self):
@@ -214,21 +217,33 @@ class Test__Buy(TestCase):
             (1) SELECT crew's position  (Affected by caching)
             (1) SELECT day's maximum rank  (Affected by caching)
             (1) UPDATE budgets
+            (1) SELECT and LOCK crew list, seats, and athletes for duplication check
             (1) INSERT new purchase
-            (1) SELECT team/day/seat/gender duplication check
-            (1) SELECT tea/day/athlete/gender duplication check
         """
+        
+        athlete = models.Athlete.objects.create(
+            event = self.day.event,
+            crew = self.crew,
+            seat = self.seat,
+            name = 'Test Athlete',
+        )
+        self.team.purchases.create(
+            day = self.day,
+            crew = self.crew,
+            seat = models.Seat.objects.last(),
+            athlete = athlete,
+        )
         
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         
-        with self.assertNumQueries(7):
-            _buy_body(self.team, fresh_day, self.seat, self.crew)
+        with self.assertNumQueries(6):
+            _buy_body(self.team, fresh_day, self.seat, self.crew, athlete)
     
     
     @tag('query-count')
     def test__query_count__without_budgets(self):
         """ Expect:
-            (7) Queried as standard
+            (6) Queried as standard
             (2) Internal transaction overhead
             (1) INSERT new budget
         """
@@ -236,7 +251,7 @@ class Test__Buy(TestCase):
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         self.budgets.delete()
         
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(9):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
