@@ -184,6 +184,10 @@ class Test__Buy(TestCase):
         self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
+        
+        self.assertEqual(self.team.purchases.count(), 2)
+        self.assertEqual(self.team.purchases.first().athlete, athlete)
+        self.assertIsNone(self.team.purchases.last().athlete)
     
     
     def test__with_duplicate_absent_athlete(self):
