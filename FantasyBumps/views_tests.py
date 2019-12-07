@@ -1467,6 +1467,14 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 1 (Oriel W1) for your women's bow seat.",
+            }],
+        )
+        
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_bow)
     
@@ -1480,6 +1488,14 @@ class Test__Switch(TestCase, MessagesMixin):
         
         response = self.client.post(self.url, {'athlete': '0', 'seat': self.seat_bow.id})
         self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Oriel W1 for your women's bow seat.",
+            }],
+        )
         
         self.purchase.refresh_from_db()
         self.assertIsNone(self.purchase.athlete)
@@ -1495,6 +1511,14 @@ class Test__Switch(TestCase, MessagesMixin):
         POST_data = {'athlete': self.ath_two.id, 'seat': self.seat_bow.id}
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 2 (Oriel W1) for your women's bow seat.",
+            }],
+        )
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_two)
@@ -1609,6 +1633,14 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'seat': self.seat_two.id})
         self.assertRedirects(response, self.market_page)
         
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 1 (Oriel W1) for your women's 2-seat.",
+            }],
+        )
+        
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_two)
     
@@ -1635,6 +1667,14 @@ class Test__Switch(TestCase, MessagesMixin):
         
         response = self.client.post(self.url, {'seat': self.seat_two.id})
         self.assertRedirects(response, self.market_page)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{
+                'level': 'success',
+                'message': "Selected Athlete 1 (Oriel W1) for your women's 2-seat.",
+            }],
+        )
         
         self.purchase.refresh_from_db()
         other_purchase.refresh_from_db()

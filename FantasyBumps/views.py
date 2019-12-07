@@ -375,8 +375,9 @@ class Switch(TemplateView):
         
         old_athlete_id = self.purchase.athlete.id if self.purchase.athlete else 0
         
+        # Perform action
         try:
-            transactions.switch(
+            updated_purchase = transactions.switch(
                 self.purchase,
                 request.POST.get('athlete', old_athlete_id),
                 request.POST.get('seat', '0'),
@@ -393,6 +394,28 @@ class Switch(TemplateView):
         
         except errors.NinthSeatError:
             messages.warning(request, "Rowers can't cox.")
+        
+        # Generate success message
+        else:
+            
+            if updated_purchase.athlete:
+                crew_string = '{} ({})'.format(updated_purchase.athlete, updated_purchase.crew)
+            else:
+                crew_string = updated_purchase.crew
+            
+            gender_string = {
+                genders.MENS: 'men',
+                genders.WOMENS: 'women',
+            }[self.purchase.crew.gender]
+            
+            seat_string = updated_purchase.seat.name.lower()
+            seat_string = seat_string + ('-' if len(seat_string) == 1 else ' ') + 'seat'
+            
+            messages.success(request, "Selected {} for your {}'s {}.".format(
+                crew_string,
+                gender_string,
+                seat_string,
+            ))
         
         
         return self.market_redirect
