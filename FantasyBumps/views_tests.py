@@ -1206,6 +1206,32 @@ class Test__Sell(TestCase, MessagesMixin):
         )
     
     
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    def test__with_athlete(self, market_closes_mock, markets_mock):
+        """Completes the sale.
+        
+        Redirects to relevant market page and raises success to user.
+        """
+        
+        athlete = self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat,
+            name = 'Sale',
+        )
+        self.purchase.athlete = athlete
+        self.purchase.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'purchase': self.purchase.id})
+        self.assertRedirects(response, self.womens_url)
+        
+        self.check_messages(
+            messages.get_messages(response.wsgi_request),
+            [{'level': 'success', 'message': "Sold Sale (Oriel W1) from your women's bow seat."}],
+        )
+    
+    
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
