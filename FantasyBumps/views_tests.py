@@ -1151,7 +1151,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Successfully sold your women's bow seat."}],
+            [{'level': 'success', 'message': "Sold Oriel W1 from your women's bow seat."}],
         )
     
     
@@ -1178,7 +1178,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Successfully sold your men's bow seat."}],
+            [{'level': 'success', 'message': "Sold Oriel M1 from your men's bow seat."}],
         )
     
     
@@ -1202,7 +1202,7 @@ class Test__Sell(TestCase, MessagesMixin):
         
         self.check_messages(
             messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Successfully sold your women's cox."}],
+            [{'level': 'success', 'message': "Sold Oriel W1 from your women's coxing seat."}],
         )
     
     

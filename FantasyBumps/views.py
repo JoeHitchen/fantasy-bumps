@@ -300,11 +300,24 @@ def sell(request):
     except (models.GameEntry.DoesNotExist, MultipleObjectsReturned):
         messages.error(request, 'An unknown error occurred processing this sale.')
     
+    # Generate success message
     else:
-        success_text = "Successfully sold your {}'s {}{}.".format(
+        if purchase.athlete:
+            athlete_string = '{} ({})'.format(purchase.athlete, purchase.crew)
+        else:
+            athlete_string = purchase.crew
+        
+        if purchase.seat.cox:
+            seat_string = 'coxing seat'
+        elif len(purchase.seat.name) == 1:
+            seat_string = purchase.seat.name.lower() + '-seat'
+        else:
+            seat_string = purchase.seat.name.lower() + ' seat'
+        
+        success_text = "Sold {} from your {}'s {}.".format(
+            athlete_string,
             gender_string,
-            str(purchase.seat).lower(),
-            '' if purchase.seat.cox else ' seat',
+            seat_string,
         )
         messages.success(request, success_text)
     
