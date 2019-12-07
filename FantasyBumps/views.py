@@ -345,47 +345,27 @@ def switch(request, purchase_id):
     # Perform action
     if request.method == 'POST':
         
-        # Athlete switching
         old_athlete_id = purchase.athlete.id if purchase.athlete else 0
-        athlete_id = request.POST.get('athlete', old_athlete_id)
-        athlete_id = int(athlete_id)
         
-        if athlete_id and not any(rower.id == athlete_id for rower in rowers):
+        try:
+            transactions.switch(
+                purchase,
+                request.POST.get('athlete', old_athlete_id),
+                request.POST.get('seat', '0'),
+            )
+        
+        except models.Athlete.DoesNotExist:
             messages.warning(request, 'Must pick a rower from the purchased crew.')
         
-        elif athlete_id and any(rower.id == athlete_id for rower in other_purchased_athletes):
+        except errors.DuplicateAthleteError:
             messages.warning(request, 'Cannot pick the same rower twice.')
         
-        else:
-            purchase.athlete_id = athlete_id if athlete_id else None
-        
-        
-        # Seat switching
-        seat_id = request.POST.get('seat', '0')
-        seat_id = int(seat_id)
-        
-        target_seat = [seat for seat in seats if seat.id == seat_id]
-        target_seat = target_seat[0] if target_seat else None
-        
-        if not target_seat:
+        except models.Seat.DoesNotExist:
             messages.warning(request, 'Target seat does not exist.')
         
-        elif any(seat.id == seat_id and seat.cox for seat in seats):
+        except errors.NinthSeatError:
             messages.warning(request, "Rowers can't cox.")
         
-        elif not target_seat == purchase.seat:
-            (
-                purchase.team
-                .get_crew(purchase.day, purchase.crew.gender)
-                .exclude(id = purchase.id)
-                .filter(seat = target_seat)
-                .update(seat = purchase.seat)
-            )
-            purchase.seat = target_seat
-            
-        
-        # Update and redirect
-        purchase.save()
         return market_redirect
     
     

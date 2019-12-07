@@ -1667,9 +1667,12 @@ class Test__Switch(TestCase, MessagesMixin):
     @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
     def test__query_count__post(self, market_closes_mock, markets_mock):
         """ Expect:
-            (8) As for GET
-            (1) UPDATE purchase of target seat
-            (1) UPDATE main purchase
+            (2) Django internals
+            (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
+            (1) SELECT purchase, crew, day, event, and seat
+            (1) SELECT purchase.athlete  (Skipped by above, because nullable)
+            (2) Transaction overhead
+            (5) Main action
         """
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1686,6 +1689,6 @@ class Test__Switch(TestCase, MessagesMixin):
             crew = self.crew,
         )
         
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(12):
             self.client.post(self.url, {'athlete': self.ath_thr.id, 'seat': self.seat_two.id})
 

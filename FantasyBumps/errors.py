@@ -15,6 +15,11 @@ class DuplicateAthleteError(ValueError):
     message = 'Cannot use an athlete twice.'
 
 
+class NinthSeatError(ValueError):
+    """Raised if a rower is found in the coxing seat or that action is being attempted."""
+    message = 'Cannot put a rower in a coxing seat'
+
+
 class InsufficientFundsError(ValueError):
     """Raised if a team does not have sufficient funds for a purchase."""
     message = 'Insufficient funds for this purchase.'
