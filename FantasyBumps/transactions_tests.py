@@ -162,7 +162,7 @@ class Test__Buy(TestCase):
     
     
     def test__with_duplicate_athlete(self):
-        """Rejects the purchase if the team/athlete/day/gender combination is already occupied."""
+        """Creates a purchase without a named athlete if athlete already picked."""
         
         athlete = models.Athlete.objects.create(
             event = self.day.event,
@@ -177,14 +177,13 @@ class Test__Buy(TestCase):
             athlete = athlete,
         )
 
-        with self.assertRaises(errors.DuplicateAthleteError):
-            buy(self.team, self.day, self.seat, self.crew, athlete)
+        buy(self.team, self.day, self.seat, self.crew, athlete)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
     
     
     def test__with_duplicate_absent_athlete(self):
