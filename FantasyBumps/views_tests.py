@@ -806,7 +806,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel W1 as your women's bow seat.",
+                'message': "Bought Oriel W1 as your women's bow seat.",
             }],
         )
     
@@ -831,7 +831,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel M1 as your men's bow seat.",
+                'message': "Bought Oriel M1 as your men's bow seat.",
             }],
         )
     
@@ -855,7 +855,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel W1 as your women's cox.",
+                'message': "Bought Oriel W1 as your women's cox.",
             }],
         )
     
@@ -882,7 +882,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Test Athlete (Oriel W1) as your women's bow seat.",
+                'message': "Bought Test Athlete (Oriel W1) as your women's bow seat.",
             }],
         )
     
@@ -926,7 +926,7 @@ class Test__Buy(TestCase, MessagesMixin):
             messages.get_messages(response.wsgi_request),
             [{
                 'level': 'success',
-                'message': "Successfully bought Oriel W1 as your women's bow seat.",
+                'message': "Bought Oriel W1 as your women's bow seat.",
             }],
         )
     

@@ -223,6 +223,7 @@ def buy(request):
     except errors.InsufficientFundsError:
         messages.warning(request, 'You do not have sufficient funds to make this purchase.')
     
+    # Generate success message
     else:
         athlete_string = '{} ({})'.format(athlete, crew) if athlete else crew
         
@@ -233,7 +234,7 @@ def buy(request):
         else:
             seat_string = seat.name.lower() + ' seat'
         
-        success_text = "Successfully bought {} as your {}'s {}.".format(
+        success_text = "Bought {} as your {}'s {}.".format(
             athlete_string,
             gender_string,
             seat_string,
