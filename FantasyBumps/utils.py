@@ -1,8 +1,10 @@
 from collections import Counter
+from functools import lru_cache
+from math import log
 
 from django.db.models import Prefetch
 
-from .constants import genders
+from .constants import genders, money
 from . import models
 from . import errors
 
@@ -25,6 +27,39 @@ def reverse_gender(gender):
         genders.MENS: genders.WOMENS,
         genders.WOMENS: genders.MENS,
     }[gender]
+
+
+@lru_cache(maxsize = 20)
+def _pricing_gradient(num_crews):
+    """Returns a function to calculate the rounded pricing gradient at a bungline."""
+    
+    def fudge_factor(num_crews):
+        """Calculates a fudge-factor to counter error caused by gradient rounding."""
+        
+        num_crews_1 = 61  # Women's Torpids
+        fudge_1 = 0.995
+        num_crews_2 = 92  # Men's Eights
+        fudge_2 = 0.9997
+        
+        top = fudge_2 * (num_crews - num_crews_1) - fudge_1 * (num_crews - num_crews_2)
+        return top / (num_crews_2 - num_crews_1)
+    
+    ratio = (money.PRICE_MIN / money.PRICE_MAX) ** (1 / (num_crews - 1))
+    ratio *= fudge_factor(num_crews)
+    return lambda position: round(money.PRICE_MAX * log(ratio) * ratio ** (position - 1))
+
+
+@lru_cache(maxsize = 2000)
+def pricing(bungline, num_crews):
+    """Iteratively calculates the price of a crew on a given bungline for a given event size."""
+    
+    if bungline == 1:
+        return money.PRICE_MAX
+    elif bungline == num_crews:
+        return money.PRICE_MIN
+    
+    price_delta = _pricing_gradient(num_crews)(bungline)
+    return pricing(bungline + 1, num_crews) - min(price_delta, -1)
 
 
 def create_payout_matrix(day):

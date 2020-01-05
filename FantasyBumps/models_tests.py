@@ -9,6 +9,7 @@ from django.contrib.auth import models as auth
 from .constants import genders, timings, money
 from . import models
 from . import patching
+from . import utils
 
 
 @tag('events-core')
@@ -597,10 +598,8 @@ class Test__Crew(TestCase):
     
     
     def test__value__middle_crew(self):
-        """Returns a price according to a geometric progression."""
-        ratio = (money.PRICE_MIN / money.PRICE_MAX) ** 0.5
-        expected_price = round(money.PRICE_MAX * ratio)
-        self.assertEqual(self.crew_middle.value(self.day1), expected_price)
+        """Returns the price from the pricing algorithm."""
+        self.assertEqual(self.crew_middle.value(self.day1), utils.pricing(2, 3))
     
     
     def test__results__first_day(self):

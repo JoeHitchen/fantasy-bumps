@@ -172,8 +172,10 @@ class Test__Create_Payout_Matrix(TestCase):
         crew = models.Crew.objects.get(club = 'jesu', gender = genders.MENS, rank = 1)
         
         crew_payout = matrix[crew]
-        self.assertEqual(crew_payout['value_change'], 0)
-        self.assertEqual(crew_payout['payout'], 1)
+        
+        old_price = new_price = utils.pricing(9, 9)
+        self.assertEqual(crew_payout['value_change'], new_price - old_price)
+        self.assertEqual(crew_payout['payout'], round(0.05 * old_price))
     
     
     def test__bump_up(self):
@@ -183,8 +185,11 @@ class Test__Create_Payout_Matrix(TestCase):
         crew = models.Crew.objects.get(club = 'magd', gender = genders.WOMENS, rank = 1)
         
         crew_payout = matrix[crew]
-        self.assertEqual(crew_payout['value_change'], 8)
-        self.assertEqual(crew_payout['payout'], 3)
+        
+        old_price = utils.pricing(9, 9)
+        new_price = utils.pricing(8, 9)
+        self.assertEqual(crew_payout['value_change'], new_price - old_price)
+        self.assertEqual(crew_payout['payout'], round(0.15 * old_price))
     
     
     def test__bump_down(self):
@@ -194,7 +199,10 @@ class Test__Create_Payout_Matrix(TestCase):
         crew = models.Crew.objects.get(club = 'orie', gender = genders.WOMENS, rank = 1)
         
         crew_payout = matrix[crew]
-        self.assertEqual(crew_payout['value_change'], -86)
+        
+        old_price = utils.pricing(1, 9)
+        new_price = utils.pricing(2, 9)
+        self.assertEqual(crew_payout['value_change'], new_price - old_price)
         self.assertEqual(crew_payout['payout'], 0)
     
     

@@ -8,6 +8,7 @@ from django.utils.functional import cached_property
 from django.dispatch import receiver
 
 from .constants import series, genders, timings, money, clubs
+from .utils import pricing
 
 
 class Event(models.Model):
@@ -212,8 +213,7 @@ class Crew(models.Model):
         except Position.DoesNotExist:
             return 0
         
-        ratio = (money.PRICE_MIN / money.PRICE_MAX) ** (1 / (total_crews - 1))
-        return round(money.PRICE_MAX * ratio ** (rank - 1))
+        return pricing(rank, total_crews)
     
     
     def results(self, day):
