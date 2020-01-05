@@ -175,7 +175,7 @@ class Test__Create_Payout_Matrix(TestCase):
         
         old_price = new_price = utils.pricing(9, 9)
         self.assertEqual(crew_payout['value_change'], new_price - old_price)
-        self.assertEqual(crew_payout['payout'], round(0.05 * old_price))
+        self.assertEqual(crew_payout['payout'], round(0.07 * old_price))
     
     
     def test__bump_up(self):
@@ -189,7 +189,7 @@ class Test__Create_Payout_Matrix(TestCase):
         old_price = utils.pricing(9, 9)
         new_price = utils.pricing(8, 9)
         self.assertEqual(crew_payout['value_change'], new_price - old_price)
-        self.assertEqual(crew_payout['payout'], round(0.15 * old_price))
+        self.assertEqual(crew_payout['payout'], round(0.21 * old_price))
     
     
     def test__bump_down(self):

@@ -92,7 +92,7 @@ def create_payout_matrix(day):
         
         matrix[crew] = {
             'value_change': crew.value(day.next) - crew_value,
-            'payout': round( (0.1 * change + 0.05) * crew_value ) if change >= 0 else 0,  # noqa: E201 E202 E501
+            'payout': round( (0.14 * change + 0.07) * crew_value ) if change >= 0 else 0,  # noqa: E201 E202 E501
         }
     
     return matrix

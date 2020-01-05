@@ -147,7 +147,7 @@ class Test__All_Investments(TestCase):
         value_change = self.crew_hert.value(self.day2) - start_value
         self.assertTrue(value_change > 0)
         
-        payout = round( 0.15 * start_value )  # noqa: E201 E202
+        payout = round( 0.21 * start_value )  # noqa: E201 E202
         
         for seat in self.all_seats:
             self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = seat)
@@ -189,7 +189,7 @@ class Test__All_Investments(TestCase):
         value_change = self.crew_wolf.value(self.day2) - start_value
         self.assertEqual(value_change, 0)
         
-        payout = round( 0.05 * start_value )  # noqa: E201 E202
+        payout = round( 0.07 * start_value )  # noqa: E201 E202
         
         for seat in self.all_seats:
             self.team.purchases.create(day = self.day1, crew = self.crew_wolf, seat = seat)
