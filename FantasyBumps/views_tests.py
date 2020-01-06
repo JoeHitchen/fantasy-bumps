@@ -640,7 +640,6 @@ class Test__Buy(TestCase, MessagesMixin):
     
     
     def setUp(self):
-        models.Crew.value.cache_clear()
         self.budgets.refresh_from_db()
     
     
@@ -943,8 +942,7 @@ class Test__Buy(TestCase, MessagesMixin):
             (1) SELECT seat - 'filled_seats' not evaluated separately
             (1) SELECT athlete
             (2) Transaction overhead
-            (1) Buy action - Get crew's value (Affected by caching)
-            (4) Buy action - Other queries
+            (5) Buy action queries
         """
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1241,10 +1239,8 @@ class Test__Sell(TestCase, MessagesMixin):
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
             (1) SELECT purchase, crew, team, user, day, event
             (2) Transaction overhead
-            (3) Sell action queries (2 with caching)
+            (3) Sell action queries
         """
-        
-        models.Crew.value.cache_clear()
         
         self.client.login(username = 'DevTeam', password = 'password')
         

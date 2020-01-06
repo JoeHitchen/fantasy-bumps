@@ -204,7 +204,6 @@ class Crew(models.Model):
         return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
     
     
-    @lru_cache(maxsize = 1000)
     def value(self, day):
         """The price of the crew for a given day."""
         

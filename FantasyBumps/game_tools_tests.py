@@ -262,10 +262,8 @@ class Test__All_Investments(TestCase):
             (1) SELECT entries
             (2) SELECT mens's & women's crews as prefetch objects
             (1) SELECT all seats
-            (3) Create payout matrix
+            (4) Create payout matrix  (3 if day.next is cached)
             (1) UPDATE entries
-            
-            Assumes crew value lookups are query-free (e.g. from caching)
         """
         
         value_change = self.crew_hert.value(self.day2) - self.crew_hert.value(self.day1)
@@ -273,10 +271,8 @@ class Test__All_Investments(TestCase):
         
         self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
         
-        for crew in models.Crew.objects.all():
-            crew.value(self.day1)
-            crew.value(self.day1.next)
+        fresh_day = models.Day.objects.select_related().get(pk = self.day1.pk)
         
-        with self.assertNumQueries(8):
-            tools.evaluate_all_investments(self.day1)
+        with self.assertNumQueries(9):
+            tools.evaluate_all_investments(fresh_day)
 

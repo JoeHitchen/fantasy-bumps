@@ -22,7 +22,6 @@ class Test__Buy(TestCase):
     
     
     def setUp(self):
-        models.Crew.value.cache_clear()
         self.budgets.refresh_from_db()
     
     
@@ -214,7 +213,7 @@ class Test__Buy(TestCase):
     def test__query_count__standard(self):
         """ Expect:
             (1) SELECT budgets
-            (1) SELECT crew's position  (Affected by caching)
+            (1) SELECT crew's position
             (1) UPDATE budgets
             (1) SELECT and LOCK crew list, seats, and athletes for duplication check
             (1) INSERT new purchase
@@ -339,12 +338,10 @@ class Test__Sell(TestCase):
     @tag('query-count')
     def test__query_count(self):
         """ Expect:
-            (1) SELECT crew's position  (Affected by caching)
+            (1) SELECT crew's position
             (1) UPDATE budget/gameentry
             (1) DELETE purchase
         """
-        
-        self.crew.value.cache_clear()
         
         fresh_purchase = models.Purchase.objects.select_related().get(id = self.purchase.id)
         with self.assertNumQueries(3):

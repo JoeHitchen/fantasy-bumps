@@ -575,8 +575,6 @@ class Test__Crew(TestCase):
         
         crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
         crew_mens.positions.create(day = cls.day1, rank = 4)  # Added to ensure gender isolation
-        
-        models.Crew.value.cache_clear()
     
     
     def test__string__womens_first(self):
@@ -637,8 +635,6 @@ class Test__Crew(TestCase):
         """Expect:
             (1) SELECT crew's position
         """
-        
-        models.Crew.value.cache_clear()
         
         with self.assertNumQueries(1):
             self.crew_top.value(self.day1)
