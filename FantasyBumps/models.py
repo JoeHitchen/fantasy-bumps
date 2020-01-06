@@ -208,14 +208,13 @@ class Crew(models.Model):
     def value(self, day):
         """The price of the crew for a given day."""
         
-        total_crews = day.event.num_crews(self.gender)
-        
         try:
-            rank = self.positions.get(day = day).rank
+            return pricing(
+                self.positions.get(day = day).rank,
+                day.event.num_crews(self.gender),
+            )
         except Position.DoesNotExist:
             return 0
-        
-        return pricing(rank, total_crews)
     
     
     def results(self, day):
