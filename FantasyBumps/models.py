@@ -208,12 +208,7 @@ class Crew(models.Model):
     def value(self, day):
         """The price of the crew for a given day."""
         
-        total_crews = (
-            day.ranking
-            .filter(crew__gender = self.gender)
-            .aggregate(models.Max('rank'))
-            ['rank__max']
-        )
+        total_crews = day.event.num_crews(self.gender)
         
         try:
             rank = self.positions.get(day = day).rank

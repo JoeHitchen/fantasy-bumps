@@ -549,7 +549,11 @@ class Test__Crew(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        days = models.Day.objects.all()
+        event = models.Event.objects.first()
+        event.womens_divisions = 1
+        event.boats_per_division = 2  # Extra crew added in "last" division
+        
+        days = event.days.all()
         cls.day1 = days[0]
         cls.day2 = days[1]
         cls.day3 = days[2]
