@@ -632,6 +632,18 @@ class Test__Crew(TestCase):
         self.assertEqual(self.crew_middle.value(self.day1), utils.pricing(2, 3))
     
     
+    @tag('query-count')
+    def test__value__query_count(self):
+        """Expect:
+            (1) SELECT crew's position
+        """
+        
+        models.Crew.value.cache_clear()
+        
+        with self.assertNumQueries(1):
+            self.crew_top.value(self.day1)
+    
+    
     def test__results__first_day(self):
         """Calculates the change in positions, noting signs are reversed since small is good."""
         self.assertEqual(self.crew_top.results(self.day1), {'week': 0, 'yesterday': 0})
