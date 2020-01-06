@@ -60,7 +60,7 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
-    def test__before_rollover(self, timezone_mock):
+    def test__active_day__before_rollover(self, timezone_mock):
         """Returns first day from today onwards before 8pm."""
         
         self.assertEqual(
@@ -70,7 +70,7 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__after_rollover(self, timezone_mock):
+    def test__active_day__after_rollover(self, timezone_mock):
         """Returns first day from tomorrow onwards after 8pm."""
         
         self.assertEqual(
@@ -80,7 +80,7 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__after_event(self, timezone_mock):
+    def test__active_day__after_event(self, timezone_mock):
         """Returns last day of the event, if all have passed."""
         
         self.tomorrow.delete()
