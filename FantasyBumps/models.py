@@ -49,6 +49,13 @@ class Event(models.Model):
         
         day = self.days.filter(date__gte = date).first()
         return day if day else self.days.last()
+    
+    
+    def num_crews(self, gender):
+        """The number of crews of the given gender competing in the event."""
+        
+        num_divisions = self.womens_divisions if gender == genders.WOMENS else self.mens_divisions
+        return num_divisions * self.boats_per_division + 1
 
 
 

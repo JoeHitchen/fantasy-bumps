@@ -90,6 +90,32 @@ class Test__Event(TestCase):
             self.event.active_day,
             self.today,
         )
+    
+    
+    def test__num_crews__mens(self):
+        """Multiplies the number of divisions and the boats per division, then adds one."""
+        
+        self.event.mens_divisions = 7
+        self.event.boats_per_division = 13
+        
+        self.assertEqual(self.event.num_crews(genders.MENS), 92)
+    
+    
+    def test__num_crews__womens(self):
+        """Multiplies the number of divisions and the boats per division, then adds one."""
+        
+        self.event.womens_divisions = 5
+        self.event.boats_per_division = 12
+        
+        self.assertEqual(self.event.num_crews(genders.WOMENS), 61)
+    
+    
+    @tag('query-count')
+    def test__num_crews__query_count(self):
+        """NONE EXPECTED (but an important part of the crew valuation chain)"""
+        
+        with self.assertNumQueries(0):
+            self.event.num_crews(genders.WOMENS)
 
 
 
