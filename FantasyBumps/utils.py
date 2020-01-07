@@ -62,6 +62,11 @@ def pricing(bungline, num_crews):
     return pricing(bungline + 1, num_crews) - min(price_delta, -1)
 
 
+def pricing_by_day_and_gender(bungline, day, gender):
+    """A shallow wrapper around the pricing function to expose a bungline/day/gender interface."""
+    return pricing(bungline, day.event.num_crews(gender))
+
+
 def create_payout_matrix(day):
     """Calculates the value change and payout for every crew racing on the day provided."""
     
