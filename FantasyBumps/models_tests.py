@@ -60,7 +60,7 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
-    def test__before_rollover(self, timezone_mock):
+    def test__active_day__before_rollover(self, timezone_mock):
         """Returns first day from today onwards before 8pm."""
         
         self.assertEqual(
@@ -70,7 +70,7 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__after_rollover(self, timezone_mock):
+    def test__active_day__after_rollover(self, timezone_mock):
         """Returns first day from tomorrow onwards after 8pm."""
         
         self.assertEqual(
@@ -80,7 +80,7 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__after_event(self, timezone_mock):
+    def test__active_day__after_event(self, timezone_mock):
         """Returns last day of the event, if all have passed."""
         
         self.tomorrow.delete()
@@ -90,6 +90,32 @@ class Test__Event(TestCase):
             self.event.active_day,
             self.today,
         )
+    
+    
+    def test__num_crews__mens(self):
+        """Multiplies the number of divisions and the boats per division, then adds one."""
+        
+        self.event.mens_divisions = 7
+        self.event.boats_per_division = 13
+        
+        self.assertEqual(self.event.num_crews(genders.MENS), 92)
+    
+    
+    def test__num_crews__womens(self):
+        """Multiplies the number of divisions and the boats per division, then adds one."""
+        
+        self.event.womens_divisions = 5
+        self.event.boats_per_division = 12
+        
+        self.assertEqual(self.event.num_crews(genders.WOMENS), 61)
+    
+    
+    @tag('query-count')
+    def test__num_crews__query_count(self):
+        """NONE EXPECTED (but an important part of the crew valuation chain)"""
+        
+        with self.assertNumQueries(0):
+            self.event.num_crews(genders.WOMENS)
 
 
 
@@ -523,7 +549,11 @@ class Test__Crew(TestCase):
     
     @classmethod
     def setUpTestData(cls):
-        days = models.Day.objects.all()
+        event = models.Event.objects.first()
+        event.womens_divisions = 1
+        event.boats_per_division = 2  # Extra crew added in "last" division
+        
+        days = event.days.all()
         cls.day1 = days[0]
         cls.day2 = days[1]
         cls.day3 = days[2]

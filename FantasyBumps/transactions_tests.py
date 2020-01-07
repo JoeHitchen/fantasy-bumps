@@ -215,7 +215,6 @@ class Test__Buy(TestCase):
         """ Expect:
             (1) SELECT budgets
             (1) SELECT crew's position  (Affected by caching)
-            (1) SELECT day's maximum rank  (Affected by caching)
             (1) UPDATE budgets
             (1) SELECT and LOCK crew list, seats, and athletes for duplication check
             (1) INSERT new purchase
@@ -236,14 +235,14 @@ class Test__Buy(TestCase):
         
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(5):
             _buy_body(self.team, fresh_day, self.seat, self.crew, athlete)
     
     
     @tag('query-count')
     def test__query_count__without_budgets(self):
         """ Expect:
-            (6) Queried as standard
+            (5) Queried as standard
             (2) Internal transaction overhead
             (1) INSERT new budget
         """
@@ -251,7 +250,7 @@ class Test__Buy(TestCase):
         fresh_day = models.Day.objects.select_related().get(id = self.day.id)
         self.budgets.delete()
         
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(8):
             _buy_body(self.team, fresh_day, self.seat, self.crew)
 
 
@@ -341,7 +340,6 @@ class Test__Sell(TestCase):
     def test__query_count(self):
         """ Expect:
             (1) SELECT crew's position  (Affected by caching)
-            (1) SELECT day's maximum rank  (Affected by caching)
             (1) UPDATE budget/gameentry
             (1) DELETE purchase
         """
@@ -349,7 +347,7 @@ class Test__Sell(TestCase):
         self.crew.value.cache_clear()
         
         fresh_purchase = models.Purchase.objects.select_related().get(id = self.purchase.id)
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(3):
             _sell_body(fresh_purchase)
 
 
