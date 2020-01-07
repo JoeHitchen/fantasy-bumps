@@ -209,17 +209,14 @@ class Test__Create_Payout_Matrix(TestCase):
     @tag('query-count')
     def test__query_count(self):
         """Expect:
+            (1) SELECT next day of event (can be cached)
             (1) SELECT crews with positions on day
             (1) SELECT positions for crews on day
             (1) SELECT positions for crews on the next day
-        
-        Assuming crew values are all previously cached.
         """
         
-        for crew in models.Crew.objects.all():
-            crew.value(self.day)
-            crew.value(self.day.next)
+        fresh_day = models.Day.objects.select_related().get(pk = self.day.pk)
         
-        with self.assertNumQueries(3):
-            utils.create_payout_matrix(self.day)
+        with self.assertNumQueries(4):
+            utils.create_payout_matrix(fresh_day)
 
