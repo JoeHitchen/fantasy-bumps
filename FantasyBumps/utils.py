@@ -99,14 +99,19 @@ def create_payout_matrix(day):
         
         posn_old = crew.posn_old[0].rank
         posn_new = crew.posn_new[0].rank
-        change = posn_old - posn_new  # Sign reversed
+        posn_change = posn_old - posn_new  # Sign reversed
         
         crew_value_old = pricing_by_day_and_gender(posn_old, day, crew.gender)
         crew_value_new = pricing_by_day_and_gender(posn_new, day, crew.gender)
         
+        payout = 0
+        if posn_change >= 0:
+            payout = (0.14 * posn_change + 0.07) * crew_value_old
+            payout = round(payout)
+        
         matrix[crew] = {
             'value_change': crew_value_new - crew_value_old,
-            'payout': round( (0.14 * change + 0.07) * crew_value_old ) if change >= 0 else 0,  # noqa: E201 E202 E501
+            'payout': payout,
         }
     
     return matrix
