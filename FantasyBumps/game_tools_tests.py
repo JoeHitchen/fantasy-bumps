@@ -273,6 +273,10 @@ class Test__All_Investments(TestCase):
         
         self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
         
+        for crew in models.Crew.objects.all():
+            crew.value(self.day1)
+            crew.value(self.day1.next)
+        
         with self.assertNumQueries(8):
             tools.evaluate_all_investments(self.day1)
 

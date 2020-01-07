@@ -624,6 +624,7 @@ class Test__Crew(TestCase):
             (3) SELECT positions
         """
         
+        self.day3.prev
         del self.day3.prev
         
         with self.assertNumQueries(5):
