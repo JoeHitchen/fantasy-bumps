@@ -110,11 +110,11 @@ def results_pill(results):
     Buy {{ crew_value|currency }}
   </button>
 '''))
-def buy_button(day, crew, disabled = False):
+def buy_button(position, disabled = False):
     return {
-        'day': day,
-        'crew': crew,
-        'crew_value': crew.value(day),
+        'day': position.day,
+        'crew': position.crew,
+        'crew_value': position.crew.value(position.day),
         'disabled': ' disabled' if disabled else '',
     }
 
@@ -148,7 +148,7 @@ def switch_button(purchase):
     <div class="flex-grow-1">{{ position.crew }}</div>
     {% results_pill results %}
     <span style="width: 1em">&nbsp;</span>
-    {% if show_actions %}{% buy_button position.day position.crew disabled %}{% endif %}
+    {% if show_actions %}{% buy_button position disabled %}{% endif %}
   </div>
 '''))
 def market_row(position, balance, show_actions):
