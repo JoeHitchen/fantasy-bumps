@@ -65,9 +65,6 @@ def currency(amount):
     return format_html('₢ {}', amount)
 
 
-@register.filter
-def value(crew, day):
-    return currency(crew.value(day))
 
 
 @register.filter
@@ -110,21 +107,26 @@ def results_pill(results):
     class="btn btn-primary btn-sm btn-buy{{ disabled }}"
     {% if not disabled %}data-day="{{ day.id }}" data-crew="{{ crew.id }}"{% endif %}
   >
-    Buy {{ crew|value:day }}
+    Buy {{ crew_value|currency }}
   </button>
 '''))
 def buy_button(day, crew, disabled = False):
-    return {'day': day, 'crew': crew, 'disabled': ' disabled' if disabled else ''}
+    return {
+        'day': day,
+        'crew': crew,
+        'crew_value': crew.value(day),
+        'disabled': ' disabled' if disabled else '',
+    }
 
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <button class="btn btn-primary btn-sm btn-sell" data-purchase="{{ purchase.id }}">
-    Sell {{ purchase.crew|value:purchase.day }}
+    Sell {{ crew_value|currency }}
   </button>
 '''))
 def sell_button(purchase):
-    return {'purchase': purchase}
+    return {'purchase': purchase, 'crew_value': purchase.crew.value(purchase.day)}
 
 
 @register.inclusion_tag(template.Template('''
