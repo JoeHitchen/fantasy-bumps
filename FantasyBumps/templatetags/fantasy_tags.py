@@ -6,6 +6,7 @@ from django.utils.html import format_html
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from .. import models
+from .. import utils
 
 register = template.Library()
 
@@ -114,7 +115,11 @@ def buy_button(position, disabled = False):
     return {
         'day': position.day,
         'crew': position.crew,
-        'crew_value': position.crew.value(position.day),
+        'crew_value': utils.pricing_by_day_and_gender(
+            position.rank,
+            position.day,
+            position.crew.gender,
+        ),
         'disabled': ' disabled' if disabled else '',
     }
 
@@ -152,8 +157,16 @@ def switch_button(purchase):
   </div>
 '''))
 def market_row(position, balance, show_actions):
-    disabled = show_actions and position.crew.value(position.day) > balance
+    
+    crew_value = utils.pricing_by_day_and_gender(
+        position.rank,
+        position.day,
+        position.crew.gender,
+    )
+    
+    disabled = show_actions and crew_value > balance
     results = position.crew.results(position.day)
+    
     return {
         'position': position,
         'disabled': disabled,
