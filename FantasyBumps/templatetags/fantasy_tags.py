@@ -6,6 +6,7 @@ from django.utils.html import format_html
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from .. import models
+from .. import utils
 
 register = template.Library()
 
@@ -65,9 +66,6 @@ def currency(amount):
     return format_html('₢ {}', amount)
 
 
-@register.filter
-def value(crew, day):
-    return currency(crew.value(day))
 
 
 @register.filter
@@ -110,21 +108,30 @@ def results_pill(results):
     class="btn btn-primary btn-sm btn-buy{{ disabled }}"
     {% if not disabled %}data-day="{{ day.id }}" data-crew="{{ crew.id }}"{% endif %}
   >
-    Buy {{ crew|value:day }}
+    Buy {{ crew_value|currency }}
   </button>
 '''))
-def buy_button(day, crew, disabled = False):
-    return {'day': day, 'crew': crew, 'disabled': ' disabled' if disabled else ''}
+def buy_button(position, disabled = False):
+    return {
+        'day': position.day,
+        'crew': position.crew,
+        'crew_value': utils.pricing_by_day_and_gender(
+            position.rank,
+            position.day,
+            position.crew.gender,
+        ),
+        'disabled': ' disabled' if disabled else '',
+    }
 
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <button class="btn btn-primary btn-sm btn-sell" data-purchase="{{ purchase.id }}">
-    Sell {{ purchase.crew|value:purchase.day }}
+    Sell {{ crew_value|currency }}
   </button>
 '''))
 def sell_button(purchase):
-    return {'purchase': purchase}
+    return {'purchase': purchase, 'crew_value': purchase.crew.value(purchase.day)}
 
 
 @register.inclusion_tag(template.Template('''
@@ -146,12 +153,20 @@ def switch_button(purchase):
     <div class="flex-grow-1">{{ position.crew }}</div>
     {% results_pill results %}
     <span style="width: 1em">&nbsp;</span>
-    {% if show_actions %}{% buy_button position.day position.crew disabled %}{% endif %}
+    {% if show_actions %}{% buy_button position disabled %}{% endif %}
   </div>
 '''))
 def market_row(position, balance, show_actions):
-    disabled = show_actions and position.crew.value(position.day) > balance
+    
+    crew_value = utils.pricing_by_day_and_gender(
+        position.rank,
+        position.day,
+        position.crew.gender,
+    )
+    
+    disabled = show_actions and crew_value > balance
     results = position.crew.results(position.day)
+    
     return {
         'position': position,
         'disabled': disabled,

@@ -62,8 +62,18 @@ def pricing(bungline, num_crews):
     return pricing(bungline + 1, num_crews) - min(price_delta, -1)
 
 
+def pricing_by_day_and_gender(bungline, day, gender):
+    """A shallow wrapper around the pricing function to expose a bungline/day/gender interface."""
+    return pricing(bungline, day.event.num_crews(gender))
+
+
 def create_payout_matrix(day):
-    """Calculates the value change and payout for every crew racing on the day provided."""
+    """Calculates the value change and payout for every crew racing on the day provided.
+    
+    Optimised when:
+        select_related called when retrieving day
+        day.next has been set
+    """
     
     # Retrieve crews racing
     crews = (
@@ -87,12 +97,21 @@ def create_payout_matrix(day):
     matrix = {}
     for crew in crews:
         
-        crew_value = crew.value(day)
-        change = crew.posn_old[0].rank - crew.posn_new[0].rank  # Sign reversed
+        posn_old = crew.posn_old[0].rank
+        posn_new = crew.posn_new[0].rank
+        posn_change = posn_old - posn_new  # Sign reversed
+        
+        crew_value_old = pricing_by_day_and_gender(posn_old, day, crew.gender)
+        crew_value_new = pricing_by_day_and_gender(posn_new, day, crew.gender)
+        
+        payout = 0
+        if posn_change >= 0:
+            payout = (0.14 * posn_change + 0.07) * crew_value_old
+            payout = round(payout)
         
         matrix[crew] = {
-            'value_change': crew.value(day.next) - crew_value,
-            'payout': round( (0.14 * change + 0.07) * crew_value ) if change >= 0 else 0,  # noqa: E201 E202 E501
+            'value_change': crew_value_new - crew_value_old,
+            'payout': payout,
         }
     
     return matrix

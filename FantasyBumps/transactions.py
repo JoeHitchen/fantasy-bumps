@@ -14,7 +14,6 @@ def buy(team, day, seat, crew, athlete = None):
     
     Optimised when:
         select_related called when retrieving day
-        purchase.crew.value(day) is cached
         team's budgets for day exist
     
     Specific possible errors:
@@ -75,7 +74,6 @@ def sell(purchase):
     
     Optimised when:
         select_related called when retrieving purchase
-        purchase.crew.value(day) is cached
     
     Specific possible errors:
         Purchase.DoesNotExist (standard)

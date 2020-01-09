@@ -575,8 +575,6 @@ class Test__Crew(TestCase):
         
         crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
         crew_mens.positions.create(day = cls.day1, rank = 4)  # Added to ensure gender isolation
-        
-        models.Crew.value.cache_clear()
     
     
     def test__string__womens_first(self):
@@ -630,6 +628,16 @@ class Test__Crew(TestCase):
     def test__value__middle_crew(self):
         """Returns the price from the pricing algorithm."""
         self.assertEqual(self.crew_middle.value(self.day1), utils.pricing(2, 3))
+    
+    
+    @tag('query-count')
+    def test__value__query_count(self):
+        """Expect:
+            (1) SELECT crew's position
+        """
+        
+        with self.assertNumQueries(1):
+            self.crew_top.value(self.day1)
     
     
     def test__results__first_day(self):
