@@ -275,6 +275,8 @@ class Test__Misc(TestCase):
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
+        cls.position = cls.crew.positions.get(day = cls.day)
+        cls.position.bungline = 1
     
     
     @staticmethod
@@ -287,12 +289,12 @@ class Test__Misc(TestCase):
     
     
     @staticmethod
-    def buy_button(day, crew, disabled = False):
+    def buy_button(position, disabled = False):
         """A helper function that renders a buy button."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% buy_button day crew disabled %}')
-            .render(template.Context({'day': day, 'crew': crew, 'disabled': disabled}))
+            .Template('{% load fantasy_tags %}{% buy_button position disabled %}')
+            .render(template.Context({'position': position, 'disabled': disabled}))
         )
     
     
@@ -315,13 +317,6 @@ class Test__Misc(TestCase):
         
         html = tags.currency(100)
         self.assertEqual(html, '₢ 100')
-    
-    
-    def test__value_filter(self):
-        """Renders the crew value with currency symbol."""
-        
-        html = tags.value(self.crew, self.day)
-        self.assertEqual(html, '₢ 300')
     
     
     def test__results_item__row_over(self):
@@ -411,7 +406,7 @@ class Test__Misc(TestCase):
     def test__buy_button__standard(self):
         """Renders a styled button with an attached function call."""
         
-        html = self.buy_button(self.day, self.crew, disabled = False)
+        html = self.buy_button(self.position, disabled = False)
         button = parser(html)
         
         self.assertEqual(button.tag, 'button')
@@ -425,13 +420,13 @@ class Test__Misc(TestCase):
         self.assertEqual(button.get('data-day'), str(self.day.id))
         self.assertEqual(button.get('data-crew'), str(self.crew.id))
         
-        self.assertInHTML('Buy ' + tags.value(self.crew, self.day), html)
+        self.assertInHTML('Buy ' + tags.currency(self.crew.value(self.day)), html)
     
     
     def test__buy_button__disabled(self):
         """Includes the disabled class and does not have a function call."""
         
-        html = self.buy_button(self.day, self.crew, disabled = True)
+        html = self.buy_button(self.position, disabled = True)
         button = parser(html)
         
         self.assertEqual(button.tag, 'button')
@@ -445,15 +440,13 @@ class Test__Misc(TestCase):
         self.assertFalse('data-day' in button.attrib)
         self.assertFalse('data-crew' in button.attrib)
         
-        self.assertInHTML('Buy ' + tags.value(self.crew, self.day), html)
+        self.assertInHTML('Buy ' + tags.currency(self.crew.value(self.day)), html)
     
     
     def test__market_row__standard(self):
         """Renders a styled div, that contains an avatar, crew box, and buy button."""
         
-        position = models.Position.objects.first()
-        position.bungline = 1  # Expected to be set
-        html = self.market_row(position, 675)
+        html = self.market_row(self.position, 675)
         
         # Test root
         row = parser(html)
@@ -461,22 +454,20 @@ class Test__Misc(TestCase):
         self.assertIn('market-row', row.get('class').split())
         
         # Test containments
-        avatar = tags.avatar(position.bungline, position.crew.club)
+        avatar = tags.avatar(self.position.bungline, self.crew.club)
         self.assertInHTML(avatar, html)
         
-        crew = '<div class="flex-grow-1">{}</div>'.format(position.crew)
+        crew = '<div class="flex-grow-1">{}</div>'.format(self.crew)
         self.assertInHTML(crew, html)
         
-        buy_button = self.buy_button(position.day, position.crew)
+        buy_button = self.buy_button(self.position)
         self.assertInHTML(buy_button, html)
     
     
     def test__market_row__cant_afford(self):
         """Renders a styled div, that contains an avatar, crew box, and disabled buy button."""
         
-        position = models.Position.objects.first()
-        position.bungline = 1  # Expected to be set
-        html = self.market_row(position, 1)
+        html = self.market_row(self.position, 1)
         
         # Test root
         row = parser(html)
@@ -484,13 +475,13 @@ class Test__Misc(TestCase):
         self.assertIn('market-row', row.get('class').split())
         
         # Test containments
-        avatar = tags.avatar(position.bungline, position.crew.club)
+        avatar = tags.avatar(self.position.bungline, self.crew.club)
         self.assertInHTML(avatar, html)
         
-        crew = '<div class="flex-grow-1">{}</div>'.format(position.crew)
+        crew = '<div class="flex-grow-1">{}</div>'.format(self.crew)
         self.assertInHTML(crew, html)
         
-        buy_button = self.buy_button(position.day, position.crew, disabled = True)
+        buy_button = self.buy_button(self.position, disabled = True)
         self.assertInHTML(buy_button, html)
     
     
@@ -589,7 +580,7 @@ class Test__Crew_List(TestCase):
         
         self.assertEqual(button.get('data-purchase'), str(purchase.id))
         
-        self.assertInHTML('Sell ' + tags.value(self.crew, self.day), html)
+        self.assertInHTML('Sell ' + tags.currency(self.crew.value(self.day)), html)
     
     
     def test__crew_list_row__no_purchase(self):
