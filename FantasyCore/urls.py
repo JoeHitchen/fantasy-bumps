@@ -1,11 +1,14 @@
-from django.urls import path, include, reverse_lazy
+from django.urls import path, re_path, include, reverse_lazy
 from django.views.generic.edit import CreateView
 from django.contrib.auth.forms import UserCreationForm
 from django.conf.urls.static import static
 
 from . import settings
+from . import views
+
 
 urlpatterns = [
+    re_path('^healthcheck/?$', views.healthcheck, name = 'healthcheck'),
     path('accounts/', include('django.contrib.auth.urls')),
     path(
         'accounts/signup/',
