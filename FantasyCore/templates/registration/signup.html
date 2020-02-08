@@ -1,6 +1,8 @@
 {% extends 'registration/base.html' %}
 
-{% block form %}
+{% block auth_header %}Create team{% endblock %}
+
+{% block auth_body %}
 <form method="post" action="{% url 'signup' %}">
   {% csrf_token %}
   {{ form.non_field_errors }}

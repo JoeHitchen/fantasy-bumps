@@ -1,11 +1,13 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<div class="card">
-  <div class="card-header bg-primary">Fantasy Bumps</div>
-  <div class="card-body">
-{% block form %}
-{% endblock %}
+<div class="row justify-content-center">
+  <div class="card mt-4 mx-2" style="max-width: 30em">
+    <div class="card-header">{% block auth_header %}Authentication Page{% endblock %}</div>
+    <div class="card-body">
+      {% block auth_body %}
+      {% endblock %}
+    </div>
   </div>
 </div>
 {% endblock %}
