@@ -78,6 +78,18 @@ DATABASES = {
     },
 }
 
+
+# Email
+# https://docs.djangoproject.com/en/2.1/ref/settings/#email
+
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+EMAIL_USE_TLS = EMAIL_HOST != 'localhost'
+
+DEFAULT_FROM_EMAIL = 'no-reply@mail.fantasybumps.org.uk'
+
+
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
