@@ -1,32 +1,23 @@
 {% extends 'registration/base.html' %}
 
-{% block auth_header %}Create team{% endblock %}
+{% block auth_header %}Create account{% endblock %}
 
-{% block auth_body %}
-<form method="post" action="{% url 'signup' %}">
-  {% csrf_token %}
-  {{ form.non_field_errors }}
-  <table>
-    <tr>
-      <td>{{ form.username.label_tag }}</td>
-      <td>{{ form.username }}</td>
-      <td>{{ form.username.errors }}</td>
-    </tr>
-    <tr>
-      <td>{{ form.password1.label_tag }}</td>
-      <td>{{ form.password1 }}</td>
-      <td>{{ form.password1.errors }}</td>
-    </tr>
-    <tr>
-      <td>{{ form.password2.label_tag }}</td>
-      <td>{{ form.password2 }}</td>
-      <td>{{ form.password2.errors }}</td>
-    </tr>
-  </table>
-  <input type="submit" value="Signup">
-  <input type="hidden" name="next" value="{{ next }}">
-</form>
+{% block auth_text %}
+Your password must have eight characters, cannot be similar to your username, and cannot be commonly used.
+{% endblock %}
 
-<p><a href="{% url 'login' %}">Have account?</a></p>
-<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+{% block auth_form %}
+<input type="text" name="username" required class="form-control form-control-sm" placeholder="Team name">
+{{ form.email }}
+<input type="password" name="password1" required class="form-control form-control-sm mt-2" placeholder="Password">
+<input type="password" name="password2" required class="form-control form-control-sm mt-2" placeholder="Retype password">
+<input type="hidden" name="next" value="{{ next }}">
+
+<div class="row justify-content-around">
+  <button type="submit" class="btn btn-primary btn-sm mt-3 mx-3">Create account</button>
+  <div class="btn-group mt-3">
+    <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Sign in</a>
+    <a href="{% url 'password_reset' %}" class="btn btn-secondary btn-sm">Reset password</a>
+  </div>
+</div>
 {% endblock %}
