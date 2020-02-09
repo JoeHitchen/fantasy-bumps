@@ -1,6 +1,4 @@
-from django.urls import path, re_path, include, reverse_lazy
-from django.views.generic.edit import CreateView
-from django.contrib.auth.forms import UserCreationForm
+from django.urls import path, re_path, include
 from django.conf.urls.static import static
 
 from . import settings
@@ -9,16 +7,8 @@ from . import views
 
 urlpatterns = [
     re_path('^healthcheck/?$', views.healthcheck, name = 'healthcheck'),
+    path('accounts/signup/', views.UserCreationView.as_view(), name = 'signup'),
     path('accounts/', include('django.contrib.auth.urls')),
-    path(
-        'accounts/signup/',
-        CreateView.as_view(
-            form_class = UserCreationForm,
-            template_name = 'registration/signup.html',
-            success_url = reverse_lazy('login'),
-        ),
-        name = 'signup',
-    ),
     path('', include('FantasyBumps.urls')),
 ]
 

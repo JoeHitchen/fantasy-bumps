@@ -1,3 +1,6 @@
+from django.views.generic.edit import CreateView
+from django.contrib.auth.forms import UserCreationForm
+from django.urls import reverse_lazy
 from django.http import JsonResponse
 
 
@@ -10,4 +13,10 @@ def healthcheck(request):
         'name': 'FantasyBumps',
         'notice': healthcheck_notice,
     })
+
+
+class UserCreationView(CreateView):
+    form_class = UserCreationForm
+    template_name = 'registration/signup.html'
+    success_url = reverse_lazy('login')
 
