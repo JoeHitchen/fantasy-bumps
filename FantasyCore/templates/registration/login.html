@@ -7,9 +7,9 @@
 {% block auth_form %}
 <input type="text" name="username" required class="form-control form-control-sm" placeholder="Team name">
 <input type="password" name="password" required class="form-control form-control-sm mt-2" placeholder="Password">
-<div class="row justify-content-around">
+<div class="row justify-content-between">
   <button type="submit" class="btn btn-primary btn-sm mt-3 mx-3">Sign in</button>
-  <div class="btn-group mt-3">
+  <div class="btn-group mt-3 mx-3">
     <a href="{% url 'signup' %}" class="btn btn-secondary btn-sm">Create account</a>
     <a href="{% url 'password_reset' %}" class="btn btn-secondary btn-sm">Reset password</a>
   </div>

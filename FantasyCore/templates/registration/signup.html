@@ -13,9 +13,9 @@ Your password must have eight characters, cannot be similar to your username, an
 <input type="password" name="password2" required class="form-control form-control-sm mt-2" placeholder="Retype password">
 <input type="hidden" name="next" value="{{ next }}">
 
-<div class="row justify-content-around">
+<div class="row justify-content-between">
   <button type="submit" class="btn btn-primary btn-sm mt-3 mx-3">Create account</button>
-  <div class="btn-group mt-3">
+  <div class="btn-group mt-3 mx-3">
     <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Sign in</a>
     <a href="{% url 'password_reset' %}" class="btn btn-secondary btn-sm">Reset password</a>
   </div>
