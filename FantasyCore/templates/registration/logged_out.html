@@ -1,6 +1,11 @@
 {% extends "registration/base.html" %}
 
-{% block form %}
-<p>You have been logged out.</p>
-<p><a href="{% url 'login' %}">Log in again</a></p>
+{% block auth_header %}Signed out{% endblock %}
+
+{% block auth_text %}
+You have been signed out.
+<br/><br/>
+<div class="row justify-content-center">
+  <a href="{% url 'login' %}" class="btn btn-primary btn-sm">Sign in</a>
+</div>
 {% endblock %}

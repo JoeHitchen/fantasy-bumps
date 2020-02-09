@@ -1,25 +1,17 @@
 {% extends 'registration/base.html' %}
 
-{% block form %}
-<form method="post" action="{% url 'login' %}">
-  {% csrf_token %}
-  {{ form.non_field_errors }}
-  <table>
-    <tr>
-      <td>{{ form.username.label_tag }}</td>
-      <td>{{ form.username }}</td>
-      <td>{{ form.username.errors }}</td>
-    </tr>
-    <tr>
-      <td>{{ form.password.label_tag }}</td>
-      <td>{{ form.password }}</td>
-      <td>{{ form.password.errors }}</td>
-    </tr>
-  </table>
-  <input type="submit" value="login">
-  <input type="hidden" name="next" value="{{ next }}">
-</form>
+{% block auth_header %}Account sign in{% endblock %}
 
-<p><a href="{% url 'signup' %}">No account?</a></p>
-<p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+{% block auth_text %}Remember - Team names are case-sensitive.{% endblock %}
+
+{% block auth_form %}
+<input type="text" name="username" required class="form-control form-control-sm" placeholder="Team name">
+<input type="password" name="password" required class="form-control form-control-sm mt-2" placeholder="Password">
+<div class="row justify-content-around">
+  <button type="submit" class="btn btn-primary btn-sm mt-3 mx-3">Sign in</button>
+  <div class="btn-group mt-3">
+    <a href="{% url 'signup' %}" class="btn btn-secondary btn-sm">Create account</a>
+    <a href="{% url 'password_reset' %}" class="btn btn-secondary btn-sm">Reset password</a>
+  </div>
+</div>
 {% endblock %}

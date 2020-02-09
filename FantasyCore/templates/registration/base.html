@@ -1,11 +1,30 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-<div class="card">
-  <div class="card-header bg-primary">Fantasy Bumps</div>
-  <div class="card-body">
-{% block form %}
-{% endblock %}
+<div class="row justify-content-center">
+  <div class="card mt-4 mx-2" style="max-width: 30em">
+    <div class="card-header">{% block auth_header %}Authentication Page{% endblock %}</div>
+    <div class="card-body">
+      <div{% if form %} class="mb-3"{% endif %}>
+        {% block auth_text %}{% endblock %}
+      </div>
+      {% if form %}<form method="post">
+        {% csrf_token %}
+        {% for error in form.non_field_errors %}
+        <div class="alert alert-danger alert-dismissible fade show">
+          {{ error }}
+          <button class="close" data-dismiss="alert"><span>&times;</span></button>
+        </div>
+        {% endfor %}
+        {% for field in form %}{% for error in field.errors %}
+        <div class="alert alert-danger alert-dismissible fade show">
+          {{ error }}
+          <button class="close" data-dismiss="alert"><span>&times;</span></button>
+        </div>
+        {% endfor %}{% endfor %}
+        {% block auth_form %}{% endblock %}
+      </form>{% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}
