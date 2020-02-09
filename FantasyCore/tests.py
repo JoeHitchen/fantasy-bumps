@@ -2,6 +2,8 @@ import json
 
 from django.test import TestCase
 from django.urls import reverse
+from django.contrib import messages
+from django.contrib import auth
 
 from .views import healthcheck_notice
 
@@ -68,4 +70,33 @@ class Test__Healthcheck(TestCase):
             json.loads(response.content),
             {'name': 'FantasyBumps', 'notice': healthcheck_notice},
         )
+
+
+
+class Test__Account_Signup(TestCase):
+    
+    def test__success(self):
+        """Redirects to the login page and sends a success message."""
+        
+        username = 'ATestUser'
+        post_data = {
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        }
+        response = self.client.post(reverse('signup'), post_data)
+        self.assertRedirects(response, reverse('fantasybumps:index'))
+        
+        user = auth.get_user(self.client)
+        self.assertEqual(user.username, username)
+        self.assertTrue(user.is_authenticated)
+        
+        response_messages = messages.get_messages(response.wsgi_request)
+        self.assertEqual(len(response_messages), 1)
+        for msg in response_messages:
+            self.assertEqual(msg.level, messages.SUCCESS)
+            self.assertEqual(
+                msg.message,
+                'Welcome ATestUser - Your account has been created.',
+            )
 
