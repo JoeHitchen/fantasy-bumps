@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib import auth
 
+from . import forms
 from .views import healthcheck_notice
 
 
@@ -75,7 +76,41 @@ class Test__Healthcheck(TestCase):
 
 class Test__Account_Signup(TestCase):
     
-    def test__success(self):
+    def test__form__without_email(self):
+        """Creates a user that does not have an e-mail address."""
+        
+        username = 'ATestUser'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertTrue(form.is_valid())
+        form.save()
+        
+        user = auth.models.User.objects.get(username = username)
+        self.assertFalse(user.email)
+    
+    
+    def test__form__with_email(self):
+        """Creates a user that does has an e-mail address."""
+        
+        username = 'ATestUser'
+        email = 'test@example.org'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'email': email,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertTrue(form.is_valid())
+        form.save()
+        
+        user = auth.models.User.objects.get(username = username)
+        self.assertEqual(user.email, email)
+        
+    
+    def test__view__success(self):
         """Redirects to the login page and sends a success message."""
         
         username = 'ATestUser'

@@ -8,7 +8,7 @@ Your password must have eight characters, cannot be similar to your username, an
 
 {% block auth_form %}
 <input type="text" name="username" required class="form-control form-control-sm" placeholder="Team name">
-{{ form.email }}
+<input type="email" name="email" class="form-control form-control-sm mt-2" placeholder="(Optional) Recovery e-mail">
 <input type="password" name="password1" required class="form-control form-control-sm mt-2" placeholder="Password">
 <input type="password" name="password2" required class="form-control form-control-sm mt-2" placeholder="Retype password">
 <input type="hidden" name="next" value="{{ next }}">

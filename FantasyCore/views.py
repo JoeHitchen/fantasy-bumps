@@ -1,9 +1,10 @@
 from django.views.generic.edit import CreateView
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import authenticate, login
 from django.urls import reverse_lazy
 from django.http import JsonResponse
+
+from . import forms
 
 
 healthcheck_notice = 'This healthcheck gives the name of the service and echos any GET data provided to demonstrate a dynamic response.'  # noqa: E501
@@ -21,7 +22,7 @@ class UserCreationView(SuccessMessageMixin, CreateView):
     """Renders and processes a user creation form."""
     
     # View settings
-    form_class = UserCreationForm
+    form_class = forms.UserCreationWithEmailForm
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('fantasybumps:index')
     
