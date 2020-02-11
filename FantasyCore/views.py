@@ -25,7 +25,7 @@ class UserCreationView(SuccessMessageMixin, CreateView):
     # View settings
     form_class = forms.UserCreationWithEmailForm
     template_name = 'registration/signup.html'
-    success_url = reverse_lazy('fantasybumps:index')
+    success_url = reverse_lazy('index')
     
     def get_success_message(self, data):
         return 'Welcome {} - Your account has been created.'.format(self.object)

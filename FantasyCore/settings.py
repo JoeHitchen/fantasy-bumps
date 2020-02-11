@@ -135,7 +135,7 @@ MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(BASE_DIR, 'media'))
 
 
 # Other settings
-LOGIN_REDIRECT_URL = 'fantasybumps:index'
+LOGIN_REDIRECT_URL = 'index'
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }

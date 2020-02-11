@@ -11,6 +11,7 @@ urlpatterns = [
     path('accounts/profile/', views.UserProfileView.as_view(), name = 'profile'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('FantasyBumps.urls')),
+    path('', lambda req: None, name = 'index' ), # Alias, handled by app
 ]
 
 if settings.DEBUG:

@@ -120,7 +120,7 @@ class Test__Account_Signup(TestCase):
             'password2': 'AComplexPassword',
         }
         response = self.client.post(reverse('signup'), post_data)
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('index'))
         
         user = auth.get_user(self.client)
         self.assertEqual(user.username, username)
