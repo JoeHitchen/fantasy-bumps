@@ -1,0 +1,20 @@
+{% extends 'registration/base.html' %}
+
+{% block auth_header %}Profile update{% endblock %}
+
+{% block auth_text %}
+You are not required to provide us an e-mail address.
+If you do, we can use it for recovering your account if you lose your password.
+{% endblock %}
+
+{% block auth_form %}
+<fieldset disabled>
+  <input type="text" name="username" value="{{ user.username }}" maxlength="150" required class="form-control form-control-sm disabled">
+</fieldset>
+<input type="email" name="email" class="form-control form-control-sm mt-2" placeholder="(Optional) Recovery e-mail" value="{{ user.email }}">
+
+<div class="row justify-content-between mt-3 mx-0">
+  <button type="submit" class="btn btn-primary btn-sm">Update</button>
+  <a href="{% url 'password_change' %}" class="btn btn-secondary btn-sm">Change password</a>
+</div>
+{% endblock %}

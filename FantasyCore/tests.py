@@ -135,3 +135,117 @@ class Test__Account_Signup(TestCase):
                 'Welcome ATestUser - Your account has been created.',
             )
 
+
+
+class Test__Account_Update(TestCase):
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = auth.models.User.objects.create_user('user', '', 'password')
+    
+    
+    def test__no_login(self):
+        """Redirects to the login page."""
+        
+        response = self.client.get(reverse('profile'))
+        self.assertRedirects(response, reverse('login'))
+    
+    
+    def test__ignore_username(self):
+        """Ignores attempts to update usernames."""
+        
+        self.client.login(username = 'user', password = 'password')
+        
+        response = self.client.post(reverse('profile'), {'username': 'AlternativeUser'})
+        self.assertRedirects(response, reverse('profile'))
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'user')
+    
+    
+    def test__view__add_email(self):
+        """Adds an e-mail address to the User."""
+        
+        self.client.login(username = 'user', password = 'password')
+        
+        response = self.client.post(reverse('profile'), {'email': 'test@example.com'})
+        self.assertRedirects(response, reverse('profile'))
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'test@example.com')
+        
+        response_messages = messages.get_messages(response.wsgi_request)
+        self.assertEqual(len(response_messages), 1)
+        for msg in response_messages:
+            self.assertEqual(msg.level, messages.SUCCESS)
+            self.assertEqual(
+                msg.message,
+                'Profile updated',
+            )
+    
+    
+    def test__view__change_email(self):
+        """Changes the User's e-mail."""
+        
+        self.user.email = 'example@test.com'
+        self.user.save()
+        
+        self.client.login(username = 'user', password = 'password')
+        
+        response = self.client.post(reverse('profile'), {'email': 'test@example.com'})
+        self.assertRedirects(response, reverse('profile'))
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'test@example.com')
+        
+        response_messages = messages.get_messages(response.wsgi_request)
+        self.assertEqual(len(response_messages), 1)
+        for msg in response_messages:
+            self.assertEqual(msg.level, messages.SUCCESS)
+            self.assertEqual(
+                msg.message,
+                'Profile updated',
+            )
+    
+    
+    def test__view__remove_email(self):
+        """Removes the User's e-mail."""
+        
+        self.user.email = 'example@test.com'
+        self.user.save()
+        
+        self.client.login(username = 'user', password = 'password')
+        
+        response = self.client.post(reverse('profile'), {'email': ''})
+        self.assertRedirects(response, reverse('profile'))
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, '')
+        
+        response_messages = messages.get_messages(response.wsgi_request)
+        self.assertEqual(len(response_messages), 1)
+        for msg in response_messages:
+            self.assertEqual(msg.level, messages.SUCCESS)
+            self.assertEqual(
+                msg.message,
+                'Profile updated',
+            )
+    
+    
+    def test__view__reject_invalid_email(self):
+        """Rejects invalid e-mail addresses."""
+        
+        self.user.email = 'example@test.com'
+        self.user.save()
+        
+        self.client.login(username = 'user', password = 'password')
+        
+        response = self.client.post(reverse('profile'), {'email': 'test'})
+        self.assertEqual(response.status_code, 200)
+        
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'example@test.com')
+        
+        response_messages = messages.get_messages(response.wsgi_request)
+        self.assertEqual(len(response_messages), 0)
+

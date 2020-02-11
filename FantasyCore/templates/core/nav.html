@@ -27,7 +27,7 @@
         </a>
         <div class="dropdown-menu">
           {% if event %}<a class="dropdown-item" href="{% url 'fantasybumps:team' event.tag user.username %}">My Crews</a>{% endif %}
-          <a class="dropdown-item" href="{% url 'password_change'%}">Change Password</a>
+          <a class="dropdown-item" href="{% url 'profile'%}">My Account</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
         </div>

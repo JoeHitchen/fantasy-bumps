@@ -1,6 +1,7 @@
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 
@@ -39,4 +40,19 @@ class UserCreationView(SuccessMessageMixin, CreateView):
         )
         login(self.request, authed_user)
         return redirect
+
+
+
+class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    """Renders and processes a user update form."""
+    
+    # View settings
+    form_class = forms.UserProfileForm
+    template_name = 'registration/profile.html'
+    redirect_field_name = None
+    success_url = reverse_lazy('profile')
+    success_message = 'Profile updated'
+    
+    def get_object(self, *args, **kwargs):
+        return self.request.user
 

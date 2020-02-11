@@ -8,6 +8,7 @@ from . import views
 urlpatterns = [
     re_path('^healthcheck/?$', views.healthcheck, name = 'healthcheck'),
     path('accounts/signup/', views.UserCreationView.as_view(), name = 'signup'),
+    path('accounts/profile/', views.UserProfileView.as_view(), name = 'profile'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('FantasyBumps.urls')),
 ]
