@@ -86,8 +86,11 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 EMAIL_USE_TLS = EMAIL_HOST != 'localhost'
-
 DEFAULT_FROM_EMAIL = 'no-reply@mail.fantasybumps.org.uk'
+
+SERVER_EMAIL = 'server-notice@mail.fantasybumps.org.uk'
+EMAIL_SUBJECT_PREFIX = '[FantasyBumps] '
+ADMINS = [('Joe Hitchen', 'hitchenjoe+sysadmin@gmail.com')]
 
 
 # Password validation
