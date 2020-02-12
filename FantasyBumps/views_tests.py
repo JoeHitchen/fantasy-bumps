@@ -3,9 +3,10 @@ from datetime import timedelta
 
 from django.test import TestCase, tag
 from django.utils import timezone
-from django.contrib import messages
 from django.contrib.auth import models as auth
 from django.urls import reverse
+
+from common.testing import MessagesTestMixin
 
 from .constants import genders
 from . import models
@@ -598,31 +599,7 @@ class Test__Team(TestCase):
 
 
 
-class MessagesMixin:
-    
-    def check_messages(self, msgs, expected):
-        """Tests that the expected messages are sent to the client."""
-        
-        def convert_level(level):
-            return messages.__dict__.get(level.upper())
-        
-        self.assertEqual(len(msgs), len(expected))
-        
-        for i, msg in enumerate(msgs):
-            with self.subTest(index = i):
-                
-                self.assertEqual(
-                    msg.level,
-                    convert_level(expected[i]['level']),
-                )
-                self.assertEqual(
-                    msg.message,
-                    expected[i]['message'],
-                )
-
-
-
-class Test__Buy(TestCase, MessagesMixin):
+class Test__Buy(TestCase, MessagesTestMixin):
     """Testing of transaction behaviour (including side effects) is delegated to the relevant
     subroutine."""
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
@@ -665,13 +642,9 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'error',
-                'message': 'An error occurred processing the request data.',
-            }],
-        )
+        self.assertMessages(response, [
+            ('error', 'An error occurred processing the request data.'),
+        ])
 
     
     def test__unknown_day(self):
@@ -682,13 +655,9 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'error',
-                'message': 'An error occurred processing the request data.',
-            }],
-        )
+        self.assertMessages(response, [
+            ('error', 'An error occurred processing the request data.'),
+        ])
     
     
     def test__missing_crew(self):
@@ -699,13 +668,9 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'error',
-                'message': 'An error occurred processing the request data.',
-            }],
-        )
+        self.assertMessages(response, [
+            ('error', 'An error occurred processing the request data.'),
+        ])
 
     
     def test__unknown_crew(self):
@@ -716,13 +681,9 @@ class Test__Buy(TestCase, MessagesMixin):
         
         self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'error',
-                'message': 'An error occurred processing the request data.',
-            }],
-        )
+        self.assertMessages(response, [
+            ('error', 'An error occurred processing the request data.'),
+        ])
     
     
     @patching.market_is_open(False)
@@ -736,10 +697,7 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Markets are not open for this sale.'}],
-        )
+        self.assertMessages(response, [('warning', 'Markets are not open for this sale.')])
     
     
     @patching.market_is_open(True)
@@ -756,13 +714,9 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'warning',
-                'message': 'Cannot buy a crew on a day they are not racing.',
-            }],
-        )
+        self.assertMessages(response, [
+            ('warning', 'Cannot buy a crew on a day they are not racing.'),
+        ])
     
     
     @patching.market_is_open(True)
@@ -780,13 +734,9 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'warning',
-                'message': 'You do not have sufficient funds to make this purchase.',
-            }],
-        )
+        self.assertMessages(response, [
+            ('warning', 'You do not have sufficient funds to make this purchase.'),
+        ])
     
     
     @patching.market_is_open(True)
@@ -801,13 +751,7 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Bought Oriel W1 as your women's bow seat.",
-            }],
-        )
+        self.assertMessages(response, [('success', "Bought Oriel W1 as your women's bow seat.")])
     
     
     @patching.market_is_open(True)
@@ -826,13 +770,7 @@ class Test__Buy(TestCase, MessagesMixin):
         mens_url = reverse('fantasybumps:men', kwargs = {'event_tag': self.day.event.tag})
         self.assertRedirects(response, mens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Bought Oriel M1 as your men's bow seat.",
-            }],
-        )
+        self.assertMessages(response, [('success', "Bought Oriel M1 as your men's bow seat.")])
     
     
     @patching.market_is_open(True)
@@ -850,13 +788,7 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Bought Oriel W1 as your women's cox.",
-            }],
-        )
+        self.assertMessages(response, [('success', "Bought Oriel W1 as your women's cox.")])
     
     
     @patching.market_is_open(True)
@@ -877,13 +809,9 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Bought Test Athlete (Oriel W1) as your women's bow seat.",
-            }],
-        )
+        self.assertMessages(response, [
+            ('success', "Bought Test Athlete (Oriel W1) as your women's bow seat."),
+        ])
     
     
     @patching.market_is_open(True)
@@ -901,13 +829,7 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'warning',
-                'message': "You have already filled your women's crew.",
-            }],
-        )
+        self.assertMessages(response, [('warning', "You have already filled your women's crew.")])
     
     
     @patching.market_is_open(True)
@@ -921,13 +843,7 @@ class Test__Buy(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Bought Oriel W1 as your women's bow seat.",
-            }],
-        )
+        self.assertMessages(response, [('success', "Bought Oriel W1 as your women's bow seat.")])
     
     
     @tag('query-count')
@@ -986,7 +902,7 @@ class Test__Buy(TestCase, MessagesMixin):
 
 
 
-class Test__Sell(TestCase, MessagesMixin):
+class Test__Sell(TestCase, MessagesTestMixin):
     """Testing of transaction behaviour (including side effects) is delegated to the relevant
     subroutine."""
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
@@ -1035,10 +951,7 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url)
         self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'error', 'message': 'You are not authorised to conduct this sale.'}],
-        )
+        self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
     
     def test__unknown_purchase(self):
@@ -1052,10 +965,7 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': 100000})
         self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'error', 'message': 'You are not authorised to conduct this sale.'}],
-        )
+        self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
     
     def test__other_team(self):
@@ -1070,10 +980,7 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': self.purchase.id})
         self.assertRedirects(response, reverse('fantasybumps:index'))
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'error', 'message': 'You are not authorised to conduct this sale.'}],
-        )
+        self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
     
     @patching.market_is_open(False)
@@ -1087,10 +994,7 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': self.purchase.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Markets are not open for this sale.'}],
-        )
+        self.assertMessages(response, [('warning', 'Markets are not open for this sale.')])
     
     
     @patching.market_is_open(True)
@@ -1109,10 +1013,7 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': self.purchase.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'This sale has already been completed.'}],
-        )
+        self.assertMessages(response, [('warning', 'This sale has already been completed.')])
     
     
     @patching.market_is_open(True)
@@ -1129,10 +1030,9 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': self.purchase.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'error', 'message': 'An unknown error occurred processing this sale.'}],
-        )
+        self.assertMessages(response, [
+            ('error', 'An unknown error occurred processing this sale.'),
+        ])
     
     
     @patching.market_is_open(True)
@@ -1147,10 +1047,7 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': self.purchase.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Sold Oriel W1 from your women's bow seat."}],
-        )
+        self.assertMessages(response, [('success', "Sold Oriel W1 from your women's bow seat.")])
     
     
     @patching.market_is_open(True)
@@ -1174,10 +1071,7 @@ class Test__Sell(TestCase, MessagesMixin):
         mens_url = reverse('fantasybumps:men', kwargs = {'event_tag': self.day.event.tag})
         self.assertRedirects(response, mens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Sold Oriel M1 from your men's bow seat."}],
-        )
+        self.assertMessages(response, [('success', "Sold Oriel M1 from your men's bow seat.")])
     
     
     @patching.market_is_open(True)
@@ -1198,10 +1092,9 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': coxing_purchase.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Sold Oriel W1 from your women's coxing seat."}],
-        )
+        self.assertMessages(response, [
+            ('success', "Sold Oriel W1 from your women's coxing seat."),
+        ])
     
     
     @patching.market_is_open(True)
@@ -1224,10 +1117,9 @@ class Test__Sell(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'purchase': self.purchase.id})
         self.assertRedirects(response, self.womens_url)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'success', 'message': "Sold Sale (Oriel W1) from your women's bow seat."}],
-        )
+        self.assertMessages(response, [
+            ('success', "Sold Sale (Oriel W1) from your women's bow seat."),
+        ])
     
     
     @tag('query-count')
@@ -1249,7 +1141,7 @@ class Test__Sell(TestCase, MessagesMixin):
 
 
 
-class Test__Switch(TestCase, MessagesMixin):
+class Test__Switch(TestCase, MessagesTestMixin):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     url_name = 'fantasybumps:switch'
     
@@ -1363,13 +1255,9 @@ class Test__Switch(TestCase, MessagesMixin):
                 response = call(self.url)
                 self.assertRedirects(response, self.market_page)
                 
-                self.check_messages(
-                    messages.get_messages(response.wsgi_request),
-                    [{
-                        'level': 'warning',
-                        'message': 'Markets are not open to alter this purchase.',
-                    }],
-                )
+                self.assertMessages(response, [
+                    ('warning', 'Markets are not open to alter this purchase.'),
+                ])
     
     
     @patching.market_is_open(True)
@@ -1389,10 +1277,7 @@ class Test__Switch(TestCase, MessagesMixin):
                 response = call(self.url)
                 self.assertRedirects(response, self.market_page)
                 
-                self.check_messages(
-                    messages.get_messages(response.wsgi_request),
-                    [{'level': 'warning', 'message': 'Coxes must stay in their place.'}],
-                )
+                self.assertMessages(response, [('warning', 'Coxes must stay in their place.')])
     
     
     @patching.market_is_open(True)
@@ -1472,10 +1357,7 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Must pick a rower from the purchased crew.'}],
-        )
+        self.assertMessages(response, [('warning', 'Must pick a rower from the purchased crew.')])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_bow)
@@ -1492,10 +1374,7 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Must pick a rower from the purchased crew.'}],
-        )
+        self.assertMessages(response, [('warning', 'Must pick a rower from the purchased crew.')])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_bow)
@@ -1515,13 +1394,9 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Selected Athlete 1 (Oriel W1) for your women's bow seat.",
-            }],
-        )
+        self.assertMessages(response, [
+            ('success', "Selected Athlete 1 (Oriel W1) for your women's bow seat."),
+        ])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_bow)
@@ -1537,13 +1412,9 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'athlete': '0', 'seat': self.seat_bow.id})
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Selected Oriel W1 for your women's bow seat.",
-            }],
-        )
+        self.assertMessages(response, [
+            ('success', "Selected Oriel W1 for your women's bow seat."),
+        ])
         
         self.purchase.refresh_from_db()
         self.assertIsNone(self.purchase.athlete)
@@ -1560,13 +1431,9 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Selected Athlete 2 (Oriel W1) for your women's bow seat.",
-            }],
-        )
+        self.assertMessages(response, [
+            ('success', "Selected Athlete 2 (Oriel W1) for your women's bow seat."),
+        ])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_two)
@@ -1590,10 +1457,7 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, POST_data)
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Cannot pick the same rower twice.'}],
-        )
+        self.assertMessages(response, [('warning', 'Cannot pick the same rower twice.')])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.athlete, self.ath_bow)
@@ -1629,10 +1493,7 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'seat': '11'})
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': 'Target seat does not exist.'}],
-        )
+        self.assertMessages(response, [('warning', 'Target seat does not exist.')])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_bow)
@@ -1648,10 +1509,7 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'seat': self.seat_cox.id})
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{'level': 'warning', 'message': "Rowers can't cox."}],
-        )
+        self.assertMessages(response, [('warning', "Rowers can't cox.")])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_bow)
@@ -1681,13 +1539,9 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'seat': self.seat_two.id})
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Selected Athlete 1 (Oriel W1) for your women's 2-seat.",
-            }],
-        )
+        self.assertMessages(response, [
+            ('success', "Selected Athlete 1 (Oriel W1) for your women's 2-seat."),
+        ])
         
         self.purchase.refresh_from_db()
         self.assertEqual(self.purchase.seat, self.seat_two)
@@ -1716,13 +1570,9 @@ class Test__Switch(TestCase, MessagesMixin):
         response = self.client.post(self.url, {'seat': self.seat_two.id})
         self.assertRedirects(response, self.market_page)
         
-        self.check_messages(
-            messages.get_messages(response.wsgi_request),
-            [{
-                'level': 'success',
-                'message': "Selected Athlete 1 (Oriel W1) for your women's 2-seat.",
-            }],
-        )
+        self.assertMessages(response, [
+            ('success', "Selected Athlete 1 (Oriel W1) for your women's 2-seat."),
+        ])
         
         self.purchase.refresh_from_db()
         other_purchase.refresh_from_db()

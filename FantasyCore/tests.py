@@ -2,8 +2,9 @@ import json
 
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib import messages
 from django.contrib import auth
+
+from common.testing import MessagesTestMixin
 
 from . import forms
 from .views import healthcheck_notice
@@ -74,7 +75,7 @@ class Test__Healthcheck(TestCase):
 
 
 
-class Test__Account_Signup(TestCase):
+class Test__Account_Signup(TestCase, MessagesTestMixin):
     
     def test__form__without_email(self):
         """Creates a user that does not have an e-mail address."""
@@ -126,18 +127,13 @@ class Test__Account_Signup(TestCase):
         self.assertEqual(user.username, username)
         self.assertTrue(user.is_authenticated)
         
-        response_messages = messages.get_messages(response.wsgi_request)
-        self.assertEqual(len(response_messages), 1)
-        for msg in response_messages:
-            self.assertEqual(msg.level, messages.SUCCESS)
-            self.assertEqual(
-                msg.message,
-                'Welcome ATestUser - Your account has been created.',
-            )
+        self.assertMessages(response, [
+            ('success', 'Welcome ATestUser - Your account has been created.'),
+        ])
 
 
 
-class Test__Account_Update(TestCase):
+class Test__Account_Update(TestCase, MessagesTestMixin):
     
     @classmethod
     def setUpTestData(cls):
@@ -174,14 +170,7 @@ class Test__Account_Update(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'test@example.com')
         
-        response_messages = messages.get_messages(response.wsgi_request)
-        self.assertEqual(len(response_messages), 1)
-        for msg in response_messages:
-            self.assertEqual(msg.level, messages.SUCCESS)
-            self.assertEqual(
-                msg.message,
-                'Profile updated',
-            )
+        self.assertMessages(response, [('success', 'Profile updated')])
     
     
     def test__view__change_email(self):
@@ -198,14 +187,7 @@ class Test__Account_Update(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'test@example.com')
         
-        response_messages = messages.get_messages(response.wsgi_request)
-        self.assertEqual(len(response_messages), 1)
-        for msg in response_messages:
-            self.assertEqual(msg.level, messages.SUCCESS)
-            self.assertEqual(
-                msg.message,
-                'Profile updated',
-            )
+        self.assertMessages(response, [('success', 'Profile updated')])
     
     
     def test__view__remove_email(self):
@@ -222,14 +204,7 @@ class Test__Account_Update(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, '')
         
-        response_messages = messages.get_messages(response.wsgi_request)
-        self.assertEqual(len(response_messages), 1)
-        for msg in response_messages:
-            self.assertEqual(msg.level, messages.SUCCESS)
-            self.assertEqual(
-                msg.message,
-                'Profile updated',
-            )
+        self.assertMessages(response, [('success', 'Profile updated')])
     
     
     def test__view__reject_invalid_email(self):
@@ -246,6 +221,5 @@ class Test__Account_Update(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'example@test.com')
         
-        response_messages = messages.get_messages(response.wsgi_request)
-        self.assertEqual(len(response_messages), 0)
+        self.assertMessages(response, [])
 
