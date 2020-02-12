@@ -23,14 +23,13 @@ class IndexView(TemplateView):
 
 
 
-class EventView(DetailView):
-    """A base view and index for event-specific pages."""
+class EventBase(DetailView):
+    """A base view for event-specific pages."""
     
     # View settings
     model = models.Event
     slug_url_kwarg = 'event_tag'
     slug_field = 'tag'
-    template_name = 'fantasybumps/event.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -47,7 +46,15 @@ class EventView(DetailView):
 
 
 
-class MarketView(EventView):
+class EventView(EventBase):
+    """An main page for an event."""
+    
+    # View settings
+    template_name = 'fantasybumps/event.html'
+
+
+
+class MarketView(EventBase):
     """Presents the market pages for an event."""
     
     # View settings
@@ -122,7 +129,7 @@ class MarketView(EventView):
 
 
 
-class LeaderboardView(EventView):
+class LeaderboardView(EventBase):
     """Presents the leaderboard for an event."""
     
     # View settings
@@ -145,7 +152,7 @@ class LeaderboardView(EventView):
 
 
 
-class TeamView(EventView):
+class TeamView(EventBase):
     """Presents a team's crews for an event."""
     
     # View settings
