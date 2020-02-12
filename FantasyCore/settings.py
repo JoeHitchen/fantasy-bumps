@@ -142,6 +142,8 @@ MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(BASE_DIR, 'media'))
 
 # Other settings
 LOGIN_REDIRECT_URL = 'index'
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
