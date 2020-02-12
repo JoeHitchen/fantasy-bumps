@@ -51,6 +51,38 @@ class EventView(EventBase):
     
     # View settings
     template_name = 'fantasybumps/event.html'
+    
+    def popular_crew_query(self, gender):
+        """Creates a Crew queryset with purchase counts and popularity scores."""
+        
+        purchase_count = db.Count(
+            'purchases',
+            filter = db.Q(purchases__day = self.day),
+        )
+        popularity = db.ExpressionWrapper(
+            db.F('purchase_count') / self.game_entry_count,
+            db.FloatField(),
+        )
+        
+        return (
+            models.Crew.objects
+            .filter(gender = gender, positions__day = self.day)
+            .annotate(purchase_count = purchase_count)
+            .annotate(popularity = popularity)
+            .order_by('-purchase_count', 'positions__rank')
+            # ^ Sort by popularity not possible on SQLite
+        )[:5]
+    
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Crew popularity data
+        self.game_entry_count = self.event.fantasies.count() or 1  # Avoid Div0 error
+        context['popular_crews_men'] = self.popular_crew_query(genders.MENS)
+        context['popular_crews_women'] = self.popular_crew_query(genders.WOMENS)
+        
+        return context
 
 
 

@@ -73,6 +73,18 @@ def popularity_indicator(popularity):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
+  <div class="list-group-item popularity-row">
+    {{ rank|avatar:crew.club }}
+    <div class="flex-grow-1">{{ crew }}</div>
+    {{ crew.popularity|popularity_indicator }}
+  </div>
+'''))
+def popularity_row(rank, crew):
+    return {'rank': rank, 'crew': crew}
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
   <button
     class="btn btn-primary btn-sm btn-buy{{ disabled }}"
     {% if not disabled %}data-day="{{ day.id }}" data-crew="{{ crew.id }}"{% endif %}
