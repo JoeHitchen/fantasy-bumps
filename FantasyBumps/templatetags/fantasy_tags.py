@@ -66,42 +66,6 @@ def currency(amount):
     return format_html('₢ {}', amount)
 
 
-
-
-@register.filter
-def results_item(places, default_align):
-    
-    if not places:
-        text = format_html('&minus;')
-        background = 'bg-warning'
-        align = 'text-center'
-    elif places > 0:
-        text = format_html('&plus;{}', places)
-        background = 'bg-success'
-        align = default_align
-    else:
-        text = format_html('&minus;{}', -places)
-        background = 'bg-danger'
-        align = default_align
-    
-    return format_html(
-        '<div class="{1} {2} font-weight-bold">&nbsp;{0}&nbsp;</div>',
-        text, background, align,
-    )
-
-
-@register.inclusion_tag(template.Template('''
-  {% load fantasy_tags %}
-  <div class="results-pill row">
-    {{ results.week|results_item:'text-right' }}
-    <div class="bg-dark"></div>
-    {{ results.yesterday|results_item:'text-left' }}
-  </div>
-'''))
-def results_pill(results):
-    return {'results': results}
-
-
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <button
@@ -151,7 +115,6 @@ def switch_button(purchase):
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
-    {% results_pill results %}
     <span style="width: 1em">&nbsp;</span>
     {% if show_actions %}{% buy_button position disabled %}{% endif %}
   </div>
@@ -165,13 +128,11 @@ def market_row(position, balance, show_actions):
     )
     
     disabled = show_actions and crew_value > balance
-    results = position.crew.results(position.day)
     
     return {
         'position': position,
         'disabled': disabled,
         'show_actions': show_actions,
-        'results': results,
     }
 
 

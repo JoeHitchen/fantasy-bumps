@@ -4,7 +4,6 @@ from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch, prefetch_related_objects
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 
@@ -62,17 +61,6 @@ class MarketView(EventView):
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
         context['start_order'] = self.day.start_order(gender)
-        
-        def position_prefetch(day, attr):
-            return Prefetch('positions', models.Position.objects.filter(day = day), to_attr = attr)
-        
-        crews = [posn.crew for div in context['start_order'] for posn in div]
-        prefetch_related_objects(
-            crews,
-            position_prefetch(self.day.event.days.first(), '_posn_start'),
-            position_prefetch(self.day.prev, '_posn_yest'),
-            position_prefetch(self.day, '_posn_today'),
-        )
         
         user = self.request.user
         if user.is_authenticated:

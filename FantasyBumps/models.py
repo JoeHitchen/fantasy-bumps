@@ -214,37 +214,6 @@ class Crew(models.Model):
             )
         except Position.DoesNotExist:
             return 0
-    
-    
-    def results(self, day):
-        """The crew's result yesterday and for the week."""
-        
-        # Start position
-        if hasattr(self, '_posn_start'):
-            position_start = self._posn_start[0]
-        else:
-            position_start = self.positions.get(day = day.event.days.first())
-        
-        # Yesterday's position
-        if hasattr(self, '_posn_yest'):
-            position_yest_queryset = self._posn_yest
-        else:
-            position_yest_queryset = self.positions.filter(day = day.prev)
-        if not position_yest_queryset:
-            return {'week': 0, 'yesterday': 0}
-        else:
-            position_yest = position_yest_queryset[0]
-        
-        # Today's position
-        if hasattr(self, '_posn_today'):
-            position_today = self._posn_today[0]
-        else:
-            position_today = self.positions.get(day = day)
-        
-        return {
-            'week': position_start.rank - position_today.rank,
-            'yesterday': position_yest.rank - position_today.rank,
-        }
 
 
 

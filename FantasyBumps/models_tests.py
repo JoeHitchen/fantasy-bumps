@@ -555,15 +555,11 @@ class Test__Crew(TestCase):
         
         days = event.days.all()
         cls.day1 = days[0]
-        cls.day2 = days[1]
-        cls.day3 = days[2]
         
         crews = models.Crew.objects.filter(gender = genders.WOMENS)
         
         cls.crew_top = crews[0]
         cls.crew_top.positions.create(day = cls.day1, rank = 1)
-        cls.crew_top.positions.create(day = cls.day2, rank = 2)
-        cls.crew_top.positions.create(day = cls.day3, rank = 4)
         
         cls.crew_middle = crews[1]
         cls.crew_middle.positions.create(day = cls.day1, rank = 2)
@@ -638,51 +634,6 @@ class Test__Crew(TestCase):
         
         with self.assertNumQueries(1):
             self.crew_top.value(self.day1)
-    
-    
-    def test__results__first_day(self):
-        """Calculates the change in positions, noting signs are reversed since small is good."""
-        self.assertEqual(self.crew_top.results(self.day1), {'week': 0, 'yesterday': 0})
-    
-    
-    def test__results__second_day(self):
-        """Calculates the change in positions, noting signs are reversed since small is good."""
-        self.assertEqual(self.crew_top.results(self.day2), {'week': -1, 'yesterday': -1})
-    
-    
-    def test__results__later_day(self):
-        """Calculates the change in positions, noting signs are reversed since small is good."""
-        self.assertEqual(self.crew_top.results(self.day3), {'week': -3, 'yesterday': -2})
-    
-    
-    @tag('query-count')
-    def test__results__query_count(self):
-        """Expect:
-            (2) SELECT days that aren't today (Day.prev call is avoided if cached)
-            (3) SELECT positions
-        """
-        
-        self.day3.prev
-        del self.day3.prev
-        
-        with self.assertNumQueries(5):
-            self.crew_top.results(self.day3)
-    
-    
-    @tag('query-count')
-    def test__results__query_count__prefetched(self):
-        """Expect no queries."""
-        
-        self.crew_top._posn_start = list(self.crew_top.positions.filter(day = self.day1))
-        self.crew_top._posn_yest = list(self.crew_top.positions.filter(day = self.day2))
-        self.crew_top._posn_today = list(self.crew_top.positions.filter(day = self.day3))
-        
-        with self.assertNumQueries(0):
-            self.crew_top.results(self.day3)
-        
-        del self.crew_top._posn_start
-        del self.crew_top._posn_yest
-        del self.crew_top._posn_today
 
 
 
