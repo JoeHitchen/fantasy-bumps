@@ -119,9 +119,9 @@ class Day(models.Model):
         ]
     
     
-    def start_order(self, gender):
+    def start_order(self, gender, extend = lambda so: so):
         """Builds the day and gender's start order from the start order of each division."""
-        return [division.start_order() for division in self.divisions(gender)]
+        return [extend(division.start_order()) for division in self.divisions(gender)]
     
     
     @cached_property
