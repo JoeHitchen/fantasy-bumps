@@ -335,7 +335,7 @@ class Purchase(models.Model):
     
     team = models.ForeignKey(Team, models.CASCADE, related_name = 'purchases')
     day = models.ForeignKey(Day, models.CASCADE, related_name = 'purchases')
-    crew = models.ForeignKey(Crew, models.PROTECT)
+    crew = models.ForeignKey(Crew, models.PROTECT, related_name = 'purchases')
     seat = models.ForeignKey(Seat, models.PROTECT)
     athlete = models.ForeignKey(Athlete, models.CASCADE, related_name = 'purchases', null = True)
 
