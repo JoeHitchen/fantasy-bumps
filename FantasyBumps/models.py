@@ -110,6 +110,7 @@ class Day(models.Model):
             Division(
                 day = self,
                 gender = gender,
+                number = division_number,
                 top_bungline = (division_number - 1) * self.event.boats_per_division + 1,
                 bottom_bungline = division_number * self.event.boats_per_division
                 + int(division_number == number_of_divisions),
@@ -160,11 +161,12 @@ class Day(models.Model):
 class Division:
     """Temporary objects for storing division information and start orders."""
     
-    def __init__(self, day, gender, top_bungline, bottom_bungline):
+    def __init__(self, day, gender, number, top_bungline, bottom_bungline):
         """Sets provided arguments as properties."""
         
         self.day = day
         self.gender = gender
+        self.number = number
         self.top_bungline = top_bungline
         self.bottom_bungline = bottom_bungline
     

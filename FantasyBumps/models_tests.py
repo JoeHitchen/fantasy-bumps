@@ -505,6 +505,7 @@ class Test__Division(TestCase):
         start_order = models.Division(
             day = self.day,
             gender = genders.WOMENS,
+            number = 2,
             top_bungline = 3,
             bottom_bungline = 8,
         ).start_order()
@@ -532,6 +533,7 @@ class Test__Division(TestCase):
         start_order = models.Division(
             day = self.day,
             gender = genders.WOMENS,
+            number = 2,
             top_bungline = 3,
             bottom_bungline = 8,
         ).start_order()
