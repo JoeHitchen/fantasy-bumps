@@ -11,7 +11,8 @@
 <div class="container">
   <div class="row">
     <div class="col-md mt-4">
-      {{ event }}
+      <h1>{{ event }}</h1>
+      {{ event.first_day.date|date:"l M dS" }} - {{ event.last_racing_day.date|date:"l M dS" }}
     </div>
     <div class="col-md mt-4">
       <div class="list-group">
