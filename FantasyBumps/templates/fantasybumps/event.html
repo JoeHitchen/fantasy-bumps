@@ -27,11 +27,8 @@
             </a>
           </div>
         </div>
-        {% for fantasy in fantasies %}<div class="list-group-item popularity-row">
-          {{ forloop.counter|avatar }}
-          <div class="flex-grow-1">{{ fantasy.team }}</div>
-          <span>{{ fantasy.total_budget }}</span>
-        </div>{% endfor %}
+        {% for fantasy in fantasies %}
+        {% mini_leaderboard_row forloop.counter fantasy %}{% endfor %}
       </div>
     </div>
   </div>
