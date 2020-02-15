@@ -13,6 +13,32 @@ Fantasy Bumps index page for {{ event }}.
 <div class="container">
   <div class="row">
     <div class="col-md">
+    </div>
+    <div class="col-md">
+      <div class="list-group popularity-box">
+        <div class="list-group-item list-group-item-primary">
+          <div class="row justify-content-between">
+            <span class="ml-3">Leaderboard</span>
+            <a
+              href="{% url 'fantasybumps:leaderboard' event.tag %}"
+              class="btn btn-primary btn-sm"
+              style="padding-top: 0.1em; padding-bottom: 0.1em; margin: 0"
+            >
+              See all
+            </a>
+          </div>
+        </div>
+        {% for fantasy in fantasies %}<div class="list-group-item popularity-row">
+          {{ forloop.counter|avatar }}
+          <div class="flex-grow-1">{{ fantasy.team }}</div>
+          <span>{{ fantasy.total_budget }}</span>
+        </div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md">
       <div class="list-group popularity-box">
         <div class="list-group-item list-group-item-primary">Most Popular Men's Crews</div>
         {% for crew in popular_crews_men %}

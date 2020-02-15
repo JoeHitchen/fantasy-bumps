@@ -77,6 +77,14 @@ class EventView(EventBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Leaderboard data
+        context['fantasies'] = (
+            self.event.fantasies
+            .select_related('team', 'team__user')
+            .extend_financials()
+            .rank_by(genders.TOTALS)
+        )[:5]
+        
         # Crew popularity data
         self.game_entry_count = self.event.fantasies.count() or 1  # Avoid Div0 error
         context['popular_crews_men'] = self.popular_crew_query(genders.MENS)

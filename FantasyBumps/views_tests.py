@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from common.testing import MessagesTestMixin
 
-from .constants import genders
+from .constants import genders, money
 from . import models
 from . import utils
 from . import transactions
@@ -141,6 +141,27 @@ class Test__Event(GamePageBase, TestCase):
             positions__day = self.day,
             positions__rank = position,
         )
+    
+    
+    def test__leaderboard(self):
+        """Lists the best fantasies, by total score."""
+        
+        # Create teams
+        teams = [
+            auth.User.objects.create_user('T-{}'.format(index)).team
+            for index in range(1, 16)
+        ]
+        fantasies = [
+            team.entries.create(
+                event = self.event,
+                mens_budget = money.INITIAL_BALANCE + 10 * index,
+                womens_budget = money.INITIAL_BALANCE + 100 * index,
+            )
+            for index, team in enumerate(teams)
+        ]
+        
+        response = self.client.get(self.url)
+        self.assertEqual(list(response.context['fantasies']), fantasies[::-1][:5])
     
     
     def test__popularity__men(self):
