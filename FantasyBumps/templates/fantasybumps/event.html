@@ -8,14 +8,13 @@
 {% endblock %}
 
 {% block content %}
-Fantasy Bumps index page for {{ event }}.
-
 <div class="container">
   <div class="row">
-    <div class="col-md">
+    <div class="col-md mt-4">
+      {{ event }}
     </div>
-    <div class="col-md">
-      <div class="list-group popularity-box">
+    <div class="col-md mt-4">
+      <div class="list-group">
         <div class="list-group-item list-group-item-primary">
           <div class="row justify-content-between">
             <span class="ml-3">Leaderboard</span>
@@ -37,16 +36,16 @@ Fantasy Bumps index page for {{ event }}.
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-md">
-      <div class="list-group popularity-box">
+  <div class="row mb-5">
+    <div class="col-md mt-4">
+      <div class="list-group">
         <div class="list-group-item list-group-item-primary">Most Popular Men's Crews</div>
         {% for crew in popular_crews_men %}
         {% popularity_row forloop.counter crew %}{% endfor %}
       </div>
     </div>
-    <div class="col-md">
-      <div class="list-group popularity-box">
+    <div class="col-md mt-4">
+      <div class="list-group">
         <div class="list-group-item list-group-item-primary">Most Popular Women's Crews</div>
         {% for crew in popular_crews_women %}
         {% popularity_row forloop.counter crew %}{% endfor %}

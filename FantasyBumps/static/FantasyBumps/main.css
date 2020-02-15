@@ -24,10 +24,6 @@
   margin-left: 0.5em;
 }
 
-.popularity-box {
-  margin-top: 2em;
-}
-
 .popularity-row, .market-row, .crew-row {
   display: flex;
   align-items: center;
