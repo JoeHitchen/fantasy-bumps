@@ -3,6 +3,7 @@ from django.views.generic.base import TemplateView
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.db import models as db
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
@@ -52,6 +53,23 @@ class MarketView(EventView):
     # View settings
     template_name = 'fantasybumps/market.html'
     
+    def add_purchase_count(self, start_order):
+        """Extends a purchase queryset with purchase counts and popularity scores."""
+        
+        purchase_count = db.Count(
+            'crew__purchases',
+            filter = db.Q(crew__purchases__day = self.day),
+        )
+        popularity = db.ExpressionWrapper(
+            db.F('purchase_count') / self.game_entry_count,
+            db.FloatField(),
+        )
+        return (
+            start_order
+            .annotate(purchase_count = purchase_count)
+            .annotate(popularity = popularity)
+        )
+    
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -60,7 +78,8 @@ class MarketView(EventView):
         context['gender_code'] = gender
         context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
         
-        context['start_order'] = self.day.start_order(gender)
+        self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
+        context['start_order'] = self.day.start_order(gender, extend = self.add_purchase_count)
         
         user = self.request.user
         if user.is_authenticated:

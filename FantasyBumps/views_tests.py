@@ -287,6 +287,44 @@ class Test__Market_Men(MarketPageBase, TestCase):
         response = self.client.get(self.url)
         
         self.assertFalse(response.context['show_actions'])
+    
+    
+    def test__popularity(self):
+        """`purchase_count` and `popularity` are added to start order query sets.
+        Popularity is the average number of seats purchased per team, and both are per-day.
+        
+        *** Due to limitations, SQLite is unable to test non-integer popularity results. ***
+        """
+        
+        # Create additional teams
+        team2 = auth.User.objects.create_user('Team2').team
+        team3 = auth.User.objects.create_user('Team3').team
+        team2.entries.create(event = self.event)
+        team3.entries.create(event = self.event)
+        
+        seat_bow = models.Seat.objects.get(name = 'Bow')
+        seat_two = models.Seat.objects.get(name = '2')
+        seat_cox = models.Seat.objects.get(name = 'Cox')
+        
+        # Create purchases
+        team2.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_bow)
+        team2.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_two)
+        team3.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_cox)
+        
+        self.team.purchases.create(day = self.day.prev, crew = self.crew_mens, seat = seat_bow)
+        # ^ Distraction, wrong day
+        
+        
+        # Generate and test expectations
+        expect = {self.crew_mens: {'count': 3, 'popularity': 1.0}}
+        
+        response = self.client.get(self.url)
+        for division in response.context['start_order']:
+            for position in division:
+                with self.subTest(crew = position.crew):
+                    expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
+                    self.assertEqual(position.purchase_count, expect_crew['count'])
+                    self.assertEqual(position.popularity, expect_crew['popularity'])
 
 
 
@@ -368,6 +406,44 @@ class Test__Market_Women(MarketPageBase, TestCase):
         self.assertFalse(response.context['crew'])
         self.assertFalse(response.context['crew_valid'])
         self.assertTrue(response.context['other_crew_valid'])
+    
+    
+    def test__popularity(self):
+        """`purchase_count` and `popularity` are added to start order query sets.
+        Popularity is the average number of seats purchased per team, and both are per-day.
+        
+        *** Due to limitations, SQLite is unable to test non-integer popularity results. ***
+        """
+        
+        # Create additional teams
+        team2 = auth.User.objects.create_user('Team2').team
+        team3 = auth.User.objects.create_user('Team3').team
+        team2.entries.create(event = self.event)
+        team3.entries.create(event = self.event)
+        
+        seat_bow = models.Seat.objects.get(name = 'Bow')
+        seat_two = models.Seat.objects.get(name = '2')
+        seat_cox = models.Seat.objects.get(name = 'Cox')
+        
+        # Create purchases
+        team2.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_bow)
+        team2.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_two)
+        team3.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_cox)
+        
+        self.team.purchases.create(day = self.day.prev, crew = self.crew_womens, seat = seat_bow)
+        # ^ Distraction, wrong day
+        
+        
+        # Generate and test expectations
+        expect = {self.crew_womens: {'count': 3, 'popularity': 1.0}}
+        
+        response = self.client.get(self.url)
+        for division in response.context['start_order']:
+            for position in division:
+                with self.subTest(crew = position.crew):
+                    expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
+                    self.assertEqual(position.purchase_count, expect_crew['count'])
+                    self.assertEqual(position.popularity, expect_crew['popularity'])
 
 
 

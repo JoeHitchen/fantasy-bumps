@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django import template
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from .. import models
@@ -66,6 +66,11 @@ def currency(amount):
     return format_html('₢ {}', amount)
 
 
+@register.filter
+def popularity_indicator(popularity):
+    return mark_safe('<span class="popularity">{:.2f}</span>'.format(popularity))
+
+
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <button
@@ -115,6 +120,7 @@ def switch_button(purchase):
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
+    {{ position.popularity|popularity_indicator }}
     <span style="width: 1em">&nbsp;</span>
     {% if show_actions %}{% buy_button position disabled %}{% endif %}
   </div>

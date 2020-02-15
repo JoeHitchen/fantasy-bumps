@@ -276,7 +276,8 @@ class Test__Misc(TestCase):
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
         cls.position = cls.crew.positions.get(day = cls.day)
-        cls.position.bungline = 1
+        cls.position.bungline = 1  # Expected to be set
+        cls.position.popularity = 0  # Expected to be set
     
     
     @staticmethod
@@ -400,6 +401,7 @@ class Test__Misc(TestCase):
         
         position = models.Position.objects.first()
         position.bungline = 1  # Expected to be set
+        position.popularity = 0  # Expected to be set
         html = self.market_row(position, '', show_actions = False)
         
         # Test containments
