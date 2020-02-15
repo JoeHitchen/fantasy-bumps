@@ -121,8 +121,8 @@ def switch_button(purchase):
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
     {{ position.popularity|popularity_indicator }}
-    <span style="width: 1em">&nbsp;</span>
-    {% if show_actions %}{% buy_button position disabled %}{% endif %}
+    {% if show_actions %}<span style="width: 1em">&nbsp;</span>
+    {% buy_button position disabled %}{% endif %}
   </div>
 '''))
 def market_row(position, balance, show_actions):
