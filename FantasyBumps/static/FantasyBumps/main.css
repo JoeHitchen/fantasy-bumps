@@ -24,13 +24,24 @@
   margin-left: 0.5em;
 }
 
-.market-row, .crew-row {
+.popularity-row, .market-row, .crew-row {
   display: flex;
   align-items: center;
 }
+
+.popularity-row .avatar,
 .market-row .avatar,
 .crew-row .avatar {
   margin-right: 1em;
+}
+
+.popularity-row {
+  padding: 0.3em;
+  padding-right: 0.5em;
+}
+
+.popularity-row :last-child {
+  margin-left: 1em;
 }
 
 .crew-row {

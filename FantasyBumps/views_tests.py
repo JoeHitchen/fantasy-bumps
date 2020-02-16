@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from common.testing import MessagesTestMixin
 
-from .constants import genders
+from .constants import genders, money
 from . import models
 from . import utils
 from . import transactions
@@ -119,6 +119,135 @@ class Test__Event(GamePageBase, TestCase):
     # Test settings
     url_name = 'fantasybumps:event'
     template = 'fantasybumps/event.html'
+    
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        
+        cls.team.entries.create(event = cls.event)
+        cls.team2 = auth.User.objects.create_user('Team 2').team
+        cls.team2.entries.create(event = cls.event)
+        
+        cls.seat_bow = models.Seat.objects.get(name = 'Bow')
+        cls.seat_two = models.Seat.objects.get(name = '2')
+        cls.seat_thr = models.Seat.objects.get(name = '3')
+        cls.seat_cox = models.Seat.objects.get(name = 'Cox')
+    
+    
+    def get_crew(self, gender, position):
+        """Helper function for retrieving crew by gender and position."""
+        return models.Crew.objects.get(
+            gender = gender,
+            positions__day = self.day,
+            positions__rank = position,
+        )
+    
+    
+    def test__leaderboard(self):
+        """Lists the best fantasies, by total score."""
+        
+        # Create teams
+        teams = [
+            auth.User.objects.create_user('T-{}'.format(index)).team
+            for index in range(1, 16)
+        ]
+        fantasies = [
+            team.entries.create(
+                event = self.event,
+                mens_budget = money.INITIAL_BALANCE + 10 * index,
+                womens_budget = money.INITIAL_BALANCE + 100 * index,
+            )
+            for index, team in enumerate(teams)
+        ]
+        
+        response = self.client.get(self.url)
+        self.assertEqual(list(response.context['fantasies']), fantasies[::-1][:5])
+    
+    
+    def test__popularity__men(self):
+        """Orders crews according to number of purchases and position on the river."""
+        
+        # Get crews
+        crew_bl1 = self.get_crew(genders.MENS, 1)
+        crew_bl2 = self.get_crew(genders.MENS, 2)
+        crew_bl3 = self.get_crew(genders.MENS, 3)
+        crew_bl4 = self.get_crew(genders.MENS, 4)
+        crew_bl5 = self.get_crew(genders.MENS, 5)
+        
+        # Create purchases
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_bow)
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_two)
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_thr)
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_cox)
+        self.team2.purchases.create(day = self.day, crew = crew_bl4, seat = self.seat_bow)
+        self.team2.purchases.create(day = self.day, crew = crew_bl2, seat = self.seat_two)
+        self.team2.purchases.create(day = self.day, crew = crew_bl2, seat = self.seat_thr)
+        self.team2.purchases.create(day = self.day, crew = crew_bl4, seat = self.seat_cox)
+        
+        # Create distraction purchases
+        self.team2.purchases.create(day = self.day, crew = self.crew_womens, seat = self.seat_bow)
+        self.team2.purchases.create(day = self.day.prev, crew = crew_bl5, seat = self.seat_bow)
+        
+        # Create expectation
+        expected = [
+            (crew_bl3, 4, 2.0),
+            (crew_bl2, 2, 1.0),
+            (crew_bl4, 2, 1.0),
+            (crew_bl1, 0, 0.0),
+            (crew_bl5, 0, 0.0),
+        ]
+        
+        # Run test
+        response = self.client.get(self.url)
+        
+        for index, crew in enumerate(response.context['popular_crews_men']):
+            with self.subTest(order = index + 1):
+                self.assertEqual(crew, expected[index][0])
+                self.assertEqual(crew.purchase_count, expected[index][1])
+                self.assertEqual(crew.popularity, expected[index][2])
+    
+    
+    def test__popularity__women(self):
+        """Orders crews according to number of purchases and position on the river."""
+        
+        # Get crews
+        crew_bl1 = self.get_crew(genders.WOMENS, 1)
+        crew_bl2 = self.get_crew(genders.WOMENS, 2)
+        crew_bl3 = self.get_crew(genders.WOMENS, 3)
+        crew_bl4 = self.get_crew(genders.WOMENS, 4)
+        crew_bl5 = self.get_crew(genders.WOMENS, 5)
+        
+        # Create purchases
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_bow)
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_two)
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_thr)
+        self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_cox)
+        self.team2.purchases.create(day = self.day, crew = crew_bl4, seat = self.seat_bow)
+        self.team2.purchases.create(day = self.day, crew = crew_bl2, seat = self.seat_two)
+        self.team2.purchases.create(day = self.day, crew = crew_bl2, seat = self.seat_thr)
+        self.team2.purchases.create(day = self.day, crew = crew_bl4, seat = self.seat_cox)
+        
+        # Create distraction purchases
+        self.team2.purchases.create(day = self.day, crew = self.crew_mens, seat = self.seat_bow)
+        self.team2.purchases.create(day = self.day.prev, crew = crew_bl5, seat = self.seat_bow)
+        
+        # Create expectation
+        expected = [
+            (crew_bl3, 4, 2.0),
+            (crew_bl2, 2, 1.0),
+            (crew_bl4, 2, 1.0),
+            (crew_bl1, 0, 0.0),
+            (crew_bl5, 0, 0.0),
+        ]
+        
+        # Run test
+        response = self.client.get(self.url)
+        
+        for index, crew in enumerate(response.context['popular_crews_women']):
+            with self.subTest(order = index + 1):
+                self.assertEqual(crew, expected[index][0])
+                self.assertEqual(crew.purchase_count, expected[index][1])
+                self.assertEqual(crew.popularity, expected[index][2])
 
 
 

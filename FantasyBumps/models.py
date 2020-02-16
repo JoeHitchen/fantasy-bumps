@@ -35,6 +35,16 @@ class Event(models.Model):
     
     
     @cached_property
+    def first_day(self):
+        return self.days.first()
+    
+    
+    @cached_property
+    def last_racing_day(self):
+        return self.days.exclude(first_race_time = None).last()
+    
+    
+    @cached_property
     def active_day(self):
         """The active/most currently relevant day of the event.
         

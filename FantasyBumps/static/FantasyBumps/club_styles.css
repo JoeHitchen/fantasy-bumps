@@ -121,3 +121,29 @@
   background-color: hotpink;
   color: black;
 }
+
+
+/* Other hacks */
+.club-first {
+  background-color: goldenrod;
+  color: darkgoldenrod;
+  border-color: darkgoldenrod;
+}
+
+.club-second {
+  background-color: silver;
+  color: grey;
+  border-color: grey;
+}
+
+.club-third {
+  background-color: #c73;
+  color: #840;
+  border-color: #840;
+}
+
+.club-other {
+  background-color: #cbd6e3;
+  color: #67a;
+  border-color: #67a;
+}

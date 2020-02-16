@@ -25,15 +25,18 @@ class Test__Event(TestCase):
         cls.yesterday = cls.event.days.create(
             name = 'Yesterday',
             date = timezone.now() - timedelta(1),
+            first_race_time = time(12, 00)
         )
         cls.today = cls.event.days.create(
             name = 'Today',
             date = timezone.now(),
+            first_race_time = time(12, 00)
         )
         cls.tomorrow = models.Day(
             event = cls.event,
             name = 'Tomorrow',
             date = timezone.now() + timedelta(1),
+            first_race_time = time(12, 00)
         )  # Saved per-test due to isolation conflict
         cls.future = models.Day(
             event = cls.event,
@@ -57,6 +60,16 @@ class Test__Event(TestCase):
         """Returns an event's name as its string representation."""
         
         self.assertEqual(str(self.event), 'Demo 2019')
+    
+    
+    def test__first_day(self):
+        """Returns the first day associated with the event."""
+        self.assertEqual(self.event.first_day, self.yesterday)
+    
+    
+    def test__last_racing_day(self):
+        """Returns the last day of racing for the event."""
+        self.assertEqual(self.event.last_racing_day, self.tomorrow)  # Future does not have races
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))

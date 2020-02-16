@@ -23,14 +23,13 @@ class IndexView(TemplateView):
 
 
 
-class EventView(DetailView):
-    """A base view and index for event-specific pages."""
+class EventBase(DetailView):
+    """A base view for event-specific pages."""
     
     # View settings
     model = models.Event
     slug_url_kwarg = 'event_tag'
     slug_field = 'tag'
-    template_name = 'fantasybumps/event.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -47,7 +46,55 @@ class EventView(DetailView):
 
 
 
-class MarketView(EventView):
+class EventView(EventBase):
+    """An main page for an event."""
+    
+    # View settings
+    template_name = 'fantasybumps/event.html'
+    
+    def popular_crew_query(self, gender):
+        """Creates a Crew queryset with purchase counts and popularity scores."""
+        
+        purchase_count = db.Count(
+            'purchases',
+            filter = db.Q(purchases__day = self.day),
+        )
+        popularity = db.ExpressionWrapper(
+            db.F('purchase_count') / self.game_entry_count,
+            db.FloatField(),
+        )
+        
+        return (
+            models.Crew.objects
+            .filter(gender = gender, positions__day = self.day)
+            .annotate(purchase_count = purchase_count)
+            .annotate(popularity = popularity)
+            .order_by('-purchase_count', 'positions__rank')
+            # ^ Sort by popularity not possible on SQLite
+        )[:5]
+    
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Leaderboard data
+        context['fantasies'] = (
+            self.event.fantasies
+            .select_related('team', 'team__user')
+            .extend_financials()
+            .rank_by(genders.TOTALS)
+        )[:5]
+        
+        # Crew popularity data
+        self.game_entry_count = self.event.fantasies.count() or 1  # Avoid Div0 error
+        context['popular_crews_men'] = self.popular_crew_query(genders.MENS)
+        context['popular_crews_women'] = self.popular_crew_query(genders.WOMENS)
+        
+        return context
+
+
+
+class MarketView(EventBase):
     """Presents the market pages for an event."""
     
     # View settings
@@ -122,7 +169,7 @@ class MarketView(EventView):
 
 
 
-class LeaderboardView(EventView):
+class LeaderboardView(EventBase):
     """Presents the leaderboard for an event."""
     
     # View settings
@@ -145,7 +192,7 @@ class LeaderboardView(EventView):
 
 
 
-class TeamView(EventView):
+class TeamView(EventBase):
     """Presents a team's crews for an event."""
     
     # View settings
