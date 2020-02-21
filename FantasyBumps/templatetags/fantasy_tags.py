@@ -73,15 +73,23 @@ def popularity_indicator(popularity):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div class="list-group-item popularity-row">
+  <a
+    href="{% url 'fantasybumps:team' event.tag fantasy.team.user.username %}"
+    class="list-group-item list-group-item-action popularity-row"
+  >
     {{ rank|avatar:style }}
     <div class="flex-grow-1">{{ fantasy.team }}</div>
     <span>{{ fantasy.total_budget }}</span>
-  </div>
+  </a>
 '''))
-def mini_leaderboard_row(rank, fantasy):
+def mini_leaderboard_row(rank, fantasy, event):
     style_matrix = {1: 'first', 2: 'second', 3: 'third'}
-    return {'fantasy': fantasy, 'rank': rank, 'style': style_matrix.get(rank, 'other')}
+    return {
+        'fantasy': fantasy,
+        'rank': rank,
+        'event': event,
+        'style': style_matrix.get(rank, 'other'),
+    }
 
 
 @register.inclusion_tag(template.Template('''
