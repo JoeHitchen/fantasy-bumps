@@ -713,6 +713,10 @@ class Test__Team(TestCase):
         )
     
     
+    def setUp(self):
+        self.budgets = self.view_team.entries.get(event = self.event)
+    
+    
     def test__unknown_event(self):
         """Returns a 404 response if the event tag is not recognised."""
         
