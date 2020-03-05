@@ -713,6 +713,10 @@ class Test__Team(TestCase):
         )
     
     
+    def setUp(self):
+        self.budgets = self.view_team.entries.get(event = self.event)
+    
+    
     def test__unknown_event(self):
         """Returns a 404 response if the event tag is not recognised."""
         
@@ -822,7 +826,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     def setUp(self):
-        self.budgets.refresh_from_db()
+        self.budgets = self.team.entries.get(event = self.day.event)
     
     
     def test__deny_get(self):
