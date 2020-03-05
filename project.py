@@ -13,4 +13,6 @@ commands = {
 command = args[0]
 command = commands.get(command, 'python manage.py {}'.format(command))
 command = ' '.join([command, *args[1:]])
-os.system(command)
+status = os.system(command)
+
+raise SystemExit(bool(status))
