@@ -826,7 +826,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     def setUp(self):
-        self.budgets.refresh_from_db()
+        self.budgets = self.team.entries.get(event = self.day.event)
     
     
     def test__deny_get(self):
