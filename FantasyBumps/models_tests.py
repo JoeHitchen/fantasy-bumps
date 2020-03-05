@@ -25,18 +25,18 @@ class Test__Event(TestCase):
         cls.yesterday = cls.event.days.create(
             name = 'Yesterday',
             date = timezone.now() - timedelta(1),
-            first_race_time = time(12, 00)
+            first_race_time = time(12, 00),
         )
         cls.today = cls.event.days.create(
             name = 'Today',
             date = timezone.now(),
-            first_race_time = time(12, 00)
+            first_race_time = time(12, 00),
         )
         cls.tomorrow = models.Day(
             event = cls.event,
             name = 'Tomorrow',
             date = timezone.now() + timedelta(1),
-            first_race_time = time(12, 00)
+            first_race_time = time(12, 00),
         )  # Saved per-test due to isolation conflict
         cls.future = models.Day(
             event = cls.event,
