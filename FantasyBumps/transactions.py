@@ -101,8 +101,12 @@ def _sell_body(purchase):
         raise models.GameEntry.DoesNotExist
     elif updated > 1:  # Untested case - Should be blocked by database constraint.
         raise MultipleObjectsReturned
+
+    try:
+        deleted = purchase.delete()
+    except AssertionError:
+        deleted = [0]
     
-    deleted = purchase.delete()
     if deleted[0] != 1:
         raise purchase.DoesNotExist
 

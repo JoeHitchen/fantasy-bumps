@@ -22,7 +22,7 @@ class Test__Buy(TestCase):
     
     
     def setUp(self):
-        self.budgets.refresh_from_db()
+        self.budgets = self.team.entries.get(event = self.day.event)
     
     
     def test__not_racing(self):
@@ -272,6 +272,11 @@ class Test__Sell(TestCase):
             seat = cls.seat,
             crew = cls.crew,
         )
+
+    
+    def setUp(self):
+        self.budgets = self.user.team.entries.get(event = self.day.event)
+        self.purchase.save()
     
     
     def test__missing_budgets(self):
