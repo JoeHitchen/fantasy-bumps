@@ -2,10 +2,19 @@ image: python:3.7
 
 pipelines:
   default:
-    - step:
+    - step: &lint
+        name: Lint
+        caches:
+          - pip
+        script:
+          - pip install -r requirements_linting.txt
+          - python project.py lint
+    
+    - step: &test
+        name: Test
         caches:
           - pip
         script:
           - pip install -r requirements.txt
-          - python project.py lint
-          - python project.py test:ff
+          - python project.py test
+
