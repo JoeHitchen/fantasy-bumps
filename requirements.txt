@@ -3,5 +3,4 @@ django == 2.2.*
 # Parsing
 requests
 beautifulsoup4
-lxml
 
