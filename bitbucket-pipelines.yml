@@ -17,4 +17,27 @@ pipelines:
         script:
           - pip install -r requirements.txt
           - python project.py test
+  
+  branches:
+    containerise:
+      - step: *lint
+      - step: *test
+      - step:
+          name: Build
+          services:
+            - docker
+          script:
+            - docker build -t joehitchen/fantasy-bumps .
+            - docker save --output fantasy-bumps.docker joehitchen/fantasy-bumps
+          artifacts:
+            - fantasy-bumps.docker
+      
+      - step:
+          name: Verify
+          services:
+            - docker
+          script:
+            - docker load --input fantasy-bumps.docker
+            - docker run --rm joehitchen/fantasy-bumps python project.py test
+
 
