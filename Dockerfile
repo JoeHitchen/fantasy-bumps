@@ -18,6 +18,6 @@ RUN pip install -r requirements.txt
 COPY --chown=python . .
 
 USER python
-CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "FantasyCore.wsgi:application", "--bind", "0.0.0.0:8000"]
 EXPOSE 8000
 
