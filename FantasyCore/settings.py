@@ -8,17 +8,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'g7$lo1wf)lb2dt$v%_r$(!(3xi4pd_7z_6*34(r3htp#u7&ujs',
-)
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'ThisMustBeReplaced')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(os.environ.get('DJANGO_DEBUG', default=1))
+DEBUG = os.environ.get('DJANGO_DEBUG').lower() == 'true' if 'DJANGO_DEBUG' in os.environ else False
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_HOSTS', default='').split(',')
-if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '[::1]'])
+ALLOWED_HOSTS = os.environ.get('DJANGO_HOSTS').split(',') if 'DJANGO_HOSTS' in os.environ else []
 
 
 # Application definition
@@ -70,12 +65,15 @@ WSGI_APPLICATION = 'FantasyCore.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('SQL_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.environ.get('SQL_DATABASE', os.path.join(BASE_DIR, 'db.sqlite3')),
-        'USER': os.environ.get('SQL_USER', 'user'),
-        'PASSWORD': os.environ.get('SQL_PASSWORD', 'password'),
-        'HOST': os.environ.get('SQL_HOST', 'localhost'),
-        'PORT': os.environ.get('SQL_PORT', '5432'),
+        'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.sqlite3'),
+        'HOST': os.environ.get('DATABASE_HOST', ''),
+        'PORT': os.environ.get('DATABASE_PORT', ''),
+        'USER': os.environ.get('DATABASE_USER', ''),
+        'PASSWORD': os.environ.get('DATABASE_PASS'),
+        'NAME': os.environ.get('DATABASE_NAME', 'database.sqlite3'),
+        'TEST': {
+            'NAME': os.environ.get('DATABASE_NAME_TEST', 'test.sqlite3'),
+        },
     },
 }
 
@@ -85,7 +83,7 @@ DATABASES = {
 
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS', '')
 EMAIL_USE_TLS = EMAIL_HOST != 'localhost'
 DEFAULT_FROM_EMAIL = 'no-reply@mail.fantasybumps.org.uk'
 

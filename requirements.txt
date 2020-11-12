@@ -3,12 +3,4 @@ django == 2.2.*
 # Parsing
 requests
 beautifulsoup4
-lxml
 
-# Development
-flake8
-flake8-print
-flake8-commas
-flake8-quotes
-flake8-import-order
-git+https://JoeHitchen@bitbucket.org/JoeHitchen/flake8-import-order-pep8app.git
