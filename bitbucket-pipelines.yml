@@ -39,5 +39,15 @@ pipelines:
           script:
             - docker load --input fantasy-bumps.docker
             - docker run --rm joehitchen/fantasy-bumps python project.py test
+      
+      - step:
+          name: Publish
+          deployment: Docker
+          services:
+            - docker
+          script:
+            - docker load --input fantasy-bumps.docker
+            - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+            - docker push joehitchen/fantasy-bumps
 
 
