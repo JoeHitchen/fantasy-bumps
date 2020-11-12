@@ -32,6 +32,10 @@ class Command(BaseCommand):
             .distinct()
         )
         
+        if not events:
+            self.stdout.write('No games to advance')
+            return
+        
         # Iterate over all events
         for event in events:
             self.stdout.write('Advancing {}...'.format(event))
