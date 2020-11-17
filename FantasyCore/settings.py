@@ -6,7 +6,6 @@ from django.contrib.messages import constants as messages
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'ThisMustBeReplaced')
 
@@ -61,7 +60,6 @@ WSGI_APPLICATION = 'FantasyCore.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -79,7 +77,6 @@ DATABASES = {
 
 
 # Email
-# https://docs.djangoproject.com/en/2.1/ref/settings/#email
 
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', '')
@@ -95,7 +92,6 @@ IGNORABLE_404_URLS = []
 
 
 # Password validation
-# https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -114,7 +110,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalisation
-# https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-gb'
 
@@ -128,7 +123,6 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.environ.get('STATIC_ROOT', os.path.join(BASE_DIR, 'static'))
