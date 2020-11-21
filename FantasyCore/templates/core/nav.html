@@ -25,7 +25,7 @@
         <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
           {{ user.username }}
         </a>
-        <div class="dropdown-menu">
+        <div class="dropdown-menu dropdown-menu-right">
           {% if event %}<a class="dropdown-item" href="{% url 'fantasybumps:team' event.tag user.username %}">My Crews</a>{% endif %}
           <a class="dropdown-item" href="{% url 'profile'%}">My Account</a>
           <div class="dropdown-divider"></div>
