@@ -109,17 +109,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalisation
+# Internationalisation and localisation
 
+USE_I18N = False
 LANGUAGE_CODE = 'en-gb'
 
+USE_TZ = True
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
+USE_L10N = False
 
 
 # Static files (CSS, JavaScript, Images)
