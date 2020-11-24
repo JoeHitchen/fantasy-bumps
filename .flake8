@@ -20,7 +20,7 @@ ignore =
 import-order-style = pep8app
 application-package-names = 
     Bumps,
-    FantasyCore,
+    core,
     FantasyBumps,
     parsing,
     common,
