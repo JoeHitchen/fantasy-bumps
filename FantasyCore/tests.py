@@ -109,6 +109,33 @@ class Test__Account_Signup(TestCase, MessagesTestMixin):
         
         user = auth.models.User.objects.get(username = username)
         self.assertEqual(user.email, email)
+    
+    
+    def test__form__blacklisted_username_standard_error(self):
+        """Blacklisted usernames are rejected."""
+        
+        form = forms.UserCreationWithEmailForm({
+            'username': 'AbCBlacklistTestDEf',
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('This team name is not permitted', str(form.errors['username']))
+    
+    
+    def test__form__blacklisted_username_custom_error(self):
+        """Custom error messages can be specified for blacklisted usernames."""
+        
+        form = forms.UserCreationWithEmailForm({
+            'username': 'AbCHiTChENDEf',
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            'The admin requests that you do not feature them in your team name',
+            str(form.errors['username']),
+        )
         
     
     def test__view__success(self):
