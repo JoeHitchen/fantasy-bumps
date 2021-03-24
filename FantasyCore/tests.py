@@ -120,7 +120,7 @@ class Test__Account_Signup(TestCase, MessagesTestMixin):
             'password2': 'AComplexPassword',
         })
         self.assertFalse(form.is_valid())
-        self.assertIn('This team name is not permitted', str(form.errors['username']))
+        self.assertIn('This team name is not permitted.', str(form.errors['username']))
     
     
     def test__form__blacklisted_username_custom_error(self):
@@ -133,7 +133,7 @@ class Test__Account_Signup(TestCase, MessagesTestMixin):
         })
         self.assertFalse(form.is_valid())
         self.assertIn(
-            'The admin requests that you do not feature them in your team name',
+            'The admin requests that you do not feature them in your team name.',
             str(form.errors['username']),
         )
         

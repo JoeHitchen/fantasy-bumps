@@ -8,11 +8,11 @@ from django.core.exceptions import ValidationError
 
 username_blacklist_regexes = [
     ['blacklisttest', None],
-    ['hitchen', 'The admin requests that you do not feature them in your team name'],
+    ['hitchen', 'The admin requests that you do not feature them in your team name.'],
     [
         'hitchin',
         'The admin requests that you do not feature them in your team name.'
-        + ' Also you spelt it wrong',
+        + ' Also you spelt it wrong.',
     ],
 ]
 
@@ -24,7 +24,7 @@ class UserCreationWithEmailForm(UserCreationForm):
         username = self.cleaned_data['username']
         for blacklist, error_message in username_blacklist_regexes:
             if re.search(blacklist, username, re.IGNORECASE):
-                raise ValidationError(error_message or 'This team name is not permitted')
+                raise ValidationError(error_message or 'This team name is not permitted.')
                 
         return username
     
