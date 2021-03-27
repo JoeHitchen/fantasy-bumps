@@ -27,6 +27,7 @@ leaderboard_subpatterns = [
 ]
 
 urlpatterns = [
+    path('rules/', views.IndexView.as_view(template_name = 'fantasybumps/rules.html'), name = 'rules'),
     path('buy/', views.buy, name = 'buy'),
     path('sell/', views.sell, name = 'sell'),
     path('switch/<int:purchase_id>/', views.Switch.as_view(), name = 'switch'),
