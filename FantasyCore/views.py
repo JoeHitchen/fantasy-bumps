@@ -3,20 +3,8 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.http import JsonResponse
 
 from . import forms
-
-
-healthcheck_notice = 'This healthcheck gives the name of the service and echos any GET data provided to demonstrate a dynamic response.'  # noqa: E501
-
-
-def healthcheck(request):
-    return JsonResponse({
-        **request.GET.dict(),
-        'name': 'FantasyBumps',
-        'notice': healthcheck_notice,
-    })
 
 
 class UserCreationView(SuccessMessageMixin, CreateView):

@@ -1,4 +1,4 @@
-from django.urls import path, re_path, include
+from django.urls import path, include
 from django.conf.urls.static import static
 
 from . import settings
@@ -6,7 +6,6 @@ from . import views
 
 
 urlpatterns = [
-    re_path('^healthcheck/?$', views.healthcheck, name = 'healthcheck'),
     path('accounts/signup/', views.UserCreationView.as_view(), name = 'signup'),
     path('accounts/profile/', views.UserProfileView.as_view(), name = 'profile'),
     path('accounts/', include('django.contrib.auth.urls')),

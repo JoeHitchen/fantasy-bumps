@@ -1,5 +1,3 @@
-import json
-
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib import auth
@@ -7,7 +5,6 @@ from django.contrib import auth
 from common.testing import MessagesTestMixin
 
 from . import forms
-from .views import healthcheck_notice
 
 
 class Test__URLs(TestCase):
@@ -36,42 +33,6 @@ class Test__URLs(TestCase):
                     reverse(url_name, args = url_args),
                     '/accounts/' + url_subpath,
                 )
-
-
-
-class Test__Healthcheck(TestCase):
-    
-    def test__default(self):
-        """Returns a JSON containing the site name and a notice."""
-        
-        response = self.client.get(reverse('healthcheck'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            json.loads(response.content),
-            {'name': 'FantasyBumps', 'notice': healthcheck_notice},
-        )
-    
-    
-    def test__with_data(self):
-        """Includes GET data in the reponse."""
-        
-        response = self.client.get(reverse('healthcheck'), {'data': '49c8ec32'})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            json.loads(response.content),
-            {'name': 'FantasyBumps', 'notice': healthcheck_notice, 'data': '49c8ec32'},
-        )
-    
-    
-    def test__no_overwrite(self):
-        """Does not allow GET data to overwrite name or notice."""
-        
-        response = self.client.get(reverse('healthcheck'), {'name': 'hidden', 'notice': 'hidden'})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            json.loads(response.content),
-            {'name': 'FantasyBumps', 'notice': healthcheck_notice},
-        )
 
 
 
