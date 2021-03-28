@@ -22,6 +22,10 @@ class UserCreationWithEmailForm(UserCreationForm):
     
     def clean_username(self):
         username = self.cleaned_data['username']
+        
+        if auth.User.objects.filter(username__icontains = username).exists():
+            raise ValidationError('This team name is already taken.')
+        
         for blacklist, error_message in username_blacklist_regexes:
             if re.search(blacklist, username, re.IGNORECASE):
                 raise ValidationError(error_message or 'This team name is not permitted.')

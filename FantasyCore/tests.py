@@ -72,6 +72,21 @@ class Test__Account_Signup(TestCase, MessagesTestMixin):
         self.assertEqual(user.email, email)
     
     
+    def test__form__case_insensitive_duplication(self):
+        """Prevents creation of new users that differ from an existing user by only letter case."""
+        
+        auth.models.User.objects.create(username = 'atEStuSeR')
+        
+        username = 'ATestUser'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('This team name is already taken.', str(form.errors['username']))
+    
+    
     def test__form__blacklisted_username_standard_error(self):
         """Blacklisted usernames are rejected."""
         
