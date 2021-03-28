@@ -63,7 +63,7 @@ def avatar(text, club = None):
 
 @register.filter
 def currency(amount):
-    return format_html('₢ {}', amount)
+    return format_html('{} 🦀', amount)
 
 
 @register.filter

@@ -308,7 +308,7 @@ class Test__Misc(TestCase):
         """Renders the amount with currency symbol."""
         
         html = tags.currency(100)
-        self.assertEqual(html, '₢ 100')
+        self.assertEqual(html, '100 🦀')
     
     
     def test__buy_button__standard(self):
