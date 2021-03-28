@@ -118,6 +118,27 @@ class Test__Account_Signup(TestCase, MessagesTestMixin):
         self.assertMessages(response, [
             ('success', 'Welcome ATestUser - Your account has been created.'),
         ])
+    
+    
+    def test__view__whitespace(self):
+        """Checks whitespace is correctly stripped and handled - See #63."""
+        
+        username = '  ATestUser  '
+        post_data = {
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        }
+        response = self.client.post(reverse('signup'), post_data)
+        self.assertRedirects(response, reverse('index'))
+        
+        user = auth.get_user(self.client)
+        self.assertEqual(user.username, username.strip())
+        self.assertTrue(user.is_authenticated)
+        
+        self.assertMessages(response, [
+            ('success', 'Welcome ATestUser - Your account has been created.'),
+        ])
 
 
 

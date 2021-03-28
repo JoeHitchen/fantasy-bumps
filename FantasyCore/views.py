@@ -23,8 +23,8 @@ class UserCreationView(SuccessMessageMixin, CreateView):
         
         redirect = super().form_valid(form)
         authed_user = authenticate(
-            username = self.request.POST['username'],
-            password = self.request.POST['password1'],
+            username = form.cleaned_data['username'],
+            password = form.cleaned_data['password1'],
         )
         login(self.request, authed_user)
         return redirect
