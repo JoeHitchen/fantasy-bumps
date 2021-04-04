@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load fantasy_tags %}
 
 {% block page_head %}
 <style type="text/css">
@@ -13,6 +14,50 @@
 
 {% block content %}
 <br/>
+
+<div>
+  <h2>Playing Guide</h2>
+  <p>
+    Fantasy Bumps is a game of prediction and speculation.
+    Players are in charge of a men's and women's boat and pick athletes entering a bumps race that they think will deliver the best results.
+  </p>
+  <p>
+    Each boat starts with a budget of {{ money.INITIAL_BALANCE|currency }} and these crabs can be spent however you choose.
+    Crews higher up the river will cost more than those lower down, with the headship crew costing {{ money.PRICE_MAX|currency }} and the footship crew costing {{ money.PRICE_MIN|currency }}.
+    These higher prices come with more risk and more reward, since crews higher up will gain more crabs if they bump or rowover and will lose more crabs if they get bumped.
+  </p>
+  <p class="mb-1">
+    Athletes gain and lose crabs for their team in two ways:
+  </p>
+  <p class="ml-3 mb-0">
+    The value of crews that gain or lose places will change to reflect their new position.
+    Crews that gain places can be sold the next day for more crabs than were spent to buy them, while crews that lose places will return fewer crabs when sold than were spent.
+    The gain/loss is simply the difference in the price of the places.
+  </p>
+  <em>
+    <ul class="mb-1">
+      <li>A division-two athlete originally worth {{ 112|currency }} that bumps up to a bungline worth {{ 118|currency }} has gained {{ 6|currency }} in value and can now be sold for the higher amount.</li>
+      <li>The same athlete that gets bumped to a bungline worth {{ 97|currency }} has lost {{ 15|currency }} because it can only be sold for that lower value.</li>
+      <li>If they row over, they can be sold for the same amount and there is no change in intrinsic value.</li>
+    </ul>
+  </em>
+  <p class="ml-3 mb-0">
+    Athletes that row over or gain places will also be awarded cash payouts, on top of any intrinsic value change.
+    The reward is 7% of their value for a rowover, plus an additional 14% for each place gained.
+  </p>
+  <em>
+    <ul>
+      <li>The headship crew is worth {{ money.PRICE_MAX|currency }} and will be rewarded {{ 21|currency }} for a row over.</li>
+      <li>A crew in division 2 valued at {{ 130|currency }} that goes up one will be rewarded {{ 27|currency }}.</li>
+      <li>A crew in division 4 valued at {{ 50|currency }} will be rewarded {{ 25|currency }} if they gain three places.</li>
+    </ul>
+  </em>
+  <p>
+    Rewards and losses are evaulated at the end of each day and there is the opportunity to change your crew lists before the next day's racing.
+    On day one, you will not have enough crabs to pick all high-valued crews so will need to pick your athletes carefully to get value from every seat.
+    Later in the week, if your athletes are doing well, you will be able to pick more and more of the higher-valued crews and take bigger risks for even greater rewards.
+  </p>
+</div>
 
 <small>
   <h2>Rules of <strike class="text-secondary">Racing</strike> Speculating</h2>
