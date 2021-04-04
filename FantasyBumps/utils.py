@@ -37,9 +37,9 @@ def _pricing_gradient(num_crews):
         """Calculates a fudge-factor to counter error caused by gradient rounding."""
         
         num_crews_1 = 61  # Women's Torpids
-        fudge_1 = 0.995
+        fudge_1 = 1.004
         num_crews_2 = 92  # Men's Eights
-        fudge_2 = 0.9997
+        fudge_2 = 1.002
         
         top = fudge_2 * (num_crews - num_crews_1) - fudge_1 * (num_crews - num_crews_2)
         return top / (num_crews_2 - num_crews_1)

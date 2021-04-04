@@ -157,6 +157,28 @@ class Test__Reverse_Gender(TestCase):
 
 
 @tag('game-core')
+class Test__Pricing(TestCase):
+    
+    def test__bungline_2(self):
+        """Ensures a sensible price is given for bungline 2.
+        
+        The price gap between bungline 1 and bungline 2 should be equal-to or greater than that of
+        bungline 2 to bungline 3.
+        
+        See #68
+        """
+        
+        for num_crews in [61, 73, 79, 92]:
+            with self.subTest(num_crews = num_crews):
+                bungline_1 = utils.pricing(1, num_crews)
+                bungline_2 = utils.pricing(2, num_crews)
+                bungline_3 = utils.pricing(3, num_crews)
+                
+                self.assertGreaterEqual(bungline_1 - bungline_2, bungline_2 - bungline_3)
+
+
+
+@tag('game-core')
 class Test__Create_Payout_Matrix(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']
     
