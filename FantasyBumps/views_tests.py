@@ -36,6 +36,16 @@ class Test__Index(TestCase):
             list(response.context['events']),
             list(models.Event.objects.all()),
         )
+    
+    
+    def test__guide_rules(self):
+        """Renders the guide & rules page."""
+        
+        response = self.client.get(reverse('fantasybumps:rules'))
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasybumps/rules.html')
+        self.assertEqual(response.context['money'], money)
 
 
 
