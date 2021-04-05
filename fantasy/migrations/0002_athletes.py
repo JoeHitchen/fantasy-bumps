@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('FantasyBumps', '0001_initial'),
+        ('fantasy', '0001_initial'),
     ]
 
     operations = [
@@ -16,9 +16,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=100)),
-                ('crew', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='crew_lists', to='FantasyBumps.Crew')),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='crew_lists', to='FantasyBumps.Event')),
-                ('seat', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='FantasyBumps.Seat')),
+                ('crew', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='crew_lists', to='fantasy.Crew')),
+                ('event', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='crew_lists', to='fantasy.Event')),
+                ('seat', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='fantasy.Seat')),
             ],
             options={
                 'ordering': ['event', 'crew', 'seat'],
@@ -28,6 +28,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='purchase',
             name='athlete',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='FantasyBumps.Athlete'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='fantasy.Athlete'),
         ),
     ]

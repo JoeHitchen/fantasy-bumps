@@ -7,13 +7,13 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('FantasyBumps', '0003_event_structure'),
+        ('fantasy', '0003_event_structure'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='purchase',
             name='crew',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='purchases', to='FantasyBumps.Crew'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='purchases', to='fantasy.Crew'),
         ),
     ]

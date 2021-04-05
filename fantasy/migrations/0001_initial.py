@@ -65,24 +65,24 @@ class Migration(migrations.Migration):
             name='Purchase',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('crew', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='FantasyBumps.Crew')),
-                ('day', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='FantasyBumps.Day')),
-                ('seat', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='FantasyBumps.Seat')),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='FantasyBumps.Team')),
+                ('crew', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='fantasy.Crew')),
+                ('day', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='fantasy.Day')),
+                ('seat', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='fantasy.Seat')),
+                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='fantasy.Team')),
             ],
         ),
         migrations.AddField(
             model_name='day',
             name='event',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='days', to='FantasyBumps.Event'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='days', to='fantasy.Event'),
         ),
         migrations.CreateModel(
             name='Position',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('rank', models.PositiveSmallIntegerField(db_index=True)),
-                ('crew', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='positions', to='FantasyBumps.Crew')),
-                ('day', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ranking', to='FantasyBumps.Day')),
+                ('crew', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='positions', to='fantasy.Crew')),
+                ('day', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ranking', to='fantasy.Day')),
             ],
             options={
                 'ordering': ['day', 'rank'],
@@ -97,8 +97,8 @@ class Migration(migrations.Migration):
                 ('womens_budget', models.PositiveSmallIntegerField(default=1000)),
                 ('mens_balance', models.PositiveSmallIntegerField(default=1000)),
                 ('womens_balance', models.PositiveSmallIntegerField(default=1000)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fantasies', to='FantasyBumps.Event')),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='entries', to='FantasyBumps.Team')),
+                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='fantasies', to='fantasy.Event')),
+                ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='entries', to='fantasy.Team')),
             ],
             options={
                 'unique_together': {('team', 'event')},
