@@ -1,0 +1,164 @@
+[
+  {
+    "model": "fantasy.position",
+    "pk": 19,
+    "fields": {
+      "day": 2,
+      "crew": 1,
+      "rank": 2
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 20,
+    "fields": {
+      "day": 2,
+      "crew": 2,
+      "rank": 1
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 21,
+    "fields": {
+      "day": 2,
+      "crew": 3,
+      "rank": 3
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 22,
+    "fields": {
+      "day": 2,
+      "crew": 4,
+      "rank": 6
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 23,
+    "fields": {
+      "day": 2,
+      "crew": 5,
+      "rank": 4
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 24,
+    "fields": {
+      "day": 2,
+      "crew": 6,
+      "rank": 5
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 25,
+    "fields": {
+      "day": 2,
+      "crew": 7,
+      "rank": 7
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 26,
+    "fields": {
+      "day": 2,
+      "crew": 8,
+      "rank": 9
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 27,
+    "fields": {
+      "day": 2,
+      "crew": 9,
+      "rank": 8
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 28,
+    "fields": {
+      "day": 2,
+      "crew": 10,
+      "rank": 1
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 29,
+    "fields": {
+      "day": 2,
+      "crew": 11,
+      "rank": 2
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 30,
+    "fields": {
+      "day": 2,
+      "crew": 12,
+      "rank": 3
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 31,
+    "fields": {
+      "day": 2,
+      "crew": 13,
+      "rank": 4
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 32,
+    "fields": {
+      "day": 2,
+      "crew": 14,
+      "rank": 5
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 33,
+    "fields": {
+      "day": 2,
+      "crew": 15,
+      "rank": 6
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 34,
+    "fields": {
+      "day": 2,
+      "crew": 16,
+      "rank": 8
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 35,
+    "fields": {
+      "day": 2,
+      "crew": 17,
+      "rank": 7
+    }
+  },
+  {
+    "model": "fantasy.position",
+    "pk": 36,
+    "fields": {
+      "day": 2,
+      "crew": 18,
+      "rank": 9
+    }
+  }
+]

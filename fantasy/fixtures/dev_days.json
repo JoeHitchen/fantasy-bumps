@@ -1,0 +1,29 @@
+[
+  {
+    "model": "fantasy.day",
+    "pk": 1,
+    "fields": {
+      "event": 1,
+      "name": "Wednesday",
+      "date": "2019-02-27"
+    }
+  },
+  {
+    "model": "fantasy.day",
+    "pk": 2,
+    "fields": {
+      "event": 1,
+      "name": "Thursday",
+      "date": "2019-02-28"
+    }
+  },
+  {
+    "model": "fantasy.day",
+    "pk": 3,
+    "fields": {
+      "event": 1,
+      "name": "Friday",
+      "date": "2019-03-01"
+    }
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "model": "fantasy.seat",
+    "pk": 1,
+    "fields": {
+      "name": "Bow",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 2,
+    "fields": {
+      "name": "2",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 3,
+    "fields": {
+      "name": "3",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 4,
+    "fields": {
+      "name": "4",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 5,
+    "fields": {
+      "name": "5",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 6,
+    "fields": {
+      "name": "6",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 7,
+    "fields": {
+      "name": "7",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 8,
+    "fields": {
+      "name": "Stroke",
+      "cox": false
+    }
+  },
+  {
+    "model": "fantasy.seat",
+    "pk": 9,
+    "fields": {
+      "name": "Cox",
+      "cox": true
+    }
+  }
+]

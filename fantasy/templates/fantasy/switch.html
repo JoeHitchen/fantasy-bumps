@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% load fantasy_tags %}
+{% load static %}
+
+
+{% block content %}
+
+<div class="container text-center" style="max-width: 30em; margin-top: 1.5em">
+
+<h3>Micromanage crew</h3>
+Alter puchase of {% if purchase.athlete %}<strong>{{ purchase.athlete }}</strong> ({{ purchase.crew }}){% else %}{{ purchase.crew }}{% endif %}
+
+<form action="{% url 'fantasy:switch' purchase.id %}" method="post">
+  {% csrf_token %}
+
+  <div class="row">
+
+  <div class="col-sm" style="margin-top: 1em">
+    <strong>Pick your athlete</strong><br/>
+    <div class="btn-group-vertical btn-group-toggle" data-toggle="buttons" style="margin-top: 0.5em">
+      {% for rower in rowers %}
+        <label class="btn {% if rower not in other_purchased_athletes and not rower.seat.cox %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}{% if rower == purchase.athlete %} active{% endif %}">
+          {% if rower not in other_purchased_athletes and not rower.seat.cox %}
+            <input type="radio" name="athlete" value="{{ rower.id }}" {% if rower == purchase.athlete %}checked{% endif %} />
+          {% endif %}
+            {{ rower }}
+        </label>
+      {% endfor %}
+        <label class="btn btn-outline-secondary{% if not purchase.athlete %} active{% endif %}">
+          <input type="radio" name="athlete" value="0"{% if not purchase.athlete %} checked{% endif %} /> No athlete
+        </label>
+    </div>
+  </div>
+  
+  
+  <div class="col-sm" style="margin-top: 1em">
+    <strong>Pick their seat</strong><br/>
+    <div class="btn-group-vertical btn-group-toggle" data-toggle="buttons" style="margin-top: 0.5em">
+      {% for seat in seats %}
+        <label class="btn {% if not seat.cox %}btn-outline-primary{% else %}btn-outline-secondary disabled{% endif %}{% if seat == purchase.seat %} active{% endif %}">
+          {% if not seat.cox %}
+            <input type="radio" name="seat" value="{{ seat.id }}"{% if seat == purchase.seat %} checked{% endif %} />
+          {% endif %}
+            {{ seat }}
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  
+  </div>
+  
+  <div class="row" style="margin-top: 1.5em">
+    <div class="col">
+      <input class="btn btn-primary" type="submit" value="Make Change" />
+    </div>
+  </div>
+  
+  
+</form>
+
+</div>
+{% endblock %}

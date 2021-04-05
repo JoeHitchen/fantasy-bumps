@@ -1,0 +1,14 @@
+[
+{
+  "model": "fantasy.event",
+  "pk": 1,
+  "fields": {
+    "series": "D",
+    "year": "2019",
+    "tag": "demogame",
+    "mens_divisions": 6,
+    "womens_divisions": 5,
+    "boats_per_division": 12
+  }
+}
+]

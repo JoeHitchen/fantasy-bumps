@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+{% load fantasy_tags %}
+{% load static %}
+
+{% block page_head %}
+<link rel="stylesheet" type="text/css" href="{% static 'fantasy/main.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'fantasy/club_styles.css' %}">
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $(".btn-sell").click(sell);
+    $(".btn-buy:not(.disabled)").click(buy);
+  });
+
+  function buy(event) {
+    $("#buy-day").val($(event.target).data('day'));
+    $("#buy-crew").val($(event.target).data('crew'));
+    if ($("#buy-day").val() && $("#buy-crew").val()) {
+      $("#buy-form").submit();
+    };
+  };
+
+  function sell(event){
+    $("#sell-purchase").val($(event.target).data('purchase'));
+    if ($("#sell-purchase").val()) {
+      $("#sell-form").submit();
+    };
+  };
+</script>
+{% endblock %}
+
+
+{% block content %}
+
+{% market_status_box day %}
+<h3>{{ gender }}'s market for {{ day }}</h3>
+
+<div class="row">
+  <div class="col-lg">
+    {% for division in start_order %}
+      {% market_division_box division gender forloop.counter finances.balance show_actions %}
+      <br/>
+    {% endfor %}
+  </div>
+
+  {% if user.is_authenticated %}<div class="col-auto">
+    <div class="list-group sticky-top" style="width:23em">
+      {% crew_list_box crew finances show_actions %}
+    </div>
+  </div>{% endif %}
+</div>
+
+<form id="buy-form" action="{% url 'fantasy:buy' %}" method="post">
+  {% csrf_token %}
+  <input id="buy-day" name="day" type="hidden" value=""/>
+  <input id="buy-crew" name="crew" type="hidden" value=""/>
+</form>
+
+<form id="sell-form" action="{% url 'fantasy:sell' %}" method="post">
+  {% csrf_token %}
+  <input id="sell-event" name="event" type="hidden" value="{{ event.tag }}">
+  <input id="sell-gender" name="gender" type="hidden" value="{{ gender_code }}">
+  <input id="sell-purchase" name="purchase" type="hidden" value=""/>
+</form>
+
+{% endblock%}
