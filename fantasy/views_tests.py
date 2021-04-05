@@ -28,7 +28,7 @@ class Test__Index(TestCase):
     def test__index(self):
         """Renders the index page."""
         
-        response = self.client.get(reverse('fantasybumps:index'))
+        response = self.client.get(reverse('fantasy:index'))
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/index.html')
@@ -41,7 +41,7 @@ class Test__Index(TestCase):
     def test__guide_rules(self):
         """Renders the guide & rules page."""
         
-        response = self.client.get(reverse('fantasybumps:rules'))
+        response = self.client.get(reverse('fantasy:rules'))
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasybumps/rules.html')
@@ -127,7 +127,7 @@ class GamePageBase():
 class Test__Event(GamePageBase, TestCase):
     
     # Test settings
-    url_name = 'fantasybumps:event'
+    url_name = 'fantasy:event'
     template = 'fantasybumps/event.html'
     
     @classmethod
@@ -326,7 +326,7 @@ class MarketPageBase(GamePageBase):
 class Test__Market_Men(MarketPageBase, TestCase):
     
     # Test settings
-    url_name = 'fantasybumps:men'
+    url_name = 'fantasy:men'
     gender_info = {
         'text': 'Men',
         'code': genders.MENS,
@@ -470,7 +470,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
 class Test__Market_Women(MarketPageBase, TestCase):
     
     # Test settings
-    url_name = 'fantasybumps:women'
+    url_name = 'fantasy:women'
     gender_info = {
         'text': 'Women',
         'code': genders.WOMENS,
@@ -666,7 +666,7 @@ class LeaderboardPageBase(GamePageBase):
 class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
     
     # Test settings
-    url_name = 'fantasybumps:leaderboard'
+    url_name = 'fantasy:leaderboard'
     ranking = genders.TOTALS
     
     def get_ranked_fantasies(self):
@@ -677,7 +677,7 @@ class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
 class Test__Leaderboard_Men(LeaderboardPageBase, TestCase):
     
     # Test settings
-    url_name = 'fantasybumps:leaderboard_men'
+    url_name = 'fantasy:leaderboard_men'
     ranking = genders.MENS
     
     def get_ranked_fantasies(self):
@@ -688,7 +688,7 @@ class Test__Leaderboard_Men(LeaderboardPageBase, TestCase):
 class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
     
     # Test settings
-    url_name = 'fantasybumps:leaderboard_women'
+    url_name = 'fantasy:leaderboard_women'
     ranking = genders.WOMENS
     
     def get_ranked_fantasies(self):
@@ -704,7 +704,7 @@ class Test__Team(TestCase):
     ]
 
     # Test settings
-    url_name = 'fantasybumps:team'
+    url_name = 'fantasy:team'
     
     
     @classmethod
@@ -822,7 +822,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     """Testing of transaction behaviour (including side effects) is delegated to the relevant
     subroutine."""
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
-    url = reverse('fantasybumps:buy')
+    url = reverse('fantasy:buy')
     
     @classmethod
     def setUpTestData(cls):
@@ -832,7 +832,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         
         cls.budgets = cls.team.entries.create(event = cls.day.event)
         
-        cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
+        cls.womens_url = reverse('fantasy:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
     def setUp(self):
@@ -859,7 +859,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'crew': self.crew.id})
         
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('fantasy:index'))
         
         self.assertMessages(response, [
             ('error', 'An error occurred processing the request data.'),
@@ -872,7 +872,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': 10000, 'crew': self.crew.id})
         
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('fantasy:index'))
         
         self.assertMessages(response, [
             ('error', 'An error occurred processing the request data.'),
@@ -885,7 +885,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id})
         
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('fantasy:index'))
         
         self.assertMessages(response, [
             ('error', 'An error occurred processing the request data.'),
@@ -898,7 +898,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': 10000})
         
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('fantasy:index'))
         
         self.assertMessages(response, [
             ('error', 'An error occurred processing the request data.'),
@@ -986,7 +986,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': mens_crew.id})
         
-        mens_url = reverse('fantasybumps:men', kwargs = {'event_tag': self.day.event.tag})
+        mens_url = reverse('fantasy:men', kwargs = {'event_tag': self.day.event.tag})
         self.assertRedirects(response, mens_url)
         
         self.assertMessages(response, [('success', "Bought Oriel M1 as your men's bow seat.")])
@@ -1125,7 +1125,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     """Testing of transaction behaviour (including side effects) is delegated to the relevant
     subroutine."""
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
-    url = reverse('fantasybumps:sell')
+    url = reverse('fantasy:sell')
     
     @classmethod
     def setUpTestData(cls):
@@ -1142,7 +1142,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
             crew = cls.crew,
         )
         
-        cls.womens_url = reverse('fantasybumps:women', kwargs = {'event_tag': cls.day.event.tag})
+        cls.womens_url = reverse('fantasy:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
     def test__deny_get(self):
@@ -1168,7 +1168,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         
         response = self.client.post(self.url)
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('fantasy:index'))
         
         self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
@@ -1182,7 +1182,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         
         response = self.client.post(self.url, {'purchase': 100000})
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('fantasy:index'))
         
         self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
@@ -1197,7 +1197,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
         self.client.login(username = 'Other', password = 'pw')
         
         response = self.client.post(self.url, {'purchase': self.purchase.id})
-        self.assertRedirects(response, reverse('fantasybumps:index'))
+        self.assertRedirects(response, reverse('fantasy:index'))
         
         self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
@@ -1287,7 +1287,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'purchase': purchase_men.id})
         
-        mens_url = reverse('fantasybumps:men', kwargs = {'event_tag': self.day.event.tag})
+        mens_url = reverse('fantasy:men', kwargs = {'event_tag': self.day.event.tag})
         self.assertRedirects(response, mens_url)
         
         self.assertMessages(response, [('success', "Sold Oriel M1 from your men's bow seat.")])
@@ -1362,7 +1362,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
 
 class Test__Switch(TestCase, MessagesTestMixin):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
-    url_name = 'fantasybumps:switch'
+    url_name = 'fantasy:switch'
     
     @classmethod
     def setUpTestData(cls):
@@ -1406,7 +1406,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
         
         cls.url = reverse(cls.url_name, kwargs = {'purchase_id': cls.purchase.id})
         cls.market_page = reverse(
-            'fantasybumps:women',
+            'fantasy:women',
             kwargs = {'event_tag': cls.event.tag},
         )
     

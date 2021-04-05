@@ -10,7 +10,7 @@
 <h3>Micromanage crew</h3>
 Alter puchase of {% if purchase.athlete %}<strong>{{ purchase.athlete }}</strong> ({{ purchase.crew }}){% else %}{{ purchase.crew }}{% endif %}
 
-<form action="{% url 'fantasybumps:switch' purchase.id %}" method="post">
+<form action="{% url 'fantasy:switch' purchase.id %}" method="post">
   {% csrf_token %}
 
   <div class="row">

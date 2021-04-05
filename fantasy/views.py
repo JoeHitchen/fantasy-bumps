@@ -241,12 +241,12 @@ def buy(request):
     
     except ObjectDoesNotExist:
         messages.error(request, 'An error occurred processing the request data.')
-        return redirect('fantasybumps:index')
+        return redirect('fantasy:index')
     
     
     # Check market status
     gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[crew.gender]
-    market_url_name = 'fantasybumps:' + gender_string
+    market_url_name = f'fantasy:{gender_string}'
     market_redirect = redirect(market_url_name, event_tag = day.event.tag)
     
     if not day.market_is_open:
@@ -328,17 +328,17 @@ def sell(request):
         try:
             gender_code = request.POST.get('gender')
             gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[gender_code]
-            url_name = 'fantasybumps:{}'.format(gender_string)
+            url_name = f'fantasy:{gender_string}'
             event = models.Event.objects.get(tag = request.POST.get('event'))
             return redirect(url_name, event_tag = event.tag)
         
         except (KeyError, models.Event.DoesNotExist):
-            return redirect('fantasybumps:index')
+            return redirect('fantasy:index')
     
     
     # Check market status
     gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
-    market_url_name = 'fantasybumps:' + gender_string
+    market_url_name = f'fantasy:{gender_string}'
     market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
     
     if not purchase.day.market_is_open:
@@ -400,7 +400,7 @@ class Switch(TemplateView):
         
         # Check market status
         gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.purchase.crew.gender]
-        market_url_name = 'fantasybumps:' + gender_string
+        market_url_name = f'fantasy:{gender_string}'
         self.market_redirect = redirect(market_url_name, event_tag = self.purchase.day.event.tag)
         
         if not self.purchase.day.market_is_open:

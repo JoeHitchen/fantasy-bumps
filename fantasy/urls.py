@@ -4,7 +4,7 @@ from .constants import genders
 from . import views
 
 
-app_name = 'fantasybumps'
+app_name = 'fantasy'
 
 leaderboard_subpatterns = [
     path(

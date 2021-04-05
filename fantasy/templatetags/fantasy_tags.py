@@ -74,7 +74,7 @@ def popularity_indicator(popularity):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <a
-    href="{% url 'fantasybumps:team' event.tag fantasy.team.user.username %}"
+    href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}"
     class="list-group-item list-group-item-action popularity-row"
   >
     {{ rank|avatar:style }}
@@ -139,7 +139,7 @@ def sell_button(purchase):
 @register.inclusion_tag(template.Template('''
   {% load static %}
   {% if not purchase.seat.cox %}
-    <a href="{% url 'fantasybumps:switch' purchase.id %}" class="btn btn-sm btn-primary">
+    <a href="{% url 'fantasy:switch' purchase.id %}" class="btn btn-sm btn-primary">
       <img class="btn-switch" src="{% static 'FantasyBumps/switch-white.svg' %}" />
     </a>
   {% endif %}
