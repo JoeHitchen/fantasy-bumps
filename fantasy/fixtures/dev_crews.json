@@ -1,6 +1,6 @@
 [
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 1,
     "fields": {
       "club": "orie",
@@ -9,7 +9,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 2,
     "fields": {
       "club": "wadh",
@@ -18,7 +18,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 3,
     "fields": {
       "club": "pemb",
@@ -27,7 +27,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 4,
     "fields": {
       "club": "chri",
@@ -36,7 +36,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 5,
     "fields": {
       "club": "kebl",
@@ -45,7 +45,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 6,
     "fields": {
       "club": "hert",
@@ -54,7 +54,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 7,
     "fields": {
       "club": "wolf",
@@ -63,7 +63,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 8,
     "fields": {
       "club": "sjoh",
@@ -72,7 +72,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 9,
     "fields": {
       "club": "magd",
@@ -81,7 +81,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 10,
     "fields": {
       "club": "orie",
@@ -90,7 +90,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 11,
     "fields": {
       "club": "pemb",
@@ -99,7 +99,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 12,
     "fields": {
       "club": "wadh",
@@ -108,7 +108,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 13,
     "fields": {
       "club": "chri",
@@ -117,7 +117,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 14,
     "fields": {
       "club": "scat",
@@ -126,7 +126,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 15,
     "fields": {
       "club": "wolf",
@@ -135,7 +135,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 16,
     "fields": {
       "club": "hert",
@@ -144,7 +144,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 17,
     "fields": {
       "club": "ball",
@@ -153,7 +153,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Crew",
+    "model": "fantasy.crew",
     "pk": 18,
     "fields": {
       "club": "jesu",

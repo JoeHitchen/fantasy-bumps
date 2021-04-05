@@ -326,7 +326,7 @@ class Test__Day__Start_Orders(TestCase):
     
     
     @patch(
-        'FantasyBumps.models.Division.start_order',
+        'fantasy.models.Division.start_order',
         autospec = True,
         side_effect = lambda self: self,
     )
@@ -349,7 +349,7 @@ class Test__Day__Start_Orders(TestCase):
     
     
     @patch(
-        'FantasyBumps.models.Division.start_order',
+        'fantasy.models.Division.start_order',
         autospec = True,
         side_effect = lambda self: (self.day.id, self.gender, self.number),
     )

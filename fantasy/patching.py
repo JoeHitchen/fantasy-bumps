@@ -48,7 +48,7 @@ def market_is_open(status):
 
 
 team_get_crew = patch(
-    'FantasyBumps.models.Team.get_crew',
+    'fantasy.models.Team.get_crew',
     autospec = True,
     side_effect = lambda team, day, gender: (team, day, gender),
 )

@@ -1,6 +1,6 @@
 [
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 1,
   "fields": {
     "club": "magd",
@@ -9,7 +9,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 2,
   "fields": {
     "club": "wadh",
@@ -18,7 +18,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 3,
   "fields": {
     "club": "newc",
@@ -27,7 +27,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 4,
   "fields": {
     "club": "sedm",
@@ -36,7 +36,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 5,
   "fields": {
     "club": "chri",
@@ -45,7 +45,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 6,
   "fields": {
     "club": "pemb",
@@ -54,7 +54,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 7,
   "fields": {
     "club": "hert",
@@ -63,7 +63,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 8,
   "fields": {
     "club": "orie",
@@ -72,7 +72,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 9,
   "fields": {
     "club": "worc",
@@ -81,7 +81,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 10,
   "fields": {
     "club": "sjoh",
@@ -90,7 +90,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 11,
   "fields": {
     "club": "univ",
@@ -99,7 +99,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 12,
   "fields": {
     "club": "quee",
@@ -108,7 +108,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 13,
   "fields": {
     "club": "scat",
@@ -117,7 +117,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 14,
   "fields": {
     "club": "exet",
@@ -126,7 +126,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 15,
   "fields": {
     "club": "wolf",
@@ -135,7 +135,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 16,
   "fields": {
     "club": "kebl",
@@ -144,7 +144,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 17,
   "fields": {
     "club": "mert",
@@ -153,7 +153,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 18,
   "fields": {
     "club": "ball",
@@ -162,7 +162,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 19,
   "fields": {
     "club": "lady",
@@ -171,7 +171,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 20,
   "fields": {
     "club": "linc",
@@ -180,7 +180,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 21,
   "fields": {
     "club": "mans",
@@ -189,7 +189,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 22,
   "fields": {
     "club": "some",
@@ -198,7 +198,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 23,
   "fields": {
     "club": "jesu",
@@ -207,7 +207,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 24,
   "fields": {
     "club": "shil",
@@ -216,7 +216,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 25,
   "fields": {
     "club": "sann",
@@ -225,7 +225,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 26,
   "fields": {
     "club": "shug",
@@ -234,7 +234,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 27,
   "fields": {
     "club": "corp",
@@ -243,7 +243,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 28,
   "fields": {
     "club": "trin",
@@ -252,7 +252,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 29,
   "fields": {
     "club": "wadh",
@@ -261,7 +261,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 30,
   "fields": {
     "club": "sjoh",
@@ -270,7 +270,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 31,
   "fields": {
     "club": "lina",
@@ -279,7 +279,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 32,
   "fields": {
     "club": "newc",
@@ -288,7 +288,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 33,
   "fields": {
     "club": "bras",
@@ -297,7 +297,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 34,
   "fields": {
     "club": "univ",
@@ -306,7 +306,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 35,
   "fields": {
     "club": "worc",
@@ -315,7 +315,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 36,
   "fields": {
     "club": "sant",
@@ -324,7 +324,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 37,
   "fields": {
     "club": "grte",
@@ -333,7 +333,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 38,
   "fields": {
     "club": "spet",
@@ -342,7 +342,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 39,
   "fields": {
     "club": "wolf",
@@ -351,7 +351,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 40,
   "fields": {
     "club": "hert",
@@ -360,7 +360,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 41,
   "fields": {
     "club": "trin",
@@ -369,7 +369,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 42,
   "fields": {
     "club": "sann",
@@ -378,7 +378,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 43,
   "fields": {
     "club": "pemb",
@@ -387,7 +387,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 44,
   "fields": {
     "club": "exet",
@@ -396,7 +396,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 45,
   "fields": {
     "club": "mert",
@@ -405,7 +405,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 46,
   "fields": {
     "club": "linc",
@@ -414,7 +414,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 47,
   "fields": {
     "club": "jesu",
@@ -423,7 +423,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 48,
   "fields": {
     "club": "lady",
@@ -432,7 +432,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 49,
   "fields": {
     "club": "grte",
@@ -441,7 +441,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 50,
   "fields": {
     "club": "orie",
@@ -450,7 +450,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 51,
   "fields": {
     "club": "bras",
@@ -459,7 +459,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 52,
   "fields": {
     "club": "some",
@@ -468,7 +468,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 53,
   "fields": {
     "club": "sjoh",
@@ -477,7 +477,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 54,
   "fields": {
     "club": "sant",
@@ -486,7 +486,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 55,
   "fields": {
     "club": "scat",
@@ -495,7 +495,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 56,
   "fields": {
     "club": "shug",
@@ -504,7 +504,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 57,
   "fields": {
     "club": "spet",
@@ -513,7 +513,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 58,
   "fields": {
     "club": "wadh",
@@ -522,7 +522,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 59,
   "fields": {
     "club": "shil",
@@ -531,7 +531,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 60,
   "fields": {
     "club": "corp",
@@ -540,7 +540,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 61,
   "fields": {
     "club": "rege",
@@ -549,7 +549,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 62,
   "fields": {
     "club": "pemb",
@@ -558,7 +558,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 63,
   "fields": {
     "club": "chri",
@@ -567,7 +567,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 64,
   "fields": {
     "club": "magd",
@@ -576,7 +576,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 65,
   "fields": {
     "club": "ball",
@@ -585,7 +585,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 66,
   "fields": {
     "club": "wolf",
@@ -594,7 +594,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 67,
   "fields": {
     "club": "sjoh",
@@ -603,7 +603,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 68,
   "fields": {
     "club": "scat",
@@ -612,7 +612,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 69,
   "fields": {
     "club": "lady",
@@ -621,7 +621,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 70,
   "fields": {
     "club": "orie",
@@ -630,7 +630,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 71,
   "fields": {
     "club": "hert",
@@ -639,7 +639,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 72,
   "fields": {
     "club": "wadh",
@@ -648,7 +648,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 73,
   "fields": {
     "club": "sann",
@@ -657,7 +657,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 74,
   "fields": {
     "club": "trin",
@@ -666,7 +666,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 75,
   "fields": {
     "club": "worc",
@@ -675,7 +675,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 76,
   "fields": {
     "club": "newc",
@@ -684,7 +684,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 77,
   "fields": {
     "club": "pemb",
@@ -693,7 +693,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 78,
   "fields": {
     "club": "linc",
@@ -702,7 +702,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 79,
   "fields": {
     "club": "sedm",
@@ -711,7 +711,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 80,
   "fields": {
     "club": "bras",
@@ -720,7 +720,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 81,
   "fields": {
     "club": "quee",
@@ -729,7 +729,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 82,
   "fields": {
     "club": "jesu",
@@ -738,7 +738,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 83,
   "fields": {
     "club": "univ",
@@ -747,7 +747,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 84,
   "fields": {
     "club": "shug",
@@ -756,7 +756,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 85,
   "fields": {
     "club": "exet",
@@ -765,7 +765,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 86,
   "fields": {
     "club": "spet",
@@ -774,7 +774,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 87,
   "fields": {
     "club": "some",
@@ -783,7 +783,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 88,
   "fields": {
     "club": "chri",
@@ -792,7 +792,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 89,
   "fields": {
     "club": "mert",
@@ -801,7 +801,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 90,
   "fields": {
     "club": "mans",
@@ -810,7 +810,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 91,
   "fields": {
     "club": "kebl",
@@ -819,7 +819,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 92,
   "fields": {
     "club": "trin",
@@ -828,7 +828,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 93,
   "fields": {
     "club": "corp",
@@ -837,7 +837,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 94,
   "fields": {
     "club": "wadh",
@@ -846,7 +846,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 95,
   "fields": {
     "club": "sant",
@@ -855,7 +855,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 96,
   "fields": {
     "club": "newc",
@@ -864,7 +864,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 97,
   "fields": {
     "club": "exet",
@@ -873,7 +873,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 98,
   "fields": {
     "club": "ball",
@@ -882,7 +882,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 99,
   "fields": {
     "club": "magd",
@@ -891,7 +891,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 100,
   "fields": {
     "club": "linc",
@@ -900,7 +900,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 101,
   "fields": {
     "club": "lina",
@@ -909,7 +909,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 102,
   "fields": {
     "club": "sjoh",
@@ -918,7 +918,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 103,
   "fields": {
     "club": "orie",
@@ -927,7 +927,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 104,
   "fields": {
     "club": "worc",
@@ -936,7 +936,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 105,
   "fields": {
     "club": "jesu",
@@ -945,7 +945,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 106,
   "fields": {
     "club": "scat",
@@ -954,7 +954,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 107,
   "fields": {
     "club": "univ",
@@ -963,7 +963,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 108,
   "fields": {
     "club": "wolf",
@@ -972,7 +972,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 109,
   "fields": {
     "club": "hert",
@@ -981,7 +981,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 110,
   "fields": {
     "club": "sann",
@@ -990,7 +990,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 111,
   "fields": {
     "club": "rege",
@@ -999,7 +999,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 112,
   "fields": {
     "club": "mert",
@@ -1008,7 +1008,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 113,
   "fields": {
     "club": "shug",
@@ -1017,7 +1017,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 114,
   "fields": {
     "club": "kebl",
@@ -1026,7 +1026,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 115,
   "fields": {
     "club": "grte",
@@ -1035,7 +1035,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 116,
   "fields": {
     "club": "wadh",
@@ -1044,7 +1044,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 117,
   "fields": {
     "club": "wadh",
@@ -1053,7 +1053,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 118,
   "fields": {
     "club": "bras",
@@ -1062,7 +1062,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 119,
   "fields": {
     "club": "spet",
@@ -1071,7 +1071,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 120,
   "fields": {
     "club": "chri",
@@ -1080,7 +1080,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 121,
   "fields": {
     "club": "pemb",
@@ -1089,7 +1089,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 122,
   "fields": {
     "club": "sben",
@@ -1098,7 +1098,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 123,
   "fields": {
     "club": "sedm",
@@ -1107,7 +1107,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 124,
   "fields": {
     "club": "bras",
@@ -1116,7 +1116,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 125,
   "fields": {
     "club": "trin",
@@ -1125,7 +1125,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 126,
   "fields": {
     "club": "scat",
@@ -1134,7 +1134,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 127,
   "fields": {
     "club": "shil",
@@ -1143,7 +1143,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 128,
   "fields": {
     "club": "some",
@@ -1152,7 +1152,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 129,
   "fields": {
     "club": "sedm",
@@ -1161,7 +1161,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 130,
   "fields": {
     "club": "pemb",
@@ -1170,7 +1170,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 131,
   "fields": {
     "club": "grte",
@@ -1179,7 +1179,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 132,
   "fields": {
     "club": "corp",
@@ -1188,7 +1188,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 133,
   "fields": {
     "club": "sjoh",
@@ -1197,7 +1197,7 @@
   }
 },
 {
-  "model": "FantasyBumps.crew",
+  "model": "fantasy.crew",
   "pk": 134,
   "fields": {
     "club": "wolf",

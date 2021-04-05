@@ -1,6 +1,6 @@
 [
   {
-    "model": "FantasyBumps.Day",
+    "model": "fantasy.day",
     "pk": 1,
     "fields": {
       "event": 1,
@@ -9,7 +9,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Day",
+    "model": "fantasy.day",
     "pk": 2,
     "fields": {
       "event": 1,
@@ -18,7 +18,7 @@
     }
   },
   {
-    "model": "FantasyBumps.Day",
+    "model": "fantasy.day",
     "pk": 3,
     "fields": {
       "event": 1,

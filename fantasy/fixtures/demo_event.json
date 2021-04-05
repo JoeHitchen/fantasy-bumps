@@ -1,6 +1,6 @@
 [
 {
-  "model": "FantasyBumps.event",
+  "model": "fantasy.event",
   "pk": 1,
   "fields": {
     "series": "D",

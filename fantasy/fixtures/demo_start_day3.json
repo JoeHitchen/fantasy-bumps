@@ -1,6 +1,6 @@
 [
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 269,
   "fields": {
     "day": 3,
@@ -9,7 +9,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 270,
   "fields": {
     "day": 3,
@@ -18,7 +18,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 271,
   "fields": {
     "day": 3,
@@ -27,7 +27,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 272,
   "fields": {
     "day": 3,
@@ -36,7 +36,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 273,
   "fields": {
     "day": 3,
@@ -45,7 +45,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 274,
   "fields": {
     "day": 3,
@@ -54,7 +54,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 275,
   "fields": {
     "day": 3,
@@ -63,7 +63,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 276,
   "fields": {
     "day": 3,
@@ -72,7 +72,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 277,
   "fields": {
     "day": 3,
@@ -81,7 +81,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 278,
   "fields": {
     "day": 3,
@@ -90,7 +90,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 279,
   "fields": {
     "day": 3,
@@ -99,7 +99,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 280,
   "fields": {
     "day": 3,
@@ -108,7 +108,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 281,
   "fields": {
     "day": 3,
@@ -117,7 +117,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 282,
   "fields": {
     "day": 3,
@@ -126,7 +126,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 283,
   "fields": {
     "day": 3,
@@ -135,7 +135,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 284,
   "fields": {
     "day": 3,
@@ -144,7 +144,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 285,
   "fields": {
     "day": 3,
@@ -153,7 +153,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 286,
   "fields": {
     "day": 3,
@@ -162,7 +162,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 287,
   "fields": {
     "day": 3,
@@ -171,7 +171,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 288,
   "fields": {
     "day": 3,
@@ -180,7 +180,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 289,
   "fields": {
     "day": 3,
@@ -189,7 +189,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 290,
   "fields": {
     "day": 3,
@@ -198,7 +198,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 291,
   "fields": {
     "day": 3,
@@ -207,7 +207,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 292,
   "fields": {
     "day": 3,
@@ -216,7 +216,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 293,
   "fields": {
     "day": 3,
@@ -225,7 +225,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 294,
   "fields": {
     "day": 3,
@@ -234,7 +234,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 295,
   "fields": {
     "day": 3,
@@ -243,7 +243,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 296,
   "fields": {
     "day": 3,
@@ -252,7 +252,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 297,
   "fields": {
     "day": 3,
@@ -261,7 +261,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 298,
   "fields": {
     "day": 3,
@@ -270,7 +270,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 299,
   "fields": {
     "day": 3,
@@ -279,7 +279,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 300,
   "fields": {
     "day": 3,
@@ -288,7 +288,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 301,
   "fields": {
     "day": 3,
@@ -297,7 +297,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 302,
   "fields": {
     "day": 3,
@@ -306,7 +306,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 303,
   "fields": {
     "day": 3,
@@ -315,7 +315,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 304,
   "fields": {
     "day": 3,
@@ -324,7 +324,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 305,
   "fields": {
     "day": 3,
@@ -333,7 +333,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 306,
   "fields": {
     "day": 3,
@@ -342,7 +342,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 307,
   "fields": {
     "day": 3,
@@ -351,7 +351,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 308,
   "fields": {
     "day": 3,
@@ -360,7 +360,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 309,
   "fields": {
     "day": 3,
@@ -369,7 +369,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 310,
   "fields": {
     "day": 3,
@@ -378,7 +378,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 311,
   "fields": {
     "day": 3,
@@ -387,7 +387,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 312,
   "fields": {
     "day": 3,
@@ -396,7 +396,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 313,
   "fields": {
     "day": 3,
@@ -405,7 +405,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 314,
   "fields": {
     "day": 3,
@@ -414,7 +414,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 315,
   "fields": {
     "day": 3,
@@ -423,7 +423,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 316,
   "fields": {
     "day": 3,
@@ -432,7 +432,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 317,
   "fields": {
     "day": 3,
@@ -441,7 +441,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 318,
   "fields": {
     "day": 3,
@@ -450,7 +450,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 319,
   "fields": {
     "day": 3,
@@ -459,7 +459,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 320,
   "fields": {
     "day": 3,
@@ -468,7 +468,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 321,
   "fields": {
     "day": 3,
@@ -477,7 +477,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 322,
   "fields": {
     "day": 3,
@@ -486,7 +486,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 323,
   "fields": {
     "day": 3,
@@ -495,7 +495,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 324,
   "fields": {
     "day": 3,
@@ -504,7 +504,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 325,
   "fields": {
     "day": 3,
@@ -513,7 +513,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 326,
   "fields": {
     "day": 3,
@@ -522,7 +522,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 327,
   "fields": {
     "day": 3,
@@ -531,7 +531,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 328,
   "fields": {
     "day": 3,
@@ -540,7 +540,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 329,
   "fields": {
     "day": 3,
@@ -549,7 +549,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 330,
   "fields": {
     "day": 3,
@@ -558,7 +558,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 331,
   "fields": {
     "day": 3,
@@ -567,7 +567,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 332,
   "fields": {
     "day": 3,
@@ -576,7 +576,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 333,
   "fields": {
     "day": 3,
@@ -585,7 +585,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 334,
   "fields": {
     "day": 3,
@@ -594,7 +594,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 335,
   "fields": {
     "day": 3,
@@ -603,7 +603,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 336,
   "fields": {
     "day": 3,
@@ -612,7 +612,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 337,
   "fields": {
     "day": 3,
@@ -621,7 +621,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 338,
   "fields": {
     "day": 3,
@@ -630,7 +630,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 339,
   "fields": {
     "day": 3,
@@ -639,7 +639,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 340,
   "fields": {
     "day": 3,
@@ -648,7 +648,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 341,
   "fields": {
     "day": 3,
@@ -657,7 +657,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 342,
   "fields": {
     "day": 3,
@@ -666,7 +666,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 343,
   "fields": {
     "day": 3,
@@ -675,7 +675,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 344,
   "fields": {
     "day": 3,
@@ -684,7 +684,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 345,
   "fields": {
     "day": 3,
@@ -693,7 +693,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 346,
   "fields": {
     "day": 3,
@@ -702,7 +702,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 347,
   "fields": {
     "day": 3,
@@ -711,7 +711,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 348,
   "fields": {
     "day": 3,
@@ -720,7 +720,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 349,
   "fields": {
     "day": 3,
@@ -729,7 +729,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 350,
   "fields": {
     "day": 3,
@@ -738,7 +738,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 351,
   "fields": {
     "day": 3,
@@ -747,7 +747,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 352,
   "fields": {
     "day": 3,
@@ -756,7 +756,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 353,
   "fields": {
     "day": 3,
@@ -765,7 +765,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 354,
   "fields": {
     "day": 3,
@@ -774,7 +774,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 355,
   "fields": {
     "day": 3,
@@ -783,7 +783,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 356,
   "fields": {
     "day": 3,
@@ -792,7 +792,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 357,
   "fields": {
     "day": 3,
@@ -801,7 +801,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 358,
   "fields": {
     "day": 3,
@@ -810,7 +810,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 359,
   "fields": {
     "day": 3,
@@ -819,7 +819,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 360,
   "fields": {
     "day": 3,
@@ -828,7 +828,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 361,
   "fields": {
     "day": 3,
@@ -837,7 +837,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 362,
   "fields": {
     "day": 3,
@@ -846,7 +846,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 363,
   "fields": {
     "day": 3,
@@ -855,7 +855,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 364,
   "fields": {
     "day": 3,
@@ -864,7 +864,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 365,
   "fields": {
     "day": 3,
@@ -873,7 +873,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 366,
   "fields": {
     "day": 3,
@@ -882,7 +882,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 367,
   "fields": {
     "day": 3,
@@ -891,7 +891,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 368,
   "fields": {
     "day": 3,
@@ -900,7 +900,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 369,
   "fields": {
     "day": 3,
@@ -909,7 +909,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 370,
   "fields": {
     "day": 3,
@@ -918,7 +918,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 371,
   "fields": {
     "day": 3,
@@ -927,7 +927,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 372,
   "fields": {
     "day": 3,
@@ -936,7 +936,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 373,
   "fields": {
     "day": 3,
@@ -945,7 +945,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 374,
   "fields": {
     "day": 3,
@@ -954,7 +954,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 375,
   "fields": {
     "day": 3,
@@ -963,7 +963,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 376,
   "fields": {
     "day": 3,
@@ -972,7 +972,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 377,
   "fields": {
     "day": 3,
@@ -981,7 +981,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 378,
   "fields": {
     "day": 3,
@@ -990,7 +990,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 379,
   "fields": {
     "day": 3,
@@ -999,7 +999,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 380,
   "fields": {
     "day": 3,
@@ -1008,7 +1008,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 381,
   "fields": {
     "day": 3,
@@ -1017,7 +1017,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 382,
   "fields": {
     "day": 3,
@@ -1026,7 +1026,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 383,
   "fields": {
     "day": 3,
@@ -1035,7 +1035,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 384,
   "fields": {
     "day": 3,
@@ -1044,7 +1044,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 385,
   "fields": {
     "day": 3,
@@ -1053,7 +1053,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 386,
   "fields": {
     "day": 3,
@@ -1062,7 +1062,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 387,
   "fields": {
     "day": 3,
@@ -1071,7 +1071,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 388,
   "fields": {
     "day": 3,
@@ -1080,7 +1080,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 389,
   "fields": {
     "day": 3,
@@ -1089,7 +1089,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 390,
   "fields": {
     "day": 3,
@@ -1098,7 +1098,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 391,
   "fields": {
     "day": 3,
@@ -1107,7 +1107,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 392,
   "fields": {
     "day": 3,
@@ -1116,7 +1116,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 393,
   "fields": {
     "day": 3,
@@ -1125,7 +1125,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 394,
   "fields": {
     "day": 3,
@@ -1134,7 +1134,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 395,
   "fields": {
     "day": 3,
@@ -1143,7 +1143,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 396,
   "fields": {
     "day": 3,
@@ -1152,7 +1152,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 397,
   "fields": {
     "day": 3,
@@ -1161,7 +1161,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 398,
   "fields": {
     "day": 3,
@@ -1170,7 +1170,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 399,
   "fields": {
     "day": 3,
@@ -1179,7 +1179,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 400,
   "fields": {
     "day": 3,
@@ -1188,7 +1188,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 401,
   "fields": {
     "day": 3,
@@ -1197,7 +1197,7 @@
   }
 },
 {
-  "model": "FantasyBumps.position",
+  "model": "fantasy.position",
   "pk": 402,
   "fields": {
     "day": 3,
