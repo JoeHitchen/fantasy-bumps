@@ -140,7 +140,7 @@ def sell_button(purchase):
   {% load static %}
   {% if not purchase.seat.cox %}
     <a href="{% url 'fantasy:switch' purchase.id %}" class="btn btn-sm btn-primary">
-      <img class="btn-switch" src="{% static 'FantasyBumps/switch-white.svg' %}" />
+      <img class="btn-switch" src="{% static 'fantasy/switch-white.svg' %}" />
     </a>
   {% endif %}
 '''))
