@@ -29,7 +29,7 @@ leaderboard_subpatterns = [
 urlpatterns = [
     path(
         'guide-rules/',
-        views.IndexView.as_view(template_name = 'fantasybumps/rules.html'),
+        views.IndexView.as_view(template_name = 'fantasy/rules.html'),
         name = 'rules',
     ),
     path('buy/', views.buy, name = 'buy'),

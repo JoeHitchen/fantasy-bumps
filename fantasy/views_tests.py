@@ -31,7 +31,7 @@ class Test__Index(TestCase):
         response = self.client.get(reverse('fantasy:index'))
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/index.html')
+        self.assertTemplateUsed(response, 'fantasy/index.html')
         self.assertEqual(
             list(response.context['events']),
             list(models.Event.objects.all()),
@@ -44,7 +44,7 @@ class Test__Index(TestCase):
         response = self.client.get(reverse('fantasy:rules'))
         
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'fantasybumps/rules.html')
+        self.assertTemplateUsed(response, 'fantasy/rules.html')
         self.assertEqual(response.context['money'], money)
 
 
@@ -128,7 +128,7 @@ class Test__Event(GamePageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:event'
-    template = 'fantasybumps/event.html'
+    template = 'fantasy/event.html'
     
     @classmethod
     def setUpTestData(cls):
@@ -264,7 +264,7 @@ class Test__Event(GamePageBase, TestCase):
 class MarketPageBase(GamePageBase):
     
     # Test group settings
-    template = 'fantasybumps/market.html'
+    template = 'fantasy/market.html'
     
     @classmethod
     def setUpTestData(cls):
@@ -589,7 +589,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
 class LeaderboardPageBase(GamePageBase):
     
     # Test group settings
-    template = 'fantasybumps/leaderboard.html'
+    template = 'fantasy/leaderboard.html'
     
     @classmethod
     def setUpTestData(cls):
@@ -705,6 +705,7 @@ class Test__Team(TestCase):
 
     # Test settings
     url_name = 'fantasy:team'
+    template = 'fantasy/team.html'
     
     
     @classmethod
@@ -765,6 +766,7 @@ class Test__Team(TestCase):
         
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, self.template)
         
         self.assertEqual(response.context['team'], self.view_team)
         self.assertEqual(response.context['finances'], self.budgets)
@@ -786,6 +788,7 @@ class Test__Team(TestCase):
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, self.template)
         
         self.assertEqual(response.context['team'], self.view_team)
         self.assertEqual(response.context['finances'], self.budgets)
@@ -1363,6 +1366,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
 class Test__Switch(TestCase, MessagesTestMixin):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     url_name = 'fantasy:switch'
+    template = 'fantasy/switch.html'
     
     @classmethod
     def setUpTestData(cls):
@@ -1520,6 +1524,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
         
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, self.template)
         
         self.assertEqual(response.context['purchase'], self.purchase)
         self.assertQuerysetEqual(

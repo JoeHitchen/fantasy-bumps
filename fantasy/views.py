@@ -16,7 +16,7 @@ from . import errors
 
 
 class IndexView(TemplateView):
-    template_name = 'fantasybumps/index.html'
+    template_name = 'fantasy/index.html'
     
     def get_context_data(self, **kwargs):
         return {
@@ -53,7 +53,7 @@ class EventView(EventBase):
     """An main page for an event."""
     
     # View settings
-    template_name = 'fantasybumps/event.html'
+    template_name = 'fantasy/event.html'
     
     def popular_crew_query(self, gender):
         """Creates a Crew queryset with purchase counts and popularity scores."""
@@ -101,7 +101,7 @@ class MarketView(EventBase):
     """Presents the market pages for an event."""
     
     # View settings
-    template_name = 'fantasybumps/market.html'
+    template_name = 'fantasy/market.html'
     
     def add_purchase_count(self, start_order):
         """Extends a purchase queryset with purchase counts and popularity scores."""
@@ -176,7 +176,7 @@ class LeaderboardView(EventBase):
     """Presents the leaderboard for an event."""
     
     # View settings
-    template_name = 'fantasybumps/leaderboard.html'
+    template_name = 'fantasy/leaderboard.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -199,7 +199,7 @@ class TeamView(EventBase):
     """Presents a team's crews for an event."""
     
     # View settings
-    template_name = 'fantasybumps/team.html'
+    template_name = 'fantasy/team.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -386,7 +386,7 @@ class Switch(TemplateView):
     
     Additionally, has a POST action to perform the switch.
     """
-    template_name = 'fantasybumps/switch.html'
+    template_name = 'fantasy/switch.html'
     
     @method_decorator(login_required(redirect_field_name = None))
     def dispatch(self, request, *args, **kwargs):
