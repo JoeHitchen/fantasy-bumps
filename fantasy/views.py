@@ -8,11 +8,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 
-from .constants import genders, money
+from .constants import Genders, money
 from . import models
 from . import utils
 from . import transactions
 from . import errors
+
+
+def gender_without_apostrophy(gender):
+    return Genders(gender).label[:-2]
 
 
 class IndexView(TemplateView):
@@ -90,8 +94,8 @@ class EventView(EventBase):
         
         # Crew popularity data
         self.game_entry_count = self.event.fantasies.count() or 1  # Avoid Div0 error
-        context['popular_crews_men'] = self.popular_crew_query(genders.MENS)
-        context['popular_crews_women'] = self.popular_crew_query(genders.WOMENS)
+        context['popular_crews_men'] = self.popular_crew_query(Genders.MENS)
+        context['popular_crews_women'] = self.popular_crew_query(Genders.WOMENS)
         
         return context
 
@@ -126,7 +130,7 @@ class MarketView(EventBase):
         
         gender = self.kwargs['gender']
         context['gender_code'] = gender
-        context['gender'] = {genders.MENS: 'Men', genders.WOMENS: 'Women'}[gender]
+        context['gender'] = gender_without_apostrophy(gender)
         
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
         context['start_order'] = self.day.start_order(gender, extend = self.add_purchase_count)
@@ -149,12 +153,12 @@ class MarketView(EventBase):
             if finances:
                 finances = finances[0]
                 context['finances'] = {
-                    genders.MENS: {
+                    Genders.MENS: {
                         'budget': finances.mens_budget,
                         'crew_value': finances.mens_crew_value,
                         'balance': finances.mens_balance,
                     },
-                    genders.WOMENS: {
+                    Genders.WOMENS: {
                         'budget': finances.womens_budget,
                         'crew_value': finances.womens_crew_value,
                         'balance': finances.womens_balance,
@@ -180,7 +184,7 @@ class LeaderboardView(EventBase):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['genders'] = genders
+        context['genders'] = Genders
         
         ranking = self.kwargs.get('gender', genders.TOTALS)
         context['ranking'] = ranking
@@ -213,8 +217,8 @@ class TeamView(EventBase):
         
         context['team'] = team
         context['finances'] = finances
-        context['mens_crew'] = team.get_crew(self.day, genders.MENS)
-        context['womens_crew'] = team.get_crew(self.day, genders.WOMENS)
+        context['mens_crew'] = team.get_crew(self.day, Genders.MENS)
+        context['womens_crew'] = team.get_crew(self.day, Genders.WOMENS)
         return context
 
 
@@ -245,7 +249,7 @@ def buy(request):
     
     
     # Check market status
-    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[crew.gender]
+    gender_string = gender_without_apostrophy(crew.gender).lower()
     market_url_name = f'fantasy:{gender_string}'
     market_redirect = redirect(market_url_name, event_tag = day.event.tag)
     
@@ -326,8 +330,8 @@ def sell(request):
         # Try elegent redirect back to market page using additional form data
         messages.error(request, 'You are not authorised to conduct this sale.')
         try:
-            gender_code = request.POST.get('gender')
-            gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[gender_code]
+            gender_code = request.POST['gender']
+            gender_string = gender_without_apostrophy(gender_code).lower()
             url_name = f'fantasy:{gender_string}'
             event = models.Event.objects.get(tag = request.POST.get('event'))
             return redirect(url_name, event_tag = event.tag)
@@ -337,7 +341,7 @@ def sell(request):
     
     
     # Check market status
-    gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[purchase.crew.gender]
+    gender_string = gender_without_apostrophy(purchase.crew.gender).lower()
     market_url_name = f'fantasy:{gender_string}'
     market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
     
@@ -399,7 +403,7 @@ class Switch(TemplateView):
         )
         
         # Check market status
-        gender_string = {genders.MENS: 'men', genders.WOMENS: 'women'}[self.purchase.crew.gender]
+        gender_string = gender_without_apostrophy(self.purchase.crew.gender).lower()
         market_url_name = f'fantasy:{gender_string}'
         self.market_redirect = redirect(market_url_name, event_tag = self.purchase.day.event.tag)
         
@@ -481,10 +485,7 @@ class Switch(TemplateView):
             else:
                 crew_string = updated_purchase.crew
             
-            gender_string = {
-                genders.MENS: 'men',
-                genders.WOMENS: 'women',
-            }[self.purchase.crew.gender]
+            gender_string = gender_without_apostrophy(self.purchase.crew.gender).lower()
             
             seat_string = updated_purchase.seat.name.lower()
             seat_string = seat_string + ('-' if len(seat_string) == 1 else ' ') + 'seat'

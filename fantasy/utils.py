@@ -4,7 +4,7 @@ from math import log
 
 from django.db.models import Prefetch
 
-from .constants import genders, money
+from .constants import Genders, money
 from . import models
 from . import errors
 
@@ -24,8 +24,8 @@ def has_all_seats(purchases, expected_seats):
 def reverse_gender(gender):
     """Return opposite gender constant to that provided."""
     return {
-        genders.MENS: genders.WOMENS,
-        genders.WOMENS: genders.MENS,
+        Genders.MENS: Genders.WOMENS,
+        Genders.WOMENS: Genders.MENS,
     }[gender]
 
 
