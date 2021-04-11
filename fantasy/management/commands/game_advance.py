@@ -8,7 +8,7 @@ from django.utils import timezone
 from parsing import live_bumps
 
 from ... import models
-from ...constants import series as event_series
+from ...constants import Series as EventSeries
 from ... import game_tools as tools
 
 
@@ -70,7 +70,7 @@ class Command(BaseCommand):
             self.stdout.write('Loading start order for {}...'.format(new_day))
             
             # Demo events
-            if event.series == event_series.DEMO:
+            if event.series == EventSeries.DEMO:
                 call_command(
                     'loaddata',
                     'demo_start_day{}'.format(new_day.id),

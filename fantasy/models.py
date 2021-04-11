@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import series, genders, timings, money, clubs
+from .constants import Series, genders, timings, money, Clubs
 from .utils import pricing
 
 
@@ -16,11 +16,7 @@ class Event(models.Model):
     
     series = models.CharField(
         max_length = 1,
-        choices = [
-            (series.DEMO, 'Demo'),
-            (series.TORPIDS, 'Torpids'),
-            (series.EIGHTS, 'Eights'),
-        ],
+        choices = Series.choices,
         db_index = True,
     )
     year = models.PositiveSmallIntegerField(db_index = True)
@@ -199,7 +195,7 @@ class Crew(models.Model):
     
     club = models.CharField(
         max_length = 4,
-        choices = clubs,
+        choices = Clubs.choices,
         db_index = True,
     )
     gender = models.CharField(

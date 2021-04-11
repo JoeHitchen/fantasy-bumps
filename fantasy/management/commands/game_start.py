@@ -7,7 +7,7 @@ from django.utils import timezone
 from parsing import ourcs, live_bumps
 
 from ... import models
-from ...constants import series as event_series
+from ...constants import Series as EventSeries
 from ... import game_tools as tools
 
 
@@ -22,21 +22,21 @@ class Command(BaseCommand):
             '--demo',
             dest = 'type',
             action = 'store_const',
-            const = event_series.DEMO,
+            const = EventSeries.DEMO,
             help = 'Create a Demo event. Requires an empty database and ignores year and date.',
         )
         type_group.add_argument(
             '--torpids',
             dest = 'type',
             action = 'store_const',
-            const = event_series.TORPIDS,
+            const = EventSeries.TORPIDS,
             help = 'Create a Torpids event.',
         )
         type_group.add_argument(
             '--eights',
             dest = 'type',
             action = 'store_const',
-            const = event_series.EIGHTS,
+            const = EventSeries.EIGHTS,
             help = 'Create a Summer Eights event.',
         )
         
@@ -61,7 +61,7 @@ class Command(BaseCommand):
             raise CommandError('Must supply event type flag.')
         
         series = kwargs['type']
-        is_demo_event = series == event_series.DEMO
+        is_demo_event = series == EventSeries.DEMO
         
         if kwargs['date'] and not is_demo_event:
             start_date = kwargs['date']
@@ -83,25 +83,19 @@ class Command(BaseCommand):
         # Bumps events
         else:
             division_structure = {
-                event_series.TORPIDS: {
+                EventSeries.TORPIDS: {
                     'mens_divisions': 6,
                     'womens_divisions': 5,
                     'boats_per_division': 12,
                 },
-                event_series.EIGHTS: {
+                EventSeries.EIGHTS: {
                     'mens_divisions': 7,
                     'womens_divisions': 6,
                     'boats_per_division': 13,
                 },
             }[series]
             
-            event_tag = '{}{}'.format(
-                {
-                    event_series.TORPIDS: 'torpids',
-                    event_series.EIGHTS: 'eights',
-                }[series],
-                year,
-            )
+            event_tag = '{}{}'.format(series.label.lower(), year)
             event = models.Event.objects.create(
                 series = series,
                 year = year,

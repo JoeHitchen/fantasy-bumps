@@ -1,10 +1,12 @@
 from datetime import time
 
+from django.db import models
 
-class series:
-    DEMO = 'D'
-    TORPIDS = 'T'
-    EIGHTS = 'E'
+
+class Series(models.TextChoices):
+    DEMO = ('D', 'Demo')
+    TORPIDS = ('T', 'Torpids')
+    EIGHTS = ('E', 'Eights')
 
 
 class genders:
@@ -23,41 +25,41 @@ class money:
     PRICE_MIN = 20
 
 
-clubs = [
-    ('ball', 'Balliol'),
-    ('bras', 'Brasenose'),
-    ('chri', 'Christ Church'),
-    ('corp', 'Corpus Christi'),
-    ('exet', 'Exeter'),
-    ('grte', 'Green Templeton'),
-    ('hert', 'Hertford'),
-    ('jesu', 'Jesus'),
-    ('kebl', 'Keble'),
-    ('lady', 'Lady Margaret Hall'),
-    ('lina', 'Linacre'),
-    ('linc', 'Lincoln'),
-    ('magd', 'Magdalen'),
-    ('mans', 'Mansfield'),
-    ('mert', 'Merton'),
-    ('newc', 'New College'),
-    ('orie', 'Oriel'),
-    ('osle', 'Osler House'),
-    ('pemb', 'Pembroke'),
-    ('quee', "Queen's"),
-    ('rege', "Regent's Park"),
-    ('some', 'Somerville'),
-    ('sann', "St Anne's"),
-    ('sant', "St Antony's"),
-    ('sben', "St Benet's"),
-    ('scat', "St Catherine's"),
-    ('sedm', 'St Edmund Hall'),
-    ('shil', "St Hilda's"),
-    ('shug', "St Hugh's"),
-    ('sjoh', "St John's"),
-    ('spet', "St Peter's"),
-    ('trin', 'Trinity'),
-    ('univ', 'University'),
-    ('wadh', 'Wadham'),
-    ('wolf', 'Wolfson'),
-    ('worc', 'Worcester'),
-]
+class Clubs(models.TextChoices):
+    BALL = ('ball', 'Balliol')
+    BRAS = ('bras', 'Brasenose')
+    CHRI = ('chri', 'Christ Church')
+    CORP = ('corp', 'Corpus Christi')
+    EXET = ('exet', 'Exeter')
+    GRTE = ('grte', 'Green Templeton')
+    HERT = ('hert', 'Hertford')
+    JESU = ('jesu', 'Jesus')
+    KEBL = ('kebl', 'Keble')
+    LADY = ('lady', 'Lady Margaret Hall')
+    LINA = ('lina', 'Linacre')
+    LINC = ('linc', 'Lincoln')
+    MAGD = ('magd', 'Magdalen')
+    MANS = ('mans', 'Mansfield')
+    MERT = ('mert', 'Merton')
+    NEWC = ('newc', 'New College')
+    ORIE = ('orie', 'Oriel')
+    OSLE = ('osle', 'Osler House')
+    PEMB = ('pemb', 'Pembroke')
+    QUEE = ('quee', "Queen's")
+    REGE = ('rege', "Regent's Park")
+    SOME = ('some', 'Somerville')
+    SANN = ('sann', "St Anne's")
+    SANT = ('sant', "St Antony's")
+    SBEN = ('sben', "St Benet's")
+    SCAT = ('scat', "St Catherine's")
+    SEDM = ('sedm', 'St Edmund Hall')
+    SHIL = ('shil', "St Hilda's")
+    SHUG = ('shug', "St Hugh's")
+    SJOH = ('sjoh', "St John's")
+    SPET = ('spet', "St Peter's")
+    TRIN = ('trin', 'Trinity')
+    UNIV = ('univ', 'University')
+    WADH = ('wadh', 'Wadham')
+    WOLF = ('wolf', 'Wolfson')
+    WORC = ('worc', 'Worcester')
+
