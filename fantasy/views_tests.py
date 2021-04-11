@@ -620,7 +620,7 @@ class LeaderboardPageBase(GamePageBase):
         """Extra context tests for without_user base test."""
         
         self.assertEqual(context['genders'], Genders)
-        self.assertEqual(context['genders_overall'], GENDERS_OVERALL)
+        self.assertEqual(context['GENDERS_OVERALL'], GENDERS_OVERALL)
         self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
@@ -629,7 +629,7 @@ class LeaderboardPageBase(GamePageBase):
         """Extra context tests for with_user base test."""
         
         self.assertEqual(context['genders'], Genders)
-        self.assertEqual(context['genders_overall'], GENDERS_OVERALL)
+        self.assertEqual(context['GENDERS_OVERALL'], GENDERS_OVERALL)
         self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     

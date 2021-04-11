@@ -18,7 +18,7 @@ Fantasy Bumps leaderboard page for {{ event }}.
     >
       <td>{{ forloop.counter }}</td>
       <td><a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}">{{ fantasy.team }}</a></td>
-      <td class="{% if ranking == genders_overall %}table-primary{% endif %}">{{ fantasy.total_budget }} ({{ fantasy.total_crew_value }})</td>
+      <td class="{% if ranking == GENDERS_OVERALL %}table-primary{% endif %}">{{ fantasy.total_budget }} ({{ fantasy.total_crew_value }})</td>
       <td class="{% if ranking == genders.MENS %}table-primary{% endif %}">{{ fantasy.mens_budget }} ({{ fantasy.mens_crew_value }})</td>
       <td class="{% if ranking == genders.WOMENS %}table-primary{% endif %}">{{ fantasy.womens_budget }} ({{ fantasy.womens_crew_value }})</td>
     </tr>{% endfor %}
