@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from common.testing import MessagesTestMixin
 
-from .constants import Genders, money
+from .constants import Genders, GENDERS_OVERALL, money
 from . import models
 from . import utils
 from . import transactions
@@ -620,6 +620,7 @@ class LeaderboardPageBase(GamePageBase):
         """Extra context tests for without_user base test."""
         
         self.assertEqual(context['genders'], Genders)
+        self.assertEqual(context['genders_overall'], GENDERS_OVERALL)
         self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
@@ -628,6 +629,7 @@ class LeaderboardPageBase(GamePageBase):
         """Extra context tests for with_user base test."""
         
         self.assertEqual(context['genders'], Genders)
+        self.assertEqual(context['genders_overall'], GENDERS_OVERALL)
         self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
@@ -662,7 +664,7 @@ class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:leaderboard'
-    ranking = genders.TOTALS
+    ranking = GENDERS_OVERALL
     
     def get_ranked_fantasies(self):
         return [self.game_entry_1, self.game_entry_3, self.game_entry_2]

@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 
-from .constants import Genders, money
+from .constants import Genders, GENDERS_OVERALL, money
 from . import models
 from . import utils
 from . import transactions
@@ -89,7 +89,7 @@ class EventView(EventBase):
             self.event.fantasies
             .select_related('team', 'team__user')
             .extend_financials()
-            .rank_by(genders.TOTALS)
+            .rank_by(GENDERS_OVERALL)
         )[:5]
         
         # Crew popularity data
@@ -185,8 +185,9 @@ class LeaderboardView(EventBase):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['genders'] = Genders
+        context['genders_overall'] = GENDERS_OVERALL
         
-        ranking = self.kwargs.get('gender', genders.TOTALS)
+        ranking = self.kwargs.get('gender', GENDERS_OVERALL)
         context['ranking'] = ranking
         context['fantasies'] = (
             self.event.fantasies

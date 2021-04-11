@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import Series, Genders, timings, money, Clubs
+from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
 from .utils import pricing
 
 
@@ -301,13 +301,13 @@ class GameEntryQuerySet(models.QuerySet):
             total_crew_value = models.F('mens_crew_value') + models.F('womens_crew_value'),
         )
     
-    def rank_by(self, gender = genders.TOTALS):
+    def rank_by(self, gender = GENDERS_OVERALL):
         """Retrieve team ranking for the gender provided.
         
         Requires .extend_financials() to have been called.
         """
         ordering = {
-            genders.TOTALS: ['-total_budget', '-total_crew_value'],
+            GENDERS_OVERALL: ['-total_budget', '-total_crew_value'],
             Genders.MENS: ['-mens_budget', '-mens_crew_value'],
             Genders.WOMENS: ['-womens_budget', '-womens_crew_value'],
         }[gender]

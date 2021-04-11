@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db import IntegrityError
 from django.contrib.auth import models as auth
 
-from .constants import Genders, timings, money
+from .constants import Genders, GENDERS_OVERALL, timings, money
 from . import models
 from . import patching
 from . import utils
@@ -940,7 +940,7 @@ class Test__GameEntry(TestCase):
         """Ranks teams by the total budget."""
         
         self.assertEqual(
-            list(self.event.fantasies.extend_financials().rank_by(genders.TOTALS)),
+            list(self.event.fantasies.extend_financials().rank_by(GENDERS_OVERALL)),
             [self.game_entry_1, self.game_entry_3, self.game_entry_2],
         )
     
