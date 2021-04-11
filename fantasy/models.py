@@ -60,7 +60,7 @@ class Event(models.Model):
     def num_crews(self, gender):
         """The number of crews of the given gender competing in the event."""
         
-        num_divisions = self.womens_divisions if gender == Genders.WOMENS else self.mens_divisions
+        num_divisions = self.womens_divisions if gender == Genders.WOMEN else self.mens_divisions
         return num_divisions * self.boats_per_division + 1
 
 
@@ -107,8 +107,8 @@ class Day(models.Model):
         
         # Get number of divisions
         number_of_divisions = {
-            Genders.MENS: self.event.mens_divisions,
-            Genders.WOMENS: self.event.womens_divisions,
+            Genders.MEN: self.event.mens_divisions,
+            Genders.WOMEN: self.event.womens_divisions,
         }[gender]
         
         # Create division structure
@@ -308,8 +308,8 @@ class GameEntryQuerySet(models.QuerySet):
         """
         ordering = {
             GENDERS_OVERALL: ['-total_budget', '-total_crew_value'],
-            Genders.MENS: ['-mens_budget', '-mens_crew_value'],
-            Genders.WOMENS: ['-womens_budget', '-womens_crew_value'],
+            Genders.MEN: ['-mens_budget', '-mens_crew_value'],
+            Genders.WOMEN: ['-womens_budget', '-womens_crew_value'],
         }[gender]
         return self.order_by(*ordering)
 

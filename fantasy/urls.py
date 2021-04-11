@@ -10,13 +10,13 @@ leaderboard_subpatterns = [
     path(
         'men/',
         views.LeaderboardView.as_view(),
-        {'gender': Genders.MENS},
+        {'gender': Genders.MEN},
         name = 'leaderboard_men',
     ),
     path(
         'women/',
         views.LeaderboardView.as_view(),
-        {'gender': Genders.WOMENS},
+        {'gender': Genders.WOMEN},
         name = 'leaderboard_women',
     ),
     path(
@@ -36,8 +36,8 @@ urlpatterns = [
     path('sell/', views.sell, name = 'sell'),
     path('switch/<int:purchase_id>/', views.Switch.as_view(), name = 'switch'),
     path('<slug:event_tag>/', include([
-        path('men/', views.MarketView.as_view(), {'gender': Genders.MENS}, name = 'men'),
-        path('women/', views.MarketView.as_view(), {'gender': Genders.WOMENS}, name = 'women'),
+        path('men/', views.MarketView.as_view(), {'gender': Genders.MEN}, name = 'men'),
+        path('women/', views.MarketView.as_view(), {'gender': Genders.WOMEN}, name = 'women'),
         path('leaderboard/', include(leaderboard_subpatterns)),
         path('teams/<team_name>/', views.TeamView.as_view(), name = 'team'),
         path('', views.EventView.as_view(), name = 'event'),

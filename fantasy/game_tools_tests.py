@@ -111,9 +111,9 @@ class Test__All_Investments(TestCase):
         cls.day3 = days[2]
         
         # Hertford bump both days; Oriel got bumped both days; Wolfson rowed over day 1
-        cls.crew_hert = models.Crew.objects.get(club = 'hert', gender = Genders.WOMENS)
-        cls.crew_orie = models.Crew.objects.get(club = 'orie', gender = Genders.WOMENS)
-        cls.crew_wolf = models.Crew.objects.get(club = 'wolf', gender = Genders.WOMENS)
+        cls.crew_hert = models.Crew.objects.get(club = 'hert', gender = Genders.WOMEN)
+        cls.crew_orie = models.Crew.objects.get(club = 'orie', gender = Genders.WOMEN)
+        cls.crew_wolf = models.Crew.objects.get(club = 'wolf', gender = Genders.WOMEN)
         
         cls.team = models.Team.objects.first()
         cls.budgets = cls.team.entries.create(event = cls.event)

@@ -134,8 +134,8 @@ def evaluate_all_investments(day):
         .select_related('team')
         .filter(event = day.event)
         .prefetch_related(
-            purchases_prefetch(day, Genders.MENS, 'mens_crew'),
-            purchases_prefetch(day, Genders.WOMENS, 'womens_crew'),
+            purchases_prefetch(day, Genders.MEN, 'mens_crew'),
+            purchases_prefetch(day, Genders.WOMEN, 'womens_crew'),
         )
     )
     

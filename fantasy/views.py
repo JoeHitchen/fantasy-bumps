@@ -90,8 +90,8 @@ class EventView(EventBase):
         
         # Crew popularity data
         self.game_entry_count = self.event.fantasies.count() or 1  # Avoid Div0 error
-        context['popular_crews_men'] = self.popular_crew_query(Genders.MENS)
-        context['popular_crews_women'] = self.popular_crew_query(Genders.WOMENS)
+        context['popular_crews_men'] = self.popular_crew_query(Genders.MEN)
+        context['popular_crews_women'] = self.popular_crew_query(Genders.WOMEN)
         
         return context
 
@@ -149,12 +149,12 @@ class MarketView(EventBase):
             if finances:
                 finances = finances[0]
                 context['finances'] = {
-                    Genders.MENS: {
+                    Genders.MEN: {
                         'budget': finances.mens_budget,
                         'crew_value': finances.mens_crew_value,
                         'balance': finances.mens_balance,
                     },
-                    Genders.WOMENS: {
+                    Genders.WOMEN: {
                         'budget': finances.womens_budget,
                         'crew_value': finances.womens_crew_value,
                         'balance': finances.womens_balance,
@@ -214,8 +214,8 @@ class TeamView(EventBase):
         
         context['team'] = team
         context['finances'] = finances
-        context['mens_crew'] = team.get_crew(self.day, Genders.MENS)
-        context['womens_crew'] = team.get_crew(self.day, Genders.WOMENS)
+        context['mens_crew'] = team.get_crew(self.day, Genders.MEN)
+        context['womens_crew'] = team.get_crew(self.day, Genders.WOMEN)
         return context
 
 
