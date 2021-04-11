@@ -190,7 +190,7 @@ class Division:
             rank__lte = self.bottom_bungline,
         ).annotate(
             bungline = models.F('rank') - self.top_bungline + 1,
-        ).select_related('crew')
+        ).order_by('rank').select_related('crew')
 
 
 
