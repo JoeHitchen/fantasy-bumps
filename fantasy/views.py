@@ -15,10 +15,6 @@ from . import transactions
 from . import errors
 
 
-def gender_without_apostrophy(gender):
-    return Genders(gender).label[:-2]
-
-
 class IndexView(TemplateView):
     template_name = 'fantasy/index.html'
     
@@ -130,7 +126,7 @@ class MarketView(EventBase):
         
         gender = self.kwargs['gender']
         context['gender_code'] = gender
-        context['gender'] = gender_without_apostrophy(gender)
+        context['gender'] = gender.label
         
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
         context['start_order'] = self.day.start_order(gender, extend = self.add_purchase_count)
@@ -250,7 +246,7 @@ def buy(request):
     
     
     # Check market status
-    gender_string = gender_without_apostrophy(crew.gender).lower()
+    gender_string = crew.get_gender_display().lower()
     market_url_name = f'fantasy:{gender_string}'
     market_redirect = redirect(market_url_name, event_tag = day.event.tag)
     
@@ -331,9 +327,8 @@ def sell(request):
         # Try elegent redirect back to market page using additional form data
         messages.error(request, 'You are not authorised to conduct this sale.')
         try:
-            gender_code = request.POST['gender']
-            gender_string = gender_without_apostrophy(gender_code).lower()
-            url_name = f'fantasy:{gender_string}'
+            gender = request.POST['gender']
+            url_name = f'fantasy:{gender.label.lower()}'
             event = models.Event.objects.get(tag = request.POST.get('event'))
             return redirect(url_name, event_tag = event.tag)
         
@@ -342,7 +337,7 @@ def sell(request):
     
     
     # Check market status
-    gender_string = gender_without_apostrophy(purchase.crew.gender).lower()
+    gender_string = purchase.crew.get_gender_display().lower()
     market_url_name = f'fantasy:{gender_string}'
     market_redirect = redirect(market_url_name, event_tag = purchase.day.event.tag)
     
@@ -404,8 +399,7 @@ class Switch(TemplateView):
         )
         
         # Check market status
-        gender_string = gender_without_apostrophy(self.purchase.crew.gender).lower()
-        market_url_name = f'fantasy:{gender_string}'
+        market_url_name = f'fantasy:{self.purchase.crew.get_gender_display().lower()}'
         self.market_redirect = redirect(market_url_name, event_tag = self.purchase.day.event.tag)
         
         if not self.purchase.day.market_is_open:
@@ -486,14 +480,12 @@ class Switch(TemplateView):
             else:
                 crew_string = updated_purchase.crew
             
-            gender_string = gender_without_apostrophy(self.purchase.crew.gender).lower()
-            
             seat_string = updated_purchase.seat.name.lower()
             seat_string = seat_string + ('-' if len(seat_string) == 1 else ' ') + 'seat'
             
             messages.success(request, "Selected {} for your {}'s {}.".format(
                 crew_string,
-                gender_string,
+                self.purchase.crew.get_gender_display().lower(),
                 seat_string,
             ))
         
