@@ -279,12 +279,7 @@ class MarketPageBase(GamePageBase):
         
         for index in range(0, len(expected)):
             with self.subTest(division_index = index):
-                
-                self.assertQuerysetEqual(
-                    received[index],
-                    expected[index],
-                    transform = lambda item: item,
-                )
+                self.assertQuerysetEqual(received[index], expected[index])
     
     
     def extra_context_without_user(self, context):
@@ -1530,19 +1525,16 @@ class Test__Switch(TestCase, MessagesTestMixin):
         self.assertQuerysetEqual(
             response.context['rowers'],
             [self.ath_bow, self.ath_two, self.ath_thr],  # Does not include ath_cox
-            transform = lambda item: item,
         )
         
         self.assertQuerysetEqual(
             response.context['other_purchased_athletes'],
             [self.ath_two],
-            transform = lambda item: item,
         )
         
         self.assertQuerysetEqual(
             response.context['seats'],
             models.Seat.objects.all(),
-            transform = lambda item: item,
             ordered = False,
         )
     
