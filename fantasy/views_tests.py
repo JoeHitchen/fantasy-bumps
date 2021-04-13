@@ -285,11 +285,10 @@ class MarketPageBase(GamePageBase):
     def extra_context_without_user(self, context):
         """Extra context tests for without_user base test."""
         
-        self.assertEqual(context['gender'], self.gender_info['text'])
-        self.assertEqual(context['gender_code'], self.gender_info['code'])
+        self.assertEqual(context['gender'], self.gender)
         self.assertStartOrdersEqual(
             context['start_order'],
-            self.day.start_order(self.gender_info['code']),
+            self.day.start_order(self.gender),
         )
         
         self.assertFalse('crew' in context)
@@ -305,11 +304,10 @@ class MarketPageBase(GamePageBase):
         Cannot test show_actions here, since it depends on market status.
         """
         
-        self.assertEqual(context['gender'], self.gender_info['text'])
-        self.assertEqual(context['gender_code'], self.gender_info['code'])
+        self.assertEqual(context['gender'], self.gender)
         self.assertStartOrdersEqual(
             context['start_order'],
-            self.day.start_order(self.gender_info['code']),
+            self.day.start_order(self.gender),
         )
         
         self.assertTrue('crew' in context)
@@ -322,10 +320,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:men'
-    gender_info = {
-        'text': 'Men',
-        'code': Genders.MEN,
-    }
+    gender = Genders.MEN
     
     def test__partial_crew(self):
         """
@@ -466,10 +461,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:women'
-    gender_info = {
-        'text': 'Women',
-        'code': Genders.WOMEN,
-    }
+    gender = Genders.WOMEN
     
     def test__partial_crew(self):
         """

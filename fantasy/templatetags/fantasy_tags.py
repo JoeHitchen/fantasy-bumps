@@ -179,7 +179,7 @@ def market_row(position, balance, show_actions):
   {% load fantasy_tags %}
   <div class="list-group">
     <div class="list-group-item list-group-item-dark">
-      {{ gender }}'s Division {{ number }}
+      {{ gender.label }}'s Division {{ number }}
     </div>
     {% for position in division %}{% market_row position balance show_actions %}{% endfor %}
   </div>
