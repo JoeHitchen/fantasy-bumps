@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from common.testing import MessagesTestMixin
 
-from .constants import genders, money
+from .constants import Genders, GENDERS_OVERALL, money
 from . import models
 from . import utils
 from . import transactions
@@ -70,8 +70,8 @@ class GamePageBase():
         
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
-        cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
-        cls.crew_womens = models.Crew.objects.filter(gender = genders.WOMENS).first()
+        cls.crew_mens = models.Crew.objects.filter(gender = Genders.MEN).first()
+        cls.crew_womens = models.Crew.objects.filter(gender = Genders.WOMEN).first()
     
     
     def test__generic__unknown_event(self):
@@ -178,11 +178,11 @@ class Test__Event(GamePageBase, TestCase):
         """Orders crews according to number of purchases and position on the river."""
         
         # Get crews
-        crew_bl1 = self.get_crew(genders.MENS, 1)
-        crew_bl2 = self.get_crew(genders.MENS, 2)
-        crew_bl3 = self.get_crew(genders.MENS, 3)
-        crew_bl4 = self.get_crew(genders.MENS, 4)
-        crew_bl5 = self.get_crew(genders.MENS, 5)
+        crew_bl1 = self.get_crew(Genders.MEN, 1)
+        crew_bl2 = self.get_crew(Genders.MEN, 2)
+        crew_bl3 = self.get_crew(Genders.MEN, 3)
+        crew_bl4 = self.get_crew(Genders.MEN, 4)
+        crew_bl5 = self.get_crew(Genders.MEN, 5)
         
         # Create purchases
         self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_bow)
@@ -221,11 +221,11 @@ class Test__Event(GamePageBase, TestCase):
         """Orders crews according to number of purchases and position on the river."""
         
         # Get crews
-        crew_bl1 = self.get_crew(genders.WOMENS, 1)
-        crew_bl2 = self.get_crew(genders.WOMENS, 2)
-        crew_bl3 = self.get_crew(genders.WOMENS, 3)
-        crew_bl4 = self.get_crew(genders.WOMENS, 4)
-        crew_bl5 = self.get_crew(genders.WOMENS, 5)
+        crew_bl1 = self.get_crew(Genders.WOMEN, 1)
+        crew_bl2 = self.get_crew(Genders.WOMEN, 2)
+        crew_bl3 = self.get_crew(Genders.WOMEN, 3)
+        crew_bl4 = self.get_crew(Genders.WOMEN, 4)
+        crew_bl5 = self.get_crew(Genders.WOMEN, 5)
         
         # Create purchases
         self.team.purchases.create(day = self.day, crew = crew_bl3, seat = self.seat_bow)
@@ -285,11 +285,10 @@ class MarketPageBase(GamePageBase):
     def extra_context_without_user(self, context):
         """Extra context tests for without_user base test."""
         
-        self.assertEqual(context['gender'], self.gender_info['text'])
-        self.assertEqual(context['gender_code'], self.gender_info['code'])
+        self.assertEqual(context['gender'], self.gender)
         self.assertStartOrdersEqual(
             context['start_order'],
-            self.day.start_order(self.gender_info['code']),
+            self.day.start_order(self.gender),
         )
         
         self.assertFalse('crew' in context)
@@ -305,11 +304,10 @@ class MarketPageBase(GamePageBase):
         Cannot test show_actions here, since it depends on market status.
         """
         
-        self.assertEqual(context['gender'], self.gender_info['text'])
-        self.assertEqual(context['gender_code'], self.gender_info['code'])
+        self.assertEqual(context['gender'], self.gender)
         self.assertStartOrdersEqual(
             context['start_order'],
-            self.day.start_order(self.gender_info['code']),
+            self.day.start_order(self.gender),
         )
         
         self.assertTrue('crew' in context)
@@ -322,10 +320,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:men'
-    gender_info = {
-        'text': 'Men',
-        'code': genders.MENS,
-    }
+    gender = Genders.MEN
     
     def test__partial_crew(self):
         """
@@ -339,7 +334,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             seat = models.Seat.objects.first(),
         )
         
-        crew = self.team.get_crew(self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, Genders.MEN)
         self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
@@ -363,7 +358,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
                 seat = seat,
             )
         
-        crew = self.team.get_crew(self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, Genders.MEN)
         self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
@@ -387,7 +382,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
                 seat = seat,
             )
         
-        other_crew = self.team.get_crew(self.day, genders.WOMENS)
+        other_crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertTrue(utils.has_all_seats(other_crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
@@ -466,10 +461,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:women'
-    gender_info = {
-        'text': 'Women',
-        'code': genders.WOMENS,
-    }
+    gender = Genders.WOMEN
     
     def test__partial_crew(self):
         """
@@ -483,7 +475,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             seat = models.Seat.objects.first(),
         )
         
-        crew = self.team.get_crew(self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
@@ -507,7 +499,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
                 seat = seat,
             )
         
-        crew = self.team.get_crew(self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
@@ -531,7 +523,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
                 seat = seat,
             )
         
-        other_crew = self.team.get_crew(self.day, genders.MENS)
+        other_crew = self.team.get_crew(self.day, Genders.MEN)
         self.assertTrue(utils.has_all_seats(other_crew, models.Seat.objects.all()))
         
         self.client.login(username='DevTeam', password='password')
@@ -619,7 +611,8 @@ class LeaderboardPageBase(GamePageBase):
     def extra_context_without_user(self, context):
         """Extra context tests for without_user base test."""
         
-        self.assertEqual(context['genders'], genders)
+        self.assertEqual(context['genders'], Genders)
+        self.assertEqual(context['GENDERS_OVERALL'], GENDERS_OVERALL)
         self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
@@ -627,7 +620,8 @@ class LeaderboardPageBase(GamePageBase):
     def extra_context_with_user(self, context):
         """Extra context tests for with_user base test."""
         
-        self.assertEqual(context['genders'], genders)
+        self.assertEqual(context['genders'], Genders)
+        self.assertEqual(context['GENDERS_OVERALL'], GENDERS_OVERALL)
         self.assertEqual(context['ranking'], self.ranking)
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
@@ -662,7 +656,7 @@ class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:leaderboard'
-    ranking = genders.TOTALS
+    ranking = GENDERS_OVERALL
     
     def get_ranked_fantasies(self):
         return [self.game_entry_1, self.game_entry_3, self.game_entry_2]
@@ -673,7 +667,7 @@ class Test__Leaderboard_Men(LeaderboardPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:leaderboard_men'
-    ranking = genders.MENS
+    ranking = Genders.MEN
     
     def get_ranked_fantasies(self):
         return [self.game_entry_2, self.game_entry_1, self.game_entry_3]
@@ -684,7 +678,7 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
     
     # Test settings
     url_name = 'fantasy:leaderboard_women'
-    ranking = genders.WOMENS
+    ranking = Genders.WOMEN
     
     def get_ranked_fantasies(self):
         return [self.game_entry_1, self.game_entry_3, self.game_entry_2]
@@ -768,11 +762,11 @@ class Test__Team(TestCase):
         
         self.assertEqual(
             response.context['mens_crew'],
-            (self.view_team, self.day, genders.MENS),
+            (self.view_team, self.day, Genders.MEN),
         )
         self.assertEqual(
             response.context['womens_crew'],
-            (self.view_team, self.day, genders.WOMENS),
+            (self.view_team, self.day, Genders.WOMEN),
         )
     
     
@@ -790,11 +784,11 @@ class Test__Team(TestCase):
         
         self.assertEqual(
             response.context['mens_crew'],
-            (self.view_team, self.day, genders.MENS),
+            (self.view_team, self.day, Genders.MEN),
         )
         self.assertEqual(
             response.context['womens_crew'],
-            (self.view_team, self.day, genders.WOMENS),
+            (self.view_team, self.day, Genders.WOMEN),
         )
     
     
@@ -979,7 +973,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         Redirects to relevant market page and raises success to user.
         """
         
-        mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
+        mens_crew = models.Crew.objects.filter(gender = Genders.MEN).first()
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': mens_crew.id})
@@ -1275,7 +1269,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
         Redirects to relevant market page and raises success to user.
         """
         
-        mens_crew = models.Crew.objects.filter(gender = genders.MENS).first()
+        mens_crew = models.Crew.objects.filter(gender = Genders.MEN).first()
         purchase_men = self.team.purchases.create(
             day = self.day,
             seat = self.seat,

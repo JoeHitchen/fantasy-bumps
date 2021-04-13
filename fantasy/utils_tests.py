@@ -1,6 +1,6 @@
 from django.test import TestCase, tag
 
-from .constants import genders
+from .constants import Genders
 from . import models
 from . import utils
 from . import errors
@@ -14,7 +14,7 @@ class Test__Has_All_Seats(TestCase):
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew.objects.create(club = 'newc', gender = genders.MENS, rank = 1)
+        cls.crew = models.Crew.objects.create(club = 'newc', gender = Genders.MEN, rank = 1)
         
         cls.all_seats = models.Seat.objects.all()
     
@@ -148,11 +148,11 @@ class Test__Reverse_Gender(TestCase):
     
     def test__men_to_women(self):
         """Returns opposite gender."""
-        self.assertEqual(utils.reverse_gender(genders.MENS), genders.WOMENS)
+        self.assertEqual(utils.reverse_gender(Genders.MEN), Genders.WOMEN)
     
     def test__women_to_men(self):
         """Returns opposite gender."""
-        self.assertEqual(utils.reverse_gender(genders.WOMENS), genders.MENS)
+        self.assertEqual(utils.reverse_gender(Genders.WOMEN), Genders.MEN)
 
 
 
@@ -191,7 +191,7 @@ class Test__Create_Payout_Matrix(TestCase):
         """No change in value but a small payout."""
         
         matrix = utils.create_payout_matrix(self.day)
-        crew = models.Crew.objects.get(club = 'jesu', gender = genders.MENS, rank = 1)
+        crew = models.Crew.objects.get(club = 'jesu', gender = Genders.MEN, rank = 1)
         
         crew_payout = matrix[crew]
         
@@ -204,7 +204,7 @@ class Test__Create_Payout_Matrix(TestCase):
         """An increase in value and a larger payout."""
         
         matrix = utils.create_payout_matrix(self.day)
-        crew = models.Crew.objects.get(club = 'magd', gender = genders.WOMENS, rank = 1)
+        crew = models.Crew.objects.get(club = 'magd', gender = Genders.WOMEN, rank = 1)
         
         crew_payout = matrix[crew]
         
@@ -218,7 +218,7 @@ class Test__Create_Payout_Matrix(TestCase):
         """A decrease in value and no payout."""
         
         matrix = utils.create_payout_matrix(self.day)
-        crew = models.Crew.objects.get(club = 'orie', gender = genders.WOMENS, rank = 1)
+        crew = models.Crew.objects.get(club = 'orie', gender = Genders.WOMEN, rank = 1)
         
         crew_payout = matrix[crew]
         

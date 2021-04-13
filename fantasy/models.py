@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
 
-from .constants import Series, genders, timings, money, Clubs
+from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
 from .utils import pricing
 
 
@@ -60,7 +60,7 @@ class Event(models.Model):
     def num_crews(self, gender):
         """The number of crews of the given gender competing in the event."""
         
-        num_divisions = self.womens_divisions if gender == genders.WOMENS else self.mens_divisions
+        num_divisions = self.womens_divisions if gender == Genders.WOMEN else self.mens_divisions
         return num_divisions * self.boats_per_division + 1
 
 
@@ -107,8 +107,8 @@ class Day(models.Model):
         
         # Get number of divisions
         number_of_divisions = {
-            genders.MENS: self.event.mens_divisions,
-            genders.WOMENS: self.event.womens_divisions,
+            Genders.MEN: self.event.mens_divisions,
+            Genders.WOMEN: self.event.womens_divisions,
         }[gender]
         
         # Create division structure
@@ -200,10 +200,7 @@ class Crew(models.Model):
     )
     gender = models.CharField(
         max_length = 1,
-        choices = [
-            (genders.MENS, "Men's"),
-            (genders.WOMENS, "Women's"),
-        ],
+        choices = Genders.choices,
         db_index = True,
     )
     rank = models.PositiveSmallIntegerField()
@@ -304,15 +301,15 @@ class GameEntryQuerySet(models.QuerySet):
             total_crew_value = models.F('mens_crew_value') + models.F('womens_crew_value'),
         )
     
-    def rank_by(self, gender = genders.TOTALS):
+    def rank_by(self, gender = GENDERS_OVERALL):
         """Retrieve team ranking for the gender provided.
         
         Requires .extend_financials() to have been called.
         """
         ordering = {
-            genders.TOTALS: ['-total_budget', '-total_crew_value'],
-            genders.MENS: ['-mens_budget', '-mens_crew_value'],
-            genders.WOMENS: ['-womens_budget', '-womens_crew_value'],
+            GENDERS_OVERALL: ['-total_budget', '-total_crew_value'],
+            Genders.MEN: ['-mens_budget', '-mens_crew_value'],
+            Genders.WOMEN: ['-womens_budget', '-womens_crew_value'],
         }[gender]
         return self.order_by(*ordering)
 

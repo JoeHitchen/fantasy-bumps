@@ -9,10 +9,12 @@ class Series(models.TextChoices):
     EIGHTS = ('E', 'Eights')
 
 
-class genders:
-    MENS = 'M'
-    WOMENS = 'W'
-    TOTALS = 'T'
+GENDERS_OVERALL = 'O'
+
+
+class Genders(models.TextChoices):
+    MEN = ('M', 'Men')
+    WOMEN = ('W', 'Women')
 
 
 class timings:

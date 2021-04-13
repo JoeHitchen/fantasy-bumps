@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db import IntegrityError
 from django.contrib.auth import models as auth
 
-from .constants import genders, timings, money
+from .constants import Genders, GENDERS_OVERALL, timings, money
 from . import models
 from . import patching
 from . import utils
@@ -111,7 +111,7 @@ class Test__Event(TestCase):
         self.event.mens_divisions = 7
         self.event.boats_per_division = 13
         
-        self.assertEqual(self.event.num_crews(genders.MENS), 92)
+        self.assertEqual(self.event.num_crews(Genders.MEN), 92)
     
     
     def test__num_crews__womens(self):
@@ -120,7 +120,7 @@ class Test__Event(TestCase):
         self.event.womens_divisions = 5
         self.event.boats_per_division = 12
         
-        self.assertEqual(self.event.num_crews(genders.WOMENS), 61)
+        self.assertEqual(self.event.num_crews(Genders.WOMEN), 61)
     
     
     @tag('query-count')
@@ -128,7 +128,7 @@ class Test__Event(TestCase):
         """NONE EXPECTED (but an important part of the crew valuation chain)"""
         
         with self.assertNumQueries(0):
-            self.event.num_crews(genders.WOMENS)
+            self.event.num_crews(Genders.WOMEN)
 
 
 
@@ -271,7 +271,7 @@ class Test__Day__Start_Orders(TestCase):
         """Has the division structure as described by the event."""
         
         # Get divisions
-        divisions = self.day.divisions(genders.MENS)
+        divisions = self.day.divisions(Genders.MEN)
         
         # Test division structure
         self.assertEqual(len(divisions), 2)
@@ -289,7 +289,7 @@ class Test__Day__Start_Orders(TestCase):
         """Has the division structure as described by the event."""
         
         # Get divisions
-        divisions = self.day.divisions(genders.WOMENS)
+        divisions = self.day.divisions(Genders.WOMEN)
         
         # Test division structure
         self.assertEqual(len(divisions), 3)
@@ -312,8 +312,8 @@ class Test__Day__Start_Orders(TestCase):
         """Passes the gender argument onto the divisions method."""
         
         # Get start orders
-        self.day.start_order(genders.MENS)
-        self.day.divisions.assert_called_once_with(genders.MENS)
+        self.day.start_order(Genders.MEN)
+        self.day.divisions.assert_called_once_with(Genders.MEN)
     
     
     @patch.object(models.Day, 'divisions', autospec = True)
@@ -321,8 +321,8 @@ class Test__Day__Start_Orders(TestCase):
         """Passes the gender argument onto the divisions method."""
         
         # Get start orders
-        self.day.start_order(genders.WOMENS)
-        self.day.divisions.assert_called_once_with(genders.WOMENS)
+        self.day.start_order(Genders.WOMEN)
+        self.day.divisions.assert_called_once_with(Genders.WOMEN)
     
     
     @patch(
@@ -337,8 +337,8 @@ class Test__Day__Start_Orders(TestCase):
         """
         
         # Get start orders
-        day_divisions = self.day.divisions(genders.WOMENS)
-        day_start_order = self.day.start_order(genders.WOMENS)
+        day_divisions = self.day.divisions(Genders.WOMEN)
+        day_start_order = self.day.start_order(Genders.WOMEN)
         
         self.assertEqual(start_order_mock.call_count, 3)
         for index, call in enumerate(start_order_mock.call_args_list):
@@ -359,12 +359,12 @@ class Test__Day__Start_Orders(TestCase):
         Tests indirectly by mocking the return value of Division.start_order and extend.
         """
         
-        start_order = self.day.start_order(genders.WOMENS, extend = lambda so: (so, so))
+        start_order = self.day.start_order(Genders.WOMEN, extend = lambda so: (so, so))
         
         self.assertEqual(start_order_mock.call_count, 3)
         for index, div_start_order in enumerate(start_order):
             with self.subTest(div = index + 1):
-                div_spec = (self.day.id, genders.WOMENS, index + 1)
+                div_spec = (self.day.id, Genders.WOMEN, index + 1)
                 self.assertEqual(div_start_order, (div_spec, div_spec))
 
 
@@ -537,7 +537,7 @@ class Test__Division(TestCase):
         # Generate start order
         start_order = models.Division(
             day = self.day,
-            gender = genders.WOMENS,
+            gender = Genders.WOMEN,
             number = 2,
             top_bungline = 3,
             bottom_bungline = 8,
@@ -551,7 +551,7 @@ class Test__Division(TestCase):
                 
                 # Test individual bungline
                 self.assertEqual(position.bungline, idx + 1)
-                self.assertEqual(position.crew.gender, genders.WOMENS)
+                self.assertEqual(position.crew.gender, Genders.WOMEN)
                 self.assertTrue(position.rank >= 3)
                 self.assertTrue(position.rank <= 8)
     
@@ -560,12 +560,12 @@ class Test__Division(TestCase):
         """Safely excludes missing bunglines from the returned data."""
         
         # Leave position 7 (Bungline 5) empty
-        models.Position.objects.filter(crew__gender = genders.WOMENS, rank = 7).delete()
+        models.Position.objects.filter(crew__gender = Genders.WOMEN, rank = 7).delete()
         
         # Generate start order
         start_order = models.Division(
             day = self.day,
-            gender = genders.WOMENS,
+            gender = Genders.WOMEN,
             number = 2,
             top_bungline = 3,
             bottom_bungline = 8,
@@ -591,7 +591,7 @@ class Test__Crew(TestCase):
         days = event.days.all()
         cls.day1 = days[0]
         
-        crews = models.Crew.objects.filter(gender = genders.WOMENS)
+        crews = models.Crew.objects.filter(gender = Genders.WOMEN)
         
         cls.crew_top = crews[0]
         cls.crew_top.positions.create(day = cls.day1, rank = 1)
@@ -604,7 +604,7 @@ class Test__Crew(TestCase):
         
         cls.crew_unranked = crews[3]
         
-        crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
+        crew_mens = models.Crew.objects.filter(gender = Genders.MEN).first()
         crew_mens.positions.create(day = cls.day1, rank = 4)  # Added to ensure gender isolation
     
     
@@ -613,7 +613,7 @@ class Test__Crew(TestCase):
         
         crew = models.Crew(
             club = 'newc',
-            gender = genders.WOMENS,
+            gender = Genders.WOMEN,
             rank = 1,
         )
         self.assertEqual(str(crew), 'New College W1')
@@ -624,7 +624,7 @@ class Test__Crew(TestCase):
         
         crew = models.Crew(
             club = 'newc',
-            gender = genders.MENS,
+            gender = Genders.MEN,
             rank = 1,
         )
         self.assertEqual(str(crew), 'New College M1')
@@ -635,7 +635,7 @@ class Test__Crew(TestCase):
         
         crew = models.Crew(
             club = 'newc',
-            gender = genders.WOMENS,
+            gender = Genders.WOMEN,
             rank = 2,
         )
         self.assertEqual(str(crew), 'New College W2')
@@ -679,7 +679,7 @@ class Test__Position(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew(club = 'hert', gender = genders.WOMENS, rank = 1)
+        cls.crew = models.Crew(club = 'hert', gender = Genders.WOMEN, rank = 1)
         cls.crew.save()
     
     
@@ -767,7 +767,7 @@ class Test__Team(TestCase):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         
-        cls.crew = models.Crew.objects.create(club = 'newc', gender = genders.WOMENS, rank = 1)
+        cls.crew = models.Crew.objects.create(club = 'newc', gender = Genders.WOMEN, rank = 1)
         cls.bow = models.Seat.objects.get(name = 'Bow')
         
     
@@ -790,7 +790,7 @@ class Test__Team(TestCase):
     def test__get_crew__empty_crew(self):
         """Returns an empty crew list if no rowers have been purchased."""
         
-        crew = self.team.get_crew(self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertEqual(crew.count(), 0)
     
     
@@ -805,7 +805,7 @@ class Test__Team(TestCase):
             seat = self.bow,
         )
         
-        crew = self.team.get_crew(self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertEqual(crew.count(), 0)
     
     
@@ -821,7 +821,7 @@ class Test__Team(TestCase):
             seat = self.bow,
         )
         
-        crew = self.team.get_crew(self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertEqual(crew.count(), 0)
     
     
@@ -834,7 +834,7 @@ class Test__Team(TestCase):
             seat = self.bow,
         )
         
-        crew = self.team.get_crew(self.day, genders.MENS)
+        crew = self.team.get_crew(self.day, Genders.MEN)
         self.assertEqual(crew.count(), 0)
     
     
@@ -847,7 +847,7 @@ class Test__Team(TestCase):
             seat = self.bow,
         )
         
-        crew = self.team.get_crew(self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertEqual(crew.count(), 1)
     
     
@@ -861,7 +861,7 @@ class Test__Team(TestCase):
                 seat = seat,
             )
         
-        crew = self.team.get_crew(self.day, genders.WOMENS)
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertEqual(crew.count(), 9)
 
 
@@ -940,7 +940,7 @@ class Test__GameEntry(TestCase):
         """Ranks teams by the total budget."""
         
         self.assertEqual(
-            list(self.event.fantasies.extend_financials().rank_by(genders.TOTALS)),
+            list(self.event.fantasies.extend_financials().rank_by(GENDERS_OVERALL)),
             [self.game_entry_1, self.game_entry_3, self.game_entry_2],
         )
     
@@ -949,7 +949,7 @@ class Test__GameEntry(TestCase):
         """Ranks teams by the men's budget."""
         
         self.assertEqual(
-            list(self.event.fantasies.extend_financials().rank_by(genders.MENS)),
+            list(self.event.fantasies.extend_financials().rank_by(Genders.MEN)),
             [self.game_entry_2, self.game_entry_1, self.game_entry_3],
         )
     
@@ -958,7 +958,7 @@ class Test__GameEntry(TestCase):
         """Ranks teams by the women's budget."""
         
         self.assertEqual(
-            list(self.event.fantasies.extend_financials().rank_by(genders.WOMENS)),
+            list(self.event.fantasies.extend_financials().rank_by(Genders.WOMEN)),
             [self.game_entry_1, self.game_entry_3, self.game_entry_2],
         )
 

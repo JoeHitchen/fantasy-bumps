@@ -3,7 +3,7 @@ from django.contrib.auth import models as auth
 
 from . import models
 from . import errors
-from .constants import genders, money
+from .constants import Genders, money
 from .transactions import buy, sell, switch, _buy_body, _sell_body, _switch_body
 
 
@@ -15,8 +15,8 @@ class Test__Buy(TestCase):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.select_related().first()
         cls.seat = models.Seat.objects.first()
-        cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
-        cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
+        cls.crew = models.Crew.objects.filter(gender = Genders.WOMEN).first()
+        cls.crew_mens = models.Crew.objects.filter(gender = Genders.MEN).first()
         
         cls.budgets = cls.team.entries.create(event = cls.day.event)
     
@@ -262,8 +262,8 @@ class Test__Sell(TestCase):
         cls.user = auth.User.objects.first()
         cls.day = models.Day.objects.select_related().first()
         cls.seat = models.Seat.objects.first()
-        cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
-        cls.crew_mens = models.Crew.objects.filter(gender = genders.MENS).first()
+        cls.crew = models.Crew.objects.filter(gender = Genders.WOMEN).first()
+        cls.crew_mens = models.Crew.objects.filter(gender = Genders.MEN).first()
         
         cls.budgets = cls.user.team.entries.create(event = cls.day.event)
         
@@ -361,8 +361,8 @@ class Test__Switch(TestCase):
     def setUpTestData(cls):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew.objects.filter(gender = genders.WOMENS).first()
-        cls.crew_alt = models.Crew.objects.filter(gender = genders.WOMENS).last()
+        cls.crew = models.Crew.objects.filter(gender = Genders.WOMEN).first()
+        cls.crew_alt = models.Crew.objects.filter(gender = Genders.WOMEN).last()
         
         cls.seat_bow = models.Seat.objects.get(name = 'Bow')
         cls.seat_two = models.Seat.objects.get(name = '2')
