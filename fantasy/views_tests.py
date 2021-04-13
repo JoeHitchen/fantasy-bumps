@@ -313,6 +313,31 @@ class MarketPageBase(GamePageBase):
         self.assertTrue('crew' in context)
         self.assertTrue('crew_valid' in context)
         self.assertTrue('other_crew_valid' in context)
+    
+    
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.now() + timedelta(1))
+    def test__market_open(self, market_closes_mock, markets_mock):
+        """'show_actions' reflects market status for logged in users.
+        Does not test response or default context.
+        """
+        
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+        
+        self.assertTrue(response.context['show_actions'])
+    
+    
+    @patching.market_is_open(False)
+    def test__market_closed(self, markets_mock):
+        """'show_actions' reflects market status for logged in users.
+        Does not test response or default context.
+        """
+        
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+        
+        self.assertFalse(response.context['show_actions'])
 
 
 
@@ -391,31 +416,6 @@ class Test__Market_Men(MarketPageBase, TestCase):
         self.assertFalse(response.context['crew'])
         self.assertFalse(response.context['crew_valid'])
         self.assertTrue(response.context['other_crew_valid'])
-    
-    
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))
-    def test__market_open(self, market_closes_mock, markets_mock):
-        """'show_actions' reflects market status for logged in users.
-        Does not test response or default context.
-        """
-        
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-        
-        self.assertTrue(response.context['show_actions'])
-    
-    
-    @patching.market_is_open(False)
-    def test__market_closed(self, markets_mock):
-        """'show_actions' reflects market status for logged in users.
-        Does not test response or default context.
-        """
-        
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-        
-        self.assertFalse(response.context['show_actions'])
     
     
     def test__popularity(self):
