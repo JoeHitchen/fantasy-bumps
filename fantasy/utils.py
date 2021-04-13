@@ -24,8 +24,8 @@ def has_all_seats(purchases, expected_seats):
 def reverse_gender(gender):
     """Return opposite gender constant to that provided."""
     return {
-        Genders.MENS: Genders.WOMENS,
-        Genders.WOMENS: Genders.MENS,
+        Genders.MEN: Genders.WOMEN,
+        Genders.WOMEN: Genders.MEN,
     }[gender]
 
 

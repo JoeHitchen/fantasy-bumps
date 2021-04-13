@@ -13,8 +13,8 @@ GENDERS_OVERALL = 'O'
 
 
 class Genders(models.TextChoices):
-    MENS = ('M', "Men's")
-    WOMENS = ('W', "Women's")
+    MEN = ('M', 'Men')
+    WOMEN = ('W', 'Women')
 
 
 class timings:
