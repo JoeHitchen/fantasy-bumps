@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.db import IntegrityError
 from django.contrib.auth import models as auth
 
-from .constants import Genders, GENDERS_OVERALL, timings, money
+from .constants import Genders, GENDERS_OVERALL, timings, money, Clubs
 from . import models
 from . import patching
 from . import utils
@@ -612,7 +612,7 @@ class Test__Crew(TestCase):
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
-            club = 'newc',
+            club = Clubs.NEWC,
             gender = Genders.WOMEN,
             rank = 1,
         )
@@ -623,7 +623,7 @@ class Test__Crew(TestCase):
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
-            club = 'newc',
+            club = Clubs.NEWC,
             gender = Genders.MEN,
             rank = 1,
         )
@@ -634,7 +634,7 @@ class Test__Crew(TestCase):
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
-            club = 'newc',
+            club = Clubs.NEWC,
             gender = Genders.WOMEN,
             rank = 2,
         )
@@ -679,7 +679,7 @@ class Test__Position(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.day = models.Day.objects.first()
-        cls.crew = models.Crew(club = 'hert', gender = Genders.WOMEN, rank = 1)
+        cls.crew = models.Crew(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
         cls.crew.save()
     
     
@@ -767,7 +767,7 @@ class Test__Team(TestCase):
         cls.team = models.Team.objects.first()
         cls.day = models.Day.objects.first()
         
-        cls.crew = models.Crew.objects.create(club = 'newc', gender = Genders.WOMEN, rank = 1)
+        cls.crew = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.WOMEN, rank = 1)
         cls.bow = models.Seat.objects.get(name = 'Bow')
         
     

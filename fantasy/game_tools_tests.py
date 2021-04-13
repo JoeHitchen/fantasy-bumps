@@ -1,7 +1,7 @@
 from django.test import TestCase, tag
 from django.contrib.auth import models as auth
 
-from .constants import Genders, money
+from .constants import Genders, money, Clubs
 from . import models
 from . import game_tools as tools
 
@@ -111,9 +111,9 @@ class Test__All_Investments(TestCase):
         cls.day3 = days[2]
         
         # Hertford bump both days; Oriel got bumped both days; Wolfson rowed over day 1
-        cls.crew_hert = models.Crew.objects.get(club = 'hert', gender = Genders.WOMEN)
-        cls.crew_orie = models.Crew.objects.get(club = 'orie', gender = Genders.WOMEN)
-        cls.crew_wolf = models.Crew.objects.get(club = 'wolf', gender = Genders.WOMEN)
+        cls.crew_hert = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN)
+        cls.crew_orie = models.Crew.objects.get(club = Clubs.ORIE, gender = Genders.WOMEN)
+        cls.crew_wolf = models.Crew.objects.get(club = Clubs.WOLF, gender = Genders.WOMEN)
         
         cls.team = models.Team.objects.first()
         cls.budgets = cls.team.entries.create(event = cls.event)
