@@ -22,9 +22,10 @@ class Event(models.Model):
     year = models.PositiveSmallIntegerField(db_index = True)
     tag = models.SlugField(max_length = 15, unique = True)  # Implicit db index
     
-    mens_divisions = models.PositiveSmallIntegerField()
-    womens_divisions = models.PositiveSmallIntegerField()
-    boats_per_division = models.PositiveSmallIntegerField()
+    mens_divisions_count = models.PositiveSmallIntegerField()
+    mens_divisions_size = models.PositiveSmallIntegerField()
+    womens_divisions_count = models.PositiveSmallIntegerField()
+    womens_divisions_size = models.PositiveSmallIntegerField()
     
     def __str__(self):
         return '{} {}'.format(self.get_series_display(), self.year)
@@ -59,9 +60,10 @@ class Event(models.Model):
     
     def num_crews(self, gender):
         """The number of crews of the given gender competing in the event."""
-        
-        num_divisions = self.womens_divisions if gender == Genders.WOMEN else self.mens_divisions
-        return num_divisions * self.boats_per_division + 1
+        return {
+            Genders.MEN: self.mens_divisions_count * self.mens_divisions_size + 1,
+            Genders.WOMEN: self.womens_divisions_count * self.womens_divisions_size + 1,
+        }[gender]
 
 
 
@@ -105,10 +107,10 @@ class Day(models.Model):
     def divisions(self, gender):
         """Generates the division structure for the day."""
         
-        # Get number of divisions
-        number_of_divisions = {
-            Genders.MEN: self.event.mens_divisions,
-            Genders.WOMEN: self.event.womens_divisions,
+        # Get number and size of divisions
+        number_of_divisions, size_of_divisions = {
+            Genders.MEN: (self.event.mens_divisions_count, self.event.mens_divisions_size),
+            Genders.WOMEN: (self.event.womens_divisions_count, self.event.womens_divisions_size),
         }[gender]
         
         # Create division structure
@@ -117,8 +119,8 @@ class Day(models.Model):
                 day = self,
                 gender = gender,
                 number = division_number,
-                top_bungline = (division_number - 1) * self.event.boats_per_division + 1,
-                bottom_bungline = division_number * self.event.boats_per_division
+                top_bungline = (division_number - 1) * size_of_divisions + 1,
+                bottom_bungline = division_number * size_of_divisions
                 + int(division_number == number_of_divisions),
             )
             for division_number in range(1, number_of_divisions + 1)

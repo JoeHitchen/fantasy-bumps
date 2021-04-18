@@ -108,8 +108,8 @@ class Test__Event(TestCase):
     def test__num_crews__mens(self):
         """Multiplies the number of divisions and the boats per division, then adds one."""
         
-        self.event.mens_divisions = 7
-        self.event.boats_per_division = 13
+        self.event.mens_divisions_count = 7
+        self.event.mens_divisions_size = 13
         
         self.assertEqual(self.event.num_crews(Genders.MEN), 92)
     
@@ -117,8 +117,8 @@ class Test__Event(TestCase):
     def test__num_crews__womens(self):
         """Multiplies the number of divisions and the boats per division, then adds one."""
         
-        self.event.womens_divisions = 5
-        self.event.boats_per_division = 12
+        self.event.womens_divisions_count = 5
+        self.event.womens_divisions_size = 12
         
         self.assertEqual(self.event.num_crews(Genders.WOMEN), 61)
     
@@ -260,8 +260,9 @@ class Test__Day__Start_Orders(TestCase):
     def setUpTestData(cls):
         
         cls.event = models.Event.objects.first()
-        cls.event.womens_divisions = 3
-        cls.event.boats_per_division = 2
+        cls.event.womens_divisions_count = 3
+        cls.event.mens_divisions_size = 2
+        cls.event.womens_divisions_size = 2
         cls.event.save()
         
         cls.day = cls.event.days.first()
@@ -585,8 +586,8 @@ class Test__Crew(TestCase):
     @classmethod
     def setUpTestData(cls):
         event = models.Event.objects.first()
-        event.womens_divisions = 1
-        event.boats_per_division = 2  # Extra crew added in "last" division
+        event.womens_divisions_count = 1
+        event.womens_divisions_size = 2  # Extra crew added in "last" division
         
         days = event.days.all()
         cls.day1 = days[0]
