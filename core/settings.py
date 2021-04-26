@@ -27,7 +27,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -87,7 +86,6 @@ DEFAULT_FROM_EMAIL = 'no-reply@mail.fantasybumps.org.uk'
 SERVER_EMAIL = 'server-notice@mail.fantasybumps.org.uk'
 EMAIL_SUBJECT_PREFIX = '[FantasyBumps] '
 ADMINS = [('Joe Hitchen', 'hitchenjoe+sysadmin@gmail.com')]
-MANAGERS = [('Joe Hitchen', 'hitchenjoe+sysadmin@gmail.com')]
 IGNORABLE_404_URLS = []
 
 
