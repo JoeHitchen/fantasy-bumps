@@ -416,6 +416,7 @@ class Switch(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        context['event'] = self.purchase.day.event
         context['purchase'] = self.purchase
         
         context['rowers'] = models.Athlete.objects.filter(
