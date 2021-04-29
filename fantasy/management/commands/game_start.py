@@ -84,14 +84,16 @@ class Command(BaseCommand):
         else:
             division_structure = {
                 EventSeries.TORPIDS: {
-                    'mens_divisions': 6,
-                    'womens_divisions': 5,
-                    'boats_per_division': 12,
+                    'mens_divisions_count': 6,
+                    'mens_divisions_size': 12,
+                    'womens_divisions_count': 5,
+                    'womens_divisions_size': 12,
                 },
                 EventSeries.EIGHTS: {
-                    'mens_divisions': 7,
-                    'womens_divisions': 6,
-                    'boats_per_division': 13,
+                    'mens_divisions_count': 7,
+                    'mens_divisions_size': 13,
+                    'womens_divisions_count': 6,
+                    'womens_divisions_size': 13,
                 },
             }[series]
             
