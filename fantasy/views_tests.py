@@ -261,6 +261,23 @@ class Test__Event(GamePageBase, TestCase):
 
 
 
+class Test__EventRules(GamePageBase, TestCase):
+    
+    # Test settings
+    url_name = 'fantasy:rules'
+    template = 'fantasy/rules.html'
+    
+    def extra_context_without_user(self, context):
+        """Extra context tests for without_user base test."""
+        self.assertEqual(context['money'], money)
+    
+    
+    def extra_context_with_user(self, context):
+        """Extra context tests for with_user base test."""
+        self.assertEqual(context['money'], money)
+
+
+
 class MarketPageBase(GamePageBase):
     
     # Test group settings

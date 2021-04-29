@@ -13,8 +13,10 @@
       <a class="nav-item nav-link" href="{% url 'fantasy:men' event.tag %}">Men</a>
       <a class="nav-item nav-link" href="{% url 'fantasy:women' event.tag %}">Women</a>
       <a class="nav-item nav-link" href="{% url 'fantasy:leaderboard' event.tag %}">Leaderboard</a>
-      {% endif %}
+      <a class="nav-item nav-link" href="{% url 'fantasy:rules' event.tag %}">Guide & Rules</a>
+      {% else %}
       <a class="nav-item nav-link" href="{% url 'fantasy:rules' %}">Guide & Rules</a>
+      {% endif %}
     </div>
   </div>
   

@@ -36,6 +36,7 @@ class EventBase(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['money'] = money
         
         self.event = self.object  # Provide friendly name for retrived event.
         self.day = self.event.active_day
