@@ -15,18 +15,26 @@ from . import transactions
 from . import errors
 
 
-class IndexView(TemplateView):
+class FantasyBaseMixin():
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['recent_events'] = utils.recent_events()
+        return context
+
+
+
+class IndexView(FantasyBaseMixin, TemplateView):
     template_name = 'fantasy/index.html'
     
     def get_context_data(self, **kwargs):
-        return {
-            'events': models.Event.objects.all(),
-            'money': money,
-        }
+        context = super().get_context_data(**kwargs)
+        context['money'] = money
+        return context
 
 
 
-class EventBase(DetailView):
+class EventBase(FantasyBaseMixin, DetailView):
     """A base view for event-specific pages."""
     
     # View settings
@@ -381,7 +389,7 @@ def sell(request):
 
 
 
-class Switch(TemplateView):
+class Switch(FantasyBaseMixin, TemplateView):
     """Presents athlete and seat selectors for a purchase to alter it.
     
     Additionally, has a POST action to perform the switch.

@@ -10,6 +10,18 @@
     <div class="navbar-nav">
       {% if event %}
       <a class="nav-item navbar-brand" href="{% url 'fantasy:event' event.tag %}">{{ event }}</a>
+      {% endif %}
+      
+      <div class="nav-item dropdown" style="margin-left: -0.75em">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"></a>
+        <div class="dropdown-menu">{% for recent_event in recent_events %}
+          <a class="dropdown-item" href="{% url 'fantasy:event' recent_event.tag %}">{{ recent_event }}</a>{% endfor %}
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#">All events</a>
+        </div>
+      </div>
+      
+      {% if event %}
       <a class="nav-item nav-link" href="{% url 'fantasy:men' event.tag %}">Men</a>
       <a class="nav-item nav-link" href="{% url 'fantasy:women' event.tag %}">Women</a>
       <a class="nav-item nav-link" href="{% url 'fantasy:leaderboard' event.tag %}">Leaderboard</a>

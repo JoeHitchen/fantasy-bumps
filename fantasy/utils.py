@@ -9,6 +9,10 @@ from . import models
 from . import errors
 
 
+def recent_events():
+    return models.Event.objects.all()
+
+
 def has_all_seats(purchases, expected_seats):
     """Checks that a set of purchase objects has every seat filled exactly once."""
     

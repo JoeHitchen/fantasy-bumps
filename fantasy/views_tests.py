@@ -32,9 +32,9 @@ class Test__Index(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
-        self.assertEqual(
-            list(response.context['events']),
-            list(models.Event.objects.all()),
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
         )
     
     
@@ -45,6 +45,10 @@ class Test__Index(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/rules.html')
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
         self.assertEqual(response.context['money'], money)
 
 
@@ -96,6 +100,11 @@ class GamePageBase():
         self.assertEqual(response.context['day'], self.day)
         self.assertFalse('team' in response.context)
         
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
+        
         self.extra_context_without_user(response.context)
     
     def extra_context_without_user(self, context):
@@ -115,6 +124,11 @@ class GamePageBase():
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertEqual(response.context['team'], self.team)
+        
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
         
         self.extra_context_with_user(response.context)
     
@@ -647,10 +661,11 @@ class LeaderboardPageBase(GamePageBase):
     def test__query_count__without_login(self):
         """ Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
+            (1) SELECT recent events
             (1) Get rankings
         """
         
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             self.client.get(self.url)
     
     
@@ -659,12 +674,13 @@ class LeaderboardPageBase(GamePageBase):
         """ Expect:
             (4) Base queries
             (2) Django Auth overheard
+            (1) SELECT recent events
             (1) Get user's team
         """
         
         self.client.login(username='DevTeam', password='password')
         
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             self.client.get(self.url)
 
 
@@ -814,11 +830,12 @@ class Test__Team(TestCase):
         """ Expect:
             (3) SELECT event and active day
             (1) SELECT team to view
+            (1) SELECT recent events
             (2) SELECT all seats (twice, once for each crew list)
             (2) SELECT purchases for crew lists (one for each crew lists)
         """
         
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.get(self.url)
             
             # Needed to force crew list queries
@@ -1548,6 +1565,11 @@ class Test__Switch(TestCase, MessagesTestMixin):
             models.Seat.objects.all(),
             ordered = False,
         )
+        
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
     
     
     @patching.market_is_open(True)
@@ -1815,6 +1837,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
             (1) SELECT purchase, crew, day, event, and seat
+            (1) SELECT recent events
             (1) SELECT purchase.athlete  (Skipped by above, because nullable)
             (1) SELECT list of crew's rowers
             (1) SELECT list of other purchases
@@ -1823,7 +1846,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.get(self.url)
     
     
