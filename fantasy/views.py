@@ -19,7 +19,7 @@ class FantasyBaseMixin():
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['recent_events'] = utils.recent_events()
+        context['recent_events'] = utils.ordered_events()[:3]
         return context
 
 

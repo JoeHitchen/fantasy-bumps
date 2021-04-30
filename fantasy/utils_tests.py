@@ -1,9 +1,40 @@
 from django.test import TestCase, tag
 
-from .constants import Genders, Clubs
+from .constants import Series, Genders, Clubs
 from . import models
 from . import utils
 from . import errors
+
+
+class Test__Ordered_Events(TestCase):
+    
+    def test__ordered_events(self):
+        
+        division_structure = {
+            'mens_divisions_count': 6,
+            'mens_divisions_size': 12,
+            'womens_divisions_count': 5,
+            'womens_divisions_size': 12,
+        }
+        
+        t14 = models.Event(series = Series.TORPIDS, year = 2014, tag = 't14', **division_structure)
+        t14.save()
+        t14.days.create(date = '2014-02-28')
+        
+        t15 = models.Event(series = Series.TORPIDS, year = 2015, tag = 't15', **division_structure)
+        t15.save()
+        t15.days.create(date = '2015-03-02')
+        
+        t13 = models.Event(series = Series.TORPIDS, year = 2013, tag = 't13', **division_structure)
+        t13.save()
+        t13.days.create(date = '2013-02-27')
+        
+        t12 = models.Event(series = Series.TORPIDS, year = 2012, tag = 't12', **division_structure)
+        t12.save()
+        t12.days.create(date = '2012-02-26')
+        
+        self.assertQuerysetEqual(utils.ordered_events(), [t15, t14, t13, t12])
+
 
 
 @tag('game-core')
