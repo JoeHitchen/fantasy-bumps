@@ -152,6 +152,31 @@ class Test__Market_Status_Box(TestCase):
     
     
     @patching.market_opens(timezone.now() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
+    def test__open_until_later_no_dismiss(self, closes_mock, opens_mock):
+        """Returns a non-dismissable info alert."""
+        
+        # Create day
+        day = self.event.days.create(
+            name = 'Market Status',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        
+        # Call and test method
+        props = tags.market_status_box(day, False)
+        
+        self.assertEqual(props['style'], 'warning')
+        self.assertFalse(props['dismissable'])
+        self.assertEqual(
+            props['message'],
+            'The market is open until {:%H:%M} today.'.format(
+                closes_mock.return_value,
+            ),
+        )
+    
+    
+    @patching.market_opens(timezone.now() - timedelta(minutes = 5))
     @patching.market_closes(timezone.now() - timedelta(minutes = 2))
     def test__after_close(self, closes_mock, opens_mock):
         """Returns a non-dismissable danger alert."""

@@ -19,7 +19,7 @@ register = template.Library()
     </button>{% endif %}
   </div>
 '''))
-def market_status_box(day):
+def market_status_box(day, allow_dismiss = True):
     """Creates the properties for an alert box that describes the market status."""
     
     # Preparation
@@ -34,7 +34,7 @@ def market_status_box(day):
     if day.market_is_open:
         return {
             'style': 'warning' if day.market_closes - now <= timedelta(hours = 6) else 'info',
-            'dismissable': True,
+            'dismissable': allow_dismiss,
             'message': 'The market is open until {}.'.format(
                 datetime_string(day.market_closes),
             ),
