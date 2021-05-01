@@ -1,0 +1,20 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+This is the event list page for Fantasy Bumps. <br/>
+
+<h3>Recent events</h3>
+{% for event in recent_events %}
+<a href="{% url 'fantasy:event' event.tag %}">{{ event }}</a><br/>
+{% empty %}
+There are no events available
+{% endfor %}
+
+<h3>Past events</h3>
+{% for event in past_events %}
+<a href="{% url 'fantasy:event' event.tag %}">{{ event }}</a><br/>
+{% empty %}
+There are no events available
+{% endfor %}
+
+{% endblock%}

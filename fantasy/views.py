@@ -34,6 +34,19 @@ class IndexView(FantasyBaseMixin, TemplateView):
 
 
 
+class EventsList(IndexView):
+    template_name = 'fantasy/events.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['past_events'] = (
+            utils.ordered_events()
+            .exclude(id__in = context['recent_events'].values('id'))
+        )
+        return context
+
+
+
 class EventBase(FantasyBaseMixin, DetailView):
     """A base view for event-specific pages."""
     
