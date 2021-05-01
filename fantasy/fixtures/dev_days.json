@@ -5,7 +5,8 @@
     "fields": {
       "event": 1,
       "name": "Wednesday",
-      "date": "2019-02-27"
+      "date": "2019-02-27",
+      "first_race_time": "12:00"
     }
   },
   {
@@ -14,7 +15,8 @@
     "fields": {
       "event": 1,
       "name": "Thursday",
-      "date": "2019-02-28"
+      "date": "2019-02-28",
+      "first_race_time": "12:00"
     }
   },
   {
