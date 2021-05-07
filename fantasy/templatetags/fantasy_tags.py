@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.html import format_html, mark_safe
 from django.contrib.humanize.templatetags.humanize import naturalday
 
-from ..constants import Genders
+from ..constants import Genders, money
 from .. import models
 from .. import utils
 
@@ -299,4 +299,84 @@ def crew_ready_button(event, gender):
         'link': reverse(f'fantasy:{gender.label}'.lower(), kwargs = {'event_tag': event.tag}),
         **styles,
     }
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="card">
+    <div class="card-header text-dark d-flex justify-content-between">
+      <h4 class="mb-0">{{ event }}</h4>
+      <a
+          href="{% url 'fantasy:event' event.tag %}"
+          class="btn btn-primary btn-sm"
+          style="width: 2.2em"
+      >
+        <small><span class="oi oi-chevron-right"></span></small>
+      </a>
+    </div>
+    <div class="card-body pb-0">
+      <div class="row">
+        <div class="col-xl-3 mb-3 alert">
+          {{ event.first_day.date|date:"l" }}&nbsp;{{ event.first_day.date|date:"M" }}&nbsp;{{ event.first_day.date|date:"jS" }} - {{ event.last_racing_day.date|date:"l" }}&nbsp;{{ event.last_racing_day.date|date:"M" }}&nbsp;{{ event.last_racing_day.date|date:"jS" }}
+        </div>
+        <div class="col-xl-6">
+          <table class="table table-sm table-borderless">
+            <tr>
+              <th class="align-middle">Men's crew</th>
+              <td class="align-middle">
+                {{ event.user_fantasy.mens_budget|currency }}
+                 / {{ event.user_fantasy.mens_crew_value|currency }}
+              </td>
+              <td class="align-middle" style="width: 35%">
+                {% crew_ready_button event genders.MEN %}
+              </td>
+            <tr>
+            <tr>
+              <th class="align-middle">Women's crew</th>
+              <td class="align-middle">
+                {{ event.user_fantasy.womens_budget|currency }}
+                 / {{ event.user_fantasy.womens_crew_value|currency }}
+              </td>
+              <td class="align-middle" style="width: 20%">
+                {% crew_ready_button event genders.WOMEN %}
+              </td>
+            <tr>
+          </table>
+        </div>
+        <div class="col-xl-3 text-center">
+          {% market_status_box event.active_day False %}
+        </div>
+      </div>
+    </div>
+  </div>
+'''))
+def event_box(event, user):
+    data = {'event': event, 'genders': Genders}
+    
+    event.user_fantasy = {
+        'mens_budget': money.INITIAL_BALANCE,
+        'mens_crew_value': 0,
+        'womens_budget': money.INITIAL_BALANCE,
+        'womens_crew_value': 0,
+    }
+    
+    if not user.is_anonymous:
+        
+        # Get event financial information
+        try:
+            event.user_fantasy = event.fantasies.extend_financials().get(team = user.team)
+        except models.GameEntry.DoesNotExist:
+            pass
+        
+        # Get crew statuses
+        event.mens_crew_ready = utils.has_all_seats(
+            user.team.get_crew(event.active_day, Genders.MEN),
+            models.Seat.objects.all(),
+        )
+        event.womens_crew_ready = utils.has_all_seats(
+            user.team.get_crew(event.active_day, Genders.WOMEN),
+            models.Seat.objects.all(),
+        )
+    
+    return data
 
