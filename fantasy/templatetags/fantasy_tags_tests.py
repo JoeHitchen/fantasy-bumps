@@ -2,12 +2,14 @@ from datetime import time, timedelta
 from xml.etree import ElementTree as ET
 
 from django.test import TestCase, tag
+from django.urls import reverse
 from django.utils import timezone
+from django.db import models as db
 from django import template
 
 from .. import models
 from .. import patching
-from ..constants import timings
+from ..constants import Genders, timings
 from . import fantasy_tags as tags
 
 
@@ -143,6 +145,31 @@ class Test__Market_Status_Box(TestCase):
         
         self.assertEqual(props['style'], 'warning')
         self.assertTrue(props['dismissable'])
+        self.assertEqual(
+            props['message'],
+            'The market is open until {:%H:%M} today.'.format(
+                closes_mock.return_value,
+            ),
+        )
+    
+    
+    @patching.market_opens(timezone.now() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
+    def test__open_until_later_no_dismiss(self, closes_mock, opens_mock):
+        """Returns a non-dismissable info alert."""
+        
+        # Create day
+        day = self.event.days.create(
+            name = 'Market Status',
+            date = timezone.now(),
+            first_race_time = time(hour = 12),
+        )
+        
+        # Call and test method
+        props = tags.market_status_box(day, False)
+        
+        self.assertEqual(props['style'], 'warning')
+        self.assertFalse(props['dismissable'])
         self.assertEqual(
             props['message'],
             'The market is open until {:%H:%M} today.'.format(
@@ -673,4 +700,135 @@ class Test__Crew_List(TestCase):
                     self.crew_list_row(seat, None),
                     html,
                 )
+
+
+
+@tag('frontend')
+class Test__Event_Box(TestCase):
+    fixtures = ['dev_event', 'dev_days']
+    
+    @staticmethod
+    def crew_ready_button(event, gender):
+        """A helper function that renders a crew row."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% crew_ready_button event gender %}')
+            .render(template.Context({'event': event, 'gender': gender}))
+        )
+    
+    
+    def test__crew_ready_button__no_crew_valid_flags(self):
+        """Renders a standard button that directs the user to the sign in page."""
+        
+        # Generate button
+        event = models.Event.objects.first()
+        html = self.crew_ready_button(event, Genders.WOMEN)
+        
+        # Test root
+        button = parser(html)
+        self.assertEqual(button.tag, 'a')
+        self.assertEqual(button.get('href'), reverse('login'))
+        self.assertIn('btn-primary', button.get('class').split())
+        
+        # Test containment
+        self.assertInHTML('Sign in to compete', html)
+    
+    
+    def test__crew_ready_button__crew_ready(self):
+        """Renders a success message & button that directs the user to the correct market page."""
+        
+        # Generate button
+        event = models.Event.objects.first()
+        event.mens_crew_ready = True
+        event.womens_crew_ready = True
+        html = self.crew_ready_button(event, Genders.WOMEN)
+        
+        # Test root
+        button = parser(html)
+        self.assertEqual(button.tag, 'a')
+        self.assertEqual(
+            button.get('href'),
+            reverse('fantasy:women', kwargs = {'event_tag': event.tag}),
+        )
+        self.assertIn('btn-success', button.get('class').split())
+        
+        # Test containment
+        self.assertInHTML('Ready to race', html)
+    
+    
+    def test__crew_ready_button__crew_not_ready_day_one(self):
+        """Renders a danger message & button that directs the user to the correct market page."""
+        
+        # Generate button
+        event = models.Event.objects.first()
+        event.mens_crew_ready = True
+        event.womens_crew_ready = False
+        date_shift = timezone.now().date() - event.first_day.date + timedelta(days = 1)
+        event.days.update(date = db.F('date') + date_shift)
+        html = self.crew_ready_button(event, Genders.WOMEN)
+        
+        # Test root
+        button = parser(html)
+        self.assertEqual(button.tag, 'a')
+        self.assertEqual(
+            button.get('href'),
+            reverse('fantasy:women', kwargs = {'event_tag': event.tag}),
+        )
+        self.assertIn('btn-danger', button.get('class').split())
+        
+        # Test containment
+        self.assertInHTML('Entry incomplete', html)
+    
+    
+    def test__crew_ready_button__crew_not_ready_day_two(self):
+        """Renders a danger message & button that directs the user to the correct market page.
+        
+        Test is possibly fragile and time-dependent, due to changing market status.
+        """
+        
+        # Generate button
+        event = models.Event.objects.first()
+        event.mens_crew_ready = True
+        event.womens_crew_ready = False
+        
+        date_shift = timezone.now().date() - event.first_day.date
+        if timezone.now().time() <= timings.MARKET_OPENS:
+            date_shift -= timedelta(days = 1)
+        event.days.update(date = db.F('date') + date_shift)
+        
+        html = self.crew_ready_button(event, Genders.WOMEN)
+        
+        # Test root
+        button = parser(html)
+        self.assertEqual(button.tag, 'a')
+        self.assertEqual(
+            button.get('href'),
+            reverse('fantasy:women', kwargs = {'event_tag': event.tag}),
+        )
+        self.assertIn('btn-danger', button.get('class').split())
+        
+        # Test containment
+        self.assertInHTML('Subs required', html)
+    
+    
+    def test__crew_ready_button__event_finished(self):
+        """Renders a standard button that directs the user to the correct market page."""
+        
+        # Generate button
+        event = models.Event.objects.first()
+        event.mens_crew_ready = True
+        event.womens_crew_ready = False
+        html = self.crew_ready_button(event, Genders.WOMEN)
+        
+        # Test root
+        button = parser(html)
+        self.assertEqual(button.tag, 'a')
+        self.assertEqual(
+            button.get('href'),
+            reverse('fantasy:women', kwargs = {'event_tag': event.tag}),
+        )
+        self.assertIn('btn-primary', button.get('class').split())
+        
+        # Test containment
+        self.assertInHTML('View final crew', html)
 

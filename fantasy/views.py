@@ -34,6 +34,84 @@ class IndexView(FantasyBaseMixin, TemplateView):
 
 
 
+class EventsList(IndexView):
+    template_name = 'fantasy/events.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Create event lists
+        context['past_events'] = list(utils.ordered_events().exclude(
+            id__in = context['recent_events'].values('id'),
+        ))
+        context['recent_events'] = list(context['recent_events'])
+        
+        # Financial prefetching
+        all_events = context['past_events'] + context['recent_events']
+        seats = models.Seat.objects.all()
+        db.prefetch_related_objects(
+            all_events,
+            db.Prefetch(
+                'fantasies',
+                queryset = (
+                    models.GameEntry.objects
+                    .filter(team = self.request.user.team)
+                    .extend_financials()
+                ),
+                to_attr = '_user_financials',
+            ),
+        )
+        
+        # User's crews prefetching
+        all_active_days = [event.active_day for event in all_events]
+        db.prefetch_related_objects(
+            all_active_days,
+            db.Prefetch(
+                'purchases',
+                queryset = (
+                    models.Purchase.objects
+                    .filter(crew__gender = Genders.MEN, team = self.request.user.team)
+                ),
+                to_attr = 'mens_crew',
+            ),
+            db.Prefetch(
+                'purchases',
+                queryset = (
+                    models.Purchase.objects
+                    .filter(crew__gender = Genders.WOMEN, team = self.request.user.team)
+                ),
+                to_attr = 'womens_crew',
+            ),
+        )
+        
+        # Process prefetched data
+        for event in all_events:
+            
+            # Default financials
+            event.user_fantasy = {
+                'mens_budget': money.INITIAL_BALANCE,
+                'mens_crew_value': 0,
+                'womens_budget': money.INITIAL_BALANCE,
+                'womens_crew_value': 0,
+            }
+            
+            # User-only content
+            if not self.request.user.is_anonymous:
+                
+                # Team financials
+                try:
+                    event.user_fantasy = event._user_financials[0]
+                except IndexError:
+                    pass
+                
+                # Get crew statuses
+                event.mens_crew_ready = utils.has_all_seats(event.active_day.mens_crew, seats)
+                event.womens_crew_ready = utils.has_all_seats(event.active_day.womens_crew, seats)
+        
+        return context
+
+
+
 class EventBase(FantasyBaseMixin, DetailView):
     """A base view for event-specific pages."""
     

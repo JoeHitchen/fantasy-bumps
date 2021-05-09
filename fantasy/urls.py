@@ -27,6 +27,7 @@ leaderboard_subpatterns = [
 ]
 
 urlpatterns = [
+    path('events/', views.EventsList.as_view(), name = 'events'),
     path(
         'guide-rules/',
         views.IndexView.as_view(template_name = 'fantasy/rules.html'),
