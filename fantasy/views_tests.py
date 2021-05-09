@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from common.testing import MessagesTestMixin
 
-from .constants import Genders, GENDERS_OVERALL, money
+from .constants import Series, Genders, GENDERS_OVERALL, money
 from . import models
 from . import utils
 from . import transactions
@@ -50,6 +50,64 @@ class Test__Index(TestCase):
             models.Event.objects.all(),
         )
         self.assertEqual(response.context['money'], money)
+
+
+
+class Test__EventsList(TestCase):
+    fixtures = ['dev_team', 'seats']
+
+    url = reverse('fantasy:events')
+    
+    @tag('query-count')
+    def test__query_count__with_login(self):
+        """Expect:
+            (1) SELECT recent events
+            (3) SELECT session, user & team
+            (1) SELECT historical events
+            (1) SELECT financial information prefetch
+            (N) SELECT each event's active day
+            (2) SELECT user crew prefetches
+            (1) SELECT all seats
+            (2N) SELECT each event's first and last racing days
+            (N) SELECT whether each event's active day has previous days
+        """
+        
+        user = auth.User.objects.get(username = 'DevTeam')
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        def prepare_event(year, date_shift = 0):
+            """An internal method for creating multiple events."""
+            event = models.Event.objects.create(
+                series = Series.EIGHTS,
+                year = year,
+                tag = 'eights{}'.format(year),
+                mens_divisions_count = 7,
+                mens_divisions_size = 13,
+                womens_divisions_count = 6,
+                womens_divisions_size = 13,
+            )
+            models.Day.objects.bulk_create([models.Day(
+                event = event,
+                name = index,
+                date = timezone.now().date() + timedelta(days = index - date_shift),
+                first_race_time = '12:30' if index != 4 else None,
+            ) for index in range(0, 5)])
+            event.fantasies.create(
+                team = user.team,
+                mens_budget = 967,
+                mens_balance = 126,
+                womens_budget = 1209,
+                womens_balance = 103,
+            )
+        
+        prepare_event(2015)
+        prepare_event(2016)
+        prepare_event(2017)
+        prepare_event(2018)
+        prepare_event(2019)
+        
+        with self.assertNumQueries(29):
+            self.client.get(self.url)
 
 
 
