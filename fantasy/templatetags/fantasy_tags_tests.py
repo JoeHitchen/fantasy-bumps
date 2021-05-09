@@ -781,14 +781,21 @@ class Test__Event_Box(TestCase):
     
     
     def test__crew_ready_button__crew_not_ready_day_two(self):
-        """Renders a danger message & button that directs the user to the correct market page."""
+        """Renders a danger message & button that directs the user to the correct market page.
+        
+        Test is possibly fragile and time-dependent, due to changing market status.
+        """
         
         # Generate button
         event = models.Event.objects.first()
         event.mens_crew_ready = True
         event.womens_crew_ready = False
+        
         date_shift = timezone.now().date() - event.first_day.date
+        if timezone.now().time() <= timings.MARKET_OPENS:
+            date_shift -= timedelta(days = 1)
         event.days.update(date = db.F('date') + date_shift)
+        
         html = self.crew_ready_button(event, Genders.WOMEN)
         
         # Test root
