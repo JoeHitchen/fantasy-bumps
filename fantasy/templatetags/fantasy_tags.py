@@ -317,7 +317,12 @@ def crew_ready_button(event, gender):
     <div class="card-body pb-0">
       <div class="row">
         <div class="col-xl-3 mb-3 alert">
-          {{ event.first_day.date|date:"l" }}&nbsp;{{ event.first_day.date|date:"M" }}&nbsp;{{ event.first_day.date|date:"jS" }} - {{ event.last_racing_day.date|date:"l" }}&nbsp;{{ event.last_racing_day.date|date:"M" }}&nbsp;{{ event.last_racing_day.date|date:"jS" }}
+          {{ event.first_day.date|date:"l" }}
+          &nbsp;{{ event.first_day.date|date:"M" }}
+          &nbsp;{{ event.first_day.date|date:"jS" }}
+          - {{ event.last_racing_day.date|date:"l" }}
+          &nbsp;{{ event.last_racing_day.date|date:"M" }}
+          &nbsp;{{ event.last_racing_day.date|date:"jS" }}
         </div>
         <div class="col-xl-6">
           <table class="table table-sm table-borderless">
