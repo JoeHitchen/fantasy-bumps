@@ -6,7 +6,7 @@
 
 <h3>Latest events</h3>
 {% for event in recent_events %}
-{% event_box event user %}
+{% event_box event %}
 <br/>
 {% empty %}
 There are no events available
@@ -14,7 +14,7 @@ There are no events available
 
 <h3>Past events</h3>
 {% for event in past_events %}
-{% event_box event user %}
+{% event_box event %}
 <br/>
 {% empty %}
 There are no events available

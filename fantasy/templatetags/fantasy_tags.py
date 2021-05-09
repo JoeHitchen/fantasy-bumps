@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.html import format_html, mark_safe
 from django.contrib.humanize.templatetags.humanize import naturalday
 
-from ..constants import Genders, money
+from ..constants import Genders
 from .. import models
 from .. import utils
 
@@ -350,33 +350,6 @@ def crew_ready_button(event, gender):
     </div>
   </div>
 '''))
-def event_box(event, user):
-    data = {'event': event, 'genders': Genders}
-    
-    event.user_fantasy = {
-        'mens_budget': money.INITIAL_BALANCE,
-        'mens_crew_value': 0,
-        'womens_budget': money.INITIAL_BALANCE,
-        'womens_crew_value': 0,
-    }
-    
-    if not user.is_anonymous:
-        
-        # Get event financial information
-        try:
-            event.user_fantasy = event.fantasies.extend_financials().get(team = user.team)
-        except models.GameEntry.DoesNotExist:
-            pass
-        
-        # Get crew statuses
-        event.mens_crew_ready = utils.has_all_seats(
-            user.team.get_crew(event.active_day, Genders.MEN),
-            models.Seat.objects.all(),
-        )
-        event.womens_crew_ready = utils.has_all_seats(
-            user.team.get_crew(event.active_day, Genders.WOMEN),
-            models.Seat.objects.all(),
-        )
-    
-    return data
+def event_box(event):
+    return {'event': event, 'genders': Genders}
 
