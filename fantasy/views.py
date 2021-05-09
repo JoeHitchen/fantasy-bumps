@@ -51,6 +51,7 @@ class EventsList(IndexView):
         seats = models.Seat.objects.all()
         db.prefetch_related_objects(
             all_events,
+            db.Prefetch('days', to_attr = '_days'),
             db.Prefetch(
                 'fantasies',
                 queryset = (

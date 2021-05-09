@@ -33,6 +33,8 @@ class Event(models.Model):
     
     @cached_property
     def first_day(self):
+        if hasattr(self, '_days'):
+            return self._days[0]
         return self.days.first()
     
     

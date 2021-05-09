@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.test import TestCase, tag
 from django.utils import timezone
-from django.db import IntegrityError
+from django.db import IntegrityError, models as db
 from django.contrib.auth import models as auth
 
 from .constants import Genders, GENDERS_OVERALL, timings, money, Clubs
@@ -62,9 +62,36 @@ class Test__Event(TestCase):
         self.assertEqual(str(self.event), 'Demo 2019')
     
     
-    def test__first_day(self):
+    def test__first_day__standard(self):
         """Returns the first day associated with the event."""
         self.assertEqual(self.event.first_day, self.yesterday)
+    
+    
+    def test__first_day__prefetched(self):
+        """Returns the first day associated with the event from a prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(self.event.first_day, self.yesterday)
+    
+    
+    @tag('query-count')
+    def test__first_day__query_count(self):
+        """Expect:
+            (1) SELECT first day
+        """
+        with self.assertNumQueries(1):
+            self.event.first_day
+    
+    
+    @tag('query-count')
+    def test__first_day__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.first_day
     
     
     def test__last_racing_day(self):
