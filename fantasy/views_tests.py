@@ -69,7 +69,6 @@ class Test__EventsList(TestCase):
             (2) SELECT user crew prefetches
             (1) SELECT all seats
             (1) SELECT event days prefetch
-            (N) SELECT each last racing days
             (N) SELECT whether each event's active day has previous days
         """
         
@@ -107,7 +106,7 @@ class Test__EventsList(TestCase):
         prepare_event(2018)
         prepare_event(2019)
         
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(20):
             self.client.get(self.url)
 
 

@@ -40,6 +40,8 @@ class Event(models.Model):
     
     @cached_property
     def last_racing_day(self):
+        if hasattr(self, '_days'):
+            return [day for day in self._days if day.first_race_time][-1]
         return self.days.exclude(first_race_time = None).last()
     
     

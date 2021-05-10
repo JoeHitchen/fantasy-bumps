@@ -94,9 +94,37 @@ class Test__Event(TestCase):
             self.event.first_day
     
     
-    def test__last_racing_day(self):
+    def test__last_racing_day__standard(self):
         """Returns the last day of racing for the event."""
         self.assertEqual(self.event.last_racing_day, self.tomorrow)  # Future does not have races
+    
+    
+    def test__last_racing_day__prefetched(self):
+        """Returns the last day of racing for the event from a prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(self.event.last_racing_day, self.tomorrow)  # Future does not have races
+    
+    
+    @tag('query-count')
+    def test__last_racing_day__query_count(self):
+        """Expect:
+            (1) SELECT last day with a race time
+        """
+        
+        with self.assertNumQueries(1):
+            self.event.last_racing_day
+    
+    
+    @tag('query-count')
+    def test__last_racing_day__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.last_racing_day
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
