@@ -128,8 +128,8 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
-    def test__active_day__before_rollover(self, timezone_mock):
-        """Returns first day from today onwards before 8pm."""
+    def test__active_day__before_rollover__standard(self, timezone_mock):
+        """Before 8pm, returns first day from today onwards."""
         
         self.assertEqual(
             self.event.active_day,
@@ -137,9 +137,43 @@ class Test__Event(TestCase):
         )
     
     
+    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    def test__active_day__before_rollover__prefetched(self, timezone_mock):
+        """Before 8pm, returns first day from today onwards using as prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.today,
+        )
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    def test__active_day__before_rollover__query_count(self, timezone_mock):
+        """Expect:
+            (1) SELECT first day today onwards
+        """
+        
+        with self.assertNumQueries(1):
+            self.event.active_day
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    def test__active_day__before_rollover__prefetched_query_count(self, timezone_mock):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.active_day
+    
+    
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__active_day__after_rollover(self, timezone_mock):
-        """Returns first day from tomorrow onwards after 8pm."""
+    def test__active_day__after_rollover__standard(self, timezone_mock):
+        """After 8pm, returns first day from tomorrow onwards."""
         
         self.assertEqual(
             self.event.active_day,
@@ -148,16 +182,84 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__active_day__after_event(self, timezone_mock):
-        """Returns last day of the event, if all have passed."""
-        
-        self.tomorrow.delete()
-        self.future.delete()
+    def test__active_day__after_rollover__prefetched(self, timezone_mock):
+        """After 8pm, returns first day from tomorrow onwards from a prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
         self.assertEqual(
             self.event.active_day,
-            self.today,
+            self.tomorrow,
         )
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS)
+    def test__active_day__after_rollover__query_count(self, timezone_mock):
+        """Expect:
+            (1) SELECT first day tomorrow onwards
+        """
+        
+        with self.assertNumQueries(1):
+            self.event.active_day
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS)
+    def test__active_day__after_rollover__prefetched_query_count(self, timezone_mock):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.active_day
+    
+    
+    def test__active_day__after_event__standard(self):
+        """Returns last day of the event, if all have passed."""
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.future,
+        )
+    
+    
+    def test__active_day__after_event__prefetched(self):
+        """Returns last day of the event from a prefetched set of days, if all have passed."""
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.future,
+        )
+    
+    
+    @tag('query-count')
+    def test__active_day__after_event__query_count(self):
+        """Expect:
+            (1) SELECT any days after today/tomorrow (depending on time)
+            (1) SELECT the last day of the event
+        """
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        
+        with self.assertNumQueries(2):
+            self.event.active_day
+    
+    
+    @tag('query-count')
+    def test__active_day__after_event__prefetched_query_count(self):
+        """Returns last day of the event from a prefetched set of days, if all have passed."""
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.active_day
     
     
     def test__num_crews__mens(self):

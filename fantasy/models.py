@@ -58,6 +58,10 @@ class Event(models.Model):
         day_shift = timedelta(1) if now.time() >= timings.MARKET_OPENS else timedelta(0)
         date = now.date() + day_shift
         
+        if hasattr(self, '_days'):
+            future_days = [day for day in self._days if day.date >= date]
+            return future_days[0] if future_days else self._days[-1]
+        
         day = self.days.filter(date__gte = date).first()
         return day if day else self.days.last()
     
