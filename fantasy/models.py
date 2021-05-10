@@ -92,12 +92,18 @@ class Day(models.Model):
     @cached_property
     def next(self):
         """The next day of the event."""
+        if hasattr(self.event, '_days'):
+            future_days = [day for day in self.event._days if day.date > self.date]
+            return future_days[0] if future_days else None
         return self.event.days.filter(date__gt = self.date).first()
     
     
     @cached_property
     def prev(self):
         """The previous day of the event."""
+        if hasattr(self.event, '_days'):
+            past_days = [day for day in self.event._days if day.date < self.date]
+            return past_days[-1] if past_days else None
         return self.event.days.filter(date__lt = self.date).order_by('-date').first()
     
     
