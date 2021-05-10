@@ -146,10 +146,8 @@ class Day(models.Model):
         if not self.first_race:
             return
         
-        earlier_days = self.event.days.exclude(date__gte = self.date).exists()
-        
         return datetime.combine(
-            self.date - timedelta(1 if earlier_days else 4),
+            self.date - timedelta(1 if self != self.event.first_day else 4),
             timings.MARKET_OPENS,
             timezone.now().tzinfo,
         )
