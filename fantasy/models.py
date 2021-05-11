@@ -33,11 +33,15 @@ class Event(models.Model):
     
     @cached_property
     def first_day(self):
+        if hasattr(self, '_days'):
+            return self._days[0]
         return self.days.first()
     
     
     @cached_property
     def last_racing_day(self):
+        if hasattr(self, '_days'):
+            return [day for day in self._days if day.first_race_time][-1]
         return self.days.exclude(first_race_time = None).last()
     
     
@@ -53,6 +57,10 @@ class Event(models.Model):
         now = timezone.now()
         day_shift = timedelta(1) if now.time() >= timings.MARKET_OPENS else timedelta(0)
         date = now.date() + day_shift
+        
+        if hasattr(self, '_days'):
+            future_days = [day for day in self._days if day.date >= date]
+            return future_days[0] if future_days else self._days[-1]
         
         day = self.days.filter(date__gte = date).first()
         return day if day else self.days.last()
@@ -84,12 +92,18 @@ class Day(models.Model):
     @cached_property
     def next(self):
         """The next day of the event."""
+        if hasattr(self.event, '_days'):
+            future_days = [day for day in self.event._days if day.date > self.date]
+            return future_days[0] if future_days else None
         return self.event.days.filter(date__gt = self.date).first()
     
     
     @cached_property
     def prev(self):
         """The previous day of the event."""
+        if hasattr(self.event, '_days'):
+            past_days = [day for day in self.event._days if day.date < self.date]
+            return past_days[-1] if past_days else None
         return self.event.days.filter(date__lt = self.date).order_by('-date').first()
     
     
@@ -142,10 +156,8 @@ class Day(models.Model):
         if not self.first_race:
             return
         
-        earlier_days = self.event.days.exclude(date__gte = self.date).exists()
-        
         return datetime.combine(
-            self.date - timedelta(1 if earlier_days else 4),
+            self.date - timedelta(1 if self != self.event.first_day else 4),
             timings.MARKET_OPENS,
             timezone.now().tzinfo,
         )
