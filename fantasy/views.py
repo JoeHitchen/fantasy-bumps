@@ -102,12 +102,6 @@ class EventsList(IndexView):
                 event.user_fantasy = event._user_financials[0] if event._user_financials else None
                 event.mens_crew_ready = utils.has_all_seats(event.active_day.mens_crew, seats)
                 event.womens_crew_ready = utils.has_all_seats(event.active_day.womens_crew, seats)
-                # try:
-                #     event.user_fantasy = event._user_financials[0]
-                # except IndexError:
-                #     pass
-                
-                # Get crew statuses
         
         return context
 

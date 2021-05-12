@@ -58,20 +58,9 @@ class Test__EventsList(TestCase):
 
     url = reverse('fantasy:events')
     
-    @tag('query-count')
-    def test__query_count__with_login(self):
-        """Expect:
-            (1) SELECT recent events
-            (3) SELECT session, user & team
-            (1) SELECT historical events
-            (1) SELECT financial information prefetch
-            (2) SELECT user crew prefetches
-            (1) SELECT all seats
-            (1) SELECT event days prefetch
-        """
+    def setUp(self):
         
-        user = auth.User.objects.get(username = 'DevTeam')
-        self.client.login(username = 'DevTeam', password = 'password')
+        self.user = auth.User.objects.get(username = 'DevTeam')
         
         def prepare_event(year, date_shift = 0):
             """An internal method for creating multiple events."""
@@ -91,7 +80,7 @@ class Test__EventsList(TestCase):
                 first_race_time = '12:30' if index != 4 else None,
             ) for index in range(0, 5)])
             event.fantasies.create(
-                team = user.team,
+                team = self.user.team,
                 mens_budget = 967,
                 mens_balance = 126,
                 womens_budget = 1209,
@@ -103,6 +92,81 @@ class Test__EventsList(TestCase):
         prepare_event(2017, 2)
         prepare_event(2018, 4)
         prepare_event(2019, 6)
+    
+    
+    def check_event_augmentation(self, event, with_user):
+        self.assertTrue(hasattr(event, 'user_fantasy'))
+        self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
+        self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
+    
+    
+    def test__without_login(self):
+        """Returns a 200 success with augmented recent and past events."""
+        
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasy/events.html')
+        
+        self.assertEqual(len(response.context['recent_events']), 3)
+        self.assertEqual(len(response.context['past_events']), 2)
+        
+        for event in response.context['recent_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = False)
+        
+        for event in response.context['past_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = False)
+    
+    
+    def test__with_login(self):
+        """Returns a 200 success with augmented recent and past events."""
+    
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasy/events.html')
+        
+        self.assertEqual(len(response.context['recent_events']), 3)
+        self.assertEqual(len(response.context['past_events']), 2)
+        
+        for event in response.context['recent_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = True)
+        
+        for event in response.context['past_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = True)
+    
+    
+    @tag('query-count')
+    def test__query_count__without_login(self):
+        """Expect:
+            (1) SELECT recent events
+            (1) SELECT historical events
+            (1) SELECT event days prefetch
+        
+        * Seats query defined but not executed since it is not used
+        """
+        
+        with self.assertNumQueries(3):
+            self.client.get(self.url)
+    
+    
+    @tag('query-count')
+    def test__query_count__with_login(self):
+        """Expect:
+            (1) SELECT recent events
+            (3) SELECT session, user & team
+            (1) SELECT historical events
+            (1) SELECT financial information prefetch
+            (2) SELECT user crew prefetches
+            (1) SELECT all seats
+            (1) SELECT event days prefetch
+        """
+        self.client.login(username = 'DevTeam', password = 'password')
         
         with self.assertNumQueries(10):
             self.client.get(self.url)
