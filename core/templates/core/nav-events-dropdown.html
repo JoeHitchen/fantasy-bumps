@@ -1,5 +1,5 @@
 <div class="nav-item dropdown {% if link_text %}d-block d-lg-none{% else %}d-none d-lg-block{% endif %}">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"{% if not link_text %} style="margin-left: -0.75em"{% endif %}>{{ link_text }}</a>
+        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown"{% if not link_text %} style="margin-left: -0.75em"{% endif %}>{{ link_text }}</a>
         <div class="dropdown-menu">{% for recent_event in recent_events %}
           <a class="dropdown-item" href="{% url 'fantasy:event' recent_event.tag %}">{{ recent_event }}</a>{% endfor %}
           <div class="dropdown-divider"></div>
