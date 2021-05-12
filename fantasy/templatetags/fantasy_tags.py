@@ -1,10 +1,12 @@
 from datetime import timedelta
 
 from django import template
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, mark_safe
 from django.contrib.humanize.templatetags.humanize import naturalday
 
+from ..constants import Genders
 from .. import models
 from .. import utils
 
@@ -19,7 +21,7 @@ register = template.Library()
     </button>{% endif %}
   </div>
 '''))
-def market_status_box(day):
+def market_status_box(day, allow_dismiss = True):
     """Creates the properties for an alert box that describes the market status."""
     
     # Preparation
@@ -34,7 +36,7 @@ def market_status_box(day):
     if day.market_is_open:
         return {
             'style': 'warning' if day.market_closes - now <= timedelta(hours = 6) else 'info',
-            'dismissable': True,
+            'dismissable': allow_dismiss,
             'message': 'The market is open until {}.'.format(
                 datetime_string(day.market_closes),
             ),
@@ -258,4 +260,48 @@ def crew_list_box(crew_list, finances = None, show_actions = False):
     ) for seat, rowers in seat_rowers.items()]
     
     return {'crew_list': crew_list, 'finances': finances, 'show_actions': show_actions}
+
+
+@register.inclusion_tag(template.Template('''
+  <a
+      href="{{ link }}"
+      class="btn btn-{{ colour }} btn-sm d-flex justify-content-between"
+  >
+    <div>{{ text }}</div>
+    <div class="ml-2"><small><span class="oi oi-chevron-right"></span></small></div>
+  </a>
+'''))
+def crew_ready_button(event, gender):
+    
+    try:
+        crew_ready = {
+            Genders.MEN: event.mens_crew_ready,
+            Genders.WOMEN: event.womens_crew_ready,
+        }[gender]
+    
+    except AttributeError:
+        return {
+            'link': reverse('login'),
+            'colour': 'primary',
+            'text': 'Sign in to compete',
+        }
+    
+    if crew_ready:
+        styles = {'colour': 'success', 'text': 'Ready to race'}
+    elif event.active_day == event.first_day:
+        styles = {'colour': 'danger', 'text': 'Entry incomplete'}
+    elif not event.active_day.first_race:
+        styles = {'colour': 'primary', 'text': 'View final crew'}
+    else:
+        styles = {'colour': 'danger', 'text': 'Subs required'}
+    
+    return {
+        'link': reverse(f'fantasy:{gender.label}'.lower(), kwargs = {'event_tag': event.tag}),
+        **styles,
+    }
+
+
+@register.inclusion_tag('fantasy/event-box.html')
+def event_box(event):
+    return {'event': event, 'genders': Genders}
 

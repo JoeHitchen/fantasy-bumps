@@ -3,7 +3,7 @@
 {% block content %}
 This is the index page for Fantasy Bumps. <br/>
 
-{% for event in events %}
+{% for event in recent_events %}
 <a href="{% url 'fantasy:event' event.tag %}">{{ event }}</a><br/>
 {% empty %}
 There are no events available

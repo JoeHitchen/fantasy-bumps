@@ -15,18 +15,99 @@ from . import transactions
 from . import errors
 
 
-class IndexView(TemplateView):
+class FantasyBaseMixin():
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['recent_events'] = utils.ordered_events()[:3]
+        return context
+
+
+
+class IndexView(FantasyBaseMixin, TemplateView):
     template_name = 'fantasy/index.html'
     
     def get_context_data(self, **kwargs):
-        return {
-            'events': models.Event.objects.all(),
-            'money': money,
-        }
+        context = super().get_context_data(**kwargs)
+        context['money'] = money
+        return context
 
 
 
-class EventBase(DetailView):
+class EventsList(IndexView):
+    template_name = 'fantasy/events.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Create event lists
+        context['past_events'] = list(utils.ordered_events().exclude(
+            id__in = context['recent_events'].values('id'),
+        ))
+        context['recent_events'] = list(context['recent_events'])
+        
+        # Add simple extra event information
+        seats = models.Seat.objects.all()
+        all_events = context['past_events'] + context['recent_events']
+        for event in all_events:
+            event.user_fantasy = {
+                'mens_budget': money.INITIAL_BALANCE,
+                'mens_crew_value': 0,
+                'womens_budget': money.INITIAL_BALANCE,
+                'womens_crew_value': 0,
+            }
+        db.prefetch_related_objects(all_events, db.Prefetch('days', to_attr = '_days'))
+        
+        # Additional information for logged in users
+        if not self.request.user.is_anonymous:
+            
+            # Financial prefetch
+            db.prefetch_related_objects(
+                all_events,
+                db.Prefetch(
+                    'fantasies',
+                    queryset = (
+                        models.GameEntry.objects
+                        .filter(team = self.request.user.team)
+                        .extend_financials()
+                    ),
+                    to_attr = '_user_financials',
+                ),
+            )
+            
+            # Crews prefetch
+            all_active_days = [event.active_day for event in all_events]
+            db.prefetch_related_objects(
+                all_active_days,
+                db.Prefetch(
+                    'purchases',
+                    queryset = (
+                        models.Purchase.objects
+                        .filter(crew__gender = Genders.MEN, team = self.request.user.team)
+                    ),
+                    to_attr = 'mens_crew',
+                ),
+                db.Prefetch(
+                    'purchases',
+                    queryset = (
+                        models.Purchase.objects
+                        .filter(crew__gender = Genders.WOMEN, team = self.request.user.team)
+                    ),
+                    to_attr = 'womens_crew',
+                ),
+            )
+            
+            # Add user-specific extra event information
+            for event in all_events:
+                event.user_fantasy = event._user_financials[0] if event._user_financials else None
+                event.mens_crew_ready = utils.has_all_seats(event.active_day.mens_crew, seats)
+                event.womens_crew_ready = utils.has_all_seats(event.active_day.womens_crew, seats)
+        
+        return context
+
+
+
+class EventBase(FantasyBaseMixin, DetailView):
     """A base view for event-specific pages."""
     
     # View settings
@@ -381,7 +462,7 @@ def sell(request):
 
 
 
-class Switch(TemplateView):
+class Switch(FantasyBaseMixin, TemplateView):
     """Presents athlete and seat selectors for a purchase to alter it.
     
     Additionally, has a POST action to perform the switch.

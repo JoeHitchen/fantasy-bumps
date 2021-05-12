@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from common.testing import MessagesTestMixin
 
-from .constants import Genders, GENDERS_OVERALL, money
+from .constants import Series, Genders, GENDERS_OVERALL, money
 from . import models
 from . import utils
 from . import transactions
@@ -32,9 +32,9 @@ class Test__Index(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
-        self.assertEqual(
-            list(response.context['events']),
-            list(models.Event.objects.all()),
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
         )
     
     
@@ -45,7 +45,131 @@ class Test__Index(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/rules.html')
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
         self.assertEqual(response.context['money'], money)
+
+
+
+class Test__EventsList(TestCase):
+    fixtures = ['dev_team', 'seats']
+
+    url = reverse('fantasy:events')
+    
+    def setUp(self):
+        
+        self.user = auth.User.objects.get(username = 'DevTeam')
+        
+        def prepare_event(year, date_shift = 0):
+            """An internal method for creating multiple events."""
+            event = models.Event.objects.create(
+                series = Series.EIGHTS,
+                year = year,
+                tag = 'eights{}'.format(year),
+                mens_divisions_count = 7,
+                mens_divisions_size = 13,
+                womens_divisions_count = 6,
+                womens_divisions_size = 13,
+            )
+            models.Day.objects.bulk_create([models.Day(
+                event = event,
+                name = index,
+                date = timezone.now().date() + timedelta(days = index - date_shift),
+                first_race_time = '12:30' if index != 4 else None,
+            ) for index in range(0, 5)])
+            event.fantasies.create(
+                team = self.user.team,
+                mens_budget = 967,
+                mens_balance = 126,
+                womens_budget = 1209,
+                womens_balance = 103,
+            )
+        
+        prepare_event(2015, -2)
+        prepare_event(2016, 0)
+        prepare_event(2017, 2)
+        prepare_event(2018, 4)
+        prepare_event(2019, 6)
+    
+    
+    def check_event_augmentation(self, event, with_user):
+        self.assertTrue(hasattr(event, 'user_fantasy'))
+        self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
+        self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
+    
+    
+    def test__without_login(self):
+        """Returns a 200 success with augmented recent and past events."""
+        
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasy/events.html')
+        
+        self.assertEqual(len(response.context['recent_events']), 3)
+        self.assertEqual(len(response.context['past_events']), 2)
+        
+        for event in response.context['recent_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = False)
+        
+        for event in response.context['past_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = False)
+    
+    
+    def test__with_login(self):
+        """Returns a 200 success with augmented recent and past events."""
+    
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasy/events.html')
+        
+        self.assertEqual(len(response.context['recent_events']), 3)
+        self.assertEqual(len(response.context['past_events']), 2)
+        
+        for event in response.context['recent_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = True)
+        
+        for event in response.context['past_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = True)
+    
+    
+    @tag('query-count')
+    def test__query_count__without_login(self):
+        """Expect:
+            (1) SELECT recent events
+            (1) SELECT historical events
+            (1) SELECT event days prefetch
+        
+        * Seats query defined but not executed since it is not used
+        """
+        
+        with self.assertNumQueries(3):
+            self.client.get(self.url)
+    
+    
+    @tag('query-count')
+    def test__query_count__with_login(self):
+        """Expect:
+            (1) SELECT recent events
+            (3) SELECT session, user & team
+            (1) SELECT historical events
+            (1) SELECT financial information prefetch
+            (2) SELECT user crew prefetches
+            (1) SELECT all seats
+            (1) SELECT event days prefetch
+        """
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(10):
+            self.client.get(self.url)
 
 
 
@@ -96,6 +220,11 @@ class GamePageBase():
         self.assertEqual(response.context['day'], self.day)
         self.assertFalse('team' in response.context)
         
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
+        
         self.extra_context_without_user(response.context)
     
     def extra_context_without_user(self, context):
@@ -115,6 +244,11 @@ class GamePageBase():
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertEqual(response.context['team'], self.team)
+        
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
         
         self.extra_context_with_user(response.context)
     
@@ -647,10 +781,11 @@ class LeaderboardPageBase(GamePageBase):
     def test__query_count__without_login(self):
         """ Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
+            (1) SELECT recent events
             (1) Get rankings
         """
         
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             self.client.get(self.url)
     
     
@@ -659,12 +794,13 @@ class LeaderboardPageBase(GamePageBase):
         """ Expect:
             (4) Base queries
             (2) Django Auth overheard
+            (1) SELECT recent events
             (1) Get user's team
         """
         
         self.client.login(username='DevTeam', password='password')
         
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             self.client.get(self.url)
 
 
@@ -814,11 +950,12 @@ class Test__Team(TestCase):
         """ Expect:
             (3) SELECT event and active day
             (1) SELECT team to view
+            (1) SELECT recent events
             (2) SELECT all seats (twice, once for each crew list)
             (2) SELECT purchases for crew lists (one for each crew lists)
         """
         
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.client.get(self.url)
             
             # Needed to force crew list queries
@@ -1548,6 +1685,11 @@ class Test__Switch(TestCase, MessagesTestMixin):
             models.Seat.objects.all(),
             ordered = False,
         )
+        
+        self.assertQuerysetEqual(
+            response.context['recent_events'],
+            models.Event.objects.all(),
+        )
     
     
     @patching.market_is_open(True)
@@ -1815,6 +1957,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
             (1) SELECT purchase, crew, day, event, and seat
+            (1) SELECT recent events
             (1) SELECT purchase.athlete  (Skipped by above, because nullable)
             (1) SELECT list of crew's rowers
             (1) SELECT list of other purchases
@@ -1823,7 +1966,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.get(self.url)
     
     

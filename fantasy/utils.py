@@ -2,11 +2,16 @@ from collections import Counter
 from functools import lru_cache
 from math import log
 
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Max
 
 from .constants import Genders, money
 from . import models
 from . import errors
+
+
+def ordered_events():
+    """Lists events in reverse chronological order."""
+    return models.Event.objects.annotate(last_day = Max('days__date')).order_by('-last_day')
 
 
 def has_all_seats(purchases, expected_seats):

@@ -10,11 +10,16 @@
     <div class="navbar-nav">
       {% if event %}
       <a class="nav-item navbar-brand" href="{% url 'fantasy:event' event.tag %}">{{ event }}</a>
+      {% endif %}
+      {% include 'core/nav-events-dropdown.html' %}
+      {% if event %}
       <a class="nav-item nav-link" href="{% url 'fantasy:men' event.tag %}">Men</a>
       <a class="nav-item nav-link" href="{% url 'fantasy:women' event.tag %}">Women</a>
       <a class="nav-item nav-link" href="{% url 'fantasy:leaderboard' event.tag %}">Leaderboard</a>
+      {% include 'core/nav-events-dropdown.html' with link_text='Other Events' %}
       <a class="nav-item nav-link" href="{% url 'fantasy:rules' event.tag %}">Guide & Rules</a>
       {% else %}
+      {% include 'core/nav-events-dropdown.html'  with link_text='Events' %}
       <a class="nav-item nav-link" href="{% url 'fantasy:rules' %}">Guide & Rules</a>
       {% endif %}
     </div>

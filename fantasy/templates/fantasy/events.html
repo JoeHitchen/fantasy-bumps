@@ -1,0 +1,23 @@
+{% extends 'core/base.html' %}
+{% load fantasy_tags %}
+
+{% block content %}
+<br/>
+
+<h3 class="mb-3">Latest events</h3>
+{% for event in recent_events %}
+{% event_box event %}
+<br/>
+{% empty %}
+There are no events available
+{% endfor %}
+
+{% if past_events %}
+<h3 class="mb-3">Past events</h3>
+{% for event in past_events %}
+{% event_box event %}
+<br/>
+{% endfor %}
+{% endif %}
+
+{% endblock%}

@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.test import TestCase, tag
 from django.utils import timezone
-from django.db import IntegrityError
+from django.db import IntegrityError, models as db
 from django.contrib.auth import models as auth
 
 from .constants import Genders, GENDERS_OVERALL, timings, money, Clubs
@@ -62,19 +62,74 @@ class Test__Event(TestCase):
         self.assertEqual(str(self.event), 'Demo 2019')
     
     
-    def test__first_day(self):
+    def test__first_day__standard(self):
         """Returns the first day associated with the event."""
         self.assertEqual(self.event.first_day, self.yesterday)
     
     
-    def test__last_racing_day(self):
+    def test__first_day__prefetched(self):
+        """Returns the first day associated with the event from a prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(self.event.first_day, self.yesterday)
+    
+    
+    @tag('query-count')
+    def test__first_day__query_count(self):
+        """Expect:
+            (1) SELECT first day
+        """
+        with self.assertNumQueries(1):
+            self.event.first_day
+    
+    
+    @tag('query-count')
+    def test__first_day__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.first_day
+    
+    
+    def test__last_racing_day__standard(self):
         """Returns the last day of racing for the event."""
         self.assertEqual(self.event.last_racing_day, self.tomorrow)  # Future does not have races
     
     
+    def test__last_racing_day__prefetched(self):
+        """Returns the last day of racing for the event from a prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(self.event.last_racing_day, self.tomorrow)  # Future does not have races
+    
+    
+    @tag('query-count')
+    def test__last_racing_day__query_count(self):
+        """Expect:
+            (1) SELECT last day with a race time
+        """
+        
+        with self.assertNumQueries(1):
+            self.event.last_racing_day
+    
+    
+    @tag('query-count')
+    def test__last_racing_day__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.last_racing_day
+    
+    
     @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
-    def test__active_day__before_rollover(self, timezone_mock):
-        """Returns first day from today onwards before 8pm."""
+    def test__active_day__before_rollover__standard(self, timezone_mock):
+        """Before 8pm, returns first day from today onwards."""
         
         self.assertEqual(
             self.event.active_day,
@@ -82,9 +137,43 @@ class Test__Event(TestCase):
         )
     
     
+    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    def test__active_day__before_rollover__prefetched(self, timezone_mock):
+        """Before 8pm, returns first day from today onwards using as prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.today,
+        )
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    def test__active_day__before_rollover__query_count(self, timezone_mock):
+        """Expect:
+            (1) SELECT first day today onwards
+        """
+        
+        with self.assertNumQueries(1):
+            self.event.active_day
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    def test__active_day__before_rollover__prefetched_query_count(self, timezone_mock):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.active_day
+    
+    
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__active_day__after_rollover(self, timezone_mock):
-        """Returns first day from tomorrow onwards after 8pm."""
+    def test__active_day__after_rollover__standard(self, timezone_mock):
+        """After 8pm, returns first day from tomorrow onwards."""
         
         self.assertEqual(
             self.event.active_day,
@@ -93,16 +182,84 @@ class Test__Event(TestCase):
     
     
     @patching.timezone_now_time(timings.MARKET_OPENS)
-    def test__active_day__after_event(self, timezone_mock):
-        """Returns last day of the event, if all have passed."""
-        
-        self.tomorrow.delete()
-        self.future.delete()
+    def test__active_day__after_rollover__prefetched(self, timezone_mock):
+        """After 8pm, returns first day from tomorrow onwards from a prefetched set of days."""
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
         self.assertEqual(
             self.event.active_day,
-            self.today,
+            self.tomorrow,
         )
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS)
+    def test__active_day__after_rollover__query_count(self, timezone_mock):
+        """Expect:
+            (1) SELECT first day tomorrow onwards
+        """
+        
+        with self.assertNumQueries(1):
+            self.event.active_day
+    
+    
+    @tag('query-count')
+    @patching.timezone_now_time(timings.MARKET_OPENS)
+    def test__active_day__after_rollover__prefetched_query_count(self, timezone_mock):
+        """Expect:
+            No queries
+        """
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.active_day
+    
+    
+    def test__active_day__after_event__standard(self):
+        """Returns last day of the event, if all have passed."""
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.future,
+        )
+    
+    
+    def test__active_day__after_event__prefetched(self):
+        """Returns last day of the event from a prefetched set of days, if all have passed."""
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(
+            self.event.active_day,
+            self.future,
+        )
+    
+    
+    @tag('query-count')
+    def test__active_day__after_event__query_count(self):
+        """Expect:
+            (1) SELECT any days after today/tomorrow (depending on time)
+            (1) SELECT the last day of the event
+        """
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        
+        with self.assertNumQueries(2):
+            self.event.active_day
+    
+    
+    @tag('query-count')
+    def test__active_day__after_event__prefetched_query_count(self):
+        """Returns last day of the event from a prefetched set of days, if all have passed."""
+        
+        models.Day.objects.update(date = db.F('date') - timedelta(5))
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            self.event.active_day
     
     
     def test__num_crews__mens(self):
@@ -139,6 +296,7 @@ class Test__Day__Core(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.event = models.Event.objects.first()
+        cls.today = timezone.now().date()
     
     
     def test__string(self):
@@ -153,88 +311,380 @@ class Test__Day__Core(TestCase):
         self.assertEqual(day_str, day.name)
     
     
-    def test__next__past_only(self):
+    def test__next__past_only__standard(self):
         """Returns None if there are no days in the future."""
         
         self.event.days.create(
             name = 'Prev',
-            date = timezone.now() - timedelta(1),
+            date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
         )
         
         curr = self.event.days.create(
             name = 'Next',
-            date = timezone.now(),
+            date = self.today,
             first_race_time = time(hour = 12),
         )
         
         self.assertIsNone(curr.next)
     
     
-    def test__next__future(self):
+    def test__next__past_only__prefetched(self):
+        """Returns None if there are no days in the future, using a prefetched set of days."""
+        
+        self.event.days.create(
+            name = 'Prev',
+            date = self.today - timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        curr = self.event.days.create(
+            name = 'Next',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertIsNone(curr.next)
+    
+    
+    @tag('query-count')
+    def test__next__past_only__query_count(self):
+        """Expect:
+            (1) SELECT the next day in the event
+        """
+        
+        self.event.days.create(
+            name = 'Prev',
+            date = self.today - timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        curr = self.event.days.create(
+            name = 'Next',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        with self.assertNumQueries(1):
+            curr.next
+    
+    
+    @tag('query-count')
+    def test__next__past_only__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        
+        self.event.days.create(
+            name = 'Prev',
+            date = self.today - timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        curr = self.event.days.create(
+            name = 'Next',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            curr.next
+    
+    
+    def test__next__future__standard(self):
         """Returns the next day in the series if there are days in the future."""
         
         curr = self.event.days.create(
             name = 'Next',
-            date = timezone.now(),
+            date = self.today,
             first_race_time = time(hour = 12),
         )
         
         future_1 = self.event.days.create(
             name = 'Future 1',
-            date = timezone.now() + timedelta(1),
+            date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
         )
         
         self.event.days.create(
             name = 'Future 2',
-            date = timezone.now() + timedelta(2),
+            date = self.today + timedelta(2),
             first_race_time = time(hour = 12),
         )
         
         self.assertEqual(curr.next, future_1)
     
     
-    def test__prev__past(self):
+    def test__next__future__prefetched(self):
+        """Returns the next day if there are days in the future, from a prefetched set of days."""
+        
+        curr = self.event.days.create(
+            name = 'Next',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        future_1 = self.event.days.create(
+            name = 'Future 1',
+            date = self.today + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Future 2',
+            date = self.today + timedelta(2),
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(curr.next, future_1)
+    
+    
+    @tag('query-count')
+    def test__next__future__query_count(self):
+        """Expect:
+            (1) SELECT the next day in the event
+        """
+        
+        curr = self.event.days.create(
+            name = 'Next',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Future 1',
+            date = self.today + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Future 2',
+            date = self.today + timedelta(2),
+            first_race_time = time(hour = 12),
+        )
+        
+        with self.assertNumQueries(1):
+            curr.next
+    
+    
+    @tag('query-count')
+    def test__next__future__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        
+        curr = self.event.days.create(
+            name = 'Next',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Future 1',
+            date = self.today + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Future 2',
+            date = self.today + timedelta(2),
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            curr.next
+    
+    
+    def test__prev__past__standard(self):
         """Returns the previous day in the series if there are days in the past."""
         
         self.event.days.create(
             name = 'Prev 2',
-            date = timezone.now() - timedelta(2),
+            date = self.today - timedelta(2),
             first_race_time = time(hour = 12),
         )
         
         prev_1 = self.event.days.create(
             name = 'Prev 1',
-            date = timezone.now() - timedelta(1),
+            date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
         )
         
         curr = self.event.days.create(
             name = 'Curr',
-            date = timezone.now(),
+            date = self.today,
             first_race_time = time(hour = 12),
         )
         
         self.assertEqual(curr.prev, prev_1)
     
     
-    def test__prev__future_only(self):
+    def test__prev__past__prefetched(self):
+        """Returns the previous day if there are days in the past from a prefetched set of days."""
+        
+        self.event.days.create(
+            name = 'Prev 2',
+            date = self.today - timedelta(2),
+            first_race_time = time(hour = 12),
+        )
+        
+        prev_1 = self.event.days.create(
+            name = 'Prev 1',
+            date = self.today - timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertEqual(curr.prev, prev_1)
+    
+    
+    @tag('query-count')
+    def test__prev__past__query_count(self):
+        """Expect:
+            (1) SELECT the previous day in the event
+        """
+        
+        self.event.days.create(
+            name = 'Prev 2',
+            date = self.today - timedelta(2),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Prev 1',
+            date = self.today - timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        with self.assertNumQueries(1):
+            curr.prev
+    
+    
+    @tag('query-count')
+    def test__prev__past__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        
+        self.event.days.create(
+            name = 'Prev 2',
+            date = self.today - timedelta(2),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Prev 1',
+            date = self.today - timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            curr.prev
+    
+    
+    def test__prev__future_only__standard(self):
         """Returns None if there are no days in the past."""
         
         curr = self.event.days.create(
             name = 'Curr',
-            date = timezone.now(),
+            date = self.today,
             first_race_time = time(hour = 12),
         )
         
         self.event.days.create(
             name = 'Next',
-            date = timezone.now() + timedelta(1),
+            date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
         )
         
         self.assertIsNone(curr.prev)
+    
+    
+    def test__prev__future_only__prefetched(self):
+        """Returns None if there are no days in the past."""
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Next',
+            date = self.today + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        self.assertIsNone(curr.prev)
+    
+    
+    @tag('query-count')
+    def test__prev__future_only__query_count(self):
+        """Expect:
+            (1) SELECT the previous day in the event
+        """
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Next',
+            date = self.today + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        
+        with self.assertNumQueries(1):
+            curr.prev
+    
+    
+    @tag('query-count')
+    def test__prev__future_only__prefetched_query_count(self):
+        """Expect:
+            No queries
+        """
+        
+        curr = self.event.days.create(
+            name = 'Curr',
+            date = self.today,
+            first_race_time = time(hour = 12),
+        )
+        
+        self.event.days.create(
+            name = 'Next',
+            date = self.today + timedelta(1),
+            first_race_time = time(hour = 12),
+        )
+        db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
+        
+        with self.assertNumQueries(0):
+            curr.prev
     
     
     def test__first_race(self):
