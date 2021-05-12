@@ -98,11 +98,11 @@ class Test__EventsList(TestCase):
                 womens_balance = 103,
             )
         
-        prepare_event(2015)
-        prepare_event(2016)
-        prepare_event(2017)
-        prepare_event(2018)
-        prepare_event(2019)
+        prepare_event(2015, -2)
+        prepare_event(2016, 0)
+        prepare_event(2017, 2)
+        prepare_event(2018, 4)
+        prepare_event(2019, 6)
         
         with self.assertNumQueries(10):
             self.client.get(self.url)
