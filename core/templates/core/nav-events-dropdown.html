@@ -3,6 +3,6 @@
         <div class="dropdown-menu">{% for recent_event in recent_events %}
           <a class="dropdown-item" href="{% url 'fantasy:event' recent_event.tag %}">{{ recent_event }}</a>{% endfor %}
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="#">All events</a>
+          <a class="dropdown-item" href="{% url 'fantasy:events' %}">All events</a>
         </div>
       </div>
