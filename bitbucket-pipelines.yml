@@ -19,7 +19,7 @@ pipelines:
           - python project.py test
   
   branches:
-    master:
+    deploy:
       - step: *lint
       - step: *test
       - step:
