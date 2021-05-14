@@ -20,17 +20,13 @@ class FantasyBaseMixin():
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['recent_events'] = utils.ordered_events()[:3]
+        context['money'] = money
         return context
 
 
 
 class IndexView(FantasyBaseMixin, TemplateView):
     template_name = 'fantasy/index.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['money'] = money
-        return context
 
 
 
@@ -117,7 +113,6 @@ class EventBase(FantasyBaseMixin, DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['money'] = money
         
         self.event = self.object  # Provide friendly name for retrived event.
         self.day = self.event.active_day
