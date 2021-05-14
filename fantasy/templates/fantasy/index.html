@@ -1,10 +1,13 @@
 {% extends 'core/base.html' %}
+{% load fantasy_tags %}
 
 {% block content %}
 This is the index page for Fantasy Bumps. <br/>
+<br/>
 
 {% for event in recent_events %}
-<a href="{% url 'fantasy:event' event.tag %}">{{ event }}</a><br/>
+{% event_box event %}
+<br/>
 {% empty %}
 There are no events available
 {% endfor %}

@@ -22,64 +22,49 @@ class FantasyBaseMixin():
         context['recent_events'] = utils.ordered_events()[:3]
         context['money'] = money
         return context
-
-
-
-class IndexView(FantasyBaseMixin, TemplateView):
-    template_name = 'fantasy/index.html'
-
-
-
-class EventsList(IndexView):
-    template_name = 'fantasy/events.html'
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    
+    @staticmethod
+    def augment_events_for_events_boxes(events, user):
+        """Prefetches data and sets additional event attributes for use with an event box."""
         
-        # Create event lists
-        context['past_events'] = list(utils.ordered_events().exclude(
-            id__in = context['recent_events'].values('id'),
-        ))
-        context['recent_events'] = list(context['recent_events'])
-        
-        # Add simple extra event information
+        # Add default financial and days prefetch
         seats = models.Seat.objects.all()
-        all_events = context['past_events'] + context['recent_events']
-        for event in all_events:
+        for event in events:
             event.user_fantasy = {
                 'mens_budget': money.INITIAL_BALANCE,
                 'mens_crew_value': 0,
                 'womens_budget': money.INITIAL_BALANCE,
                 'womens_crew_value': 0,
             }
-        db.prefetch_related_objects(all_events, db.Prefetch('days', to_attr = '_days'))
+        db.prefetch_related_objects(events, db.Prefetch('days', to_attr = '_days'))
         
-        # Additional information for logged in users
-        if not self.request.user.is_anonymous:
+        # Additional augmentation for logged in users
+        if not user.is_anonymous:
             
-            # Financial prefetch
+            # User financial data prefetch
             db.prefetch_related_objects(
-                all_events,
+                events,
                 db.Prefetch(
                     'fantasies',
                     queryset = (
                         models.GameEntry.objects
-                        .filter(team = self.request.user.team)
+                        .filter(team = user.team)
                         .extend_financials()
                     ),
                     to_attr = '_user_financials',
                 ),
             )
             
-            # Crews prefetch
-            all_active_days = [event.active_day for event in all_events]
+            # User crews prefetch
+            active_days = [event.active_day for event in events]
             db.prefetch_related_objects(
-                all_active_days,
+                active_days,
                 db.Prefetch(
                     'purchases',
                     queryset = (
                         models.Purchase.objects
-                        .filter(crew__gender = Genders.MEN, team = self.request.user.team)
+                        .filter(crew__gender = Genders.MEN, team = user.team)
                     ),
                     to_attr = 'mens_crew',
                 ),
@@ -87,17 +72,56 @@ class EventsList(IndexView):
                     'purchases',
                     queryset = (
                         models.Purchase.objects
-                        .filter(crew__gender = Genders.WOMEN, team = self.request.user.team)
+                        .filter(crew__gender = Genders.WOMEN, team = user.team)
                     ),
                     to_attr = 'womens_crew',
                 ),
             )
             
             # Add user-specific extra event information
-            for event in all_events:
-                event.user_fantasy = event._user_financials[0] if event._user_financials else None
+            for event in events:
+                if event._user_financials:
+                    event.user_fantasy = event._user_financials[0]
                 event.mens_crew_ready = utils.has_all_seats(event.active_day.mens_crew, seats)
                 event.womens_crew_ready = utils.has_all_seats(event.active_day.womens_crew, seats)
+
+
+
+class IndexView(FantasyBaseMixin, TemplateView):
+    template_name = 'fantasy/index.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Load and augment events
+        context['recent_events'] = list(context['recent_events'])
+        self.augment_events_for_events_boxes(context['recent_events'], self.request.user)
+        
+        return context
+
+
+
+class RulesView(FantasyBaseMixin, TemplateView):
+    template_name = 'fantasy/rules.html'
+
+
+
+class EventsList(FantasyBaseMixin, TemplateView):
+    template_name = 'fantasy/events.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Load and augment events
+        context['past_events'] = list(utils.ordered_events().exclude(
+            id__in = context['recent_events'].values('id'),
+        ))
+        context['recent_events'] = list(context['recent_events'])
+        
+        self.augment_events_for_events_boxes(
+            context['past_events'] + context['recent_events'],
+            self.request.user,
+        )
         
         return context
 
