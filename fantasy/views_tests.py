@@ -16,35 +16,110 @@ from . import patching
 
 
 class Test__Index(TestCase):
-    fixtures = ['dev_event', 'dev_team']
+    fixtures = ['dev_team', 'seats']
+
+    url = reverse('fantasy:index')
     
-    @classmethod
-    def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
-        cls.team = models.Team.objects.first()
-    
-    
-    def test__render(self):
-        """Renders the index page."""
+    def setUp(self):
         
-        response = self.client.get(reverse('fantasy:index'))
+        self.user = auth.User.objects.get(username = 'DevTeam')
+        
+        def prepare_event(year, date_shift = 0):
+            """An internal method for creating multiple events."""
+            event = models.Event.objects.create(
+                series = Series.EIGHTS,
+                year = year,
+                tag = 'eights{}'.format(year),
+                mens_divisions_count = 7,
+                mens_divisions_size = 13,
+                womens_divisions_count = 6,
+                womens_divisions_size = 13,
+            )
+            models.Day.objects.bulk_create([models.Day(
+                event = event,
+                name = index,
+                date = timezone.now().date() + timedelta(days = index - date_shift),
+                first_race_time = '12:30' if index != 4 else None,
+            ) for index in range(0, 5)])
+            event.fantasies.create(
+                team = self.user.team,
+                mens_budget = 967,
+                mens_balance = 126,
+                womens_budget = 1209,
+                womens_balance = 103,
+            )
+        
+        prepare_event(2015, -2)
+        prepare_event(2016, 0)
+        prepare_event(2017, 2)
+        prepare_event(2018, 4)
+        prepare_event(2019, 6)
+    
+    
+    def check_event_augmentation(self, event, with_user):
+        self.assertTrue(hasattr(event, 'user_fantasy'))
+        self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
+        self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
+    
+    
+    def test__without_login(self):
+        """Returns a 200 success with augmented recent and past events."""
+        
+        response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
-        self.assertQuerysetEqual(
-            response.context['recent_events'],
-            models.Event.objects.all(),
-        )
+        
+        self.assertEqual(len(response.context['recent_events']), 3)
+        
+        for event in response.context['recent_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = False)
+    
+    
+    def test__with_login(self):
+        """Returns a 200 success with augmented recent and past events."""
+    
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.get(self.url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasy/index.html')
+        
+        self.assertEqual(len(response.context['recent_events']), 3)
+        
+        for event in response.context['recent_events']:
+            with self.subTest(year = event.year):
+                self.check_event_augmentation(event, with_user = True)
     
     
     @tag('query-count')
-    def test__query_count(self):
+    def test__query_count__without_login(self):
         """Expect:
             (1) SELECT recent events
+            (1) SELECT event days prefetch
+        
+        * Seats query defined but not executed since it is not used
         """
         
-        with self.assertNumQueries(1):
-            self.client.get(reverse('fantasy:rules'))
+        with self.assertNumQueries(2):
+            self.client.get(self.url)
+    
+    
+    @tag('query-count')
+    def test__query_count__with_login(self):
+        """Expect:
+            (1) SELECT recent events
+            (3) SELECT session, user & team
+            (1) SELECT financial information prefetch
+            (2) SELECT user crew prefetches
+            (1) SELECT all seats
+            (1) SELECT event days prefetch
+        """
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        with self.assertNumQueries(9):
+            self.client.get(self.url)
 
 
 
