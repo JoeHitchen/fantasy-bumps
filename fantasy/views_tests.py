@@ -16,7 +16,6 @@ from . import patching
 
 
 class Test__Index(TestCase):
-    """Tests simple views that do not justify separate test classes."""
     fixtures = ['dev_event', 'dev_team']
     
     @classmethod
@@ -25,7 +24,7 @@ class Test__Index(TestCase):
         cls.team = models.Team.objects.first()
     
     
-    def test__index(self):
+    def test__render(self):
         """Renders the index page."""
         
         response = self.client.get(reverse('fantasy:index'))
@@ -39,16 +38,26 @@ class Test__Index(TestCase):
     
     
     @tag('query-count')
-    def test__index__query_count(self):
+    def test__query_count(self):
         """Expect:
             (1) SELECT recent events
         """
         
         with self.assertNumQueries(1):
             self.client.get(reverse('fantasy:rules'))
+
+
+
+class Test__GuideRules(TestCase):
+    fixtures = ['dev_event', 'dev_team']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
+        cls.team = models.Team.objects.first()
     
     
-    def test__guide_rules(self):
+    def test__render(self):
         """Renders the guide & rules page."""
         
         response = self.client.get(reverse('fantasy:rules'))
@@ -63,7 +72,7 @@ class Test__Index(TestCase):
     
     
     @tag('query-count')
-    def test__guide_rules__query_count(self):
+    def test__query_count(self):
         """Expect:
             (1) SELECT recent events
         """

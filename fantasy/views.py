@@ -30,7 +30,12 @@ class IndexView(FantasyBaseMixin, TemplateView):
 
 
 
-class EventsList(IndexView):
+class RulesView(FantasyBaseMixin, TemplateView):
+    template_name = 'fantasy/rules.html'
+
+
+
+class EventsList(FantasyBaseMixin, TemplateView):
     template_name = 'fantasy/events.html'
     
     def get_context_data(self, **kwargs):
