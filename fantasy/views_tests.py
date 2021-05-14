@@ -38,6 +38,16 @@ class Test__Index(TestCase):
         )
     
     
+    @tag('query-count')
+    def test__index__query_count(self):
+        """Expect:
+            (1) SELECT recent events
+        """
+        
+        with self.assertNumQueries(1):
+            self.client.get(reverse('fantasy:rules'))
+    
+    
     def test__guide_rules(self):
         """Renders the guide & rules page."""
         
@@ -50,6 +60,16 @@ class Test__Index(TestCase):
             models.Event.objects.all(),
         )
         self.assertEqual(response.context['money'], money)
+    
+    
+    @tag('query-count')
+    def test__guide_rules__query_count(self):
+        """Expect:
+            (1) SELECT recent events
+        """
+        
+        with self.assertNumQueries(1):
+            self.client.get(reverse('fantasy:rules'))
 
 
 
