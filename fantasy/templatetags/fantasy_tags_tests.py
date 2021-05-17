@@ -201,7 +201,8 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    def test__after_close_with_next(self):
+    @patching.market_opens(timezone.localtime() + timedelta(minutes = 500))  # Affects second day
+    def test__after_close_with_next(self, opens_mock):
         """Returns a non-dismissable danger alert with the open time for the next day.
         
         WARNING: Contains non-standard mocking. May not fail if other code changes.
@@ -228,10 +229,16 @@ class Test__Market_Status_Box(TestCase):
         
         self.assertEqual(props['style'], 'danger')
         self.assertFalse(props['dismissable'])
+        
+        if opens_mock.return_value.date() == timezone.localtime().date():
+            today_tomorrow = 'today'
+        else:
+            today_tomorrow = 'tomorrow'
         self.assertEqual(
             props['message'],
-            'The market is closed, and will open at {:%H:%M} tomorrow.'.format(
-                timings.MARKET_OPENS,
+            'The market is closed, and will open at {:%H:%M} {}.'.format(
+                opens_mock.return_value,
+                today_tomorrow,
             ),
         )
     

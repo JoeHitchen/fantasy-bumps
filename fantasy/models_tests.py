@@ -896,13 +896,13 @@ class Test__Day__Market_Status(TestCase):
             date = date.fromisoformat('2021-01-05'),
             first_race_time = time.fromisoformat('12:00:00'),
         )
-        self.event.days.create(
+        prev = self.event.days.create(
             name = 'Prior',
-            date = day.date - timedelta(2),  # Demonstrates linked to date not previous day
+            date = day.date - timedelta(2),  # Demonstrates linked to previous day, not yesterday
             first_race_time = time.fromisoformat('12:00:00'),
         )
         
-        self.assertEqual(day.market_opens.date(), day.date - timedelta(1))
+        self.assertEqual(day.market_opens.date(), prev.date)
         self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
@@ -915,13 +915,13 @@ class Test__Day__Market_Status(TestCase):
             date = date.fromisoformat('2021-07-05'),
             first_race_time = time.fromisoformat('12:00:00'),
         )
-        self.event.days.create(
+        prev = self.event.days.create(
             name = 'Prior',
-            date = day.date - timedelta(2),  # Demonstrates linked to date not previous day
+            date = day.date - timedelta(2),  # Demonstrates linked to previous day, not yesterday
             first_race_time = time.fromisoformat('12:00:00'),
         )
         
-        self.assertEqual(day.market_opens.date(), day.date - timedelta(1))
+        self.assertEqual(day.market_opens.date(), prev.date)
         self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
         self.assertEqual(day.market_opens.tzname(), 'BST')
     

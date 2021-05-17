@@ -161,7 +161,7 @@ class Day(models.Model):
             return
         
         naive = datetime.combine(
-            self.date - timedelta(1 if self != self.event.first_day else 4),
+            self.prev.date if self.prev else self.date - timedelta(4),
             timings.MARKET_OPENS,
         )
         return pytz.timezone(TIME_ZONE).localize(naive)
