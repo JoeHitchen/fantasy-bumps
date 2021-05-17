@@ -6,6 +6,9 @@ from django.contrib.auth import models as auth
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
+import pytz
+
+from core.settings import TIME_ZONE
 
 from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
 from .utils import pricing
@@ -110,11 +113,12 @@ class Day(models.Model):
     @cached_property
     def first_race(self):
         """The datetime for the first race of the day, or None if not racing day."""
-        return datetime.combine(
-            self.date,
-            self.first_race_time,
-            timezone.now().tzinfo,
-        ) if self.first_race_time else None
+        
+        if not self.first_race_time:
+            return None
+        
+        naive = datetime.combine(self.date, self.first_race_time)
+        return pytz.timezone(TIME_ZONE).localize(naive)
     
     
     @lru_cache(maxsize=2)

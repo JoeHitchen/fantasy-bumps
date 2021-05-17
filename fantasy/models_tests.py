@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, date, time, timedelta
 from unittest.mock import patch
 
 from django.test import TestCase, tag
@@ -687,18 +687,36 @@ class Test__Day__Core(TestCase):
             curr.prev
     
     
-    def test__first_race(self):
-        """Returns a datetime object for the first race of the day."""
+    def test__first_race__winter(self):
+        """Constructs a datetime object from the date, first race time, and system timezone."""
         
+        race_date = date.fromisoformat('2021-01-05')
+        race_time = time(11, 30)
         first_race = self.event.days.create(
-            date = timezone.now(),
-            first_race_time = time(11, 30),
+            date = race_date,
+            first_race_time = race_time,
         ).first_race
         
         self.assertIsInstance(first_race, datetime)
-        self.assertEqual(first_race.date(), timezone.now().date())
-        self.assertEqual(first_race.time(), time(11, 30))
-        self.assertEqual(first_race.tzinfo, timezone.now().tzinfo)
+        self.assertEqual(first_race.date(), race_date)
+        self.assertEqual(first_race.time(), race_time)
+        self.assertEqual(first_race.tzname(), 'GMT')
+    
+    
+    def test__first_race__summer(self):
+        """Constructs a datetime object from the date, first race time, and system timezone."""
+        
+        race_date = date.fromisoformat('2021-07-05')
+        race_time = time(11, 30)
+        first_race = self.event.days.create(
+            date = race_date,
+            first_race_time = race_time,
+        ).first_race
+        
+        self.assertIsInstance(first_race, datetime)
+        self.assertEqual(first_race.date(), race_date)
+        self.assertEqual(first_race.time(), race_time)
+        self.assertEqual(first_race.tzname(), 'BST')
 
 
 
@@ -872,10 +890,10 @@ class Test__Day__Market_Status(TestCase):
         """Returns null if no racing occurs."""
         
         # Create days
-        now = timezone.now()
+        race_date = date.fromisoformat('2021-07-05')
         day = self.event.days.create(
             name = 'Markets',
-            date = now,
+            date = race_date,
             first_race_time = None,
         )
         
