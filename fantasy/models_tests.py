@@ -847,92 +847,122 @@ class Test__Day__Market_Status(TestCase):
         cls.event = models.Event.objects.first()
     
     
-    def test__market_opens__first_race_day(self):
-        """First day markets open more than 24h in advance."""
-        
-        # Create day
-        now = timezone.now()
-        day = self.event.days.create(
-            name = 'Markets',
-            date = now,
-            first_race_time = time(hour = 12),
-        )
-        
-        # Test property
-        open = day.market_opens
-        self.assertEqual(open.date() - now.date(), timedelta(-4))
-        self.assertEqual(open.time(), timings.MARKET_OPENS)
-    
-    
-    def test__market_opens__later_race_day(self):
-        """Later day markets open after racing the previous day."""
-        
-        # Create days
-        now = timezone.now()
-        self.event.days.create(
-            name = 'Markets',
-            date = now - timedelta(1),
-            first_race_time = time(hour = 12),
-        )
-        day = self.event.days.create(
-            name = 'Markets',
-            date = now,
-            first_race_time = time(hour = 12),
-        )
-        
-        # Test property
-        open = day.market_opens
-        self.assertEqual(open.date() - now.date(), timedelta(-1))
-        self.assertEqual(open.time(), timings.MARKET_OPENS)
-    
-    
     def test__market_opens__non_race_day(self):
-        """Returns null if no racing occurs."""
+        """Market opening time is undefined if no racing is scheduled."""
         
-        # Create days
         race_date = date.fromisoformat('2021-07-05')
         day = self.event.days.create(
-            name = 'Markets',
+            name = 'Main',
             date = race_date,
             first_race_time = None,
         )
         
-        # Test property
-        open = day.market_opens
-        self.assertIsNone(open)
+        self.assertIsNone(day.market_opens)
     
     
-    def test__market_closes__with_race(self):
-        """Markets close half an hour before the first race."""
+    def test__market_opens__first_race_day__winter(self):
+        """The first day's markets opening is four days prior."""
         
-        # Create days
-        now = timezone.now()
         day = self.event.days.create(
-            name = 'Markets',
-            date = now,
-            first_race_time = time(hour = 12),
+            name = 'Main',
+            date = date.fromisoformat('2021-01-05'),
+            first_race_time = time.fromisoformat('12:00:00'),
         )
         
-        # Test property
-        close = day.market_closes
-        self.assertEqual(close.date(), now.date())
-        self.assertEqual(close.time(), time(hour = 11, minute = 30))
+        self.assertEqual(day.market_opens.date(), day.date - timedelta(4))
+        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.tzname(), 'GMT')
+    
+    
+    def test__market_opens__first_race_day__summer(self):
+        """The first day's markets opening is four days prior."""
+        
+        day = self.event.days.create(
+            name = 'Main',
+            date = date.fromisoformat('2021-07-05'),
+            first_race_time = time.fromisoformat('12:00:00'),
+        )
+        
+        self.assertEqual(day.market_opens.date(), day.date - timedelta(4))
+        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.tzname(), 'BST')
+    
+    
+    def test__market_opens__later_race_day__winter(self):
+        """Later day markets open after racing the previous day."""
+        
+        day = self.event.days.create(
+            name = 'Main',
+            date = date.fromisoformat('2021-01-05'),
+            first_race_time = time.fromisoformat('12:00:00'),
+        )
+        self.event.days.create(
+            name = 'Prior',
+            date = day.date - timedelta(2),  # Demonstrates linked to date not previous day
+            first_race_time = time.fromisoformat('12:00:00'),
+        )
+        
+        self.assertEqual(day.market_opens.date(), day.date - timedelta(1))
+        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.tzname(), 'GMT')
+    
+    
+    def test__market_opens__later_race_day__summer(self):
+        """Later day markets open after racing the previous day."""
+        
+        day = self.event.days.create(
+            name = 'Main',
+            date = date.fromisoformat('2021-07-05'),
+            first_race_time = time.fromisoformat('12:00:00'),
+        )
+        self.event.days.create(
+            name = 'Prior',
+            date = day.date - timedelta(2),  # Demonstrates linked to date not previous day
+            first_race_time = time.fromisoformat('12:00:00'),
+        )
+        
+        self.assertEqual(day.market_opens.date(), day.date - timedelta(1))
+        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.tzname(), 'BST')
     
     
     def test__market_closes__without_race(self):
-        """Returns a null value if no racing occurs."""
+        """Market closing time is undefined if no racing is scheduled."""
         
-        # Create days
-        now = timezone.now()
         day = self.event.days.create(
-            name = 'Markets',
-            date = now,
-            first_race_time = None,
+            name = 'Main',
+            date = date.fromisoformat('2021-07-05'),
         )
         
-        # Test property
-        close = day.market_closes
-        self.assertIsNone(close)
+        self.assertIsNone(day.market_closes)
+    
+    
+    def test__market_closes__with_winter_race(self):
+        """Markets close half an hour before the first race."""
+        
+        day = self.event.days.create(
+            name = 'Main',
+            date = date.fromisoformat('2021-01-05'),
+            first_race_time = time.fromisoformat('12:00:00'),
+        )
+        
+        self.assertEqual(day.market_closes.date(), day.date)
+        self.assertEqual(day.market_closes.time().isoformat(), '11:30:00')
+        self.assertEqual(day.market_closes.tzname(), 'GMT')
+    
+    
+    def test__market_closes__with_summer_race(self):
+        """Markets close half an hour before the first race."""
+        
+        day = self.event.days.create(
+            name = 'Main',
+            date = date.fromisoformat('2021-07-05'),
+            first_race_time = time.fromisoformat('12:00:00'),
+        )
+        
+        self.assertEqual(day.market_closes.date(), day.date)
+        self.assertEqual(day.market_closes.time().isoformat(), '11:30:00')
+        self.assertEqual(day.market_closes.tzname(), 'BST')
     
     
     @patching.market_opens(timezone.now() + timedelta(minutes = 5))

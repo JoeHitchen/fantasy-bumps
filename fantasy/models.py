@@ -160,11 +160,11 @@ class Day(models.Model):
         if not self.first_race:
             return
         
-        return datetime.combine(
+        naive = datetime.combine(
             self.date - timedelta(1 if self != self.event.first_day else 4),
             timings.MARKET_OPENS,
-            timezone.now().tzinfo,
         )
+        return pytz.timezone(TIME_ZONE).localize(naive)
     
     
     @cached_property
