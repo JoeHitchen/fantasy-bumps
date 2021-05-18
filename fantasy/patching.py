@@ -2,21 +2,28 @@ from unittest.mock import patch, PropertyMock
 from datetime import datetime, timedelta
 
 from django.utils import timezone
+import pytz
+
+from core.settings import TIME_ZONE
 
 from . import models
 
 
-def timezone_now_time(time, shift = timedelta(0)):
+def localtime_time(time, shift = timedelta(0)):
+    """Replace the time component of the `timezone.localtime()` function with the time provided.
     
-    now = timezone.now()
+    Cannot apply timedelta to time when called, since `time` + `timedelta` is not a permitted
+    operation.
+    """
+    
+    naive = datetime.combine(
+        timezone.localtime().date(),
+        time,
+    ) + shift
     
     return patch(
-        'django.utils.timezone.now',
-        return_value = datetime.combine(
-            now.date(),
-            time,
-            tzinfo = now.tzinfo,
-        ) + shift,
+        'django.utils.timezone.localtime',
+        return_value = pytz.timezone(TIME_ZONE).localize(naive),
     )
 
 

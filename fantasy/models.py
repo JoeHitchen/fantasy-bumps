@@ -57,7 +57,7 @@ class Event(models.Model):
         After the event -> Last day of the event.
         """
         
-        now = timezone.now()
+        now = timezone.localtime()
         day_shift = timedelta(1) if now.time() >= timings.MARKET_OPENS else timedelta(0)
         date = now.date() + day_shift
         

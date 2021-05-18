@@ -127,7 +127,7 @@ class Test__Event(TestCase):
             self.event.last_racing_day
     
     
-    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
     def test__active_day__before_rollover__standard(self, timezone_mock):
         """Before 8pm, returns first day from today onwards."""
         
@@ -137,7 +137,7 @@ class Test__Event(TestCase):
         )
     
     
-    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
     def test__active_day__before_rollover__prefetched(self, timezone_mock):
         """Before 8pm, returns first day from today onwards using as prefetched set of days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
@@ -149,7 +149,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
     def test__active_day__before_rollover__query_count(self, timezone_mock):
         """Expect:
             (1) SELECT first day today onwards
@@ -160,7 +160,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.timezone_now_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
     def test__active_day__before_rollover__prefetched_query_count(self, timezone_mock):
         """Expect:
             No queries
@@ -171,7 +171,7 @@ class Test__Event(TestCase):
             self.event.active_day
     
     
-    @patching.timezone_now_time(timings.MARKET_OPENS)
+    @patching.localtime_time(timings.MARKET_OPENS)
     def test__active_day__after_rollover__standard(self, timezone_mock):
         """After 8pm, returns first day from tomorrow onwards."""
         
@@ -181,7 +181,7 @@ class Test__Event(TestCase):
         )
     
     
-    @patching.timezone_now_time(timings.MARKET_OPENS)
+    @patching.localtime_time(timings.MARKET_OPENS)
     def test__active_day__after_rollover__prefetched(self, timezone_mock):
         """After 8pm, returns first day from tomorrow onwards from a prefetched set of days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
@@ -193,7 +193,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.timezone_now_time(timings.MARKET_OPENS)
+    @patching.localtime_time(timings.MARKET_OPENS)
     def test__active_day__after_rollover__query_count(self, timezone_mock):
         """Expect:
             (1) SELECT first day tomorrow onwards
@@ -204,7 +204,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.timezone_now_time(timings.MARKET_OPENS)
+    @patching.localtime_time(timings.MARKET_OPENS)
     def test__active_day__after_rollover__prefetched_query_count(self, timezone_mock):
         """Expect:
             No queries
