@@ -29,7 +29,10 @@ def market_status_box(day, allow_dismiss = True):
     
     def datetime_string(datetime):
         """Generates a partially humanised datetime."""
-        return '{:%H:%M} {}'.format(datetime, naturalday(datetime, 'd/m/Y'))
+        day_string = naturalday(datetime, 'l')
+        if day_string[0:2] != 'to':
+            day_string = 'on ' + day_string
+        return '{:%H:%M} {}'.format(datetime, day_string)
     
     
     # While market open
