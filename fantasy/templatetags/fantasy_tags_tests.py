@@ -49,7 +49,7 @@ class Test__Market_Status_Box(TestCase):
         self.assertFalse(props['dismissable'])
         self.assertEqual(
             props['message'],
-            'The market is closed, and will open at {0:%H:%M} {0:%d/%m/%Y}.'.format(
+            'The market is closed, and will open at {0:%H:%M} on {0:%A}.'.format(
                 opens_mock.return_value,
             ),
         )
@@ -99,6 +99,31 @@ class Test__Market_Status_Box(TestCase):
             props['message'],
             'The market is closed, and will open at {:%H:%M} today.'.format(
                 opens_mock.return_value,
+            ),
+        )
+    
+    
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() + timedelta(days = 2))
+    def test__open_for_two_days(self, closes_mock, opens_mock):
+        """Returns a dismissable info alert."""
+        
+        # Create day
+        day = self.event.days.create(
+            name = 'Market Status',
+            date = timezone.localtime().date(),
+            first_race_time = time(hour = 12),
+        )
+        
+        # Call and test method
+        props = tags.market_status_box(day)
+        
+        self.assertEqual(props['style'], 'info')
+        self.assertTrue(props['dismissable'])
+        self.assertEqual(
+            props['message'],
+            'The market is open until {0:%H:%M} on {0:%A}.'.format(
+                closes_mock.return_value,
             ),
         )
     
