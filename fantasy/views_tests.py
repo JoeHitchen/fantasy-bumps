@@ -38,7 +38,7 @@ class Test__Index(TestCase):
             models.Day.objects.bulk_create([models.Day(
                 event = event,
                 name = index,
-                date = timezone.now().date() + timedelta(days = index - date_shift),
+                date = timezone.localtime().date() + timedelta(days = index - date_shift),
                 first_race_time = '12:30' if index != 4 else None,
             ) for index in range(0, 5)])
             event.fantasies.create(
@@ -180,7 +180,7 @@ class Test__EventsList(TestCase):
             models.Day.objects.bulk_create([models.Day(
                 event = event,
                 name = index,
-                date = timezone.now().date() + timedelta(days = index - date_shift),
+                date = timezone.localtime().date() + timedelta(days = index - date_shift),
                 first_race_time = '12:30' if index != 4 else None,
             ) for index in range(0, 5)])
             event.fantasies.create(
@@ -571,7 +571,7 @@ class MarketPageBase(GamePageBase):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))
+    @patching.market_closes(timezone.localtime() + timedelta(1))
     def test__market_open(self, market_closes_mock, markets_mock):
         """'show_actions' reflects market status for logged in users.
         Does not test response or default context.
@@ -1170,7 +1170,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__not_racing(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         
@@ -1189,7 +1189,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__insufficient_funds(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         
@@ -1209,7 +1209,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__valid_womens(self, market_closes_mock, markets_mock):
         """Completes the purchase.
         
@@ -1224,7 +1224,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__valid_mens(self, market_closes_mock, markets_mock):
         """Completes the purchase.
         
@@ -1243,7 +1243,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__valid_cox(self, market_closes_mock, markets_mock):
         """Completes the purchase.
         
@@ -1261,7 +1261,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__with_athlete(self, market_closes_mock, markets_mock):
         """Completes the purchase.
         
@@ -1284,7 +1284,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__all_seats_filled(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         
@@ -1302,7 +1302,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__budgets_missing(self, market_closes_mock, markets_mock):
         """Completes the purchase as normal, creating the missing budgets."""
         
@@ -1317,7 +1317,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @tag('query-count')
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__standard(self, market_closes_mock, markets_mock):
         """ Expect:
             (2) Django internals
@@ -1338,7 +1338,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @tag('query-count')
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__without_budgets(self, market_closes_mock, markets_mock):
         """ Expect:
             (14) Queried as standard
@@ -1355,7 +1355,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @tag('query-count')
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__with_athlete(self, market_closes_mock, markets_mock):
         """ Expect:
             (14) Queried as standard
@@ -1467,7 +1467,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     @patch.object(transactions, 'sell')
     def test__race_condition(self, transaction_mock, market_closes_mock, markets_mock):
         """Does not complete the sale.
@@ -1486,7 +1486,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__missing_budgets(self, market_closes_mock, markets_mock):
         """Does not complete the sale.
         
@@ -1505,7 +1505,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__valid_womens(self, market_closes_mock, markets_mock):
         """Completes the sale.
         
@@ -1520,7 +1520,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__valid_mens(self, market_closes_mock, markets_mock):
         """Completes the sale.
         
@@ -1544,7 +1544,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__valid_cox(self, market_closes_mock, markets_mock):
         """Completes the sale.
         
@@ -1567,7 +1567,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__with_athlete(self, market_closes_mock, markets_mock):
         """Completes the sale.
         
@@ -1593,7 +1593,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     @tag('query-count')
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count(self, market_closes_mock, markets_mock):
         """ Expect:
             (2) Django internals
@@ -1731,7 +1731,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__general__switching_coxes(self, market_closes_mock, markets_mock):
         """Switching a cox purchase is not allowed, and redirects to the market page."""
         
@@ -1751,7 +1751,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__get(self, market_closes_mock, markets_mock):
         """Provides the frontend with:
             * The main purchase
@@ -1797,7 +1797,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__post__no_data(self, market_closes_mock, markets_mock):
         """Does not change the athlete or seat on the purchase."""
         
@@ -1812,7 +1812,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__athlete__not_in_crew(self, market_closes_mock, markets_mock):
         """Cannot switch to an athlete not in the crew."""
         
@@ -1837,7 +1837,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__athlete__cox(self, market_closes_mock, markets_mock):
         """Cannot switch to the cox."""
         
@@ -1854,7 +1854,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__athlete__set(self, market_closes_mock, markets_mock):
         """Adds an athlete to the purchase."""
         
@@ -1876,7 +1876,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__athlete__unset(self, market_closes_mock, markets_mock):
         """Removes the athlete from the purchase."""
         
@@ -1894,7 +1894,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__athlete__switch(self, market_closes_mock, markets_mock):
         """Switches the athlete on the purchase."""
         
@@ -1913,7 +1913,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__athlete__already_purchased(self, market_closes_mock, markets_mock):
         """Cannot switch to a named athlete already purchased."""
         
@@ -1937,7 +1937,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__athlete__allow_double_unnamed(self, market_closes_mock, markets_mock):
         """Can have multiple unnamed athletes."""
         
@@ -1957,7 +1957,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__seat__unknown(self, market_closes_mock, markets_mock):
         """Cannot switch an unknown seat."""
         
@@ -1973,7 +1973,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__seat__cox(self, market_closes_mock, markets_mock):
         """Cannot switch to the coxing seat."""
         
@@ -1989,7 +1989,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__seat__unchanged(self, market_closes_mock, markets_mock):
         """Performs no action if switching to current seat."""
         
@@ -2003,7 +2003,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__seat__unoccupied(self, market_closes_mock, markets_mock):
         """Moves athlete into empty seat."""
         
@@ -2021,7 +2021,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__seat__occupied(self, market_closes_mock, markets_mock):
         """Switches places with athlete in target seat."""
         
@@ -2055,7 +2055,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @tag('query-count')
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__get(self, market_closes_mock, markets_mock):
         """ Expect:
             (2) Django internals
@@ -2076,7 +2076,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @tag('query-count')
     @patching.market_is_open(True)
-    @patching.market_closes(timezone.now() + timedelta(1))  # Required for redirect page
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__post(self, market_closes_mock, markets_mock):
         """ Expect:
             (2) Django internals

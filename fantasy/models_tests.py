@@ -24,24 +24,24 @@ class Test__Event(TestCase):
         # Prepare days
         cls.yesterday = cls.event.days.create(
             name = 'Yesterday',
-            date = timezone.now() - timedelta(1),
+            date = timezone.localtime().date() - timedelta(1),
             first_race_time = time(12, 00),
         )
         cls.today = cls.event.days.create(
             name = 'Today',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(12, 00),
         )
         cls.tomorrow = models.Day(
             event = cls.event,
             name = 'Tomorrow',
-            date = timezone.now() + timedelta(1),
+            date = timezone.localtime().date() + timedelta(1),
             first_race_time = time(12, 00),
         )  # Saved per-test due to isolation conflict
         cls.future = models.Day(
             event = cls.event,
             name = 'Future',
-            date = timezone.now() + timedelta(2),
+            date = timezone.localtime().date() + timedelta(2),
         )  # Saved per-test due to isolation conflict
     
     
@@ -296,7 +296,7 @@ class Test__Day__Core(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.event = models.Event.objects.first()
-        cls.today = timezone.now().date()
+        cls.today = timezone.localtime().date()
     
     
     def test__string(self):
@@ -304,7 +304,7 @@ class Test__Day__Core(TestCase):
         
         day = self.event.days.create(
             name = 'Racing',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         day_str = str(day)
@@ -965,56 +965,56 @@ class Test__Day__Market_Status(TestCase):
         self.assertEqual(day.market_closes.tzname(), 'BST')
     
     
-    @patching.market_opens(timezone.now() + timedelta(minutes = 5))
-    @patching.market_closes(timezone.now() + timedelta(minutes = 10))
+    @patching.market_opens(timezone.localtime() + timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
     def test__market_is_open__before_open(self, closes_mock, opens_mock):
         """Returns False if before opening time."""
         
         day = self.event.days.create(
             name = 'Markets',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
         self.assertFalse(day.market_is_open)
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 10))
-    @patching.market_closes(timezone.now() + timedelta(minutes = 10))
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
     def test__market_is_open__between(self, closes_mock, opens_mock):
         """Returns True if between opening time and closing time."""
         
         day = self.event.days.create(
             name = 'Markets',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
         self.assertTrue(day.market_is_open)
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 10))
-    @patching.market_closes(timezone.now() - timedelta(minutes = 5))
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.localtime() - timedelta(minutes = 5))
     def test__market_is_open__after_close(self, closes_mock, opens_mock):
         """Returns False if after closing time."""
         
         day = self.event.days.create(
             name = 'Markets',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
         self.assertFalse(day.market_is_open)
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 10))
-    @patching.market_closes(timezone.now() + timedelta(minutes = 10))
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
     def test__market_is_open__without_first_race(self, closes_mock, opens_mock):
         """Returns False if first_race_time is not set."""
         
         day = self.event.days.create(
             name = 'Markets',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = None,
         )
         

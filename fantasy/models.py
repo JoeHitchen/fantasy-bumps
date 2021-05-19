@@ -178,7 +178,7 @@ class Day(models.Model):
         """Indicates whether the market is currently open for trading."""
         if not self.first_race:
             return False
-        return self.market_opens <= timezone.now() < self.market_closes
+        return self.market_opens <= timezone.localtime() < self.market_closes
 
 
 
