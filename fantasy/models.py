@@ -6,6 +6,9 @@ from django.contrib.auth import models as auth
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
+import pytz
+
+from core.settings import TIME_ZONE
 
 from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
 from .utils import pricing
@@ -54,7 +57,7 @@ class Event(models.Model):
         After the event -> Last day of the event.
         """
         
-        now = timezone.now()
+        now = timezone.localtime()
         day_shift = timedelta(1) if now.time() >= timings.MARKET_OPENS else timedelta(0)
         date = now.date() + day_shift
         
@@ -110,11 +113,12 @@ class Day(models.Model):
     @cached_property
     def first_race(self):
         """The datetime for the first race of the day, or None if not racing day."""
-        return datetime.combine(
-            self.date,
-            self.first_race_time,
-            timezone.now().tzinfo,
-        ) if self.first_race_time else None
+        
+        if not self.first_race_time:
+            return None
+        
+        naive = datetime.combine(self.date, self.first_race_time)
+        return pytz.timezone(TIME_ZONE).localize(naive)
     
     
     @lru_cache(maxsize=2)
@@ -156,11 +160,11 @@ class Day(models.Model):
         if not self.first_race:
             return
         
-        return datetime.combine(
+        naive = datetime.combine(
             self.date - timedelta(1 if self != self.event.first_day else 4),
             timings.MARKET_OPENS,
-            timezone.now().tzinfo,
         )
+        return pytz.timezone(TIME_ZONE).localize(naive)
     
     
     @cached_property
@@ -174,7 +178,7 @@ class Day(models.Model):
         """Indicates whether the market is currently open for trading."""
         if not self.first_race:
             return False
-        return self.market_opens <= timezone.now() < self.market_closes
+        return self.market_opens <= timezone.localtime() < self.market_closes
 
 
 
