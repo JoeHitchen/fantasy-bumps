@@ -32,7 +32,7 @@ class Test__Market_Status_Box(TestCase):
     
     
     @patching.market_opens(timezone.localtime() + timedelta(days = 2))
-    def test__open_two_days(self, opens_mock):
+    def test__opens_in_two_days(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
@@ -56,7 +56,7 @@ class Test__Market_Status_Box(TestCase):
     
     
     @patching.market_opens(timezone.localtime() + timedelta(days = 1))
-    def test__open_tomorrow(self, opens_mock):
+    def test__opens_tomorrow(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
@@ -80,7 +80,7 @@ class Test__Market_Status_Box(TestCase):
     
     
     @patching.market_opens(timezone.localtime() + timedelta(minutes = 5))
-    def test__open_later_today(self, opens_mock):
+    def test__opens_later_today(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
