@@ -25,7 +25,7 @@ def market_status_box(day, allow_dismiss = True):
     """Creates the properties for an alert box that describes the market status."""
     
     # Preparation
-    now = timezone.now()
+    now = timezone.localtime()
     
     def datetime_string(datetime):
         """Generates a partially humanised datetime."""

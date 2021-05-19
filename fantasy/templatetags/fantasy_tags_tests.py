@@ -31,14 +31,14 @@ class Test__Market_Status_Box(TestCase):
         cls.event = models.Event.objects.first()
     
     
-    @patching.market_opens(timezone.now() + timedelta(days = 2))
+    @patching.market_opens(timezone.localtime() + timedelta(days = 2))
     def test__open_two_days(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
@@ -55,14 +55,14 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    @patching.market_opens(timezone.now() + timedelta(days = 1))
+    @patching.market_opens(timezone.localtime() + timedelta(days = 1))
     def test__open_tomorrow(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
@@ -79,14 +79,14 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    @patching.market_opens(timezone.now() + timedelta(minutes = 5))
+    @patching.market_opens(timezone.localtime() + timedelta(minutes = 5))
     def test__open_later_today(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
@@ -103,15 +103,15 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 5))
-    @patching.market_closes(timezone.now() + timedelta(days = 1))
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() + timedelta(days = 1))
     def test__open_until_tomorrow(self, closes_mock, opens_mock):
         """Returns a dismissable info alert."""
         
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
@@ -128,15 +128,15 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 5))
-    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 5))
     def test__open_until_later(self, closes_mock, opens_mock):
         """Returns a dismissable info alert."""
         
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
@@ -153,15 +153,15 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 5))
-    @patching.market_closes(timezone.now() + timedelta(minutes = 5))
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 5))
     def test__open_until_later_no_dismiss(self, closes_mock, opens_mock):
         """Returns a non-dismissable info alert."""
         
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
@@ -178,15 +178,15 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    @patching.market_opens(timezone.now() - timedelta(minutes = 5))
-    @patching.market_closes(timezone.now() - timedelta(minutes = 2))
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() - timedelta(minutes = 2))
     def test__after_close(self, closes_mock, opens_mock):
         """Returns a non-dismissable danger alert."""
         
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         
@@ -210,16 +210,16 @@ class Test__Market_Status_Box(TestCase):
         # Create first day and fix return values
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
-        day.market_opens = timezone.now() - timedelta(minutes = 5)  # Non-standard mocking
-        day.market_closes = timezone.now() - timedelta(minutes = 2)  # Non-standard mocking
+        day.market_opens = timezone.localtime() - timedelta(minutes = 5)  # Non-standard mocking
+        day.market_closes = timezone.localtime() - timedelta(minutes = 2)  # Non-standard mocking
         
         # Create later day
         self.event.days.create(
             name = 'Market Status 2',
-            date = timezone.now() + timedelta(2),  # Ensure market never opens today
+            date = timezone.localtime().date() + timedelta(2),  # Ensure market never opens today
             first_race_time = time(hour = 12),
         )
         
@@ -245,7 +245,7 @@ class Test__Market_Status_Box(TestCase):
         # Create day
         day = self.event.days.create(
             name = 'Market Status',
-            date = timezone.now(),
+            date = timezone.localtime().date(),
             first_race_time = None,
         )
         
@@ -763,7 +763,7 @@ class Test__Event_Box(TestCase):
         event = models.Event.objects.first()
         event.mens_crew_ready = True
         event.womens_crew_ready = False
-        date_shift = timezone.now().date() - event.first_day.date + timedelta(days = 1)
+        date_shift = timezone.localtime().date() - event.first_day.date + timedelta(days = 1)
         event.days.update(date = db.F('date') + date_shift)
         html = self.crew_ready_button(event, Genders.WOMEN)
         
@@ -791,8 +791,8 @@ class Test__Event_Box(TestCase):
         event.mens_crew_ready = True
         event.womens_crew_ready = False
         
-        date_shift = timezone.now().date() - event.first_day.date
-        if timezone.now().time() <= timings.MARKET_OPENS:
+        date_shift = timezone.localtime().date() - event.first_day.date
+        if timezone.localtime().time() <= timings.MARKET_OPENS:
             date_shift -= timedelta(days = 1)
         event.days.update(date = db.F('date') + date_shift)
         
