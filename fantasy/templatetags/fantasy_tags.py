@@ -138,7 +138,8 @@ def buy_button(position, disabled = False):
   </button>
 '''))
 def sell_button(purchase):
-    return {'purchase': purchase, 'crew_value': purchase.crew.value(purchase.day)}
+    price = purchase.price if hasattr(purchase, 'price') else purchase.crew.value(purchase.day)
+    return {'purchase': purchase, 'crew_value': price}
 
 
 @register.inclusion_tag(template.Template('''

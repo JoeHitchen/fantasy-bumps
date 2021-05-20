@@ -337,6 +337,12 @@ class Test__Misc(TestCase):
         cls.position = cls.crew.positions.get(day = cls.day)
         cls.position.bungline = 1  # Expected to be set
         cls.position.popularity = 0  # Expected to be set
+        
+        cls.purchase = cls.team.purchases.create(
+            day = cls.day,
+            crew = cls.crew,
+            seat = cls.seat,
+        )
     
     
     @staticmethod
@@ -346,6 +352,16 @@ class Test__Misc(TestCase):
             template
             .Template('{% load fantasy_tags %}{% buy_button position disabled %}')
             .render(template.Context({'position': position, 'disabled': disabled}))
+        )
+    
+    
+    @staticmethod
+    def sell_button(purchase):
+        """A helper function that renders a buy button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% sell_button purchase %}')
+            .render(template.Context({'purchase': purchase}))
         )
     
     
@@ -408,6 +424,65 @@ class Test__Misc(TestCase):
         self.assertFalse('data-crew' in button.attrib)
         
         self.assertInHTML('Buy ' + tags.currency(self.crew.value(self.day)), html)
+    
+    
+    def test__sell_button__standard(self):
+        """Renders a styled button with associated data."""
+        
+        html = self.sell_button(self.purchase)
+        button = parser(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-sell', classes)
+        
+        self.assertEqual(button.get('data-purchase'), str(self.purchase.id))
+        
+        self.assertInHTML('Sell ' + tags.currency(self.crew.value(self.day)), html)
+    
+    
+    def test__sell_button__preset_price(self):
+        """Uses the preset purchase.price attribute if available."""
+        
+        self.purchase.price = 999
+        html = self.sell_button(self.purchase)
+        button = parser(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-sell', classes)
+        
+        self.assertEqual(button.get('data-purchase'), str(self.purchase.id))
+        
+        self.assertInHTML('Sell ' + tags.currency(999), html)
+    
+    
+    @tag('query-count')
+    def test__sell_button__query_count__standard(self):
+        """Expect:
+            (1) Purchased crew's position
+            (1) Event details (for total number of crews)
+        """
+        
+        with self.assertNumQueries(2):
+            self.sell_button(self.purchase)
+    
+    
+    @tag('query-count')
+    def test__sell_button__preset_price__query_count(self):
+        """Expect:
+            No queries
+        """
+        
+        self.purchase.price = 999
+        with self.assertNumQueries(0):
+            self.sell_button(self.purchase)
     
     
     def test__market_row__standard(self):

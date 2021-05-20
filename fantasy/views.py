@@ -237,8 +237,19 @@ class MarketView(EventBase):
             context['crew'] = (
                 user.team
                 .get_crew(self.day, gender)
-                .select_related('seat', 'crew', 'athlete', 'day', 'day__event')
+                .select_related('seat', 'crew', 'athlete')
+                .prefetch_related(db.Prefetch(
+                    'crew__positions',
+                    models.Position.objects.filter(day = self.day),
+                    to_attr = '_position',
+                ))
             )
+            for purchase in context['crew']:
+                purchase.price = utils.pricing_by_day_and_gender(
+                    purchase.crew._position[0].rank,
+                    self.day,
+                    gender,
+                )
             context['crew_valid'] = utils.has_all_seats(context['crew'], models.Seat.objects.all())
             
             other_gender = utils.reverse_gender(gender)
