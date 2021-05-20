@@ -709,6 +709,50 @@ class Test__Market_Men(MarketPageBase, TestCase):
                     expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
                     self.assertEqual(position.purchase_count, expect_crew['count'])
                     self.assertEqual(position.popularity, expect_crew['popularity'])
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock, markets_mock):
+        """Expect:
+            (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
+            (2) Django Auth overheard - Session (1), User (1)
+            (1) User's team
+            (1) All game entries for event
+            (2) Select crews
+            (1) User's game entry
+            (Divisions) Select start order for each division
+        1   (3x) Select all seats
+            
+        x   (Purchases x6)
+        x     (1) Select seat
+        x     (1) Select purchased crew
+        x     (1) Select purchased athlete
+        x     (1) Select day
+        x     (1) Select event
+        x     (1) Select crew's position
+            
+            Total: 70
+            Target: 14
+        """
+        
+        for seat in models.Seat.objects.all():
+            athlete = self.crew_mens.crew_lists.create(
+                event = self.day.event,
+                seat = seat,
+                name = str(seat),
+            )
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_mens,
+                seat = seat,
+                athlete = athlete,
+            )
+        
+        self.client.login(username='DevTeam', password='password')
+        with self.assertNumQueries(70):
+            response = self.client.get(self.url)
 
 
 
@@ -825,6 +869,50 @@ class Test__Market_Women(MarketPageBase, TestCase):
                     expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
                     self.assertEqual(position.purchase_count, expect_crew['count'])
                     self.assertEqual(position.popularity, expect_crew['popularity'])
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock, markets_mock):
+        """Expect:
+            (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
+            (2) Django Auth overheard - Session (1), User (1)
+            (1) User's team
+            (1) All game entries for event
+            (2) Select crews
+            (1) User's game entry
+            (Divisions) Select start order for each division
+        1   (3x) Select all seats
+            
+        x   (Purchases x6)
+        x     (1) Select seat
+        x     (1) Select purchased crew
+        x     (1) Select purchased athlete
+        x     (1) Select day
+        x     (1) Select event
+        x     (1) Select crew's position
+            
+            Total: 70
+            Target: 14
+        """
+        
+        for seat in models.Seat.objects.all():
+            athlete = self.crew_womens.crew_lists.create(
+                event = self.day.event,
+                seat = seat,
+                name = str(seat),
+            )
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_womens,
+                seat = seat,
+                athlete = athlete,
+            )
+        
+        self.client.login(username='DevTeam', password='password')
+        with self.assertNumQueries(70):
+            response = self.client.get(self.url)
 
 
 
