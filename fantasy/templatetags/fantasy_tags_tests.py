@@ -371,7 +371,7 @@ class Test__Misc(TestCase):
     
     
     def test__buy_button__standard(self):
-        """Renders a styled button with an attached function call."""
+        """Renders a styled button with associated data."""
         
         html = self.buy_button(self.position, disabled = False)
         button = parser(html)
@@ -391,7 +391,7 @@ class Test__Misc(TestCase):
     
     
     def test__buy_button__disabled(self):
-        """Includes the disabled class and does not have a function call."""
+        """Includes the disabled class and does not have any data."""
         
         html = self.buy_button(self.position, disabled = True)
         button = parser(html)
