@@ -33,7 +33,9 @@
 {% block content %}
 <br/>
 
-{% market_status_box day %}
+<div class="row"><div class="col">
+  {% market_status_box day %}
+</div></div>
 
 <div class="row">
   <div class="col-lg">
@@ -43,10 +45,11 @@
     {% endfor %}
   </div>
 
-  {% if user.is_authenticated %}<div class="col-auto">
-    <div class="list-group sticky-top" style="width:23em">
+  {% if user.is_authenticated %}<div class="col-lg-5">
+    <div class="list-group sticky-top">
       {% crew_list_box crew finances show_actions %}
     </div>
+    <br/>
   </div>{% endif %}
 </div>
 
