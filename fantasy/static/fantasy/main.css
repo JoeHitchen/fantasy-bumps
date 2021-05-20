@@ -20,10 +20,6 @@
   width: 6.5em;
 }
 
-.btn-buy .currency,.btn-sell .currency {
-  margin-left: 0.5em;
-}
-
 .popularity-row, .market-row, .crew-row {
   display: flex;
   align-items: center;
