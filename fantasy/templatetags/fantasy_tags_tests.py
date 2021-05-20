@@ -301,7 +301,7 @@ class Test__Avatar(TestCase):
         
         self.assertHTMLEqual(
             tags.avatar('C'),
-            '<span class="avatar">C</span>',
+            '<span class="avatar flex-shrink-0">C</span>',
         )
     
     
@@ -310,7 +310,7 @@ class Test__Avatar(TestCase):
         
         self.assertHTMLEqual(
             tags.avatar(7),
-            '<span class="avatar">7</span>',
+            '<span class="avatar flex-shrink-0">7</span>',
         )
     
     
@@ -319,7 +319,7 @@ class Test__Avatar(TestCase):
         
         self.assertHTMLEqual(
             tags.avatar(7, 'newc'),
-            '<span class="avatar club-newc">7</span>',
+            '<span class="avatar club-newc flex-shrink-0">7</span>',
         )
 
 
