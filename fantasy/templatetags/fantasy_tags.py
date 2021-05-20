@@ -63,7 +63,7 @@ def market_status_box(day, allow_dismiss = True):
 @register.filter
 def avatar(text, club = None):
     classes = 'avatar' + (' club-' + club if club else '')
-    return format_html('<span class="{1}">{0}</span>', text, classes)
+    return format_html('<span class="{1} flex-shrink-0">{0}</span>', text, classes)
 
 
 @register.filter
@@ -112,7 +112,7 @@ def popularity_row(rank, crew):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <button
-    class="btn btn-primary btn-sm btn-buy{{ disabled }}"
+    class="btn btn-primary btn-sm btn-buy{{ disabled }} flex-shrink-0"
     {% if not disabled %}data-day="{{ day.id }}" data-crew="{{ crew.id }}"{% endif %}
   >
     Buy {{ crew_value|currency }}
@@ -133,7 +133,7 @@ def buy_button(position, disabled = False):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <button class="btn btn-primary btn-sm btn-sell" data-purchase="{{ purchase.id }}">
+  <button class="btn btn-primary btn-sm btn-sell flex-shrink-0" data-purchase="{{ purchase.id }}">
     Sell {{ crew_value|currency }}
   </button>
 '''))
