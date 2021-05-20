@@ -44,8 +44,10 @@
   margin-left: 1em;
 }
 
-.crew-row {
+.market-row, .crew-row {
   height: 3.5em;
+  padding-left: 0.75em;
+  padding-right: 0.75em;
 }
 .crew-row-athlete {
   margin-top: -0.3em;

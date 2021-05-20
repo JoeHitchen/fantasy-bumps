@@ -183,8 +183,8 @@ def market_row(position, balance, show_actions):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <div class="list-group">
-    <div class="list-group-item list-group-item-dark">
-      {{ gender.label }}'s Division {{ number }}
+    <div class="list-group-item list-group-item-dark market-row">
+      <h5 class="mb-0">{{ gender.label }}'s Division {{ number }}</h5>
     </div>
     {% for position in division %}{% market_row position balance show_actions %}{% endfor %}
   </div>
@@ -201,7 +201,7 @@ def market_division_box(division, gender, number, balance, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div class="list-group-item list-group-item-dark">
+  <div class="list-group-item list-group-item-dark crew-row">
     <div class="container"><div class="row justify-content-between">
       <span>Crew Value: {{ crew_value|currency }}</span>
       <span>Cash: {{ balance|currency }}</span>
