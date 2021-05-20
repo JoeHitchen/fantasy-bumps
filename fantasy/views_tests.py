@@ -725,15 +725,9 @@ class Test__Market_Men(MarketPageBase, TestCase):
             (Divisions) Select start order for each division
         1   (3x) Select all seats
             
-        x   (Purchases x6)
-        x     (1) Select seat
-        x     (1) Select purchased crew
-        x     (1) Select purchased athlete
-        x     (1) Select day
-        x     (1) Select event
-        x     (1) Select crew's position
+        x   (Purchases) Select each purchased crew's position
             
-            Total: 70
+            Total: 25
             Target: 14
         """
         
@@ -751,8 +745,8 @@ class Test__Market_Men(MarketPageBase, TestCase):
             )
         
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(70):
-            response = self.client.get(self.url)
+        with self.assertNumQueries(25):
+            self.client.get(self.url)
 
 
 
@@ -885,15 +879,9 @@ class Test__Market_Women(MarketPageBase, TestCase):
             (Divisions) Select start order for each division
         1   (3x) Select all seats
             
-        x   (Purchases x6)
-        x     (1) Select seat
-        x     (1) Select purchased crew
-        x     (1) Select purchased athlete
-        x     (1) Select day
-        x     (1) Select event
-        x     (1) Select crew's position
+        x   (Purchases) Select each purchased crew's position
             
-            Total: 70
+            Total: 25
             Target: 14
         """
         
@@ -911,8 +899,8 @@ class Test__Market_Women(MarketPageBase, TestCase):
             )
         
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(70):
-            response = self.client.get(self.url)
+        with self.assertNumQueries(25):
+            self.client.get(self.url)
 
 
 

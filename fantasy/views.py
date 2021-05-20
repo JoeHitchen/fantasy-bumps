@@ -234,9 +234,12 @@ class MarketView(EventBase):
         user = self.request.user
         if user.is_authenticated:
             
-            crew = user.team.get_crew(self.day, gender)
-            context['crew'] = crew
-            context['crew_valid'] = utils.has_all_seats(crew, models.Seat.objects.all())
+            context['crew'] = (
+                user.team
+                .get_crew(self.day, gender)
+                .select_related('seat', 'crew', 'athlete', 'day', 'day__event')
+            )
+            context['crew_valid'] = utils.has_all_seats(context['crew'], models.Seat.objects.all())
             
             other_gender = utils.reverse_gender(gender)
             other_crew = user.team.get_crew(self.day, other_gender)
