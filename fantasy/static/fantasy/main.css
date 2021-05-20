@@ -49,8 +49,13 @@
 }
 .crew-row-athlete {
   margin-top: -0.3em;
+  margin-right: 0.75em;
+  overflow: hidden;
+}
+.crew-row-athlete div:first-child {
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 .crew-row-athlete div:last-child {
   font-size: 0.8em;
