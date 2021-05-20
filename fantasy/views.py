@@ -113,10 +113,10 @@ class EventsList(FantasyBaseMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Load and augment events
-        context['past_events'] = list(utils.ordered_events().exclude(
-            id__in = context['recent_events'].values('id'),
-        ))
         context['recent_events'] = list(context['recent_events'])
+        context['past_events'] = list(utils.ordered_events().exclude(
+            id__in = [event.id for event in context['recent_events']],
+        ))
         
         self.augment_events_for_events_boxes(
             context['past_events'] + context['recent_events'],
