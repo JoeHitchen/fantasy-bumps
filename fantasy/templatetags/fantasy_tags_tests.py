@@ -444,6 +444,25 @@ class Test__Misc(TestCase):
         self.assertInHTML('Sell ' + tags.currency(self.crew.value(self.day)), html)
     
     
+    def test__sell_button__preset_price(self):
+        """Uses the preset purchase.price attribute if available."""
+        
+        self.purchase.price = 999
+        html = self.sell_button(self.purchase)
+        button = parser(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-sell', classes)
+        
+        self.assertEqual(button.get('data-purchase'), str(self.purchase.id))
+        
+        self.assertInHTML('Sell ' + tags.currency(999), html)
+    
+    
     @tag('query-count')
     def test__sell_button__query_count__standard(self):
         """Expect:
@@ -452,6 +471,17 @@ class Test__Misc(TestCase):
         """
         
         with self.assertNumQueries(2):
+            self.sell_button(self.purchase)
+    
+    
+    @tag('query-count')
+    def test__sell_button__preset_price__query_count(self):
+        """Expect:
+            No queries
+        """
+        
+        self.purchase.price = 999
+        with self.assertNumQueries(0):
             self.sell_button(self.purchase)
     
     
