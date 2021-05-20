@@ -724,10 +724,9 @@ class Test__Market_Men(MarketPageBase, TestCase):
             (1) User's game entry
             (Divisions) Select start order for each division
         1   (3x) Select all seats
+            (1) Prefetch purchase positions
             
-        x   (Purchases) Select each purchased crew's position
-            
-            Total: 25
+            Total: 17
             Target: 14
         """
         
@@ -745,7 +744,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             )
         
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(17):
             self.client.get(self.url)
 
 
@@ -878,10 +877,9 @@ class Test__Market_Women(MarketPageBase, TestCase):
             (1) User's game entry
             (Divisions) Select start order for each division
         1   (3x) Select all seats
+            (1) Prefetch purchase positions
             
-        x   (Purchases) Select each purchased crew's position
-            
-            Total: 25
+            Total: 17
             Target: 14
         """
         
@@ -899,7 +897,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             )
         
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(17):
             self.client.get(self.url)
 
 
