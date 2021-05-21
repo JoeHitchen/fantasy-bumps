@@ -258,9 +258,8 @@ class MarketView(EventBase):
             other_crew = user.team.get_crew(self.day, other_gender)
             context['other_crew_valid'] = utils.has_all_seats(other_crew, seats)
             
-            finances = self.team.entries.extend_financials().filter(event = self.event)
-            if finances:
-                finances = finances[0]
+            try:
+                finances = self.team.entries.extend_financials().get(event = self.event)
                 context['finances'] = {
                     Genders.MEN: {
                         'budget': finances.mens_budget,
@@ -273,7 +272,7 @@ class MarketView(EventBase):
                         'balance': finances.womens_balance,
                     },
                 }[gender]
-            else:
+            except models.GameEntry.DoesNotExist:
                 context['finances'] = {
                     'budget': money.INITIAL_BALANCE,
                     'crew_value': 0,
