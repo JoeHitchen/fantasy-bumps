@@ -719,12 +719,15 @@ class Test__Market_Men(MarketPageBase, TestCase):
             (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
             (2) Django Auth overheard - Session (1), User (1)
             (1) User's team
-            (1) All game entries for event
-            (2) Select crews
-            (1) User's game entry
+            (1) All game entries for event (for popularity count)
+            (1) User's crew for this gender
+            (1) Prefetch purchase positions (for pricing)
+            (1) Select all seats
+            (1) User's crew of other gender
+        x   (1) Select all seats
+            (1) User's game entry & financials
             (Divisions) Select start order for each division
-        1   (3x) Select all seats
-            (1) Prefetch purchase positions
+        x   (1) Select all seats
             
             Total: 17
             Target: 14
@@ -872,12 +875,15 @@ class Test__Market_Women(MarketPageBase, TestCase):
             (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
             (2) Django Auth overheard - Session (1), User (1)
             (1) User's team
-            (1) All game entries for event
-            (2) Select crews
-            (1) User's game entry
+            (1) All game entries for event (for popularity count)
+            (1) User's crew for this gender
+            (1) Prefetch purchase positions (for pricing)
+            (1) Select all seats
+            (1) User's crew of other gender
+        x   (1) Select all seats
+            (1) User's game entry & financials
             (Divisions) Select start order for each division
-        1   (3x) Select all seats
-            (1) Prefetch purchase positions
+        x   (1) Select all seats
             
             Total: 17
             Target: 14
