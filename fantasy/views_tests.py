@@ -709,6 +709,44 @@ class Test__Market_Men(MarketPageBase, TestCase):
                     expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
                     self.assertEqual(position.purchase_count, expect_crew['count'])
                     self.assertEqual(position.popularity, expect_crew['popularity'])
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock, markets_mock):
+        """Expect:
+            (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
+            (2) Django Auth overheard - Session (1), User (1)
+            (1) User's team
+            (1) All game entries for event (for popularity count)
+            (1) User's crew for this gender
+            (1) Prefetch purchase positions (for pricing)
+            (1) Select all seats
+            (1) User's crew of other gender
+            (1) User's game entry & financials
+            (2 <-> Divisions) Select start order for each division
+            
+            Could be reduced further by fetching the information for every division's start order
+            in a single query and filtering in the code. See #88.
+        """
+        
+        for seat in models.Seat.objects.all():
+            athlete = self.crew_mens.crew_lists.create(
+                event = self.day.event,
+                seat = seat,
+                name = str(seat),
+            )
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_mens,
+                seat = seat,
+                athlete = athlete,
+            )
+        
+        self.client.login(username='DevTeam', password='password')
+        with self.assertNumQueries(15):
+            self.client.get(self.url)
 
 
 
@@ -825,6 +863,44 @@ class Test__Market_Women(MarketPageBase, TestCase):
                     expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
                     self.assertEqual(position.purchase_count, expect_crew['count'])
                     self.assertEqual(position.popularity, expect_crew['popularity'])
+    
+    
+    @tag('query-count')
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock, markets_mock):
+        """Expect:
+            (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
+            (2) Django Auth overheard - Session (1), User (1)
+            (1) User's team
+            (1) All game entries for event (for popularity count)
+            (1) User's crew for this gender
+            (1) Prefetch purchase positions (for pricing)
+            (1) Select all seats
+            (1) User's crew of other gender
+            (1) User's game entry & financials
+            (2 <-> Divisions) Select start order for each division
+            
+            Could be reduced further by fetching the information for every division's start order
+            in a single query and filtering in the code. See #88.
+        """
+        
+        for seat in models.Seat.objects.all():
+            athlete = self.crew_womens.crew_lists.create(
+                event = self.day.event,
+                seat = seat,
+                name = str(seat),
+            )
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_womens,
+                seat = seat,
+                athlete = athlete,
+            )
+        
+        self.client.login(username='DevTeam', password='password')
+        with self.assertNumQueries(15):
+            self.client.get(self.url)
 
 
 
@@ -1055,11 +1131,11 @@ class Test__Team(TestCase):
             (3) SELECT event and active day
             (1) SELECT team to view
             (1) SELECT recent events
-            (2) SELECT all seats (twice, once for each crew list)
+            (1) SELECT all seats
             (2) SELECT purchases for crew lists (one for each crew lists)
         """
         
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(8):
             response = self.client.get(self.url)
             
             # Needed to force crew list queries

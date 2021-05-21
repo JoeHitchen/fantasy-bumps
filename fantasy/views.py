@@ -227,6 +227,8 @@ class MarketView(EventBase):
         
         gender = self.kwargs['gender']
         context['gender'] = gender
+        seats = models.Seat.objects.all()
+        context['seats'] = seats
         
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
         context['start_order'] = self.day.start_order(gender, extend = self.add_purchase_count)
@@ -234,16 +236,27 @@ class MarketView(EventBase):
         user = self.request.user
         if user.is_authenticated:
             
-            crew = user.team.get_crew(self.day, gender)
-            context['crew'] = crew
-            context['crew_valid'] = utils.has_all_seats(crew, models.Seat.objects.all())
+            context['crew'] = (
+                user.team
+                .get_crew(self.day, gender)
+                .select_related('seat', 'crew', 'athlete')
+                .prefetch_related(db.Prefetch(
+                    'crew__positions',
+                    models.Position.objects.filter(day = self.day),
+                    to_attr = '_position',
+                ))
+            )
+            for purchase in context['crew']:
+                purchase.price = utils.pricing_by_day_and_gender(
+                    purchase.crew._position[0].rank,
+                    self.day,
+                    gender,
+                )
+            context['crew_valid'] = utils.has_all_seats(context['crew'], seats)
             
             other_gender = utils.reverse_gender(gender)
             other_crew = user.team.get_crew(self.day, other_gender)
-            context['other_crew_valid'] = utils.has_all_seats(
-                other_crew,
-                models.Seat.objects.all(),
-            )
+            context['other_crew_valid'] = utils.has_all_seats(other_crew, seats)
             
             finances = self.team.entries.extend_financials().filter(event = self.event)
             if finances:
@@ -313,6 +326,7 @@ class TeamView(EventBase):
         team = finances.team
         
         context['team'] = team
+        context['seats'] = models.Seat.objects.all()
         context['finances'] = finances
         context['mens_crew'] = team.get_crew(self.day, Genders.MEN)
         context['womens_crew'] = team.get_crew(self.day, Genders.WOMEN)
