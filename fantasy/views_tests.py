@@ -725,10 +725,10 @@ class Test__Market_Men(MarketPageBase, TestCase):
             (1) Select all seats
             (1) User's crew of other gender
             (1) User's game entry & financials
-            (Divisions) Select start order for each division
+            (2 <-> Divisions) Select start order for each division
             
-            Total: 15
-            Target: 14
+            Could be reduced further by fetching the information for every division's start order
+            in a single query and filtering in the code. See #88.
         """
         
         for seat in models.Seat.objects.all():
@@ -879,10 +879,10 @@ class Test__Market_Women(MarketPageBase, TestCase):
             (1) Select all seats
             (1) User's crew of other gender
             (1) User's game entry & financials
-            (Divisions) Select start order for each division
+            (2 <-> Divisions) Select start order for each division
             
-            Total: 15
-            Target: 14
+            Could be reduced further by fetching the information for every division's start order
+            in a single query and filtering in the code. See #88.
         """
         
         for seat in models.Seat.objects.all():
