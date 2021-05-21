@@ -228,6 +228,7 @@ class MarketView(EventBase):
         gender = self.kwargs['gender']
         context['gender'] = gender
         seats = models.Seat.objects.all()
+        context['seats'] = seats
         
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
         context['start_order'] = self.day.start_order(gender, extend = self.add_purchase_count)
