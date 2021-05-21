@@ -243,14 +243,12 @@ def crew_list_row(seat, purchase, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div>
-    {% if finances %}
-      {% crew_list_header finances %}
-    {% endif %}
-    {% for seat, rower in crew_list %}
-      {% crew_list_row seat rower show_actions %}
-    {% endfor %}
-  </div>
+  {% if finances %}
+    {% crew_list_header finances %}
+  {% endif %}
+  {% for seat, rower in crew_list %}
+    {% crew_list_row seat rower show_actions %}
+  {% endfor %}
 '''))
 def crew_list_box(crew_list, seats, finances = None, show_actions = False):
     seat_rowers = {seat: [
@@ -263,6 +261,40 @@ def crew_list_box(crew_list, seats, finances = None, show_actions = False):
     ) for seat, rowers in seat_rowers.items()]
     
     return {'crew_list': crew_list, 'finances': finances, 'show_actions': show_actions}
+
+
+@register.inclusion_tag(template.Template('''
+    <div class="list-group-item p-0">
+      <table class="table table-sm table-borderless mb-0"><tr>
+      <td class="table-{{ main.colour }} text-center align-middle" style="width: 50%">
+        <strong>{{ main.crew }}</strong>
+        <br/>
+        <strong class="text-{{ main.colour }}">{{ main.text }}</strong>
+      </td>
+      <td class="table-{{ other.colour }} text-center" style="width: 50%">
+        <strong>{{ other.crew }}</strong>
+        <br/>
+        <strong class="text-{{ other.colour }}">{{ other.text }}</strong>
+        <a href="" class="btn btn-sm btn-{{ other.colour }} ml-2 px-1 py-0">
+          View <small><span class="oi oi-chevron-right"></span></small>
+        </a>
+      </td>
+      </tr></table>
+    </div>
+'''))
+def crew_status_box(gender, crew_valid, other_crew_valid):
+
+    def styling(gender, valid):
+        return {
+            'colour': 'success' if valid else 'danger',
+            'crew': "{}'s crew".format(gender.label),
+            'text': 'Ready' if valid else 'Not ready',
+        }
+    
+    return {
+        'main': styling(gender, crew_valid),
+        'other': styling(utils.reverse_gender(gender), other_crew_valid),
+    }
 
 
 @register.inclusion_tag(template.Template('''

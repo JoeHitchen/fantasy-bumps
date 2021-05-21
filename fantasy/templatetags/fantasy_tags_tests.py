@@ -524,7 +524,7 @@ class Test__Crew_List(TestCase):
     @staticmethod
     def crew_list_box(crew_list, seats, finances = {}, show_actions = False):
         """A helper function that renders a crew list."""
-        component_string = '{% crew_list_box crew_list seats finances show_actions %}'
+        component_string = '<div>{% crew_list_box crew_list seats finances show_actions %}</div>'
         return (
             template
             .Template('{% load fantasy_tags %}' + component_string)

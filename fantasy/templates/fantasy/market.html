@@ -48,6 +48,7 @@
   {% if user.is_authenticated %}<div class="col-lg-5">
     <div class="list-group sticky-top">
       {% crew_list_box crew seats finances show_actions %}
+      {% crew_status_box gender crew_valid other_crew_valid %}
     </div>
     <br/>
   </div>{% endif %}
