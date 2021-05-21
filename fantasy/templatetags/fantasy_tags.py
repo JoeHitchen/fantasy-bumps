@@ -7,7 +7,6 @@ from django.utils.html import format_html, mark_safe
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from ..constants import Genders
-from .. import models
 from .. import utils
 
 register = template.Library()
@@ -253,10 +252,10 @@ def crew_list_row(seat, purchase, show_actions):
     {% endfor %}
   </div>
 '''))
-def crew_list_box(crew_list, finances = None, show_actions = False):
+def crew_list_box(crew_list, seats, finances = None, show_actions = False):
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
-    ] for seat in models.Seat.objects.all()}
+    ] for seat in seats}
     
     crew_list = [(
         seat,
