@@ -553,6 +553,7 @@ class Test__Crew_List(TestCase):
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
+        cls.seats = models.Seat.objects.all()
     
     
     @staticmethod
@@ -590,13 +591,15 @@ class Test__Crew_List(TestCase):
     
     
     @staticmethod
-    def crew_list_box(crew_list, finances = {}, show_actions = False):
+    def crew_list_box(crew_list, seats, finances = {}, show_actions = False):
         """A helper function that renders a crew list."""
+        component_string = '{% crew_list_box crew_list seats finances show_actions %}'
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_list_box crew_list finances show_actions %}')
+            .Template('{% load fantasy_tags %}' + component_string)
             .render(template.Context({
                 'crew_list': crew_list,
+                'seats': seats,
                 'finances': finances,
                 'show_actions': show_actions,
             }))
@@ -735,7 +738,7 @@ class Test__Crew_List(TestCase):
     def test__crew_list_box__empty_list(self):
         """Renders a styled div that always has all seats."""
         
-        html = self.crew_list_box([])
+        html = self.crew_list_box([], self.seats)
         
         # Test root
         crew_list = parser(html)
@@ -754,7 +757,7 @@ class Test__Crew_List(TestCase):
         """Renders a styled div that includes any purchases provided."""
         
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase])
+        html = self.crew_list_box([purchase], self.seats)
         
         # Test root
         crew_list = parser(html)
@@ -778,7 +781,7 @@ class Test__Crew_List(TestCase):
         """Includes financial information if provided."""
         
         finances = {'budget': 1079, 'crew_value': 856, 'balance': 223}
-        html = self.crew_list_box([], finances)
+        html = self.crew_list_box([], self.seats, finances)
         
         # Test containments
         self.assertInHTML(self.crew_list_header(finances), html)
@@ -789,7 +792,7 @@ class Test__Crew_List(TestCase):
         """Propagates the show_actions flag."""
         
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase], show_actions = True)
+        html = self.crew_list_box([purchase], self.seats, show_actions = True)
         
         # Test root
         crew_list = parser(html)
