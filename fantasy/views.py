@@ -325,6 +325,7 @@ class TeamView(EventBase):
         team = finances.team
         
         context['team'] = team
+        context['seats'] = models.Seat.objects.all()
         context['finances'] = finances
         context['mens_crew'] = team.get_crew(self.day, Genders.MEN)
         context['womens_crew'] = team.get_crew(self.day, Genders.WOMEN)
