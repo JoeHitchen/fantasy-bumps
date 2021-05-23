@@ -20,10 +20,6 @@
   width: 6.5em;
 }
 
-.btn-buy .currency,.btn-sell .currency {
-  margin-left: 0.5em;
-}
-
 .popularity-row, .market-row, .crew-row {
   display: flex;
   align-items: center;
@@ -44,13 +40,20 @@
   margin-left: 1em;
 }
 
-.crew-row {
+.market-row, .crew-row {
   height: 3.5em;
+  padding-left: 0.75em;
+  padding-right: 0.75em;
 }
 .crew-row-athlete {
   margin-top: -0.3em;
+  margin-right: 0.75em;
+  overflow: hidden;
+}
+.crew-row-athlete div:first-child {
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 .crew-row-athlete div:last-child {
   font-size: 0.8em;

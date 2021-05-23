@@ -7,7 +7,6 @@ from django.utils.html import format_html, mark_safe
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from ..constants import Genders
-from .. import models
 from .. import utils
 
 register = template.Library()
@@ -63,7 +62,7 @@ def market_status_box(day, allow_dismiss = True):
 @register.filter
 def avatar(text, club = None):
     classes = 'avatar' + (' club-' + club if club else '')
-    return format_html('<span class="{1}">{0}</span>', text, classes)
+    return format_html('<span class="{1} flex-shrink-0">{0}</span>', text, classes)
 
 
 @register.filter
@@ -112,7 +111,7 @@ def popularity_row(rank, crew):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <button
-    class="btn btn-primary btn-sm btn-buy{{ disabled }}"
+    class="btn btn-primary btn-sm btn-buy{{ disabled }} flex-shrink-0"
     {% if not disabled %}data-day="{{ day.id }}" data-crew="{{ crew.id }}"{% endif %}
   >
     Buy {{ crew_value|currency }}
@@ -133,12 +132,13 @@ def buy_button(position, disabled = False):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <button class="btn btn-primary btn-sm btn-sell" data-purchase="{{ purchase.id }}">
+  <button class="btn btn-primary btn-sm btn-sell flex-shrink-0" data-purchase="{{ purchase.id }}">
     Sell {{ crew_value|currency }}
   </button>
 '''))
 def sell_button(purchase):
-    return {'purchase': purchase, 'crew_value': purchase.crew.value(purchase.day)}
+    price = purchase.price if hasattr(purchase, 'price') else purchase.crew.value(purchase.day)
+    return {'purchase': purchase, 'crew_value': price}
 
 
 @register.inclusion_tag(template.Template('''
@@ -183,8 +183,8 @@ def market_row(position, balance, show_actions):
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <div class="list-group">
-    <div class="list-group-item list-group-item-dark">
-      {{ gender.label }}'s Division {{ number }}
+    <div class="list-group-item list-group-item-dark market-row">
+      <h5 class="mb-0">{{ gender.label }}'s Division {{ number }}</h5>
     </div>
     {% for position in division %}{% market_row position balance show_actions %}{% endfor %}
   </div>
@@ -201,7 +201,7 @@ def market_division_box(division, gender, number, balance, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div class="list-group-item list-group-item-dark">
+  <div class="list-group-item list-group-item-dark crew-row">
     <div class="container"><div class="row justify-content-between">
       <span>Crew Value: {{ crew_value|currency }}</span>
       <span>Cash: {{ balance|currency }}</span>
@@ -243,19 +243,17 @@ def crew_list_row(seat, purchase, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div>
-    {% if finances %}
-      {% crew_list_header finances %}
-    {% endif %}
-    {% for seat, rower in crew_list %}
-      {% crew_list_row seat rower show_actions %}
-    {% endfor %}
-  </div>
+  {% if finances %}
+    {% crew_list_header finances %}
+  {% endif %}
+  {% for seat, rower in crew_list %}
+    {% crew_list_row seat rower show_actions %}
+  {% endfor %}
 '''))
-def crew_list_box(crew_list, finances = None, show_actions = False):
+def crew_list_box(crew_list, seats, finances = None, show_actions = False):
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
-    ] for seat in models.Seat.objects.all()}
+    ] for seat in seats}
     
     crew_list = [(
         seat,
@@ -263,6 +261,40 @@ def crew_list_box(crew_list, finances = None, show_actions = False):
     ) for seat, rowers in seat_rowers.items()]
     
     return {'crew_list': crew_list, 'finances': finances, 'show_actions': show_actions}
+
+
+@register.inclusion_tag(template.Template('''
+    <div class="list-group-item p-0">
+      <table class="table table-sm table-borderless mb-0"><tr>
+      <td class="table-{{ main.colour }} text-center align-middle" style="width: 50%">
+        <strong>{{ main.crew }}</strong>
+        <br/>
+        <strong class="text-{{ main.colour }}">{{ main.text }}</strong>
+      </td>
+      <td class="table-{{ other.colour }} text-center" style="width: 50%">
+        <strong>{{ other.crew }}</strong>
+        <br/>
+        <strong class="text-{{ other.colour }}">{{ other.text }}</strong>
+        <a href="" class="btn btn-sm btn-{{ other.colour }} ml-2 px-1 py-0">
+          View <small><span class="oi oi-chevron-right"></span></small>
+        </a>
+      </td>
+      </tr></table>
+    </div>
+'''))
+def crew_status_box(gender, crew_valid, other_crew_valid):
+
+    def styling(gender, valid):
+        return {
+            'colour': 'success' if valid else 'danger',
+            'crew': "{}'s crew".format(gender.label),
+            'text': 'Ready' if valid else 'Not ready',
+        }
+    
+    return {
+        'main': styling(gender, crew_valid),
+        'other': styling(utils.reverse_gender(gender), other_crew_valid),
+    }
 
 
 @register.inclusion_tag(template.Template('''

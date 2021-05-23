@@ -301,7 +301,7 @@ class Test__Avatar(TestCase):
         
         self.assertHTMLEqual(
             tags.avatar('C'),
-            '<span class="avatar">C</span>',
+            '<span class="avatar flex-shrink-0">C</span>',
         )
     
     
@@ -310,7 +310,7 @@ class Test__Avatar(TestCase):
         
         self.assertHTMLEqual(
             tags.avatar(7),
-            '<span class="avatar">7</span>',
+            '<span class="avatar flex-shrink-0">7</span>',
         )
     
     
@@ -319,7 +319,7 @@ class Test__Avatar(TestCase):
         
         self.assertHTMLEqual(
             tags.avatar(7, 'newc'),
-            '<span class="avatar club-newc">7</span>',
+            '<span class="avatar club-newc flex-shrink-0">7</span>',
         )
 
 
@@ -478,6 +478,13 @@ class Test__Crew_List(TestCase):
         cls.day = models.Day.objects.first()
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
+        cls.seats = models.Seat.objects.all()
+        
+        cls.purchase = cls.team.purchases.create(
+            day = cls.day,
+            seat = cls.seat,
+            crew = cls.crew,
+        )
     
     
     @staticmethod
@@ -515,28 +522,25 @@ class Test__Crew_List(TestCase):
     
     
     @staticmethod
-    def crew_list_box(crew_list, finances = {}, show_actions = False):
+    def crew_list_box(crew_list, seats, finances = {}, show_actions = False):
         """A helper function that renders a crew list."""
+        component_string = '<div>{% crew_list_box crew_list seats finances show_actions %}</div>'
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_list_box crew_list finances show_actions %}')
+            .Template('{% load fantasy_tags %}' + component_string)
             .render(template.Context({
                 'crew_list': crew_list,
+                'seats': seats,
                 'finances': finances,
                 'show_actions': show_actions,
             }))
         )
     
     
-    def test__sell_button(self):
-        """Renders a styled button."""
+    def test__sell_button__standard(self):
+        """Renders a styled button with associated data."""
         
-        purchase = self.team.purchases.create(
-            day = self.day,
-            seat = self.seat,
-            crew = self.crew,
-        )
-        html = self.sell_button(purchase)
+        html = self.sell_button(self.purchase)
         button = parser(html)
         
         self.assertEqual(button.tag, 'button')
@@ -546,9 +550,50 @@ class Test__Crew_List(TestCase):
         self.assertIn('btn-sm', classes)
         self.assertIn('btn-sell', classes)
         
-        self.assertEqual(button.get('data-purchase'), str(purchase.id))
+        self.assertEqual(button.get('data-purchase'), str(self.purchase.id))
         
         self.assertInHTML('Sell ' + tags.currency(self.crew.value(self.day)), html)
+    
+    
+    def test__sell_button__preset_price(self):
+        """Uses the preset purchase.price attribute if available."""
+        
+        self.purchase.price = 999
+        html = self.sell_button(self.purchase)
+        button = parser(html)
+        
+        self.assertEqual(button.tag, 'button')
+        
+        classes = button.get('class').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-sell', classes)
+        
+        self.assertEqual(button.get('data-purchase'), str(self.purchase.id))
+        
+        self.assertInHTML('Sell ' + tags.currency(999), html)
+    
+    
+    @tag('query-count')
+    def test__sell_button__query_count__standard(self):
+        """Expect:
+            (1) Purchased crew's position
+            (1) Event details (for total number of crews)
+        """
+        
+        with self.assertNumQueries(2):
+            self.sell_button(self.purchase)
+    
+    
+    @tag('query-count')
+    def test__sell_button__preset_price__query_count(self):
+        """Expect:
+            No queries
+        """
+        
+        self.purchase.price = 999
+        with self.assertNumQueries(0):
+            self.sell_button(self.purchase)
     
     
     def test__crew_list_row__no_purchase(self):
@@ -660,7 +705,7 @@ class Test__Crew_List(TestCase):
     def test__crew_list_box__empty_list(self):
         """Renders a styled div that always has all seats."""
         
-        html = self.crew_list_box([])
+        html = self.crew_list_box([], self.seats)
         
         # Test root
         crew_list = parser(html)
@@ -679,7 +724,7 @@ class Test__Crew_List(TestCase):
         """Renders a styled div that includes any purchases provided."""
         
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase])
+        html = self.crew_list_box([purchase], self.seats)
         
         # Test root
         crew_list = parser(html)
@@ -703,7 +748,7 @@ class Test__Crew_List(TestCase):
         """Includes financial information if provided."""
         
         finances = {'budget': 1079, 'crew_value': 856, 'balance': 223}
-        html = self.crew_list_box([], finances)
+        html = self.crew_list_box([], self.seats, finances)
         
         # Test containments
         self.assertInHTML(self.crew_list_header(finances), html)
@@ -714,7 +759,7 @@ class Test__Crew_List(TestCase):
         """Propagates the show_actions flag."""
         
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase], show_actions = True)
+        html = self.crew_list_box([purchase], self.seats, show_actions = True)
         
         # Test root
         crew_list = parser(html)

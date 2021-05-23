@@ -31,9 +31,11 @@
 
 
 {% block content %}
+<br/>
 
-{% market_status_box day %}
-<h3>{{ gender.label }}'s market for {{ day }}</h3>
+<div class="row"><div class="col">
+  {% market_status_box day %}
+</div></div>
 
 <div class="row">
   <div class="col-lg">
@@ -43,10 +45,12 @@
     {% endfor %}
   </div>
 
-  {% if user.is_authenticated %}<div class="col-auto">
-    <div class="list-group sticky-top" style="width:23em">
-      {% crew_list_box crew finances show_actions %}
+  {% if user.is_authenticated %}<div class="col-lg-5">
+    <div class="list-group sticky-top">
+      {% crew_list_box crew seats finances show_actions %}
+      {% crew_status_box gender crew_valid other_crew_valid %}
     </div>
+    <br/>
   </div>{% endif %}
 </div>
 
