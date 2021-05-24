@@ -275,14 +275,14 @@ def crew_list_box(crew_list, seats, finances = None, show_actions = False):
         <strong>{{ other.crew }}</strong>
         <br/>
         <strong class="text-{{ other.colour }}">{{ other.text }}</strong>
-        <a href="" class="btn btn-sm btn-{{ other.colour }} ml-2 px-1 py-0">
+        <a href="{{ other_gender_link }}" class="btn btn-sm btn-{{ other.colour }} ml-2 px-1 py-0">
           View <small><span class="oi oi-chevron-right"></span></small>
         </a>
       </td>
       </tr></table>
     </div>
 '''))
-def crew_status_box(gender, crew_valid, other_crew_valid):
+def crew_status_box(event, gender, crew_valid, other_crew_valid):
 
     def styling(gender, valid):
         return {
@@ -291,9 +291,15 @@ def crew_status_box(gender, crew_valid, other_crew_valid):
             'text': 'Ready' if valid else 'Not ready',
         }
     
+    other_gender = utils.reverse_gender(gender)
+    
     return {
         'main': styling(gender, crew_valid),
-        'other': styling(utils.reverse_gender(gender), other_crew_valid),
+        'other': styling(other_gender, other_crew_valid),
+        'other_gender_link': reverse(
+            'fantasy:{}'.format(other_gender.label.lower()),
+            kwargs = {'event_tag': event.tag},
+        ),
     }
 
 
