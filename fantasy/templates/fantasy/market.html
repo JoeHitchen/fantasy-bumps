@@ -39,7 +39,7 @@
 
 <div class="row">
   {% if user.is_authenticated %}<div class="col-lg-5 order-lg-last">
-    <div class="list-group sticky-top">
+    <div class="list-group sticky-top mb-3">
       {% crew_list_box crew seats finances show_actions %}
       {% crew_status_box event gender crew_valid other_crew_valid %}
     </div>
@@ -49,7 +49,6 @@
   <div class="col-lg order-lg-first">
     {% for division in start_order %}
       {% market_division_box division gender forloop.counter finances.balance show_actions %}
-      <br/>
     {% endfor %}
   </div>
 </div>

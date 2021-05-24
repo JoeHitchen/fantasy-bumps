@@ -182,7 +182,7 @@ def market_row(position, balance, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div class="list-group">
+  <div class="list-group mb-3">
     <div class="list-group-item list-group-item-dark market-row">
       <h5 class="mb-0">{{ gender.label }}'s Division {{ number }}</h5>
     </div>
