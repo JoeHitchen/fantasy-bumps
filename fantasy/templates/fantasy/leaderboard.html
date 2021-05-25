@@ -1,28 +1,64 @@
 {% extends 'core/base.html' %}
 {% load fantasy_tags %}
 
-{% block content %}
-Fantasy Bumps leaderboard page for {{ event }}.
+{% block page_head %}
+<style type="text/css">
+  .table>thead>tr>th {
+    vertical-align: top;
+  }
+</style>
+{% endblock %}
 
-<table class="table table-hover table-sm">
-  <thead class="thead-light">
+{% block content %}
+<div class="row"><div class="col">
+<table class="table table-hover table-sm table-responsive-md text-center">
+  <thead class="thead-light"><tr>
     <th>Rank</th>
-    <th>Team</th>
-    <th><a href="{% url 'fantasy:leaderboard' event.tag %}">Total Score (Crew&nbsp;Value)</a></th>
-    <th><a href="{% url 'fantasy:leaderboard_men' event.tag %}">Men's Score (Crew&nbsp;Value)</a></th>
-    <th><a href="{% url 'fantasy:leaderboard_women' event.tag %}">Women's Score (Crew&nbsp;Value)</a></th>
-  </thead>
+    <th class="text-left">Team</th>
+    <th>
+      <span>Overall</span>
+      <a href="{% url 'fantasy:leaderboard' event.tag %}" class="btn btn-{% if ranking == GENDERS_OVERALL %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-2">
+        <small><span class="oi oi-sort-descending"></span></small>
+      </a>
+    </th>
+    <th>
+      Men
+      <a href="{% url 'fantasy:leaderboard_men' event.tag %}" class="btn btn-{% if ranking == genders.MEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-2">
+        <small><span class="oi oi-sort-descending"></span></small>
+      </a>
+    </th>
+    <th>
+      Women
+      <a href="{% url 'fantasy:leaderboard_women' event.tag %}" class="btn btn-{% if ranking == genders.WOMEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-2">
+        <small><span class="oi oi-sort-descending"></span></small>
+      </a>
+    </th>
+    <th>Crews</th>
+  </tr></thead>
   <tbody>
-    {% for fantasy in fantasies %}<tr
-      {% if fantasy.team == team %}class="table-warning"{% elif forloop.counter == 1 %}class="table-success"{% endif %}
-    >
+    {% for fantasy in fantasies %}<tr {% if fantasy.team == team %}class="table-info"{% endif %}>
       <td>{{ forloop.counter }}</td>
-      <td><a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}">{{ fantasy.team }}</a></td>
-      <td class="{% if ranking == GENDERS_OVERALL %}table-primary{% endif %}">{{ fantasy.total_budget }} ({{ fantasy.total_crew_value }})</td>
-      <td class="{% if ranking == genders.MEN %}table-primary{% endif %}">{{ fantasy.mens_budget }} ({{ fantasy.mens_crew_value }})</td>
-      <td class="{% if ranking == genders.WOMEN %}table-primary{% endif %}">{{ fantasy.womens_budget }} ({{ fantasy.womens_crew_value }})</td>
+      <td class="text-left">{{ fantasy.team }}</td>
+      <td>
+        <span>{{ fantasy.total_budget }}</span>
+        <small>{{ fantasy.total_crew_value }}</small>
+      </td>
+      <td>
+        <span>{{ fantasy.mens_budget }}</span>
+        <small>{{ fantasy.mens_crew_value }}</small>
+      </td>
+      <td>
+        <span>{{ fantasy.womens_budget }}</span>
+        <small>{{ fantasy.womens_crew_value }}</small>
+      </td>
+      <td class="align-middle">
+        <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2" style="padding-bottom: 2px">
+          <small><span class="oi oi-chevron-right"></span></small>
+        </a>
+      </td>
     </tr>{% endfor %}
   </tbody>
 </table>
+</div></div>
 
 {% endblock %}
