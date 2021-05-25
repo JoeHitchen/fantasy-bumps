@@ -110,10 +110,17 @@ class Test__All_Investments(TestCase):
         cls.day2 = days[1]
         cls.day3 = days[2]
         
-        # Hertford bump both days; Oriel got bumped both days; Wolfson rowed over day 1
-        cls.crew_hert = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN)
-        cls.crew_orie = models.Crew.objects.get(club = Clubs.ORIE, gender = Genders.WOMEN)
-        cls.crew_wolf = models.Crew.objects.get(club = Clubs.WOLF, gender = Genders.WOMEN)
+        # Wadham bumped day 1; Oriel got bumped both days; Wolfson rowed over day 1
+        cls.crew_wadh_w = models.Crew.objects.get(club = Clubs.WADH, gender = Genders.WOMEN)
+        cls.crew_orie_w = models.Crew.objects.get(club = Clubs.ORIE, gender = Genders.WOMEN)
+        cls.crew_wolf_w = models.Crew.objects.get(club = Clubs.WOLF, gender = Genders.WOMEN)
+        
+        # Balliol bumped day 1; Hertford got bumped day 1; Pembroke rowed over both days
+        cls.crew_ball_m = models.Crew.objects.get(club = Clubs.BALL, gender = Genders.MEN)
+        cls.crew_hert_m = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN)
+        cls.crew_pemb_m = models.Crew.objects.get(club = Clubs.PEMB, gender = Genders.MEN)
+        cls.crew_catz_m = models.Crew.objects.get(club = Clubs.SCAT, gender = Genders.MEN)
+        # ^ Catz bumped day 2
         
         cls.team = models.Team.objects.first()
         cls.budgets = cls.team.entries.create(event = cls.event)
@@ -122,56 +129,102 @@ class Test__All_Investments(TestCase):
         cls.all_seats = models.Seat.objects.all()
     
     
-    def test__bump_up__partial_crew(self):
-        """Increases the budget and balance for the correct gender."""
+    def test__bump_down__men_complete(self):
+        """Crews lose value and no bonuses are awarded, regardless of completeness."""
         
-        start_value = self.crew_hert.value(self.day1)
-        value_change = self.crew_hert.value(self.day2) - start_value
-        self.assertTrue(value_change > 0)
+        value_change_men = self.crew_hert_m.value(self.day2) - self.crew_hert_m.value(self.day1)
+        self.assertTrue(value_change_men < 0)
         
-        self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
+        value_change_women = self.crew_orie_w.value(self.day2) - self.crew_orie_w.value(self.day1)
+        self.assertTrue(value_change_women < 0)
+        
+        self.team.purchases.create(day = self.day1, crew = self.crew_orie_w, seat = self.seat)
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_hert_m, seat = seat)
         
         tools.evaluate_all_investments(self.day1)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + value_change)
+        self.assertEqual(
+            self.budgets.mens_budget,
+            money.INITIAL_BALANCE + 9 * value_change_men,
+        )
+        self.assertEqual(
+            self.budgets.womens_budget,
+            money.INITIAL_BALANCE + 1 * value_change_women,
+        )
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
     
     
-    def test__bump_up__full_crew(self):
-        """Increases the budget and balance for the correct gender."""
+    def test__bump_down__women_complete(self):
+        """Crews lose value and no bonuses are awarded, regardless of completeness."""
         
-        start_value = self.crew_hert.value(self.day1)
-        value_change = self.crew_hert.value(self.day2) - start_value
-        self.assertTrue(value_change > 0)
+        value_change_men = self.crew_hert_m.value(self.day2) - self.crew_hert_m.value(self.day1)
+        self.assertTrue(value_change_men < 0)
         
-        payout = round( 0.21 * start_value )  # noqa: E201 E202
+        value_change_women = self.crew_orie_w.value(self.day2) - self.crew_orie_w.value(self.day1)
+        self.assertTrue(value_change_women < 0)
         
+        self.team.purchases.create(day = self.day1, crew = self.crew_hert_m, seat = self.seat)
         for seat in self.all_seats:
-            self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = seat)
+            self.team.purchases.create(day = self.day1, crew = self.crew_orie_w, seat = seat)
         
         tools.evaluate_all_investments(self.day1)
         
         self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(
+            self.budgets.mens_budget,
+            money.INITIAL_BALANCE + 1 * value_change_men,
+        )
         self.assertEqual(
             self.budgets.womens_budget,
-            money.INITIAL_BALANCE + 9 * value_change + 9 * payout,
+            money.INITIAL_BALANCE + 9 * value_change_women,
         )
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + 9 * payout)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
     
     
-    def test__row_over__partial_crew(self):
-        """No changes to budgets or balance."""
+    def test__bump_down__both_complete(self):
+        """Crews lose value and no bonuses are awarded, regardless of completeness."""
         
-        start_value = self.crew_wolf.value(self.day1)
-        value_change = self.crew_wolf.value(self.day2) - start_value
-        self.assertEqual(value_change, 0)
+        value_change_men = self.crew_hert_m.value(self.day2) - self.crew_hert_m.value(self.day1)
+        self.assertTrue(value_change_men < 0)
         
-        self.team.purchases.create(day = self.day1, crew = self.crew_wolf, seat = self.seat)
+        value_change_women = self.crew_orie_w.value(self.day2) - self.crew_orie_w.value(self.day1)
+        self.assertTrue(value_change_women < 0)
+        
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_hert_m, seat = seat)
+            self.team.purchases.create(day = self.day1, crew = self.crew_orie_w, seat = seat)
+        
+        tools.evaluate_all_investments(self.day1)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(
+            self.budgets.mens_budget,
+            money.INITIAL_BALANCE + 9 * value_change_men,
+        )
+        self.assertEqual(
+            self.budgets.womens_budget,
+            money.INITIAL_BALANCE + 9 * value_change_women,
+        )
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__row_over__men_complete(self):
+        """No value changes, but bonuses are awarded if both crews complete."""
+        
+        value_change_men = self.crew_pemb_m.value(self.day2) - self.crew_pemb_m.value(self.day1)
+        self.assertEqual(value_change_men, 0)
+        
+        value_change_women = self.crew_wolf_w.value(self.day2) - self.crew_wolf_w.value(self.day1)
+        self.assertEqual(value_change_women, 0)
+        
+        self.team.purchases.create(day = self.day1, crew = self.crew_wolf_w, seat = self.seat)
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_pemb_m, seat = seat)
         
         tools.evaluate_all_investments(self.day1)
         
@@ -182,51 +235,154 @@ class Test__All_Investments(TestCase):
         self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
     
     
-    def test__row_over__full_crew(self):
-        """Increases the budget and balance for the correct gender."""
+    def test__row_over__women_complete(self):
+        """No value changes, but bonuses are awarded if both crews complete."""
         
-        start_value = self.crew_wolf.value(self.day1)
-        value_change = self.crew_wolf.value(self.day2) - start_value
-        self.assertEqual(value_change, 0)
+        value_change_men = self.crew_pemb_m.value(self.day2) - self.crew_pemb_m.value(self.day1)
+        self.assertEqual(value_change_men, 0)
         
-        payout = round( 0.07 * start_value )  # noqa: E201 E202
+        value_change_women = self.crew_wolf_w.value(self.day2) - self.crew_wolf_w.value(self.day1)
+        self.assertEqual(value_change_women, 0)
         
+        self.team.purchases.create(day = self.day1, crew = self.crew_pemb_m, seat = self.seat)
         for seat in self.all_seats:
-            self.team.purchases.create(day = self.day1, crew = self.crew_wolf, seat = seat)
+            self.team.purchases.create(day = self.day1, crew = self.crew_wolf_w, seat = seat)
         
         tools.evaluate_all_investments(self.day1)
         
         self.budgets.refresh_from_db()
         self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + 9 * payout)
-        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + 9 * payout)
-    
-    
-    def test__bumped_down(self):
-        """Decreases the budget for the correct gender, but not the balance."""
-        
-        value_change = self.crew_orie.value(self.day2) - self.crew_orie.value(self.day1)
-        self.assertTrue(value_change < 0)
-        
-        self.team.purchases.create(day = self.day1, crew = self.crew_orie, seat = self.seat)
-        
-        tools.evaluate_all_investments(self.day1)
-        
-        self.budgets.refresh_from_db()
-        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + value_change)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
         self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__row_over__both_complete(self):
+        """No value changes, but bonuses are awarded if both crews complete."""
+        
+        start_value_men = self.crew_pemb_m.value(self.day1)
+        payout_men = round(0.07 * start_value_men)
+        value_change_men = self.crew_pemb_m.value(self.day2) - start_value_men
+        self.assertEqual(value_change_men, 0)
+        
+        start_value_women = self.crew_wolf_w.value(self.day1)
+        payout_women = round(0.07 * start_value_women)
+        value_change_women = self.crew_wolf_w.value(self.day2) - start_value_women
+        self.assertEqual(value_change_women, 0)
+        
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_pemb_m, seat = seat)
+            self.team.purchases.create(day = self.day1, crew = self.crew_wolf_w, seat = seat)
+        
+        tools.evaluate_all_investments(self.day1)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(self.budgets.mens_budget, money.INITIAL_BALANCE + 9 * payout_men)
+        self.assertEqual(self.budgets.womens_budget, money.INITIAL_BALANCE + 9 * payout_women)
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE + 9 * payout_men)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + 9 * payout_women)
+    
+    
+    def test__bump_up__men_complete(self):
+        """Values increase regardless of completeness, bonuses awarded only if both complete."""
+        
+        value_change_men = self.crew_ball_m.value(self.day2) - self.crew_ball_m.value(self.day1)
+        self.assertTrue(value_change_men > 0)
+        
+        value_change_women = self.crew_wadh_w.value(self.day2) - self.crew_wadh_w.value(self.day1)
+        self.assertTrue(value_change_women > 0)
+        
+        self.team.purchases.create(day = self.day1, crew = self.crew_wadh_w, seat = self.seat)
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_ball_m, seat = seat)
+        
+        tools.evaluate_all_investments(self.day1)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(
+            self.budgets.mens_budget,
+            money.INITIAL_BALANCE + 9 * value_change_men,
+        )
+        self.assertEqual(
+            self.budgets.womens_budget,
+            money.INITIAL_BALANCE + 1 * value_change_women,
+        )
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__bump_up__women_complete(self):
+        """Values increase regardless of completeness, bonuses awarded only if both complete."""
+        
+        value_change_men = self.crew_ball_m.value(self.day2) - self.crew_ball_m.value(self.day1)
+        self.assertTrue(value_change_men > 0)
+        
+        value_change_women = self.crew_wadh_w.value(self.day2) - self.crew_wadh_w.value(self.day1)
+        self.assertTrue(value_change_women > 0)
+        
+        self.team.purchases.create(day = self.day1, crew = self.crew_ball_m, seat = self.seat)
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_wadh_w, seat = seat)
+        
+        tools.evaluate_all_investments(self.day1)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(
+            self.budgets.mens_budget,
+            money.INITIAL_BALANCE + 1 * value_change_men,
+        )
+        self.assertEqual(
+            self.budgets.womens_budget,
+            money.INITIAL_BALANCE + 9 * value_change_women,
+        )
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__bump_up__both_complete(self):
+        """Values increase regardless of completeness, bonuses awarded only if both complete."""
+        
+        start_value_men = self.crew_ball_m.value(self.day1)
+        payout_men = round(0.21 * start_value_men)
+        value_change_men = self.crew_ball_m.value(self.day2) - start_value_men
+        self.assertTrue(value_change_men > 0)
+        
+        start_value_women = self.crew_wadh_w.value(self.day1)
+        payout_women = round(0.21 * start_value_women)
+        value_change_women = self.crew_wadh_w.value(self.day2) - start_value_women
+        self.assertTrue(value_change_women > 0)
+        
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_ball_m, seat = seat)
+            self.team.purchases.create(day = self.day1, crew = self.crew_wadh_w, seat = seat)
+        
+        tools.evaluate_all_investments(self.day1)
+        
+        self.budgets.refresh_from_db()
+        self.assertEqual(
+            self.budgets.mens_budget,
+            money.INITIAL_BALANCE + 9 * (value_change_men + payout_men),
+        )
+        self.assertEqual(
+            self.budgets.womens_budget,
+            money.INITIAL_BALANCE + 9 * (value_change_women + payout_women),
+        )
+        self.assertEqual(self.budgets.mens_balance, money.INITIAL_BALANCE + 9 * payout_men)
+        self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE + 9 * payout_women)
     
     
     def test__different_day(self):
         """Ignores purchases for other days."""
         
-        value_change = self.crew_hert.value(self.day3) - self.crew_hert.value(self.day2)
-        self.assertTrue(value_change > 0)
+        value_change_men = self.crew_catz_m.value(self.day3) - self.crew_catz_m.value(self.day2)
+        self.assertTrue(value_change_men > 0)
         
-        self.team.purchases.create(day = self.day2, crew = self.crew_hert, seat = self.seat)
+        value_change_women = self.crew_wolf_w.value(self.day3) - self.crew_wolf_w.value(self.day2)
+        self.assertTrue(value_change_women > 0)
+        
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day2, crew = self.crew_catz_m, seat = seat)
+            self.team.purchases.create(day = self.day2, crew = self.crew_wolf_w, seat = seat)
         
         tools.evaluate_all_investments(self.day1)
         
@@ -242,10 +398,15 @@ class Test__All_Investments(TestCase):
         
         other_team = auth.User.objects.create_user('Other').team
         
-        value_change = self.crew_hert.value(self.day2) - self.crew_hert.value(self.day1)
-        self.assertTrue(value_change > 0)
+        value_change_men = self.crew_catz_m.value(self.day3) - self.crew_catz_m.value(self.day2)
+        self.assertTrue(value_change_men > 0)
         
-        other_team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
+        value_change_women = self.crew_wolf_w.value(self.day3) - self.crew_wolf_w.value(self.day2)
+        self.assertTrue(value_change_women > 0)
+        
+        for seat in self.all_seats:
+            other_team.purchases.create(day = self.day2, crew = self.crew_catz_m, seat = seat)
+            other_team.purchases.create(day = self.day2, crew = self.crew_wolf_w, seat = seat)
         
         tools.evaluate_all_investments(self.day1)
         
@@ -266,10 +427,15 @@ class Test__All_Investments(TestCase):
             (1) UPDATE entries
         """
         
-        value_change = self.crew_hert.value(self.day2) - self.crew_hert.value(self.day1)
-        self.assertTrue(value_change > 0)
+        value_change_men = self.crew_ball_m.value(self.day2) - self.crew_ball_m.value(self.day1)
+        self.assertTrue(value_change_men > 0)
         
-        self.team.purchases.create(day = self.day1, crew = self.crew_hert, seat = self.seat)
+        value_change_women = self.crew_wadh_w.value(self.day2) - self.crew_wadh_w.value(self.day1)
+        self.assertTrue(value_change_women > 0)
+        
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day1, crew = self.crew_ball_m, seat = seat)
+            self.team.purchases.create(day = self.day1, crew = self.crew_wadh_w, seat = seat)
         
         fresh_day = models.Day.objects.select_related().get(pk = self.day1.pk)
         

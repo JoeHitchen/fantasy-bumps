@@ -105,17 +105,18 @@ def evaluate_all_investments(day):
             for purchase in entry.team.womens_crew
         )
         
-        # Men's payout
-        if utils.has_all_seats(entry.team.mens_crew, all_seats):
+        # Payouts
+        men_have_all_seats = utils.has_all_seats(entry.team.mens_crew, all_seats)
+        women_have_all_seats = utils.has_all_seats(entry.team.womens_crew, all_seats)
+        if men_have_all_seats and women_have_all_seats:
+            
             mens_payout = sum(
                 payout_matrix[purchase.crew]['payout']
                 for purchase in entry.team.mens_crew
             )
             entry.mens_budget += mens_payout
             entry.mens_balance += mens_payout
-        
-        # Women's payout
-        if utils.has_all_seats(entry.team.womens_crew, all_seats):
+            
             womens_payout = sum(
                 payout_matrix[purchase.crew]['payout']
                 for purchase in entry.team.womens_crew
