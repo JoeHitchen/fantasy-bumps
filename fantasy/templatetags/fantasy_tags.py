@@ -144,7 +144,10 @@ def sell_button(purchase):
 @register.inclusion_tag(template.Template('''
   {% load static %}
   {% if not purchase.seat.cox %}
-    <a href="{% url 'fantasy:switch' purchase.id %}" class="btn btn-sm btn-primary">
+    <a
+        href="{% url 'fantasy:switch' purchase.id %}" class="btn btn-sm btn-primary"
+        data-toggle="tooltip" data-placement="top" title="Change athlete or seat"
+    >
       <img class="btn-switch" src="{% static 'fantasy/switch-white.svg' %}" />
     </a>
   {% endif %}
