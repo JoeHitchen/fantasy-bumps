@@ -1461,3 +1461,32 @@ class Test__GameEntry(TestCase):
             [self.game_entry_1, self.game_entry_3, self.game_entry_2],
         )
 
+
+
+@tag('game-core')
+class Test__Purchase(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
+    
+    def test__athlete_delete(self):
+        """Athlete references should be nulled if the athlete is deleted.
+        
+        This is important for not dropping purchases when honouring an athlete deletion request.
+        """
+        
+        # Create athlete
+        day = models.Day.objects.select_related('event').first()
+        crew = models.Crew.objects.first()
+        seat = models.Seat.objects.first()
+        athlete = crew.crew_lists.create(event = day.event, seat = seat, name = 'Deletion')
+        
+        # Create purchase
+        team = models.Team.objects.first()
+        purchase = team.purchases.create(day = day, crew = crew, seat = seat, athlete = athlete)
+        
+        # Delete athlete
+        athlete.delete()
+        with self.assertRaises(models.Athlete.DoesNotExist):
+            athlete.refresh_from_db()  # Verify deletion completed
+        purchase.refresh_from_db()
+        self.assertIsNone(purchase.athlete)
+
