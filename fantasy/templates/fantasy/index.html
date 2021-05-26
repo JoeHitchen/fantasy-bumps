@@ -2,11 +2,9 @@
 {% load fantasy_tags %}
 
 {% block content %}
-<br/>
 
 {% for event in recent_events %}
 {% event_box event %}
-<br/>
 {% empty %}
 There are no events available
 {% endfor %}

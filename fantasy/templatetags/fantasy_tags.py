@@ -144,7 +144,10 @@ def sell_button(purchase):
 @register.inclusion_tag(template.Template('''
   {% load static %}
   {% if not purchase.seat.cox %}
-    <a href="{% url 'fantasy:switch' purchase.id %}" class="btn btn-sm btn-primary">
+    <a
+        href="{% url 'fantasy:switch' purchase.id %}" class="btn btn-sm btn-primary"
+        data-toggle="tooltip" data-placement="top" title="Change athlete or seat"
+    >
       <img class="btn-switch" src="{% static 'fantasy/switch-white.svg' %}" />
     </a>
   {% endif %}
@@ -182,7 +185,7 @@ def market_row(position, balance, show_actions):
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  <div class="list-group">
+  <div class="list-group mb-3">
     <div class="list-group-item list-group-item-dark market-row">
       <h5 class="mb-0">{{ gender.label }}'s Division {{ number }}</h5>
     </div>
@@ -275,14 +278,14 @@ def crew_list_box(crew_list, seats, finances = None, show_actions = False):
         <strong>{{ other.crew }}</strong>
         <br/>
         <strong class="text-{{ other.colour }}">{{ other.text }}</strong>
-        <a href="" class="btn btn-sm btn-{{ other.colour }} ml-2 px-1 py-0">
+        <a href="{{ other_gender_link }}" class="btn btn-sm btn-{{ other.colour }} ml-2 px-1 py-0">
           View <small><span class="oi oi-chevron-right"></span></small>
         </a>
       </td>
       </tr></table>
     </div>
 '''))
-def crew_status_box(gender, crew_valid, other_crew_valid):
+def crew_status_box(event, gender, crew_valid, other_crew_valid):
 
     def styling(gender, valid):
         return {
@@ -291,9 +294,15 @@ def crew_status_box(gender, crew_valid, other_crew_valid):
             'text': 'Ready' if valid else 'Not ready',
         }
     
+    other_gender = utils.reverse_gender(gender)
+    
     return {
         'main': styling(gender, crew_valid),
-        'other': styling(utils.reverse_gender(gender), other_crew_valid),
+        'other': styling(other_gender, other_crew_valid),
+        'other_gender_link': reverse(
+            'fantasy:{}'.format(other_gender.label.lower()),
+            kwargs = {'event_tag': event.tag},
+        ),
     }
 
 
