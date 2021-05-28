@@ -6,8 +6,22 @@
   .table>thead>tr>th {
     vertical-align: top;
     border-top: 0;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+  .narrow-column {
+    width: 10em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
 {% endblock %}
 
 {% block content %}
@@ -25,19 +39,19 @@
         <th class="text-left">Team</th>
         <th>
           <span>Overall</span>
-          <a href="{% url 'fantasy:leaderboard' event.tag %}" class="btn btn-{% if ranking == GENDERS_OVERALL %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-2">
+          <a href="{% url 'fantasy:leaderboard' event.tag %}" class="btn btn-{% if ranking == GENDERS_OVERALL %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-1">
             <small><span class="oi oi-sort-descending"></span></small>
           </a>
         </th>
         <th>
           <span>Men</span>
-          <a href="{% url 'fantasy:leaderboard_men' event.tag %}" class="btn btn-{% if ranking == genders.MEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-2">
+          <a href="{% url 'fantasy:leaderboard_men' event.tag %}" class="btn btn-{% if ranking == genders.MEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-1">
             <small><span class="oi oi-sort-descending"></span></small>
           </a>
         </th>
         <th>
           <span>Women</span>
-          <a href="{% url 'fantasy:leaderboard_women' event.tag %}" class="btn btn-{% if ranking == genders.WOMEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-2">
+          <a href="{% url 'fantasy:leaderboard_women' event.tag %}" class="btn btn-{% if ranking == genders.WOMEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-1">
             <small><span class="oi oi-sort-descending"></span></small>
           </a>
         </th>
@@ -46,7 +60,10 @@
       <tbody>
         {% for fantasy in fantasies %}<tr {% if fantasy.team == team %}class="table-info"{% endif %}>
           <td>{{ forloop.counter }}</td>
-          <td class="text-left">{{ fantasy.team }}</td>
+          <td class="text-left">
+            <div class="team-name d-none d-md-block">{{ fantasy.team }}</div>
+            <div class="narrow-column d-block d-md-none" data-toggle="tooltip" data-placement="bottom" title="{{ fantasy.team }}">{{ fantasy.team }}</div>
+          </td>
           <td>
             <span>{{ fantasy.total_budget }}</span>
             <small>{{ fantasy.total_crew_value }}</small>
