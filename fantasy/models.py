@@ -325,9 +325,9 @@ class GameEntryQuerySet(models.QuerySet):
         Requires .extend_financials() to have been called.
         """
         ordering = {
-            GENDERS_OVERALL: ['-total_budget', '-total_crew_value'],
-            Genders.MEN: ['-mens_budget', '-mens_crew_value'],
-            Genders.WOMEN: ['-womens_budget', '-womens_crew_value'],
+            GENDERS_OVERALL: ['-total_budget', '-total_crew_value', 'team__user__username'],
+            Genders.MEN: ['-mens_budget', '-mens_crew_value', 'team__user__username'],
+            Genders.WOMEN: ['-womens_budget', '-womens_crew_value', 'team__user__username'],
         }[gender]
         return self.order_by(*ordering)
 

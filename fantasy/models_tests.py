@@ -1376,6 +1376,7 @@ class Test__GameEntry(TestCase):
         cls.team_1 = auth.User.objects.create_user('One', '', '').team
         cls.team_2 = auth.User.objects.create_user('Two', '', '').team
         cls.team_3 = auth.User.objects.create_user('Three', '', '').team
+        cls.team_4 = auth.User.objects.create_user('Four', '', '').team
         
         cls.game_entry_1 = cls.event.fantasies.create(
             team = cls.team_1,
@@ -1393,6 +1394,13 @@ class Test__GameEntry(TestCase):
         )
         cls.game_entry_3 = cls.event.fantasies.create(
             team = cls.team_3,
+            mens_budget = 701,
+            womens_budget = 713,
+            mens_balance = 117,
+            womens_balance = 112,
+        )
+        cls.game_entry_4 = cls.event.fantasies.create(
+            team = cls.team_4,  # Alphabetically before but otherwise identical to 'Three'
             mens_budget = 701,
             womens_budget = 713,
             mens_balance = 117,
@@ -1440,7 +1448,7 @@ class Test__GameEntry(TestCase):
         
         self.assertEqual(
             list(self.event.fantasies.extend_financials().rank_by(GENDERS_OVERALL)),
-            [self.game_entry_1, self.game_entry_3, self.game_entry_2],
+            [self.game_entry_1, self.game_entry_4, self.game_entry_3, self.game_entry_2],
         )
     
     
@@ -1449,7 +1457,7 @@ class Test__GameEntry(TestCase):
         
         self.assertEqual(
             list(self.event.fantasies.extend_financials().rank_by(Genders.MEN)),
-            [self.game_entry_2, self.game_entry_1, self.game_entry_3],
+            [self.game_entry_2, self.game_entry_1, self.game_entry_4, self.game_entry_3],
         )
     
     
@@ -1458,7 +1466,7 @@ class Test__GameEntry(TestCase):
         
         self.assertEqual(
             list(self.event.fantasies.extend_financials().rank_by(Genders.WOMEN)),
-            [self.game_entry_1, self.game_entry_3, self.game_entry_2],
+            [self.game_entry_1, self.game_entry_4, self.game_entry_3, self.game_entry_2],
         )
 
 
