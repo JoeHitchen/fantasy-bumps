@@ -11,6 +11,12 @@
 
 {% block content %}
 <div class="row"><div class="col">
+  <h3>{% if ranking == GENDERS_OVERALL %}Overall{% elif ranking == genders.MEN %}Men's{% else %}Women's{% endif %} ranking</h3>
+  <div class="mb-3">
+    {% if ranking == GENDERS_OVERALL %}Teams are ranked by the total number of crabs accumulated and then by the combined value of their crews.
+    {% else %}Teams are ranked by the number of crabs their {{ ranking.label|lower }}'s crew has accumulated and then by the value of their {{ ranking.label|lower }}'s crews.{% endif %}
+  </div>
+
 <table class="table table-hover table-sm table-responsive-md text-center">
   <thead class="thead-light"><tr>
     <th>Rank</th>
