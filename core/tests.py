@@ -38,6 +38,11 @@ class Test__URLs(TestCase):
 
 class Test__Account_Signup(TestCase, MessagesTestMixin):
     
+    default_character_set_error = (
+        'Enter a valid username.'
+        + ' This value may contain only letters, numbers, and @/./+/-/_ characters.'
+    )
+    
     def test__form__without_email(self):
         """Creates a user that does not have an e-mail address."""
         
@@ -70,6 +75,108 @@ class Test__Account_Signup(TestCase, MessagesTestMixin):
         
         user = auth.models.User.objects.get(username = username)
         self.assertEqual(user.email, email)
+    
+    
+    def test__form__character_set__space(self):
+        """Usernames can only contain letters and numbers."""
+        
+        username = 'ATest User'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertNotIn(self.default_character_set_error, str(form.errors['username']))
+        self.assertIn(
+            'Usernames can only contain letters and numbers.',
+            str(form.errors['username']),
+        )
+    
+    
+    def test__form__character_set__at(self):
+        """Usernames can only contain letters and numbers."""
+        
+        username = 'ATestUser@'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertNotIn(self.default_character_set_error, str(form.errors['username']))
+        self.assertIn(
+            'Usernames can only contain letters and numbers.',
+            str(form.errors['username']),
+        )
+    
+    
+    def test__form__character_set__dot(self):
+        """Usernames can only contain letters and numbers."""
+        
+        username = 'ATestUser.'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertNotIn(self.default_character_set_error, str(form.errors['username']))
+        self.assertIn(
+            'Usernames can only contain letters and numbers.',
+            str(form.errors['username']),
+        )
+    
+    
+    def test__form__character_set__plus(self):
+        """Usernames can only contain letters and numbers."""
+        
+        username = 'ATestUser+'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertNotIn(self.default_character_set_error, str(form.errors['username']))
+        self.assertIn(
+            'Usernames can only contain letters and numbers.',
+            str(form.errors['username']),
+        )
+    
+    
+    def test__form__character_set__minus(self):
+        """Usernames can only contain letters and numbers."""
+        
+        username = 'ATestUser-'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertNotIn(self.default_character_set_error, str(form.errors['username']))
+        self.assertIn(
+            'Usernames can only contain letters and numbers.',
+            str(form.errors['username']),
+        )
+    
+    
+    def test__form__character_set__underscore(self):
+        """Usernames can only contain letters and numbers."""
+        
+        username = 'ATestUser_'
+        form = forms.UserCreationWithEmailForm({
+            'username': username,
+            'password1': 'AComplexPassword',
+            'password2': 'AComplexPassword',
+        })
+        self.assertFalse(form.is_valid())
+        self.assertNotIn(self.default_character_set_error, str(form.errors['username']))
+        self.assertIn(
+            'Usernames can only contain letters and numbers.',
+            str(form.errors['username']),
+        )
     
     
     def test__form__case_insensitive_duplication(self):

@@ -23,6 +23,9 @@ class UserCreationWithEmailForm(UserCreationForm):
     def clean_username(self):
         username = self.cleaned_data['username']
         
+        if not re.match('^[a-z0-9]+$', username, re.IGNORECASE):
+            raise ValidationError('Usernames can only contain letters and numbers.')
+        
         if auth.User.objects.filter(username__icontains = username).exists():
             raise ValidationError('This team name is already taken.')
         
