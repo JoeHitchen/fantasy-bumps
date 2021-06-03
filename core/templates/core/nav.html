@@ -17,10 +17,22 @@
       <a class="nav-item nav-link" href="{% url 'fantasy:women' event.tag %}">Women</a>
       <a class="nav-item nav-link" href="{% url 'fantasy:leaderboard' event.tag %}">Leaderboard</a>
       {% include 'core/nav-events-dropdown.html' with link_text='Other Events' %}
-      <a class="nav-item nav-link" href="{% url 'fantasy:rules' event.tag %}">Guide & Rules</a>
+      <div class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Information</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="{% url 'fantasy:rules' event.tag %}">Guide & Rules</a>
+          <a class="dropdown-item" href="{% url 'fantasy:privacy' event.tag %}">Privacy Policy</a>
+        </div>
+      </div>
       {% else %}
       {% include 'core/nav-events-dropdown.html'  with link_text='Events' %}
-      <a class="nav-item nav-link" href="{% url 'fantasy:rules' %}">Guide & Rules</a>
+      <div class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Information</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="{% url 'fantasy:rules' %}">Guide & Rules</a>
+          <a class="dropdown-item" href="{% url 'fantasy:privacy' %}">Privacy Policy</a>
+        </div>
+      </div>
       {% endif %}
     </div>
   </div>
