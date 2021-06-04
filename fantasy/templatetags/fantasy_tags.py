@@ -75,6 +75,23 @@ def popularity_indicator(popularity):
     return mark_safe('<span class="popularity">{:.2f}</span>'.format(popularity))
 
 
+@register.filter()
+def analysis_button(crew):
+    return mark_safe('''
+      <button
+          class="payout btn btn-primary btn-sm"
+          data-toggle="popover"
+          data-placement="top"
+          title="Analysis for {}"
+          data-popularity="1.23"
+          data-bump-up="&plus;45"
+          data-row-over="&plus;12"
+          data-bumped-down="&minus;15"
+      >
+        <span class="oi oi-beaker"></span>&nbsp;&nbsp;<span class="oi oi-graph"></span>
+      </button>'''.format(crew))
+
+
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <a
@@ -162,6 +179,7 @@ def switch_button(purchase):
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
     {{ position.popularity|popularity_indicator }}
+    {{ position.crew|analysis_button }}
     {% if show_actions %}<span style="width: 1em">&nbsp;</span>
     {% buy_button position disabled %}{% endif %}
   </div>

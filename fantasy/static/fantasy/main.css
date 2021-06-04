@@ -78,6 +78,14 @@
   width: 2.5em;
 }
 
+.analysis-box.table {
+  margin-bottom: 0em;
+}
+
+.analysis-box tr:first-of-type td {
+  border-top: 0px;
+}
+
 .btn-switch {
   display: block;
   width: 1.5em;
