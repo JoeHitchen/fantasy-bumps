@@ -121,7 +121,7 @@ def buy_button(position, disabled = False):
     return {
         'day': position.day,
         'crew': position.crew,
-        'crew_value': utils.pricing_by_day_and_gender(
+        'crew_value': utils.pricing_by_day_gender(
             position.rank,
             position.day,
             position.crew.gender,
@@ -168,7 +168,7 @@ def switch_button(purchase):
 '''))
 def market_row(position, balance, show_actions):
     
-    crew_value = utils.pricing_by_day_and_gender(
+    crew_value = utils.pricing_by_day_gender(
         position.rank,
         position.day,
         position.crew.gender,

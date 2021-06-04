@@ -67,7 +67,7 @@ def pricing(bungline, num_crews):
     return pricing(bungline + 1, num_crews) - min(price_delta, -1)
 
 
-def pricing_by_day_and_gender(bungline, day, gender):
+def pricing_by_day_gender(bungline, day, gender):
     """A shallow wrapper around the pricing function to expose a bungline/day/gender interface."""
     return pricing(bungline, day.event.num_crews(gender))
 
@@ -106,8 +106,8 @@ def create_payout_matrix(day):
         posn_new = crew.posn_new[0].rank
         posn_change = posn_old - posn_new  # Sign reversed
         
-        crew_value_old = pricing_by_day_and_gender(posn_old, day, crew.gender)
-        crew_value_new = pricing_by_day_and_gender(posn_new, day, crew.gender)
+        crew_value_old = pricing_by_day_gender(posn_old, day, crew.gender)
+        crew_value_new = pricing_by_day_gender(posn_new, day, crew.gender)
         
         payout = 0
         if posn_change >= 0:

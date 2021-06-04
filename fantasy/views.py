@@ -247,7 +247,7 @@ class MarketView(EventBase):
                 ))
             )
             for purchase in context['crew']:
-                purchase.price = utils.pricing_by_day_and_gender(
+                purchase.price = utils.pricing_by_day_gender(
                     purchase.crew._position[0].rank,
                     self.day,
                     gender,
