@@ -72,6 +72,22 @@ def pricing_by_day_and_gender(bungline, day, gender):
     return pricing(bungline, day.event.num_crews(gender))
 
 
+def payout_by_day_gender_positions(day, gender, old_position, new_position):
+    """Calculates the value change and payout for a given day, gender, and pair of positions."""
+    
+    position_change = old_position - new_position  # Sign reversed - Lower position is better
+    
+    crew_value_old = pricing_by_day_and_gender(old_position, day, gender)
+    crew_value_new = pricing_by_day_and_gender(new_position, day, gender)
+    
+    payout = 0
+    if position_change >= 0:
+        payout = (0.14 * position_change + 0.07) * crew_value_old
+        payout = round(payout)
+    
+    return {'value_change': crew_value_new - crew_value_old, 'payout': payout}
+
+
 def create_payout_matrix(day):
     """Calculates the value change and payout for every crew racing on the day provided.
     
@@ -99,25 +115,12 @@ def create_payout_matrix(day):
     )
     
     # Generate payout matrix
-    matrix = {}
-    for crew in crews:
-        
-        posn_old = crew.posn_old[0].rank
-        posn_new = crew.posn_new[0].rank
-        posn_change = posn_old - posn_new  # Sign reversed
-        
-        crew_value_old = pricing_by_day_and_gender(posn_old, day, crew.gender)
-        crew_value_new = pricing_by_day_and_gender(posn_new, day, crew.gender)
-        
-        payout = 0
-        if posn_change >= 0:
-            payout = (0.14 * posn_change + 0.07) * crew_value_old
-            payout = round(payout)
-        
-        matrix[crew] = {
-            'value_change': crew_value_new - crew_value_old,
-            'payout': payout,
-        }
-    
-    return matrix
+    return {
+        crew: payout_by_day_gender_positions(
+            day,
+            crew.gender,
+            crew.posn_old[0].rank,
+            crew.posn_new[0].rank,
+        ) for crew in crews
+    }
 
