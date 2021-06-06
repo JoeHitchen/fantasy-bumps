@@ -11,7 +11,24 @@
   <div class="row">
     <div class="col-md mb-3">
       <h1>{{ event }}</h1>
-      {{ event.first_day.date|date:"l F jS" }} - {{ event.last_racing_day.date|date:"l F jS" }}
+      <div class="mb-3">
+        {{ event.first_day.date|date:"l F jS" }} - {{ event.last_racing_day.date|date:"l F jS" }}
+      </div>
+      <div class="card card-body bg-light text-dark">
+        <a href="https://bumps.live/" class="text-reset text-decoration-none">
+          <div class="d-flex justify-content-between">
+          <div>
+            <image src="https://bumps.live/blades.png" style="height: 3.5em">
+          </div>
+          <div>
+            <span>Results provided by</span>
+            <h3 class="mb-0">Live Bumps</h3>
+          </div>
+          <div>
+            <image src="https://bumps.live/spoons.png" style="height: 3.5em">
+          </div>
+        </div></a>
+      </div>
     </div>
     <div class="col-md mb-3">
       <div class="list-group">
