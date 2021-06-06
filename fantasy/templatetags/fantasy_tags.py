@@ -100,13 +100,13 @@ def analysis_button(position):
           class="payout btn btn-primary btn-sm"
           data-toggle="popover"
           data-placement="top"
-          title="Analysis for {}"
-          data-popularity="{:.2f}"
-          data-bump-up="{:+d}"
-          data-row-over="{:+d}"
-          data-bumped-down="{:+d}"
+          title="Analysis for {0}"
+          data-popularity="{1:.2f}"
+          data-bump-up="{2:+d}"
+          data-row-over="{3:+d}"
+          data-bumped-down="{4:+d}"
       >
-        <span class="oi oi-beaker"></span>&nbsp;&nbsp;<span class="oi oi-graph"></span>
+        {1:.2f}&nbsp;&nbsp;<span class="oi oi-graph"></span>
       </button>'''.format(position.crew, position.popularity, bump_up, row_over, bumped_down))
 
 
@@ -196,7 +196,6 @@ def switch_button(purchase):
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
-    {{ position.popularity|popularity_indicator }}
     {{ position|analysis_button }}
     {% if show_actions %}<span style="width: 1em">&nbsp;</span>
     {% buy_button position disabled %}{% endif %}
