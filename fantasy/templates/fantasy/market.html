@@ -5,12 +5,43 @@
 {% block page_head %}
 <link rel="stylesheet" type="text/css" href="{% static 'fantasy/main.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'fantasy/club_styles.css' %}">
+<style type="text/css">
+  .popover .popover-body {
+    padding: 0em;
+  }
+</style>
 
 <script type="text/javascript">
   $(document).ready(function () {
     $(".btn-sell").click(sell);
     $(".btn-buy:not(.disabled)").click(buy);
     $('[data-toggle="tooltip"]').tooltip({delay: {"show": 750, "hide": 0}});
+    $('[data-toggle="popover"]').popover({
+      html: true,
+      trigger: 'focus',
+      content: function() {
+        $('#analysis-popularity').html($(this).data('popularity'));
+        
+        $('#analysis-bump-up').html($(this).data('bump-up'));
+        $('#analysis-row-over').html($(this).data('row-over'));
+        $('#analysis-bumped-down').html($(this).data('bumped-down'));
+        
+        if ($(this).data('bump-up') === '+0') {
+          $('#analysis-bump-up-row').hide();
+          $('#analysis-row-over-row').addClass('analysis-top-row');
+        } else {
+          $('#analysis-bump-up-row').show();
+          $('#analysis-row-over-row').removeClass('analysis-top-row');
+        }
+        if ($(this).data('bumped-down') === '+0') {
+          $('#analysis-bumped-down-row').hide();
+        } else {
+          $('#analysis-bumped-down-row').show();
+        }
+        
+        return $('#analysis_wrapper').html();
+      }
+    });
   });
 
   function buy(event) {
@@ -64,5 +95,26 @@
   <input id="sell-gender" name="gender" type="hidden" value="{{ gender_code }}">
   <input id="sell-purchase" name="purchase" type="hidden" value=""/>
 </form>
+
+<div id="analysis_wrapper" style="display: none">
+  <table class="table table-sm text-center analysis-box">
+    <tr class="analysis-top-row" id="analysis-bump-up-row">
+      <td><span class="badge badge-success">+1</span></td>
+      <td><span id="analysis-bump-up">-</span>{{ ''|currency }}</td>
+    </tr>
+    <tr id="analysis-row-over-row">
+      <td><span class="badge badge-warning"><span class="oi oi-arrow-right"></span></span></td>
+      <td><span id="analysis-row-over">-</span>{{ ''|currency }}</td>
+    </tr>
+    <tr id="analysis-bumped-down-row">
+      <td><span class="badge badge-danger">&minus;1</span></td>
+      <td><span id="analysis-bumped-down">-</span>{{ ''|currency }}</td>
+    </tr>
+    <tr>
+      <td>Popularity</td>
+      <td><span id="analysis-popularity">-</span></td>
+    </tr>
+  </table>
+</div>
 
 {% endblock%}

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase, tag
 
 from .constants import Series, Genders, Clubs
@@ -210,7 +212,7 @@ class Test__Pricing(TestCase):
 
 
 @tag('game-core')
-class Test__Create_Payout_Matrix(TestCase):
+class Test__Payouts(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']
     
     @classmethod
@@ -218,49 +220,101 @@ class Test__Create_Payout_Matrix(TestCase):
         cls.day = models.Day.objects.first()
     
     
-    def test__row_over(self):
+    def test__individual__row_over(self):
         """No change in value but a small payout."""
         
-        matrix = utils.create_payout_matrix(self.day)
-        crew = models.Crew.objects.get(club = Clubs.JESU, gender = Genders.MEN, rank = 1)
+        old_ranking = 5
+        new_ranking = 5
         
-        crew_payout = matrix[crew]
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        value_change = new_price - old_price
         
-        old_price = new_price = utils.pricing(9, 9)
-        self.assertEqual(crew_payout['value_change'], new_price - old_price)
-        self.assertEqual(crew_payout['payout'], round(0.07 * old_price))
+        delta_crabs = utils.payout_by_day_gender_positions(
+            self.day,
+            Genders.WOMEN,
+            old_ranking,
+            new_ranking,
+        )
+        
+        self.assertEqual(value_change, 0)
+        self.assertEqual(delta_crabs['value_change'], value_change)
+        self.assertEqual(delta_crabs['payout'], round(0.07 * old_price))
     
     
-    def test__bump_up(self):
+    def test__individual__bump_up(self):
         """An increase in value and a larger payout."""
         
-        matrix = utils.create_payout_matrix(self.day)
-        crew = models.Crew.objects.get(club = Clubs.MAGD, gender = Genders.WOMEN, rank = 1)
+        old_ranking = 5
+        new_ranking = 4
         
-        crew_payout = matrix[crew]
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        value_change = new_price - old_price
         
-        old_price = utils.pricing(9, 9)
-        new_price = utils.pricing(8, 9)
-        self.assertEqual(crew_payout['value_change'], new_price - old_price)
-        self.assertEqual(crew_payout['payout'], round(0.21 * old_price))
+        delta_crabs = utils.payout_by_day_gender_positions(
+            self.day,
+            Genders.WOMEN,
+            old_ranking,
+            new_ranking,
+        )
+        
+        self.assertTrue(value_change > 0)
+        self.assertEqual(delta_crabs['value_change'], value_change)
+        self.assertEqual(delta_crabs['payout'], round(0.21 * old_price))
     
     
-    def test__bump_down(self):
+    def test__individual__bump_down(self):
         """A decrease in value and no payout."""
         
-        matrix = utils.create_payout_matrix(self.day)
-        crew = models.Crew.objects.get(club = Clubs.ORIE, gender = Genders.WOMEN, rank = 1)
+        old_ranking = 5
+        new_ranking = 6
         
-        crew_payout = matrix[crew]
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        value_change = new_price - old_price
         
-        old_price = utils.pricing(1, 9)
-        new_price = utils.pricing(2, 9)
-        self.assertEqual(crew_payout['value_change'], new_price - old_price)
-        self.assertEqual(crew_payout['payout'], 0)
+        delta_crabs = utils.payout_by_day_gender_positions(
+            self.day,
+            Genders.WOMEN,
+            old_ranking,
+            new_ranking,
+        )
+        
+        self.assertTrue(value_change < 0)
+        self.assertEqual(delta_crabs['value_change'], value_change)
+        self.assertEqual(delta_crabs['payout'], 0)
     
     
     @tag('query-count')
-    def test__query_count(self):
+    def test__individual__query_count(self):
+        """Expect no queries if Day has Event pre-selected."""
+        
+        day = models.Day.objects.select_related('event').first()
+        
+        with self.assertNumQueries(0):
+            utils.payout_by_day_gender_positions(day, Genders.WOMEN, 5, 5)
+    
+    
+    @patch(
+        'fantasy.utils.payout_by_day_gender_positions',
+        autospec = True,
+        side_effect = lambda w, x, y, z: (w, x, y, z),
+    )
+    def test__matrix__individual_calls(self, payouts_mock):
+        """Checks that the matrix is constructed from payout calls for individual crews."""
+        
+        matrix = utils.create_payout_matrix(self.day)
+        for crew, delta_crabs in matrix.items():
+            with self.subTest(crew = str(crew)):
+                self.assertEqual(delta_crabs[0], self.day)
+                self.assertEqual(delta_crabs[1], crew.gender)
+                self.assertEqual(delta_crabs[2], self.day.ranking.get(crew = crew).rank)
+                self.assertEqual(delta_crabs[3], self.day.next.ranking.get(crew = crew).rank)
+    
+    
+    @tag('query-count')
+    def test__matrix__query_count(self):
         """Expect:
             (1) SELECT next day of event (can be cached)
             (1) SELECT crews with positions on day

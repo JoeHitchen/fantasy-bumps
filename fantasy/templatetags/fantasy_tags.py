@@ -76,6 +76,48 @@ def popularity_indicator(popularity):
 
 
 @register.inclusion_tag(template.Template('''
+  <button
+      class="payout btn btn-primary btn-sm flex-shrink-0"
+      data-toggle="popover"
+      data-placement="top"
+      title="Analysis for {{ analysis_crew }}"
+      data-popularity="{{ popularity|floatformat:2 }}"
+      data-bump-up="{{ bump_up }}"
+      data-row-over="{{ row_over }}"
+      data-bumped-down="{{ bumped_down }}"
+  >
+    {{ popularity|floatformat:2 }}&nbsp;&nbsp;<span class="oi oi-graph"></span>
+  </button>
+'''))
+def analysis_button(position):
+    
+    def delta_crabs_for_change(position_change):
+        delta_crabs = utils.payout_by_day_gender_positions(
+            position.day,
+            position.crew.gender,
+            position.rank,
+            position.rank - position_change,
+        )
+        return delta_crabs['value_change'] + delta_crabs['payout']
+    
+    bump_up = delta_crabs_for_change(+1) if not position.rank == 1 else 0
+    row_over = delta_crabs_for_change(0)
+    bumped_down = (
+        delta_crabs_for_change(-1)
+        if not position.rank == position.day.event.num_crews(position.crew.gender)
+        else 0
+    )
+    
+    return {
+        'analysis_crew': position.crew,
+        'popularity': position.popularity,
+        'bump_up': '{:+d}'.format(bump_up),
+        'row_over': '{:+d}'.format(row_over),
+        'bumped_down': '{:+d}'.format(bumped_down),
+    }
+
+
+@register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
   <a
     href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}"
@@ -161,8 +203,8 @@ def switch_button(purchase):
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
-    {{ position.popularity|popularity_indicator }}
-    {% if show_actions %}<span style="width: 1em">&nbsp;</span>
+    {% analysis_button position %}
+    {% if show_actions %}
     {% buy_button position disabled %}{% endif %}
   </div>
 '''))

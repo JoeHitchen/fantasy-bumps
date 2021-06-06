@@ -31,6 +31,10 @@
   margin-right: 0.7em;
 }
 
+.market-row button, .crew-row button {
+  margin-left: 1em;
+}
+
 .popularity-row {
   padding: 0.3em;
   padding-right: 0.5em;
@@ -58,9 +62,6 @@
 .crew-row-athlete div:last-child {
   font-size: 0.8em;
 }
-.crew-row button {
-  margin-left: 1em;
-}
 
 .results-pill {
   font-size: 10pt;
@@ -76,6 +77,14 @@
 .results-pill :last-child {
   border-radius: 0em 1em 1em 0em;
   width: 2.5em;
+}
+
+.analysis-box.table {
+  margin-bottom: 0em;
+}
+
+.analysis-box tr.analysis-top-row td {
+  border-top: 0px;
 }
 
 .btn-switch {
