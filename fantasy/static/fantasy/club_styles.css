@@ -3,18 +3,21 @@
 .club-chri, .club-quee, .club-shil, .club-sjoh, .club-trin {
   background-color: darkblue;
   color: white;
+  border-color: darkblue;
 }
 
 /* yellow-on-navy */
 .club-lady, .club-shug, .club-univ {
   background-color: darkblue;
   color: yellow;
+  border-color: darkblue;
 }
 
 /* red-on-navy */
 .club-ball, .club-corp {
   background-color: darkblue;
   color: #c00;
+  border-color: darkblue;
 }
 
 /* red-on-white */
@@ -51,8 +54,8 @@
 
 .club-grte {
   background-color: darkblue;
-  color: #098137;
-  border-color: yellow;
+  color: gold;
+  border-color: darkgreen;
 }
 .club-hert { /* Source: Wiki */
   background-color: #600;
@@ -61,24 +64,26 @@
 .club-jesu { /* Source: Wiki */
   background-color: darkgreen;
   color: white;
+  border-color: darkgreen;
 }
 .club-lina {
-  background-color: yellow;
+  background-color: gold;
   color: black;
+  background-color: gold;
 }
 .club-linc {
   background-color: darkblue;
   color: lightblue;
+  border-color: lightblue;
 }
 .club-magd {
   background-color: black;
   color: white;
-  border-color: #444;
+  border-color: black;
 }
 .club-mert { /* Source: Wiki */
-  background-color: white;
-  color: #906;
-  border-color: #906;
+  background-color: #906;
+  color: white;
 }
 .club-newc { /* Source: Wiki */ 
   background-color: purple;
@@ -86,8 +91,9 @@
   border-color: goldenrod;
 }
 .club-pemb {
-  background-color: pink;
-  color: white;
+  background-color: white;
+  color: hotpink;
+  border-color: hotpink;
 }
 .club-some { /* Source: Wiki */
   background-color: red;
@@ -112,9 +118,10 @@
 .club-wadh { /* Source: Wiki */
   background-color: lightblue;
   color: white;
+  border-color: lightblue;
 }
 .club-wolf {
-  background-color: yellow;
+  background-color: gold;
   color: #c00;
 }
 .club-worc {
