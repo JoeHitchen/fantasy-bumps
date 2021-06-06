@@ -75,7 +75,20 @@ def popularity_indicator(popularity):
     return mark_safe('<span class="popularity">{:.2f}</span>'.format(popularity))
 
 
-@register.filter()
+@register.inclusion_tag(template.Template('''
+  <button
+      class="payout btn btn-primary btn-sm flex-shrink-0"
+      data-toggle="popover"
+      data-placement="top"
+      title="Analysis for {{ analysis_crew }}"
+      data-popularity="{{ popularity|floatformat:2 }}"
+      data-bump-up="{{ bump_up }}"
+      data-row-over="{{ row_over }}"
+      data-bumped-down="{{ bumped_down }}"
+  >
+    {{ popularity|floatformat:2 }}&nbsp;&nbsp;<span class="oi oi-graph"></span>
+  </button>
+'''))
 def analysis_button(position):
     
     def delta_crabs_for_change(position_change):
@@ -95,19 +108,13 @@ def analysis_button(position):
         else 0
     )
     
-    return mark_safe('''
-      <button
-          class="payout btn btn-primary btn-sm flex-shrink-0"
-          data-toggle="popover"
-          data-placement="top"
-          title="Analysis for {0}"
-          data-popularity="{1:.2f}"
-          data-bump-up="{2:+d}"
-          data-row-over="{3:+d}"
-          data-bumped-down="{4:+d}"
-      >
-        {1:.2f}&nbsp;&nbsp;<span class="oi oi-graph"></span>
-      </button>'''.format(position.crew, position.popularity, bump_up, row_over, bumped_down))
+    return {
+        'analysis_crew': position.crew,
+        'popularity': position.popularity,
+        'bump_up': '{:+d}'.format(bump_up),
+        'row_over': '{:+d}'.format(row_over),
+        'bumped_down': '{:+d}'.format(bumped_down),
+    }
 
 
 @register.inclusion_tag(template.Template('''
@@ -196,7 +203,7 @@ def switch_button(purchase):
   <div class="list-group-item market-row">
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
-    {{ position|analysis_button }}
+    {% analysis_button position %}
     {% if show_actions %}
     {% buy_button position disabled %}{% endif %}
   </div>
