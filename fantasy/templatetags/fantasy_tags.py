@@ -97,7 +97,7 @@ def analysis_button(position):
     
     return mark_safe('''
       <button
-          class="payout btn btn-primary btn-sm"
+          class="payout btn btn-primary btn-sm flex-shrink-0"
           data-toggle="popover"
           data-placement="top"
           title="Analysis for {0}"
@@ -197,7 +197,7 @@ def switch_button(purchase):
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
     {{ position|analysis_button }}
-    {% if show_actions %}<span style="width: 1em">&nbsp;</span>
+    {% if show_actions %}
     {% buy_button position disabled %}{% endif %}
   </div>
 '''))
