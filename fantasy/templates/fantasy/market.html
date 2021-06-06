@@ -21,9 +21,24 @@
       trigger: 'focus',
       content: function() {
         $('#analysis-popularity').html($(this).data('popularity'));
+        
         $('#analysis-bump-up').html($(this).data('bump-up'));
         $('#analysis-row-over').html($(this).data('row-over'));
         $('#analysis-bumped-down').html($(this).data('bumped-down'));
+        
+        if ($(this).data('bump-up') === '+0') {
+          $('#analysis-bump-up-row').hide();
+          $('#analysis-row-over-row').addClass('analysis-top-row');
+        } else {
+          $('#analysis-bump-up-row').show();
+          $('#analysis-row-over-row').removeClass('analysis-top-row');
+        }
+        if ($(this).data('bumped-down') === '+0') {
+          $('#analysis-bumped-down-row').hide();
+        } else {
+          $('#analysis-bumped-down-row').show();
+        }
+        
         return $('#analysis_wrapper').html();
       }
     });
@@ -83,15 +98,15 @@
 
 <div id="analysis_wrapper" style="display: none">
   <table class="table table-sm text-center analysis-box">
-    <tr>
+    <tr class="analysis-top-row" id="analysis-bump-up-row">
       <td><span class="badge badge-success">+1</span></td>
       <td><span id="analysis-bump-up">-</span>{{ ''|currency }}</td>
     </tr>
-    <tr>
+    <tr id="analysis-row-over-row">
       <td><span class="badge badge-warning"><span class="oi oi-arrow-right"></span></span></td>
       <td><span id="analysis-row-over">-</span>{{ ''|currency }}</td>
     </tr>
-    <tr>
+    <tr id="analysis-bumped-down-row">
       <td><span class="badge badge-danger">&minus;1</span></td>
       <td><span id="analysis-bumped-down">-</span>{{ ''|currency }}</td>
     </tr>
