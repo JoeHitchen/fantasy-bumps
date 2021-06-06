@@ -76,20 +76,38 @@ def popularity_indicator(popularity):
 
 
 @register.filter()
-def analysis_button(crew):
+def analysis_button(position):
+    
+    def delta_crabs_for_change(position_change):
+        delta_crabs = utils.payout_by_day_gender_positions(
+            position.day,
+            position.crew.gender,
+            position.rank,
+            position.rank - position_change,
+        )
+        return delta_crabs['value_change'] + delta_crabs['payout']
+    
+    bump_up = delta_crabs_for_change(+1) if not position.rank == 1 else 0
+    row_over = delta_crabs_for_change(0)
+    bumped_down = (
+        delta_crabs_for_change(-1)
+        if not position.rank == position.day.event.num_crews(position.crew.gender)
+        else 0
+    )
+    
     return mark_safe('''
       <button
           class="payout btn btn-primary btn-sm"
           data-toggle="popover"
           data-placement="top"
           title="Analysis for {}"
-          data-popularity="1.23"
-          data-bump-up="&plus;45"
-          data-row-over="&plus;12"
-          data-bumped-down="&minus;15"
+          data-popularity="{:.2f}"
+          data-bump-up="{:+d}"
+          data-row-over="{:+d}"
+          data-bumped-down="{:+d}"
       >
         <span class="oi oi-beaker"></span>&nbsp;&nbsp;<span class="oi oi-graph"></span>
-      </button>'''.format(crew))
+      </button>'''.format(position.crew, position.popularity, bump_up, row_over, bumped_down))
 
 
 @register.inclusion_tag(template.Template('''
@@ -179,7 +197,7 @@ def switch_button(purchase):
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
     {{ position.popularity|popularity_indicator }}
-    {{ position.crew|analysis_button }}
+    {{ position|analysis_button }}
     {% if show_actions %}<span style="width: 1em">&nbsp;</span>
     {% buy_button position disabled %}{% endif %}
   </div>
