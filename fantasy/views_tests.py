@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.test import TestCase, tag
 from django.utils import timezone
@@ -15,6 +15,37 @@ from . import transactions
 from . import patching
 
 
+def prepare_event(user, year, date_shift = 0):
+    """An internal method for creating multiple events."""
+    
+    event = models.Event.objects.create(
+        series = Series.EIGHTS,
+        year = year,
+        tag = 'eights{}'.format(year),
+        mens_divisions_count = 7,
+        mens_divisions_size = 13,
+        womens_divisions_count = 6,
+        womens_divisions_size = 13,
+    )
+    
+    models.Day.objects.bulk_create([models.Day(
+        event = event,
+        name = index,
+        date = timezone.localtime().date() + timedelta(days = index - date_shift),
+        first_race_time = '12:30' if index != 4 else None,
+    ) for index in range(0, 5)])
+    
+    event.fantasies.create(
+        team = user.team,
+        mens_budget = 967,
+        mens_balance = 126,
+        womens_budget = 1209,
+        womens_balance = 103,
+    )
+    
+    return event
+
+
 class Test__Index(TestCase):
     fixtures = ['dev_team', 'seats']
 
@@ -24,36 +55,13 @@ class Test__Index(TestCase):
         
         self.user = auth.User.objects.get(username = 'DevTeam')
         
-        def prepare_event(year, date_shift = 0):
-            """An internal method for creating multiple events."""
-            event = models.Event.objects.create(
-                series = Series.EIGHTS,
-                year = year,
-                tag = 'eights{}'.format(year),
-                mens_divisions_count = 7,
-                mens_divisions_size = 13,
-                womens_divisions_count = 6,
-                womens_divisions_size = 13,
-            )
-            models.Day.objects.bulk_create([models.Day(
-                event = event,
-                name = index,
-                date = timezone.localtime().date() + timedelta(days = index - date_shift),
-                first_race_time = '12:30' if index != 4 else None,
-            ) for index in range(0, 5)])
-            event.fantasies.create(
-                team = self.user.team,
-                mens_budget = 967,
-                mens_balance = 126,
-                womens_budget = 1209,
-                womens_balance = 103,
-            )
-        
-        prepare_event(2015, -2)
-        prepare_event(2016, 0)
-        prepare_event(2017, 2)
-        prepare_event(2018, 4)
-        prepare_event(2019, 6)
+        self.recent_events = [
+            prepare_event(self.user, 2021, -2),
+            prepare_event(self.user, 2020, 0),
+            prepare_event(self.user, 2019, 2),
+        ]
+        prepare_event(self.user, 2018, 4)
+        prepare_event(self.user, 2017, 6)
     
     
     def check_event_augmentation(self, event, with_user):
@@ -70,7 +78,7 @@ class Test__Index(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
         
-        self.assertEqual(len(response.context['recent_events']), 3)
+        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
         
         for event in response.context['recent_events']:
             with self.subTest(year = event.year):
@@ -86,7 +94,7 @@ class Test__Index(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
         
-        self.assertEqual(len(response.context['recent_events']), 3)
+        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
         
         for event in response.context['recent_events']:
             with self.subTest(year = event.year):
@@ -124,12 +132,19 @@ class Test__Index(TestCase):
 
 
 class Test__GuideRules(TestCase):
-    fixtures = ['dev_event', 'dev_team']
+    fixtures = ['dev_team']
     
     @classmethod
     def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
-        cls.team = models.Team.objects.first()
+        cls.user = auth.User.objects.get(username = 'DevTeam')
+        
+        cls.recent_events = [
+            prepare_event(cls.user, 2021, -2),
+            prepare_event(cls.user, 2020, 0),
+            prepare_event(cls.user, 2019, 2),
+        ]
+        prepare_event(cls.user, 2018, 4)
+        prepare_event(cls.user, 2017, 6)
     
     
     def test__render(self):
@@ -139,10 +154,7 @@ class Test__GuideRules(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/rules.html')
-        self.assertQuerysetEqual(
-            response.context['recent_events'],
-            models.Event.objects.all(),
-        )
+        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
         self.assertEqual(response.context['money'], money)
     
     
@@ -166,36 +178,15 @@ class Test__EventsList(TestCase):
         
         self.user = auth.User.objects.get(username = 'DevTeam')
         
-        def prepare_event(year, date_shift = 0):
-            """An internal method for creating multiple events."""
-            event = models.Event.objects.create(
-                series = Series.EIGHTS,
-                year = year,
-                tag = 'eights{}'.format(year),
-                mens_divisions_count = 7,
-                mens_divisions_size = 13,
-                womens_divisions_count = 6,
-                womens_divisions_size = 13,
-            )
-            models.Day.objects.bulk_create([models.Day(
-                event = event,
-                name = index,
-                date = timezone.localtime().date() + timedelta(days = index - date_shift),
-                first_race_time = '12:30' if index != 4 else None,
-            ) for index in range(0, 5)])
-            event.fantasies.create(
-                team = self.user.team,
-                mens_budget = 967,
-                mens_balance = 126,
-                womens_budget = 1209,
-                womens_balance = 103,
-            )
-        
-        prepare_event(2015, -2)
-        prepare_event(2016, 0)
-        prepare_event(2017, 2)
-        prepare_event(2018, 4)
-        prepare_event(2019, 6)
+        self.recent_events = [
+            prepare_event(self.user, 2021, -2),
+            prepare_event(self.user, 2020, 0),
+            prepare_event(self.user, 2019, 2),
+        ]
+        self.past_events = [
+            prepare_event(self.user, 2018, 4),
+            prepare_event(self.user, 2017, 6),
+        ]
     
     
     def check_event_augmentation(self, event, with_user):
@@ -212,8 +203,8 @@ class Test__EventsList(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/events.html')
         
-        self.assertEqual(len(response.context['recent_events']), 3)
-        self.assertEqual(len(response.context['past_events']), 2)
+        self.assertEqual(response.context['recent_events'], self.recent_events)
+        self.assertEqual(response.context['past_events'], self.past_events)
         
         for event in response.context['recent_events']:
             with self.subTest(year = event.year):
@@ -233,8 +224,8 @@ class Test__EventsList(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/events.html')
         
-        self.assertEqual(len(response.context['recent_events']), 3)
-        self.assertEqual(len(response.context['past_events']), 2)
+        self.assertEqual(response.context['recent_events'], self.recent_events)
+        self.assertEqual(response.context['past_events'], self.past_events)
         
         for event in response.context['recent_events']:
             with self.subTest(year = event.year):
@@ -294,12 +285,22 @@ class GamePageBase():
         
         cls.event = models.Event.objects.first()
         cls.team = models.Team.objects.first()
+        cls.user = auth.User.objects.first()
         cls.day = cls.event.active_day
         
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
         cls.crew_mens = models.Crew.objects.filter(gender = Genders.MEN).first()
         cls.crew_womens = models.Crew.objects.filter(gender = Genders.WOMEN).first()
+        
+        day_shift = (date.today() - cls.day.date).days
+        cls.recent_events = [
+            prepare_event(cls.user, 2021, 0),
+            prepare_event(cls.user, 2020, day_shift + 10),
+            prepare_event(cls.user, 2019, day_shift + 12),
+        ]
+        prepare_event(cls.user, 2018, day_shift + 14)
+        prepare_event(cls.user, 2017, day_shift + 16)
     
     
     def test__generic__unknown_event(self):
@@ -323,11 +324,7 @@ class GamePageBase():
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertFalse('team' in response.context)
-        
-        self.assertQuerysetEqual(
-            response.context['recent_events'],
-            models.Event.objects.all(),
-        )
+        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
         
         self.extra_context_without_user(response.context)
     
@@ -348,11 +345,7 @@ class GamePageBase():
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertEqual(response.context['team'], self.team)
-        
-        self.assertQuerysetEqual(
-            response.context['recent_events'],
-            models.Event.objects.all(),
-        )
+        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
         
         self.extra_context_with_user(response.context)
     

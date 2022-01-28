@@ -19,8 +19,13 @@ class FantasyBaseMixin():
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['recent_events'] = utils.ordered_events()[:3]
         context['money'] = money
+        
+        events = utils.ordered_events()
+        if 'event' in context:
+            events = events.exclude(id = context['event'].id)
+        context['recent_events'] = events[:3]
+        
         return context
     
     
