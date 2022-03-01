@@ -26,7 +26,7 @@ def get_crew_lists(event_id):
     print('Retriving OURCs crew lists for event #{}'.format(event_id))  # noqa: T001
     
     url = 'https://ourcs.co.uk/racing/entries/events/event/{}/crew_lists/'.format(event_id)
-    response = requests.get(url)
+    response = requests.get(url, allow_redirects = False)
     
     if not response.status_code == 200:
         raise IOError('Could not load crew lists page')
