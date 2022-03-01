@@ -445,7 +445,7 @@ def sell(request):
         # Try elegent redirect back to market page using additional form data
         messages.error(request, 'You are not authorised to conduct this sale.')
         try:
-            gender = request.POST['gender']
+            gender = Genders(request.POST['gender'])
             url_name = f'fantasy:{gender.label.lower()}'
             event = models.Event.objects.get(tag = request.POST.get('event'))
             return redirect(url_name, event_tag = event.tag)

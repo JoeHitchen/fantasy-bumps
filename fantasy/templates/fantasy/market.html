@@ -92,7 +92,7 @@
 <form id="sell-form" action="{% url 'fantasy:sell' %}" method="post">
   {% csrf_token %}
   <input id="sell-event" name="event" type="hidden" value="{{ event.tag }}">
-  <input id="sell-gender" name="gender" type="hidden" value="{{ gender_code }}">
+  <input id="sell-gender" name="gender" type="hidden" value="{{ gender }}">
   <input id="sell-purchase" name="purchase" type="hidden" value=""/>
 </form>
 
