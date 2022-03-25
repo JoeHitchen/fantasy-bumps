@@ -78,7 +78,8 @@ class Command(BaseCommand):
             
             # Bumps events
             else:
-                results = live_bumps.get_results(event.series, event.year)
+                new_day_index = tools.get_day_index(new_day)
+                results = live_bumps.get_results(event.series, event.year, new_day_index)
                 crews = tools.get_all_crews(results.keys())
                 tools.add_rankings(new_day, crews, results)
             

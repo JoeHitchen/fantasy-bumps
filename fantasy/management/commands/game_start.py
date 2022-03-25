@@ -124,7 +124,7 @@ class Command(BaseCommand):
             return
         
         # Bumps event via Live Bumps
-        results = live_bumps.get_results(series, year)
+        results = live_bumps.get_results(series, year, tools.get_day_index(weds))
         crews = tools.get_all_crews(results.keys())
         tools.add_rankings(weds, crews, results)
         tools.add_athletes(event, crews, live_bumps.get_crew_lists(series, year))

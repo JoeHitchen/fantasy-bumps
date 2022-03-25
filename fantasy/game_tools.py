@@ -26,15 +26,17 @@ def get_all_crews(crews_in_event):
     }
 
 
+def get_day_index(day):
+    return day.event.days.filter(date__lt = day.date).count()
+
+
 def add_rankings(day, crews, results):
-    
-    day_index = day.event.days.filter(date__lt = day.date).count()
     
     day.ranking.bulk_create([
         models.Position(
             day = day,
             crew = crew,
-            rank = results[crew_id][day_index],
+            rank = results[crew_id],
         )
         for crew_id, crew in crews.items()
     ])
