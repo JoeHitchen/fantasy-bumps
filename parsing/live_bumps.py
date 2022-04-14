@@ -14,7 +14,7 @@ def _crew_results(crew_data):
     return positions
 
 
-def get_results(series, year):
+def get_results(series, year, day_index):
     event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
     print('Retriving results for {} {} via Live Bumps'.format(event_string, year))  # noqa: T001
     
@@ -29,10 +29,10 @@ def get_results(series, year):
         club = boat_code_parser(boat_code)
         
         for index, crew_data in enumerate(club_data['men']):
-            crews[(club, 'M', index + 1)] = _crew_results(crew_data)
+            crews[(club, 'M', index + 1)] = _crew_results(crew_data)[day_index]
         
         for index, crew_data in enumerate(club_data['women']):
-            crews[(club, 'W', index + 1)] = _crew_results(crew_data)
+            crews[(club, 'W', index + 1)] = _crew_results(crew_data)[day_index]
     
     return crews
 

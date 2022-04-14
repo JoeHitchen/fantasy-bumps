@@ -5,8 +5,10 @@ if not args:
     raise IndexError('Must supply at least one argument')
 
 commands = {
-    'test': 'python manage.py test --pattern=*tests.py',
-    'test:ff': 'python project.py test --failfast',
+    '_test': 'python manage.py test --pattern=*tests.py',
+    'test': 'python project.py _test --exclude=external',
+    'test:ff': 'python project.py _test --exclude=external --failfast',
+    'test:external': 'python project.py _test --tag=external',
     'lint': 'flake8',
 }
 

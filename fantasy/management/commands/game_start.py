@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
 from django.utils import timezone
 
-from parsing import ourcs, live_bumps
+from parsing import ourcs, live_bumps, anu
 
 from ... import models
 from ...constants import Series as EventSeries
@@ -13,7 +13,10 @@ from ... import game_tools as tools
 
 class Command(BaseCommand):
     help = 'Creates a new event to play FantasyBumps against.'
-
+    
+    LIVE_BUMPS = 'live'
+    ANU = 'anu'
+    
     def add_arguments(self, parser):
         
         type_group = parser.add_mutually_exclusive_group()
@@ -52,6 +55,13 @@ class Command(BaseCommand):
             type = int,
             help = 'The year of the event to create/simulate.',
         )
+        
+        parser.add_argument(
+            '--source',
+            default = self.LIVE_BUMPS,
+            choices = [self.LIVE_BUMPS, self.ANU],
+            help = 'The source of start order data (default: live)',
+        )
     
     
     def handle(self, *args, **kwargs):
@@ -69,6 +79,7 @@ class Command(BaseCommand):
             start_date = timezone.now() + timedelta(5)
         
         year = kwargs['year'] if kwargs['year'] else start_date.year
+        source = kwargs.get('source', self.LIVE_BUMPS)
         
         # Demo events
         if is_demo_event:
@@ -123,8 +134,12 @@ class Command(BaseCommand):
             tools.add_athletes(event, crews, crew_lists)
             return
         
-        # Bumps event via Live Bumps
-        results = live_bumps.get_results(series, year)
+        # Bumps event
+        if source == self.LIVE_BUMPS:
+            results = live_bumps.get_results(series, year, tools.get_day_index(weds))
+        else:
+            day_tag = weds.date.strftime('%a').lower() if weds.first_race_time else 'end'
+            results = anu.get_start_order(series, year, day_tag)
         crews = tools.get_all_crews(results.keys())
         tools.add_rankings(weds, crews, results)
         tools.add_athletes(event, crews, live_bumps.get_crew_lists(series, year))
