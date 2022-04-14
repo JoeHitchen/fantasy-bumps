@@ -28,11 +28,15 @@ def get_results(series, year, day_index):
     for boat_code, club_data in response.json().items():
         club = boat_code_parser(boat_code)
         
-        for index, crew_data in enumerate(club_data['men']):
-            crews[(club, 'M', index + 1)] = _crew_results(crew_data)[day_index]
+        for crew_rank, crew_data in enumerate(club_data['men']):
+            crew_results = _crew_results(crew_data)
+            index = min(day_index, len(crew_results) - 1)
+            crews[(club, 'M', crew_rank + 1)] = crew_results[index]
         
-        for index, crew_data in enumerate(club_data['women']):
-            crews[(club, 'W', index + 1)] = _crew_results(crew_data)[day_index]
+        for crew_rank, crew_data in enumerate(club_data['women']):
+            crew_results = _crew_results(crew_data)
+            index = min(day_index, len(crew_results) - 1)
+            crews[(club, 'W', crew_rank + 1)] = crew_results[index]
     
     return crews
 
