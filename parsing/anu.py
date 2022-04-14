@@ -31,7 +31,7 @@ def _parse_division(table):
         start_order.append((
             int(bungline_match.group('bungline')),
             club_parser(bungline_match.group('club')),
-            _roman_parser(bungline_match.group('rank')) or 1,
+            bungline_match.group('rank'),
         ))
     
     return (gender, division, start_order)
