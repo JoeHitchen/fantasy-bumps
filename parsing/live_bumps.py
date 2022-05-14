@@ -16,7 +16,7 @@ def _crew_results(crew_data):
 
 def get_results(series, year, day_index):
     event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
-    print('Retriving results for {} {} via Live Bumps'.format(event_string, year))  # noqa: T001
+    print('Retriving results for {} {} via Live Bumps'.format(event_string, year))  # noqa: T201
     
     url = 'https://bumps.live/data/{}_{}.json'.format(event_string.lower(), year)
     response = requests.get(url)
@@ -43,7 +43,7 @@ def get_results(series, year, day_index):
 
 def get_crew_lists(series, year):
     event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
-    print('Retriving crew lists for {} {} via Live Bumps'.format(event_string, year))  # noqa: T001
+    print('Retriving crew lists for {} {} via Live Bumps'.format(event_string, year))  # noqa: T201
     
     url = 'https://bumps.live/data/{}_{}_crews.json'.format(event_string.lower(), year)
     response = requests.get(url)

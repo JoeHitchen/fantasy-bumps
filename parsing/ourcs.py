@@ -23,7 +23,7 @@ def _crew_box(box, ext_club):
 
 
 def get_crew_lists(event_id):
-    print('Retriving OURCs crew lists for event #{}'.format(event_id))  # noqa: T001
+    print('Retriving OURCs crew lists for event #{}'.format(event_id))  # noqa: T201
     
     url = 'https://ourcs.co.uk/racing/entries/events/event/{}/crew_lists/'.format(event_id)
     response = requests.get(url, allow_redirects = False)
