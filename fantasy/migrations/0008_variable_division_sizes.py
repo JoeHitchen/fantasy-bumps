@@ -20,4 +20,20 @@ class Migration(migrations.Migration):
             name='womens_division_sizes',
             field=models.JSONField(default=list),
         ),
+        migrations.RemoveField(
+            model_name='event',
+            name='mens_divisions_count',
+        ),
+        migrations.RemoveField(
+            model_name='event',
+            name='mens_divisions_size',
+        ),
+        migrations.RemoveField(
+            model_name='event',
+            name='womens_divisions_count',
+        ),
+        migrations.RemoveField(
+            model_name='event',
+            name='womens_divisions_size',
+        ),
     ]

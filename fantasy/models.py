@@ -25,11 +25,7 @@ class Event(models.Model):
     year = models.PositiveSmallIntegerField(db_index = True)
     tag = models.SlugField(max_length = 15, unique = True)  # Implicit db index
     
-    mens_divisions_count = models.PositiveSmallIntegerField()
-    mens_divisions_size = models.PositiveSmallIntegerField()
     mens_division_sizes = models.JSONField(default = list)
-    womens_divisions_count = models.PositiveSmallIntegerField()
-    womens_divisions_size = models.PositiveSmallIntegerField()
     womens_division_sizes = models.JSONField(default = list)
     
     def __str__(self):

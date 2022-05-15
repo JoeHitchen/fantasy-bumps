@@ -22,10 +22,6 @@ def prepare_event(user, year, date_shift = 0):
         series = Series.EIGHTS,
         year = year,
         tag = 'eights{}'.format(year),
-        mens_divisions_count = 7,
-        mens_divisions_size = 13,
-        womens_divisions_count = 6,
-        womens_divisions_size = 13,
         mens_division_sizes = [13, 13, 13, 13, 13, 13, 14],
         womens_division_sizes = [13, 13, 13, 13, 13, 14],
     )

@@ -6,11 +6,7 @@
       "series": "D",
       "year": "2019",
       "tag": "devgame",
-      "mens_divisions_count": 2,
-      "mens_divisions_size": 4,
       "mens_division_sizes": [4, 5],
-      "womens_divisions_count": 2,
-      "womens_divisions_size": 4,
       "womens_division_sizes": [4, 5]
     }
   }
