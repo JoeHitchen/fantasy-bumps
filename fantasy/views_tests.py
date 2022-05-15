@@ -26,6 +26,8 @@ def prepare_event(user, year, date_shift = 0):
         mens_divisions_size = 13,
         womens_divisions_count = 6,
         womens_divisions_size = 13,
+        mens_division_sizes = [13, 13, 13, 13, 13, 13, 14],
+        womens_division_sizes = [13, 13, 13, 13, 13, 14],
     )
     
     models.Day.objects.bulk_create([models.Day(

@@ -17,6 +17,8 @@ class Test__Ordered_Events(TestCase):
             'mens_divisions_size': 12,
             'womens_divisions_count': 5,
             'womens_divisions_size': 12,
+            'mens_division_sizes': [12, 12, 12, 12, 12, 13],
+            'womens_division_sizes': [12, 12, 12, 12, 13],
         }
         
         t14 = models.Event(series = Series.TORPIDS, year = 2014, tag = 't14', **division_structure)
