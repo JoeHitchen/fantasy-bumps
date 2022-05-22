@@ -25,10 +25,8 @@ class Event(models.Model):
     year = models.PositiveSmallIntegerField(db_index = True)
     tag = models.SlugField(max_length = 15, unique = True)  # Implicit db index
     
-    mens_divisions_count = models.PositiveSmallIntegerField()
-    mens_divisions_size = models.PositiveSmallIntegerField()
-    womens_divisions_count = models.PositiveSmallIntegerField()
-    womens_divisions_size = models.PositiveSmallIntegerField()
+    mens_division_sizes = models.JSONField(default = list)
+    womens_division_sizes = models.JSONField(default = list)
     
     def __str__(self):
         return '{} {}'.format(self.get_series_display(), self.year)
@@ -72,8 +70,8 @@ class Event(models.Model):
     def num_crews(self, gender):
         """The number of crews of the given gender competing in the event."""
         return {
-            Genders.MEN: self.mens_divisions_count * self.mens_divisions_size + 1,
-            Genders.WOMEN: self.womens_divisions_count * self.womens_divisions_size + 1,
+            Genders.MEN: sum(self.mens_division_sizes),
+            Genders.WOMEN: sum(self.womens_division_sizes),
         }[gender]
 
 
@@ -125,24 +123,29 @@ class Day(models.Model):
     def divisions(self, gender):
         """Generates the division structure for the day."""
         
-        # Get number and size of divisions
-        number_of_divisions, size_of_divisions = {
-            Genders.MEN: (self.event.mens_divisions_count, self.event.mens_divisions_size),
-            Genders.WOMEN: (self.event.womens_divisions_count, self.event.womens_divisions_size),
+        # Get correct division sizes
+        division_sizes = {
+            Genders.MEN: self.event.mens_division_sizes,
+            Genders.WOMEN: self.event.womens_division_sizes,
         }[gender]
         
-        # Create division structure
-        return [
-            Division(
+        # Generate division structure
+        divisions = []
+        prev_lowest_bungline = 0
+        
+        for division_number, division_size in enumerate(division_sizes):
+            
+            divisions.append(Division(
                 day = self,
                 gender = gender,
-                number = division_number,
-                top_bungline = (division_number - 1) * size_of_divisions + 1,
-                bottom_bungline = division_number * size_of_divisions
-                + int(division_number == number_of_divisions),
-            )
-            for division_number in range(1, number_of_divisions + 1)
-        ]
+                number = division_number + 1,
+                top_bungline = prev_lowest_bungline + 1,
+                bottom_bungline = prev_lowest_bungline + division_size,
+            ))
+            
+            prev_lowest_bungline = divisions[-1].bottom_bungline
+        
+        return divisions
     
     
     def start_order(self, gender, extend = lambda so: so):
