@@ -3,6 +3,51 @@
 from django.db import migrations, models
 
 
+def make_division_size_list(count, size):
+    """Makes a list of the divisions sizes based on the old structure fields."""
+    
+    sizes = [size] * (count - 1)
+    sizes.append(size + 1)
+    return sizes
+
+
+def migrate_divisions_forwards(apps, schema_editor):
+    """Populates the new _division_sizes fields."""
+    Event = apps.get_model('fantasy', 'Event')
+    
+    events = Event.objects.all()
+    for event in events:
+        event.mens_division_sizes = make_division_size_list(
+            event.mens_divisions_count,
+            event.mens_divisions_size,
+        )
+        event.womens_division_sizes = make_division_size_list(
+            event.womens_divisions_count,
+            event.womens_divisions_size,
+        )
+    
+    Event.objects.bulk_update(events, ['mens_division_sizes', 'womens_division_sizes'])
+
+
+def migrate_divisions_backwards(apps, schema_editor):
+    """Attempts to fit the flexible divisions back into the more rigid format."""
+    Event = apps.get_model('fantasy', 'Event')
+    
+    events = Event.objects.all()
+    for event in events:
+        event.mens_divisions_count = len(event.mens_division_sizes)
+        event.mens_divisions_size = event.mens_division_sizes[0]
+        event.womens_divisions_count = len(event.womens_division_sizes)
+        event.womens_divisions_size = event.womens_division_sizes[0]
+    
+    Event.objects.bulk_update(events, [
+        'mens_divisions_count',
+        'mens_divisions_size',
+        'womens_divisions_count',
+        'womens_divisions_size',
+    ])
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,6 +55,26 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AlterField(
+            model_name='event',
+            name='mens_divisions_count',
+            field=models.PositiveSmallIntegerField(default=0),
+        ),
+        migrations.AlterField(
+            model_name='event',
+            name='mens_divisions_size',
+            field=models.PositiveSmallIntegerField(default=0),
+        ),
+        migrations.AlterField(
+            model_name='event',
+            name='womens_divisions_count',
+            field=models.PositiveSmallIntegerField(default=0),
+        ),
+        migrations.AlterField(
+            model_name='event',
+            name='womens_divisions_size',
+            field=models.PositiveSmallIntegerField(default=0),
+        ),
         migrations.AddField(
             model_name='event',
             name='mens_division_sizes',
@@ -20,6 +85,7 @@ class Migration(migrations.Migration):
             name='womens_division_sizes',
             field=models.JSONField(default=list),
         ),
+        migrations.RunPython(migrate_divisions_forwards, migrate_divisions_backwards),
         migrations.RemoveField(
             model_name='event',
             name='mens_divisions_count',
