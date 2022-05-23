@@ -29,12 +29,15 @@
         if ($(this).data('bump-up') === '+0') {
           $('#analysis-bump-up-row').hide();
           $('#analysis-row-over-row').addClass('analysis-top-row');
+          $('#analysis-row-over-row').find('.badge').addClass('badge-success').removeClass('badge-warning');
         } else {
           $('#analysis-bump-up-row').show();
           $('#analysis-row-over-row').removeClass('analysis-top-row');
+          $('#analysis-row-over-row').find('.badge').removeClass(['badge-success', 'badge-danger']).addClass('badge-warning');
         }
         if ($(this).data('bumped-down') === '+0') {
           $('#analysis-bumped-down-row').hide();
+          $('#analysis-row-over-row').find('.badge').addClass('badge-danger').removeClass('badge-warning');
         } else {
           $('#analysis-bumped-down-row').show();
         }

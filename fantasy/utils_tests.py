@@ -240,6 +240,28 @@ class Test__Payouts(TestCase):
         self.assertEqual(delta_crabs['payout'], round(0.07 * old_price))
     
     
+    def test__individual__headship(self):
+        """Headship row overs get a larger payout than a standard row over."""
+        
+        old_ranking = 1
+        new_ranking = 1
+        
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        value_change = new_price - old_price
+        
+        delta_crabs = utils.payout_by_day_gender_positions(
+            self.day,
+            Genders.WOMEN,
+            old_ranking,
+            new_ranking,
+        )
+        
+        self.assertEqual(value_change, 0)
+        self.assertEqual(delta_crabs['value_change'], value_change)
+        self.assertEqual(delta_crabs['payout'], round(0.175 * old_price))
+    
+    
     def test__individual__bump_up(self):
         """An increase in value and a larger payout."""
         
