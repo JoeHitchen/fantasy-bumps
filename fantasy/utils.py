@@ -82,7 +82,8 @@ def payout_by_day_gender_positions(day, gender, old_position, new_position):
     
     payout = 0
     if position_change >= 0:
-        payout = (0.14 * position_change + 0.07) * crew_value_old
+        headship_bonus = 0.105 if new_position == old_position == 1 else 0
+        payout = (0.14 * position_change + 0.07 + headship_bonus) * crew_value_old
         payout = round(payout)
     
     return {'value_change': crew_value_new - crew_value_old, 'payout': payout}

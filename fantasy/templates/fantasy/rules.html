@@ -47,12 +47,14 @@
   <p class="ml-3 mb-0">
     Athletes that row over or gain places will also be awarded cash payouts, on top of any intrinsic value change.
     The reward is 7% of their value for a rowover, plus an additional 14% for each place gained.
+    Headship crews are handled slightly differently, and a headship row over is valued at 17.5% to compensate for the fact that they cannot bump.
   </p>
   <em>
     <ul>
-      <li>The headship crew is worth {{ money.PRICE_MAX|currency }} and will be rewarded {{ 21|currency }} for a row over.</li>
+      <li>A crew in division 1 valued at {{ 240|currency }} will be rewarded {{ 17|currency }} for a row over.</li>
       <li>A crew in division 2 valued at {{ 130|currency }} that goes up one will be rewarded {{ 27|currency }}.</li>
       <li>A crew in division 4 valued at {{ 50|currency }} will be rewarded {{ 25|currency }} if they gain three places.</li>
+      <li>The headship crew is worth {{ money.PRICE_MAX|currency }} and will be rewarded {{ 52|currency }} for a row over, rather than the standard {{ 21|currency }}.</li>
     </ul>
   </em>
   <p>
