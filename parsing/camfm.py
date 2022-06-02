@@ -29,11 +29,9 @@ def _cambridge_club_parser(club_str):
     }.get(club_str[0:5].lower(), club_str[0:4].lower())
 
 
-def _get_crews_for_division(division_soup, finish):
+def _get_crews_for_division(division_soup):
     
-    order_class = 'division_boats_finish' if finish else 'division_boats_start'
-    
-    start_div = division_soup.findChildren('div', {'class': order_class})[0]
+    start_div = division_soup.findChildren('div', {'class': 'division_boats_start'})[0]
     boat_divs = start_div.findChildren('div', {'class': 'boat_container'})
     
     crews = []
@@ -54,14 +52,43 @@ def _get_crews_for_division(division_soup, finish):
     return crews
 
 
+def _get_moves_from_results_url(results_url):
+    positions_strs = results_url.split('/')[-1].split('.')[0].split('_')[:-1]
+    return [int(new) - old for new, old in zip(positions_strs, range(0, 18))]
+
+
 def _get_positions_for_gender(division_soups, day_number):
     """Generates the crew-position map for one gender from a parsed set of divisions."""
     
+    # Get starting positions map
     ranking = []
     for division_soup in division_soups:
-        ranking.extend(_get_crews_for_division(division_soup, day_number != 1))
+        ranking.extend(_get_crews_for_division(division_soup))
     
     positions = {crew: rank0 + 1 for rank0, crew in enumerate(ranking)}
+    
+    # Modify positions for racing
+    for day_class in ['race_1', 'race_2', 'race_3', 'race_4'][0:day_number - 1]:
+        
+        # Generate position-move maps for each division
+        offset = 0
+        moves_maps = []
+        for division_soup in division_soups:
+            
+            results_url = division_soup.find('div', {'class': day_class}).find('img')['src']
+            moves = _get_moves_from_results_url(results_url)
+            
+            moves_maps.append({
+                offset + bungline0 + 1: move
+                for bungline0, move in enumerate(moves)
+            })
+            offset += len(moves) - 1
+        
+        # Apply position-move maps in reverse division order
+        for moves_map in moves_maps[::-1]:
+            for crew, position in positions.items():
+                if position in moves_map:
+                    positions[crew] = position + moves_map[position]
     
     return positions
 

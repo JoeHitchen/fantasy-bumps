@@ -47,13 +47,14 @@ class Test__CamFM(TestCase):
     def test__mays_2019(self):
         """The positions given by the parser should match the expected results."""
         
-        for day in [1, 5]:
+        for day in [1, 2, 5]:
             with self.subTest(day = day):
                 
                 day_code = (camfm.MAYS, 2019, day)
+                parsed = camfm.get_positions(*day_code)
+                expected = self.load_expected_positions(*day_code)
                 
-                self.assertEqual(
-                    camfm.get_positions(*day_code),
-                    self.load_expected_positions(*day_code),
-                )
+                for crew in parsed.keys():
+                    with self.subTest(crew = crew):
+                        self.assertEqual(parsed[crew], expected[crew])
 
