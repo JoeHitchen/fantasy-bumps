@@ -1,6 +1,8 @@
+import json
+
 from django.test import TestCase, tag
 
-from parsing import anu
+from parsing import anu, camfm
 
 
 @tag('external')
@@ -21,4 +23,37 @@ class Test__Anu(TestCase):
                 with self.subTest((series, year, day)):
                     order = anu.get_start_order(series, year, day)
                     self.assertEqual(len(order.keys()), num_crews)
+
+
+@tag('external')
+class Test__CamFM(TestCase):
+    
+    @staticmethod
+    def load_expected_positions(series, year, day):
+        """A helper to load expected positions from file."""
+        
+        series_tag = {camfm.MAYS: 'mays'}.get(series)
+        with open(f'parsing/expected_results/{series_tag}_{year}_day{day}.json') as file:
+            raw = json.load(file)
+        
+        results = {}
+        for crew_key, position in raw.items():
+            crew_code = (crew_key[0:4], crew_key[5].upper(), int(crew_key[6]))
+            results[crew_code] = int(position)
+        
+        return results
+    
+    
+    def test__mays_2019(self):
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (camfm.MAYS, 2019, day)
+                
+                self.assertEqual(
+                    camfm.get_positions(*day_code),
+                    self.load_expected_positions(*day_code),
+                )
 
