@@ -57,4 +57,23 @@ class Test__CamFM(TestCase):
                 for crew in parsed.keys():
                     with self.subTest(crew = crew):
                         self.assertEqual(parsed[crew], expected[crew])
+    
+    
+    def test__smoke(self):
+        """Checks that other historical events can be parsed without error."""
+        
+        events = [
+            (camfm.LENTS, 2017),
+            (camfm.MAYS, 2017),
+            (camfm.LENTS, 2018),
+            (camfm.MAYS, 2018),
+            (camfm.LENTS, 2019),
+            (camfm.MAYS, 2019),
+            (camfm.LENTS, 2020),
+            (camfm.LENTS, 2022),
+        ]
+        
+        for event in events:
+            with self.subTest(event = event):
+                camfm.get_positions(event[0], event[1], 5)
 

@@ -1,9 +1,11 @@
+from datetime import datetime
 import re
 
 import requests
 from bs4 import BeautifulSoup
 
 
+LENTS = 'L'
 MAYS = 'M'
 
 
@@ -94,16 +96,29 @@ def _get_positions_for_gender(division_soups, day_number):
 
 
 def get_positions(series, year, day_number):
-    """Generates the crew-position map for a given day of racing.
+    """Generates the crew-position map for a given day of racing."""
     
-    **Currently hardcoded to only process Mays 2019**
-    """
+    # Map historical events
+    event_id = {
+        (LENTS, 2017): 1029,
+        (MAYS, 2017): 1064,
+        (LENTS, 2018): 1175,
+        (MAYS, 2018): 1214,
+        (LENTS, 2019): 1318,
+        (MAYS, 2019): 1353,
+        (LENTS, 2020): 1400,
+        (LENTS, 2022): 2000,
+    }.get((series, year))
     
-    if series != MAYS or year != 2019:
-        raise ValueError('CamFM parsing only supports Mays 2019 currently')
+    if year <= datetime.now().year and not event_id:
+        raise ValueError('Historical results not mapped for {} {}'.format(
+            {LENTS: 'Lents', MAYS: 'Mays'}.get(series),
+            year,
+        ))
     
     # Load results page into parser
-    response = requests.get('https://bumps.camfm.co.uk/?bumps_id=1353&allboats=true')
+    event_string = f'&bumps_id={event_id}' if event_id else ''
+    response = requests.get(f'https://bumps.camfm.co.uk/?allboats=true{event_string}')
     if not response.ok:
         response.raise_for_status()
     
