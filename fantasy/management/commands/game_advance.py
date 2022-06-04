@@ -5,7 +5,7 @@ from django.core.management import call_command
 from django.db.models import F
 from django.utils import timezone
 
-from parsing import live_bumps, anu
+from parsing import live_bumps, anu, camfm
 
 from ... import models
 from ...constants import Series as EventSeries
@@ -20,6 +20,7 @@ class Command(BaseCommand):
     
     LIVE_BUMPS = 'live'
     ANU = 'anu'
+    CAMFM = 'camfm'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -31,7 +32,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--source',
             default = self.LIVE_BUMPS,
-            choices = [self.LIVE_BUMPS, self.ANU],
+            choices = [self.LIVE_BUMPS, self.ANU, self.CAMFM],
             help = 'The source of start order data (default: live)',
         )
     
@@ -95,6 +96,11 @@ class Command(BaseCommand):
             elif source == self.LIVE_BUMPS:
                 new_day_index = tools.get_day_index(new_day)
                 results = live_bumps.get_results(event.series, event.year, new_day_index)
+                crews = tools.get_all_crews(results.keys())
+                tools.add_rankings(new_day, crews, results)
+            elif source == self.CAMFM:
+                new_day_index = tools.get_day_index(new_day)
+                results = camfm.get_positions(event.series, event.year, new_day_index + 1)
                 crews = tools.get_all_crews(results.keys())
                 tools.add_rankings(new_day, crews, results)
             else:
