@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
 from django.utils import timezone
 
-from parsing import ourcs, live_bumps, anu
+from parsing import ourcs, live_bumps, anu, camfm
 
 from ... import models
 from ...constants import Series as EventSeries
@@ -16,6 +16,7 @@ class Command(BaseCommand):
     
     LIVE_BUMPS = 'live'
     ANU = 'anu'
+    CAMFM = 'camfm'
     
     def add_arguments(self, parser):
         
@@ -42,6 +43,13 @@ class Command(BaseCommand):
             const = EventSeries.EIGHTS,
             help = 'Create a Summer Eights event.',
         )
+        type_group.add_argument(
+            '--mays',
+            dest = 'type',
+            action = 'store_const',
+            const = EventSeries.MAYS,
+            help = 'Create a May Bumps event.',
+        )
         
         date_group = parser.add_mutually_exclusive_group()
         
@@ -59,7 +67,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--source',
             default = self.LIVE_BUMPS,
-            choices = [self.LIVE_BUMPS, self.ANU],
+            choices = [self.LIVE_BUMPS, self.ANU, self.CAMFM],
             help = 'The source of start order data (default: live)',
         )
     
@@ -102,6 +110,10 @@ class Command(BaseCommand):
                     'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
                     'womens_division_sizes': [13, 13, 13, 13, 13, 14],
                 },
+                EventSeries.MAYS: {
+                    'mens_division_sizes': [17, 17, 17, 17, 17, 6],
+                    'womens_division_sizes': [17, 17, 17, 17, 9],
+                },
             }[series]
             
             event_tag = '{}{}'.format(series.label.lower(), year)
@@ -133,12 +145,17 @@ class Command(BaseCommand):
         # Bumps event
         if source == self.LIVE_BUMPS:
             results = live_bumps.get_results(series, year, tools.get_day_index(weds))
+        elif source == self.CAMFM:
+            results = camfm.get_positions(series, year, 1)
         else:
             day_tag = weds.date.strftime('%a').lower() if weds.first_race_time else 'end'
             results = anu.get_start_order(series, year, day_tag)
+        
         crews = tools.get_all_crews(results.keys())
         tools.add_rankings(weds, crews, results)
-        tools.add_athletes(event, crews, live_bumps.get_crew_lists(series, year))
+        
+        if not source == self.CAMFM:
+            tools.add_athletes(event, crews, live_bumps.get_crew_lists(series, year))
 
 
 def create_days(event, start_date):
