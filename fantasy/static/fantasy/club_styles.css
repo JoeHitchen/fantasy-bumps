@@ -1,6 +1,6 @@
 
 /* white-on-navy */
-.club-chri, .club-quee, .club-shil, .club-sjoh, .club-trin {
+.club-chri, .club-quee, .club-shil, .club-sjoh, .club-trin, .club-chrc, .club-fatt {
   background-color: darkblue;
   color: white;
   border-color: darkblue;
@@ -14,7 +14,7 @@
 }
 
 /* red-on-navy */
-.club-ball, .club-corp {
+.club-ball, .club-corp, .club-sidn {
   background-color: darkblue;
   color: #c00;
   border-color: darkblue;
@@ -33,8 +33,14 @@
   border-color: darkblue;
 }
 
+/* black-on-white */
+.club-home, .club-murr {
+  background-color: white;
+  color: black;
+}
+
 /* white-on-red */
-.club-exet, .club-rege {
+.club-exet, .club-rege, .club-ladc {
   background-color: #c00;
   color: white;
 }
@@ -45,21 +51,42 @@
   color: yellow;
 }
 
+/* white-on-maroon */
+.club-hert, .club-cocc { /* Source (Hertford): Wiki */
+  background-color: #600;
+  color: white;
+}
 
+/* white-on-black */
+.club-magd, .club-trih {
+  background-color: black;
+  color: white;
+  border-color: black;
+}
+
+/* black-on-pink */
+.club-worc, .club-chur {
+  background-color: hotpink;
+  color: black;
+}
+
+/* white-on-purple */
+.club-mert, .club-scac { /* Source (Merton): Wiki */
+  background-color: #906;
+  color: white;
+}
+
+
+/* Individual Oxford clubs */
 .club-bras {
   background-color: black;
   color: #c00;
   border-color: goldenrod;
 }
-
 .club-grte {
   background-color: darkblue;
   color: gold;
   border-color: darkgreen;
-}
-.club-hert { /* Source: Wiki */
-  background-color: #600;
-  color: white;
 }
 .club-jesu { /* Source: Wiki */
   background-color: darkgreen;
@@ -75,15 +102,6 @@
   background-color: darkblue;
   color: lightblue;
   border-color: lightblue;
-}
-.club-magd {
-  background-color: black;
-  color: white;
-  border-color: black;
-}
-.club-mert { /* Source: Wiki */
-  background-color: #906;
-  color: white;
 }
 .club-newc { /* Source: Wiki */ 
   background-color: purple;
@@ -124,10 +142,117 @@
   background-color: gold;
   color: #c00;
 }
-.club-worc {
-  background-color: hotpink;
-  color: black;
+
+
+/* Individual Cambridge clubs */
+.club-adde {
+  background-color: steelblue;
+  color: white;
+  border-color: #600;
 }
+.club-angl {
+  background-color: black;
+  color: orange;
+}
+.club-caiu {
+  background-color: black;
+  color: lightblue;
+}
+.club-clar, .club-clah {
+  background-color: gold;
+  color: red;
+  border-color: black;
+}
+.club-darw {
+  background-color: darkblue;
+  color: gold;
+  border-color: #b00;
+}
+.club-down {
+  background-color: #906;
+  color: black;
+  border-color: #906;
+}
+.club-emma {
+  background-color: darkblue;
+  color: salmon;
+  border-color: darkblue;
+}
+.club-fitz {
+  background-color: lightgrey;
+  color: black;
+  border-color: lightgrey;
+}
+.club-girt {
+  background-color: darkgreen;
+  color: white;
+  border-color: red;
+}
+.club-hugh {
+  background-color: white;
+  color: dodgerblue;
+  border-color: darkblue;
+}
+.club-jesc {
+  background-color: black;
+  color: red;
+  border-color: red;
+}
+.club-king {
+  background-color: purple;
+  color: white;
+  border-color: purple;
+}
+.club-lucy {
+  background-color: dodgerblue;
+  color: midnightblue;
+  border-color: midnightblue;
+}
+.club-magc {
+  background-color: purple;
+  color: midnightblue;
+  border-color: midnightblue;
+}
+.club-newn {
+  background-color: darkblue;
+  color: grey;
+  border-color: gold;
+}
+.club-pemc {
+  background-color: skyblue;
+  color: midnightblue;
+  border-color: midnightblue;
+}
+.club-pete {
+  background-color: blue;
+  color: white;
+  border-color: blue;
+}
+.club-quec {
+  background-color: darkgreen;
+  color: white;
+  border-color: darkgreen;
+}
+.club-robi {
+  background-color: dodgerblue;
+  color: yellow;
+  border-color: dodgerblue;
+}
+.club-sedc {
+  background-color: dodgerblue;
+  color: white;
+  border-color: skyblue;
+}
+.club-selw {
+  background-color: white;
+  color: gold;
+  border-color: #600;
+}
+.club-wolc {
+  background-color: blue;
+  color: gold;
+  border-color: blue;
+} 
 
 
 /* Other hacks */
