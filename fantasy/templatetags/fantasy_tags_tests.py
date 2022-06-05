@@ -31,19 +31,25 @@ class Test__Market_Status_Box(TestCase):
         cls.event = models.Event.objects.first()
     
     
-    @patching.market_opens(timezone.localtime() + timedelta(days = 2))
-    def test__opens_in_two_days(self, opens_mock):
-        """Returns a non-dismissable danger alert."""
-        
-        # Create day
-        day = self.event.days.create(
+    def setUp(self):
+        self.day = self.event.days.create(
             name = 'Market Status',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
+        self.next_day = self.event.days.create(
+            name = 'Market Status 2',
+            date = timezone.localtime().date() + timedelta(2),  # Ensure market never opens today
+            first_race_time = time(hour = 12),
+        )
+    
+    
+    @patching.market_opens(timezone.localtime() + timedelta(days = 2))
+    def test__opens_in_two_days(self, opens_mock):
+        """Returns a non-dismissable danger alert."""
         
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'danger')
         self.assertFalse(props['dismissable'])
@@ -59,15 +65,8 @@ class Test__Market_Status_Box(TestCase):
     def test__opens_tomorrow(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'danger')
         self.assertFalse(props['dismissable'])
@@ -83,15 +82,8 @@ class Test__Market_Status_Box(TestCase):
     def test__opens_later_today(self, opens_mock):
         """Returns a non-dismissable danger alert."""
         
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'danger')
         self.assertFalse(props['dismissable'])
@@ -108,15 +100,8 @@ class Test__Market_Status_Box(TestCase):
     def test__open_for_two_days(self, closes_mock, opens_mock):
         """Returns a dismissable info alert."""
         
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'info')
         self.assertTrue(props['dismissable'])
@@ -133,15 +118,8 @@ class Test__Market_Status_Box(TestCase):
     def test__open_until_tomorrow(self, closes_mock, opens_mock):
         """Returns a dismissable info alert."""
         
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'info')
         self.assertTrue(props['dismissable'])
@@ -158,15 +136,8 @@ class Test__Market_Status_Box(TestCase):
     def test__open_until_later(self, closes_mock, opens_mock):
         """Returns a dismissable info alert."""
         
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'warning')
         self.assertTrue(props['dismissable'])
@@ -183,15 +154,8 @@ class Test__Market_Status_Box(TestCase):
     def test__open_until_later_no_dismiss(self, closes_mock, opens_mock):
         """Returns a non-dismissable info alert."""
         
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        
         # Call and test method
-        props = tags.market_status_box(day, False)
+        props = tags.market_status_box(self.day, False)
         
         self.assertEqual(props['style'], 'warning')
         self.assertFalse(props['dismissable'])
@@ -208,15 +172,8 @@ class Test__Market_Status_Box(TestCase):
     def test__after_close(self, closes_mock, opens_mock):
         """Returns a non-dismissable danger alert."""
         
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'danger')
         self.assertFalse(props['dismissable'])
@@ -233,24 +190,12 @@ class Test__Market_Status_Box(TestCase):
         WARNING: Contains non-standard mocking. May not fail if other code changes.
         """
         
-        # Create first day and fix return values
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = time(hour = 12),
-        )
-        day.market_opens = timezone.localtime() - timedelta(minutes = 5)  # Non-standard mocking
-        day.market_closes = timezone.localtime() - timedelta(minutes = 2)  # Non-standard mocking
-        
-        # Create later day
-        self.event.days.create(
-            name = 'Market Status 2',
-            date = timezone.localtime().date() + timedelta(2),  # Ensure market never opens today
-            first_race_time = time(hour = 12),
-        )
+        # Non-standard mocking of first day market times
+        self.day.market_opens = timezone.localtime() - timedelta(minutes = 5)
+        self.day.market_closes = timezone.localtime() - timedelta(minutes = 2)
         
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
         self.assertEqual(props['style'], 'danger')
         self.assertFalse(props['dismissable'])
@@ -268,27 +213,22 @@ class Test__Market_Status_Box(TestCase):
         )
     
     
-    def test__non_racing_day(self):
-        """Returns a non-dismissable danger alert.
+    def test__last_day(self):
+        """Returns a non-dismissable info alert."""
         
-        A special case of test__after_close since markets are always closed for non-racing days,
-        but market_opens and market_closes do not return datetime objects."""
-        
-        # Create day
-        day = self.event.days.create(
-            name = 'Market Status',
-            date = timezone.localtime().date(),
-            first_race_time = None,
-        )
+        # Alter test setup
+        self.day.first_race_time = None
+        self.day.save()
+        self.next_day.delete()
         
         # Call and test method
-        props = tags.market_status_box(day)
+        props = tags.market_status_box(self.day)
         
-        self.assertEqual(props['style'], 'danger')
+        self.assertEqual(props['style'], 'info')
         self.assertFalse(props['dismissable'])
         self.assertEqual(
             props['message'],
-            'The market is closed.',
+            'This event has concluded.',
         )
 
 

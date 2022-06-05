@@ -44,6 +44,15 @@ def market_status_box(day, allow_dismiss = True):
             ),
         }
     
+    
+    # After racing
+    if not day.next:
+        return {
+            'style': 'info',
+            'dismissable': False,
+            'message': 'This event has concluded.',
+        }
+    
     # Market closed
     future_open = day.market_opens if day.market_opens and now < day.market_opens else None
     if (not future_open) and day.next and day.next.market_opens and day.next.market_opens >= now:
