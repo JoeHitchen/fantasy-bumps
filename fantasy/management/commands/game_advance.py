@@ -12,15 +12,6 @@ from ...constants import Series as EventSeries
 from ... import game_tools as tools
 
 
-def _live_bumps_wrapper(event, year, day_number):
-    return live_bumps.get_results(event, year, day_number - 1)
-
-
-def _anu_wrapper(event, year, day_number):
-    day_tag = ['wed', 'thu', 'fri', 'sat', 'end'][day_number - 1]
-    return anu.get_start_order(event, year, day_tag)
-
-
 def _demo_wrapper(event, year, day_number):
     call_command(
         'loaddata',
@@ -73,7 +64,10 @@ class Command(BaseCommand):
         cambridge_source = kwargs.get('cam_source', self.CAMFM)
         
         source_function_map = {
-            self.OXFORD: {self.LIVE: _live_bumps_wrapper, self.ANU: _anu_wrapper}[oxford_source],
+            self.OXFORD: {
+                self.LIVE: live_bumps.get_positions,
+                self.ANU: anu.get_positions,
+            }[oxford_source],
             self.CAMBRIDGE: {self.CAMFM: camfm.get_positions}[cambridge_source],
             self.DEMO: _demo_wrapper,
         }

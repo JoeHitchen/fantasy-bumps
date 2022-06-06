@@ -54,13 +54,18 @@ def _convert_divisions_to_ranking(divisions, gender):
     return crews
 
 
-def get_start_order(series, year, day):
+def get_positions(series, year, day_number):
+    
+    if series == 'T' and year == 2021:
+        day_map = ['tue', 'wed', 'thu', 'fri', 'end']
+    else:
+        day_map = ['wed', 'thu', 'fri', 'sat', 'end']
     
     url = BASE_URL + '{}/{}{}{}.html'.format(
         {'T': 'torpids', 'E': 'eights'}[series],
         series.lower(),
         str(year)[-2:],
-        day,
+        day_map[day_number - 1],
     )
     response = requests.get(url)
     if not response.ok:

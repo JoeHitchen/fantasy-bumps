@@ -14,7 +14,7 @@ def _crew_results(crew_data):
     return positions
 
 
-def get_results(series, year, day_index):
+def get_positions(series, year, day_number):
     event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
     print('Retriving results for {} {} via Live Bumps'.format(event_string, year))  # noqa: T201
     
@@ -30,12 +30,12 @@ def get_results(series, year, day_index):
         
         for crew_rank, crew_data in enumerate(club_data['men']):
             crew_results = _crew_results(crew_data)
-            index = min(day_index, len(crew_results) - 1)
+            index = min(day_number, len(crew_results)) - 1
             crews[(club, 'M', crew_rank + 1)] = crew_results[index]
         
         for crew_rank, crew_data in enumerate(club_data['women']):
             crew_results = _crew_results(crew_data)
-            index = min(day_index, len(crew_results) - 1)
+            index = min(day_number, len(crew_results)) - 1
             crews[(club, 'W', crew_rank + 1)] = crew_results[index]
     
     return crews
