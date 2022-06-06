@@ -128,7 +128,7 @@ class Command(BaseCommand):
             
             
             # Get positions
-            day_number = tools.get_day_index(new_day) + 1
+            day_number = new_day.event.days.filter(date__lte = new_day.date).count()  # One-indexed
             source = series_source_map[event.series]
             new_positions = source_function_map[source](event.series, event.year, day_number)
             

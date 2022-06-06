@@ -26,10 +26,6 @@ def get_all_crews(crews_in_event):
     }
 
 
-def get_day_index(day):
-    return day.event.days.filter(date__lt = day.date).count()
-
-
 def add_rankings(day, crews, results):
     
     day.ranking.bulk_create([
