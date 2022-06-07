@@ -4,27 +4,28 @@ from django.test import TestCase, tag
 
 from parsing import anu, camfm
 
-from .common import TORPIDS, LENTS, MAYS
+from .common import TORPIDS, EIGHTS, LENTS, MAYS
 
 
 @tag('external')
 class Test__Anu(TestCase):
     
-    cases = [
-        # At time of writing, no pre-Covid start orders are available
-        (TORPIDS, 2021, 128),
-        (TORPIDS, 2022, 134),
-    ]
-    
-    def test__anu(self):
-        """Checks no errors are raised parsing all Anu's known start/finish orders."""
+    def test__smoke(self):
+        """Checks that other historical events can be parsed without error."""
         
-        for series, year, num_crews in self.cases:
+        events = [
+            # At time of writing, no pre-Covid start orders are available
+            (TORPIDS, 2021, 128),
+            (TORPIDS, 2022, 134),
+            (EIGHTS, 2022, 168),
+        ]
+        
+        for series, year, num_crews in events:
             for day_number in range(1, 6):
-                
-                with self.subTest((series, year, day_number)):
-                    order = anu.get_positions(series, year, day_number)
-                    self.assertEqual(len(order.keys()), num_crews)
+                with self.subTest([series, year, day_number]):
+                    
+                    positions = anu.get_positions(series, year, day_number)
+                    self.assertEqual(len(positions.keys()), num_crews)
 
 
 @tag('external')
@@ -75,7 +76,9 @@ class Test__CamFM(TestCase):
             (LENTS, 2022, 120),
         ]
         
-        for event in events:
-            with self.subTest(event = event):
-                camfm.get_positions(event[0], event[1], 5)
+        for series, year, num_crews in events:
+            with self.subTest([series, year]):
+                
+                positions = camfm.get_positions(series, year, 5)
+                self.assertEqual(len(positions.keys()), num_crews)
 
