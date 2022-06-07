@@ -4,14 +4,16 @@ from django.test import TestCase, tag
 
 from parsing import anu, camfm
 
+from .common import TORPIDS, LENTS, MAYS
+
 
 @tag('external')
 class Test__Anu(TestCase):
     
     cases = [
         # At time of writing, no pre-Covid start orders are available
-        ('T', 2021, 128),
-        ('T', 2022, 134),
+        (TORPIDS, 2021, 128),
+        (TORPIDS, 2022, 134),
     ]
     
     def test__anu(self):
@@ -32,7 +34,7 @@ class Test__CamFM(TestCase):
     def load_expected_positions(series, year, day):
         """A helper to load expected positions from file."""
         
-        series_tag = {camfm.MAYS: 'mays'}.get(series)
+        series_tag = {MAYS: 'mays'}.get(series)
         with open(f'parsing/expected_results/{series_tag}_{year}_day{day}.json') as file:
             raw = json.load(file)
         
@@ -50,7 +52,7 @@ class Test__CamFM(TestCase):
         for day in [1, 2, 5]:
             with self.subTest(day = day):
                 
-                day_code = (camfm.MAYS, 2019, day)
+                day_code = (MAYS, 2019, day)
                 parsed = camfm.get_positions(*day_code)
                 expected = self.load_expected_positions(*day_code)
                 
@@ -63,14 +65,14 @@ class Test__CamFM(TestCase):
         """Checks that other historical events can be parsed without error."""
         
         events = [
-            (camfm.LENTS, 2017),
-            (camfm.MAYS, 2017),
-            (camfm.LENTS, 2018),
-            (camfm.MAYS, 2018),
-            (camfm.LENTS, 2019),
-            (camfm.MAYS, 2019),
-            (camfm.LENTS, 2020),
-            (camfm.LENTS, 2022),
+            (LENTS, 2017, 120),
+            (MAYS, 2017, 155),
+            (LENTS, 2018, 120),
+            (MAYS, 2018, 154),
+            (LENTS, 2019, 120),
+            (MAYS, 2019, 168),
+            (LENTS, 2020, 120),
+            (LENTS, 2022, 120),
         ]
         
         for event in events:

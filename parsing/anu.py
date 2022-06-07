@@ -3,7 +3,7 @@ import re
 from bs4 import BeautifulSoup
 import requests
 
-from .common import club_parser
+from .common import club_parser, TORPIDS, EIGHTS, MEN, WOMEN
 
 BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
 
@@ -56,13 +56,13 @@ def _convert_divisions_to_ranking(divisions, gender):
 
 def get_positions(series, year, day_number):
     
-    if series == 'T' and year == 2021:
+    if (series, year) == (TORPIDS, 2021):
         day_map = ['tue', 'wed', 'thu', 'fri', 'end']
     else:
         day_map = ['wed', 'thu', 'fri', 'sat', 'end']
     
     url = BASE_URL + '{}/{}{}{}.html'.format(
-        {'T': 'torpids', 'E': 'eights'}[series],
+        {TORPIDS: 'torpids', EIGHTS: 'eights'}[series],
         series.lower(),
         str(year)[-2:],
         day_map[day_number - 1],
@@ -80,8 +80,8 @@ def get_positions(series, year, day_number):
             continue
         divisions.append(_parse_division(table))
     
-    mens_positions = _convert_divisions_to_ranking(divisions, 'M')
-    womens_positions = _convert_divisions_to_ranking(divisions, 'W')
+    mens_positions = _convert_divisions_to_ranking(divisions, MEN)
+    womens_positions = _convert_divisions_to_ranking(divisions, WOMEN)
     
     return {**mens_positions, **womens_positions}
 
