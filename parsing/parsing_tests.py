@@ -7,8 +7,38 @@ from parsing import anu, camfm
 from .common import TORPIDS, EIGHTS, LENTS, MAYS
 
 
+def load_expected_positions(series, year, day):
+    """A helper to load expected positions from file."""
+    
+    series_tag = {TORPIDS: 'torpids', MAYS: 'mays'}.get(series)
+    with open(f'parsing/expected_results/{series_tag}_{year}_day{day}.json') as file:
+        raw = json.load(file)
+    
+    results = {}
+    for crew_key, position in raw.items():
+        crew_code = (crew_key[0:4], crew_key[5].upper(), int(crew_key[6]))
+        results[crew_code] = int(position)
+    
+    return results
+
+
 @tag('external')
 class Test__Anu(TestCase):
+    
+    def test__torpids_2022(self):
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (TORPIDS, 2022, day)
+                parsed = anu.get_positions(*day_code)
+                expected = load_expected_positions(*day_code)
+                
+                for crew in parsed.keys():
+                    with self.subTest(crew = crew):
+                        self.assertEqual(parsed[crew], expected[crew])
+    
     
     def test__smoke(self):
         """Checks that other historical events can be parsed without error."""
@@ -31,22 +61,6 @@ class Test__Anu(TestCase):
 @tag('external')
 class Test__CamFM(TestCase):
     
-    @staticmethod
-    def load_expected_positions(series, year, day):
-        """A helper to load expected positions from file."""
-        
-        series_tag = {MAYS: 'mays'}.get(series)
-        with open(f'parsing/expected_results/{series_tag}_{year}_day{day}.json') as file:
-            raw = json.load(file)
-        
-        results = {}
-        for crew_key, position in raw.items():
-            crew_code = (crew_key[0:4], crew_key[5].upper(), int(crew_key[6]))
-            results[crew_code] = int(position)
-        
-        return results
-    
-    
     def test__mays_2019(self):
         """The positions given by the parser should match the expected results."""
         
@@ -55,7 +69,7 @@ class Test__CamFM(TestCase):
                 
                 day_code = (MAYS, 2019, day)
                 parsed = camfm.get_positions(*day_code)
-                expected = self.load_expected_positions(*day_code)
+                expected = load_expected_positions(*day_code)
                 
                 for crew in parsed.keys():
                     with self.subTest(crew = crew):
