@@ -21,10 +21,7 @@ def _demo_wrapper(event, year, day_number):
 
 
 class Command(BaseCommand):
-    """Advance the game state by one (optionally forced) day
-    
-    N.B. Anu's results rely on tomorrow's day of the week, so do not work for forced advances.
-    """
+    """Advance the game state by one (optionally forced) day."""
     
     LIVE = 'live'
     ANU = 'anu'
