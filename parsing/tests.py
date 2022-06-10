@@ -1,6 +1,5 @@
+from unittest import TestCase
 import json
-
-from django.test import TestCase, tag
 
 from . import live_bumps, anu, ourcs, camfm
 from .common import TORPIDS, EIGHTS, LENTS, MAYS
@@ -21,7 +20,6 @@ def load_expected_positions(series, year, day):
     return results
 
 
-@tag('external')
 class Test__LiveBumps(TestCase):
     
     def test__positions__torpids_2022(self):
@@ -83,7 +81,6 @@ class Test__LiveBumps(TestCase):
                 self.assertEqual(len(crew_lists.keys()), num_crews)
 
 
-@tag('external')
 class Test__Anu(TestCase):
     
     def test__torpids_2022(self):
@@ -119,7 +116,6 @@ class Test__Anu(TestCase):
                     self.assertEqual(len(positions.keys()), num_crews)
 
 
-@tag('external')
 class Test__OURCs(TestCase):
     
     def test__crew_lists__smoke(self):
@@ -144,7 +140,6 @@ class Test__OURCs(TestCase):
                 self.assertEqual(len(crew_lists.keys()), num_crews)
 
 
-@tag('external')
 class Test__CamFM(TestCase):
     
     def test__mays_2019(self):
