@@ -108,7 +108,7 @@ def get_positions(series, year, day_number):
         (LENTS, 2022): 2000,
     }.get((series, year))
     
-    if year <= datetime.now().year and not event_id:
+    if year < datetime.now().year and not event_id:
         raise ValueError('Historical results not mapped for {} {}'.format(
             {LENTS: 'Lents', MAYS: 'Mays'}.get(series),
             year,
