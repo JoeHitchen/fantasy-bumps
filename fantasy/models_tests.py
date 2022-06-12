@@ -858,7 +858,7 @@ class Test__Day__Market_Status(TestCase):
     
     
     def test__market_opens__first_race_day__winter(self):
-        """The first day's markets opening is two days prior."""
+        """The first day's markets opening is three days prior."""
         
         day = self.event.days.create(
             name = 'Main',
@@ -866,13 +866,13 @@ class Test__Day__Market_Status(TestCase):
             first_race_time = time.fromisoformat('12:00:00'),
         )
         
-        self.assertEqual(day.market_opens.date(), day.date - timedelta(2))
+        self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
         self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
     
     def test__market_opens__first_race_day__summer(self):
-        """The first day's markets opening is two days prior."""
+        """The first day's markets opening is three days prior."""
         
         day = self.event.days.create(
             name = 'Main',
@@ -880,7 +880,7 @@ class Test__Day__Market_Status(TestCase):
             first_race_time = time.fromisoformat('12:00:00'),
         )
         
-        self.assertEqual(day.market_opens.date(), day.date - timedelta(2))
+        self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
         self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
         self.assertEqual(day.market_opens.tzname(), 'BST')
     
