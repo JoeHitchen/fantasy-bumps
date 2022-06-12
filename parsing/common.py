@@ -1,4 +1,13 @@
 
+TORPIDS = 'T'
+EIGHTS = 'E'
+LENTS = 'L'
+MAYS = 'M'
+
+MEN = 'M'
+WOMEN = 'W'
+
+
 def seat_parser(seat_str):
     return {
         'Bow': 1,

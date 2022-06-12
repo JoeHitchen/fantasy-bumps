@@ -4,9 +4,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-
-LENTS = 'L'
-MAYS = 'M'
+from .common import LENTS, MAYS
 
 
 def _cambridge_club_parser(club_str):

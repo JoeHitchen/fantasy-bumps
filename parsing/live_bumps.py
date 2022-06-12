@@ -2,7 +2,7 @@ import html
 
 import requests
 
-from .common import seat_parser, boat_code_parser
+from .common import seat_parser, boat_code_parser, TORPIDS, EIGHTS, MEN, WOMEN
 
 
 def _crew_results(crew_data):
@@ -14,8 +14,8 @@ def _crew_results(crew_data):
     return positions
 
 
-def get_results(series, year, day_index):
-    event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
+def get_positions(series, year, day_number):
+    event_string = {TORPIDS: 'Torpids', EIGHTS: 'Eights'}[series]
     print('Retriving results for {} {} via Live Bumps'.format(event_string, year))  # noqa: T201
     
     url = 'https://bumps.live/data/{}_{}.json'.format(event_string.lower(), year)
@@ -30,19 +30,19 @@ def get_results(series, year, day_index):
         
         for crew_rank, crew_data in enumerate(club_data['men']):
             crew_results = _crew_results(crew_data)
-            index = min(day_index, len(crew_results) - 1)
-            crews[(club, 'M', crew_rank + 1)] = crew_results[index]
+            index = min(day_number, len(crew_results)) - 1
+            crews[(club, MEN, crew_rank + 1)] = crew_results[index]
         
         for crew_rank, crew_data in enumerate(club_data['women']):
             crew_results = _crew_results(crew_data)
-            index = min(day_index, len(crew_results) - 1)
-            crews[(club, 'W', crew_rank + 1)] = crew_results[index]
+            index = min(day_number, len(crew_results)) - 1
+            crews[(club, WOMEN, crew_rank + 1)] = crew_results[index]
     
     return crews
 
 
 def get_crew_lists(series, year):
-    event_string = {'T': 'Torpids', 'E': 'Eights'}[series]
+    event_string = {TORPIDS: 'Torpids', EIGHTS: 'Eights'}[series]
     print('Retriving crew lists for {} {} via Live Bumps'.format(event_string, year))  # noqa: T201
     
     url = 'https://bumps.live/data/{}_{}_crews.json'.format(event_string.lower(), year)
@@ -61,7 +61,7 @@ def get_crew_lists(series, year):
                 seat_parser(person['pos']): html.unescape(person['name'])
                 for person in crew_data
             }
-            crews[(club, 'M', int(crew_rank))] = crew_list
+            crews[(club, MEN, int(crew_rank))] = crew_list
         
         
         for crew_rank, crew_data in club_data['women'].items():
@@ -70,7 +70,7 @@ def get_crew_lists(series, year):
                 seat_parser(person['pos']): html.unescape(person['name'])
                 for person in crew_data
             }
-            crews[(club, 'W', int(crew_rank))] = crew_list
+            crews[(club, WOMEN, int(crew_rank))] = crew_list
     
     return crews
 

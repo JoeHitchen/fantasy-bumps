@@ -144,12 +144,11 @@ class Command(BaseCommand):
         
         # Bumps event
         if source == self.LIVE_BUMPS:
-            results = live_bumps.get_results(series, year, tools.get_day_index(weds))
+            results = live_bumps.get_positions(series, year, 1)
         elif source == self.CAMFM:
             results = camfm.get_positions(series, year, 1)
         else:
-            day_tag = weds.date.strftime('%a').lower() if weds.first_race_time else 'end'
-            results = anu.get_start_order(series, year, day_tag)
+            results = anu.get_positions(series, year, 1)
         
         crews = tools.get_all_crews(results.keys())
         tools.add_rankings(weds, crews, results)

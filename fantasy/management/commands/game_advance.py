@@ -12,15 +12,24 @@ from ...constants import Series as EventSeries
 from ... import game_tools as tools
 
 
+def _demo_wrapper(event, year, day_number):
+    call_command(
+        'loaddata',
+        'demo_start_day{}'.format(day_number),
+    )
+    return {}
+
+
 class Command(BaseCommand):
-    """Advance the game state by one (optionally forced) day
+    """Advance the game state by one (optionally forced) day."""
     
-    N.B. Anu's results rely on tomorrow's day of the week, so do not work for forced advances.
-    """
-    
-    LIVE_BUMPS = 'live'
+    LIVE = 'live'
     ANU = 'anu'
     CAMFM = 'camfm'
+    
+    OXFORD = 'OXFORD'
+    CAMBRIDGE = 'CAMBRIDGE'
+    DEMO = 'DEMO'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -30,14 +39,43 @@ class Command(BaseCommand):
         )
         
         parser.add_argument(
-            '--source',
-            default = self.LIVE_BUMPS,
-            choices = [self.LIVE_BUMPS, self.ANU, self.CAMFM],
-            help = 'The source of start order data (default: live)',
+            '--oxf-source',
+            default = self.LIVE,
+            choices = [self.LIVE, self.ANU],
+            help = f'The source of start order data for Oxford (default: {self.LIVE})',
+        )
+        
+        parser.add_argument(
+            '--cam-source',
+            default = self.CAMFM,
+            choices = [self.CAMFM],
+            help = f'The source of start order data for Cambridge (default: {self.CAMFM})',
         )
     
     
     def handle(self, *args, **kwargs):
+        
+        # Parse command arguments
+        forced = bool(kwargs['forced'])
+        oxford_source = kwargs.get('oxf_source', self.LIVE)
+        cambridge_source = kwargs.get('cam_source', self.CAMFM)
+        
+        source_function_map = {
+            self.OXFORD: {
+                self.LIVE: live_bumps.get_positions,
+                self.ANU: anu.get_positions,
+            }[oxford_source],
+            self.CAMBRIDGE: {self.CAMFM: camfm.get_positions}[cambridge_source],
+            self.DEMO: _demo_wrapper,
+        }
+        series_source_map = {
+            EventSeries.TORPIDS: self.OXFORD,
+            EventSeries.EIGHTS: self.OXFORD,
+            EventSeries.LENTS: self.CAMBRIDGE,
+            EventSeries.MAYS: self.CAMBRIDGE,
+            EventSeries.DEMO: self.DEMO,
+        }
+        
         
         # Get current events
         now = timezone.now()
@@ -46,37 +84,31 @@ class Command(BaseCommand):
             .filter(days__date__range = (now - timedelta(7), now + timedelta(7)))
             .distinct()
         )
-        source = kwargs.get('source', self.LIVE_BUMPS)
-        
         if not events:
             self.stdout.write('No games to advance')
             return
+        
         
         # Iterate over all events
         for event in events:
             self.stdout.write('Advancing {}...'.format(event))
             
             # Shift dates for forced updates
-            if kwargs['forced']:
+            if forced:
                 event.days.update(date = F('date') - timedelta(1))
+            
             
             # Get relevant days
             if event.active_day.first_race and now >= event.active_day.first_race:
-                # Racing started on the active day
-                
-                old_day = event.active_day
+                old_day = event.active_day  # Racing underway for active day
                 new_day = event.active_day.next
-            
             elif event.active_day.prev:
-                # A previous day exists
-                
-                old_day = event.active_day.prev
+                old_day = event.active_day.prev  # No active racing but a previous day exists
                 new_day = event.active_day
-            
             else:
-                # Pre-event, no action required
-                self.stdout.write('No new racing has occurred.')
+                self.stdout.write('No new racing has occurred.')  # Pre-event, no action required
                 continue
+            
             
             # Check results required for new day
             if new_day.ranking.count():
@@ -85,30 +117,16 @@ class Command(BaseCommand):
             
             self.stdout.write('Loading start order for {}...'.format(new_day))
             
-            # Demo events
-            if event.series == EventSeries.DEMO:
-                call_command(
-                    'loaddata',
-                    'demo_start_day{}'.format(new_day.id),
-                )
             
-            # Bumps events
-            elif source == self.LIVE_BUMPS:
-                new_day_index = tools.get_day_index(new_day)
-                results = live_bumps.get_results(event.series, event.year, new_day_index)
-                crews = tools.get_all_crews(results.keys())
-                tools.add_rankings(new_day, crews, results)
-            elif source == self.CAMFM:
-                new_day_index = tools.get_day_index(new_day)
-                results = camfm.get_positions(event.series, event.year, new_day_index + 1)
-                crews = tools.get_all_crews(results.keys())
-                tools.add_rankings(new_day, crews, results)
-            else:
-                day_tag = new_day.date.strftime('%a').lower() if new_day.first_race_time else 'end'
-                results = anu.get_start_order(event.series, event.year, day_tag)
-                crews = tools.get_all_crews(results.keys())
-                tools.add_rankings(new_day, crews, results)
+            # Get positions
+            day_number = new_day.event.days.filter(date__lte = new_day.date).count()  # One-indexed
+            source = series_source_map[event.series]
+            new_positions = source_function_map[source](event.series, event.year, day_number)
             
+            
+            # Update records
+            crews = tools.get_all_crews(new_positions.keys())
+            tools.add_rankings(new_day, crews, new_positions)
             tools.roll_over_purchases(old_day)
             tools.evaluate_all_investments(old_day)
             self.stdout.write('Completed!')
