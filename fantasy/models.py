@@ -50,8 +50,8 @@ class Event(models.Model):
     def active_day(self):
         """The active/most currently relevant day of the event.
         
-        Before 8pm -> The first day from today onwards.
-        After 8pm -> The first day from tomorrow onwards.
+        Before markets open -> The first day from today onwards.
+        After markets open -> The first day from tomorrow onwards.
         After the event -> Last day of the event.
         """
         

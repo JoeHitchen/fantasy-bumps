@@ -20,7 +20,7 @@ class Genders(models.TextChoices):
 
 
 class timings:
-    MARKET_OPENS = time(20, 00)
+    MARKET_OPENS = time(20, 30)
 
 
 class money:
