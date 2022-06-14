@@ -68,7 +68,7 @@ class Clubs(models.TextChoices):
     WORC = ('worc', 'Worcester')
     ADDE = ('adde', 'Addenbrookes')
     ANGL = ('angl', 'Anglia Ruskin')
-    CAIU = ('caiu', 'Cauis')
+    CAIU = ('caiu', 'Caius')
     CHRC = ('chrc', "Christ's")
     CHUR = ('chur', 'Churchill')
     CLAR = ('clar', 'Clare')
