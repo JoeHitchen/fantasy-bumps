@@ -4,7 +4,7 @@ import html
 from bs4 import BeautifulSoup
 import requests
 
-from .common import seat_parser, club_parser
+from .common import TORPIDS, EIGHTS, seat_parser, club_parser
 
 
 def _crew_box(box, ext_club):
@@ -22,7 +22,27 @@ def _crew_box(box, ext_club):
     return ((club, gender, rank), crew_list)
 
 
-def get_crew_lists(event_id):
+def get_crew_lists(series, year):
+    
+    try:
+        event_id = {
+            (TORPIDS, 2017): 173,
+            (EIGHTS, 2017): 174,
+            (TORPIDS, 2018): 184,
+            (EIGHTS, 2018): 186,
+            (TORPIDS, 2019): 195,
+            (EIGHTS, 2019): 198,
+            (TORPIDS, 2021): 217,
+            (TORPIDS, 2022): 229,
+            (EIGHTS, 2022): 230,
+        }[(series, year)]
+    
+    except KeyError:
+        raise ValueError('Historical crew lists not mapped for {} {}'.format(
+            {TORPIDS: 'Torpids', EIGHTS: 'Eights'}.get(series),
+            year,
+        ))
+    
     print('Retriving OURCs crew lists for event #{}'.format(event_id))  # noqa: T201
     
     url = 'https://ourcs.co.uk/racing/entries/events/event/{}/crew_lists/'.format(event_id)

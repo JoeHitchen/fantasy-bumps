@@ -17,10 +17,6 @@ class Command(BaseCommand):
             help = 'The event in which the crew has been renumbered',
         )
         parser.add_argument(
-            'ourcs_event_id',
-            help = 'The event ID on the OURCs entries system',
-        )
-        parser.add_argument(
             'club',
             choices = Clubs.values,
             help = 'The club of the renumbered crew',
@@ -66,7 +62,7 @@ class Command(BaseCommand):
             raise models.Position.DoesNotExist('This crew is not entered into this event.')
         
         # Retrieve and check new crew list
-        crew_lists = ourcs.get_crew_lists(kwargs['ourcs_event_id'])
+        crew_lists = ourcs.get_crew_lists(event.series, event.year)
         if old_crew not in crew_lists:
             raise ValueError('Old crew designation not found on OURCs crew lists page')
         
