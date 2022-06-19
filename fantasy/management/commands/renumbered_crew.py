@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand
 
-from parsing import ourcs
+from parsing import live_bumps, ourcs
 
 from ... import models, game_tools as tools
-from ...constants import Clubs, Genders
+from ...constants import Clubs, Genders, Sources
 
 
 class Command(BaseCommand):
@@ -35,6 +35,13 @@ class Command(BaseCommand):
             'old_rank',
             type = int,
             help = 'The rank of the crew prior to renumbering',
+        )
+        
+        parser.add_argument(
+            '--source',
+            default = Sources.LIVE_BUMPS,
+            choices = [Sources.LIVE_BUMPS, Sources.OURCS],
+            help = f'The source of start order data (default: {Sources.LIVE_BUMPS})',
         )
     
     @staticmethod
@@ -75,6 +82,11 @@ class Command(BaseCommand):
             source_crew_tpl[2],
         ))
         
-        self.perform_crew_list_update(ourcs.get_crew_lists, event, target_crew, source_crew_tpl)
+        crew_list_fcn = {
+            Sources.LIVE_BUMPS: live_bumps.get_crew_lists,
+            Sources.OURCS: ourcs.get_crew_lists,
+        }[kwargs.get('source', Sources.LIVE_BUMPS)]
+        
+        self.perform_crew_list_update(crew_list_fcn, event, target_crew, source_crew_tpl)
         self.stdout.write(f'Corrected crew list for {target_crew}')
 

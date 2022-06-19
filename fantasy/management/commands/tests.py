@@ -2,10 +2,10 @@ from unittest.mock import patch, Mock
 
 from django.test import TestCase
 
-from parsing import ourcs
+from parsing import live_bumps, ourcs
 
 from ... import models
-from ...constants import Clubs
+from ...constants import Clubs, Sources
 from .renumbered_crew import Command as RenumberedCrew
 
 
@@ -73,6 +73,27 @@ class Test__Renumbered_Crew(TestCase):
             gender = self.target_crew.gender,
             new_rank = self.target_crew.rank,
             old_rank = self.source_crew_rank,
+        )
+        
+        perform_mock.assert_called_once_with(
+            live_bumps.get_crew_lists,
+            self.event,
+            self.target_crew,
+            self.source_crew_tpl,
+        )
+    
+    
+    @patch.object(RenumberedCrew, 'perform_crew_list_update')
+    def test__handle__ourcs_source(self, perform_mock):
+        """Can use the OURCs website as an alternative crew list source."""
+        
+        RenumberedCrew().handle(
+            event_tag = self.event.tag,
+            club = self.target_crew.club,
+            gender = self.target_crew.gender,
+            new_rank = self.target_crew.rank,
+            old_rank = self.source_crew_rank,
+            source = Sources.OURCS,
         )
         
         perform_mock.assert_called_once_with(
