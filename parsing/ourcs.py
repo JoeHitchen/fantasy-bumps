@@ -4,10 +4,10 @@ import html
 from bs4 import BeautifulSoup
 import requests
 
-from .common import TORPIDS, EIGHTS, seat_parser, club_parser
+from .common import TORPIDS, EIGHTS, series_text_map, seat_parser, club_parser
 
 
-def _crew_box(box, ext_club):
+def _parse_crew_box(box, ext_club):
     
     crew_header = box.find('a').string
     club = club_parser(crew_header)
@@ -23,7 +23,11 @@ def _crew_box(box, ext_club):
 
 
 def get_crew_lists(series, year):
+    """Generates a crew/crew-list map from the public OURCs records."""
+    series_text = series_text_map[series]
+    print(f'Retriving crew lists for {series_text} {year} from OURCs')  # noqa: T201
     
+    # Identify OURCs event
     try:
         event_id = {
             (TORPIDS, 2017): 173,
@@ -36,28 +40,28 @@ def get_crew_lists(series, year):
             (TORPIDS, 2022): 229,
             (EIGHTS, 2022): 230,
         }[(series, year)]
+        print(f'Using OURCs event #{event_id} for {series_text} {year}')  # noqa: T201
     
     except KeyError:
-        raise ValueError('Historical crew lists not mapped for {} {}'.format(
-            {TORPIDS: 'Torpids', EIGHTS: 'Eights'}.get(series),
-            year,
-        ))
+        raise ValueError(f'No OURCs event mapped for {series_text} {year}')
     
-    print('Retriving OURCs crew lists for event #{}'.format(event_id))  # noqa: T201
-    
-    url = 'https://ourcs.co.uk/racing/entries/events/event/{}/crew_lists/'.format(event_id)
-    response = requests.get(url, allow_redirects = False)
-    
-    if not response.status_code == 200:
-        raise IOError('Could not load crew lists page')
+    # Load page into parser
+    response = requests.get(
+        f'https://ourcs.co.uk/racing/entries/events/event/{event_id}/crew_lists/',
+        allow_redirects = False,
+    )
+    if not response.ok:
+        raise response.raise_for_status()
     
     soup = BeautifulSoup(response.text, 'html.parser')
     
+    # Extract crew lists
     crews = {}
     for club_box in soup.find_all(id = re.compile('club-[a-z]{4}')):
         for crew_box in club_box.find_all(class_ = 'panel-default'):
-            crew = _crew_box(crew_box, club_box['id'][5:])
-            crews[crew[0]] = crew[1]
+            crew, crew_list = _parse_crew_box(crew_box, club_box['id'][5:])
+            crews[crew] = crew_list
     
+    print(f'Retrieved {len(crews)} crews from OURCs for {series_text} {year}')  # noqa: T201
     return crews
 
