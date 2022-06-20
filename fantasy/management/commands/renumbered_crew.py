@@ -1,9 +1,14 @@
+import logging
+
 from django.core.management.base import BaseCommand
 
 from parsing import live_bumps, ourcs
 
 from ... import models, game_tools as tools
 from ...constants import Clubs, Genders, Sources
+
+logging.basicConfig(level = logging.INFO)
+logger = logging.getLogger('fantasy.renumbered')
 
 
 class Command(BaseCommand):
@@ -76,7 +81,7 @@ class Command(BaseCommand):
             raise models.Position.DoesNotExist('This crew is not entered into this event.')
         
         source_crew_tpl = (target_crew.club, target_crew.gender, kwargs['old_rank'])
-        self.stdout.write('Correcting crew list for {} as their original {}{}'.format(
+        logger.info('Correcting crew list for {} as their original {}{}'.format(
             target_crew,
             target_crew.gender,
             source_crew_tpl[2],
@@ -88,5 +93,5 @@ class Command(BaseCommand):
         }[kwargs.get('source', Sources.LIVE_BUMPS)]
         
         self.perform_crew_list_update(crew_list_fcn, event, target_crew, source_crew_tpl)
-        self.stdout.write(f'Corrected crew list for {target_crew}')
+        logger.info(f'Corrected crew list for {target_crew}')
 

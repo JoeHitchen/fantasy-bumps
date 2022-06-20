@@ -1,10 +1,13 @@
 import re
 import html
+import logging
 
 from bs4 import BeautifulSoup
 import requests
 
 from .common import TORPIDS, EIGHTS, series_text_map, seat_parser, club_parser
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_crew_box(box, ext_club):
@@ -25,7 +28,7 @@ def _parse_crew_box(box, ext_club):
 def get_crew_lists(series, year):
     """Generates a crew/crew-list map from the public OURCs records."""
     series_text = series_text_map[series]
-    print(f'Retriving crew lists for {series_text} {year} from OURCs')  # noqa: T201
+    logger.info(f'Retriving crew lists for {series_text} {year} from OURCs')
     
     # Identify OURCs event
     try:
@@ -40,7 +43,7 @@ def get_crew_lists(series, year):
             (TORPIDS, 2022): 229,
             (EIGHTS, 2022): 230,
         }[(series, year)]
-        print(f'Using OURCs event #{event_id} for {series_text} {year}')  # noqa: T201
+        logger.info(f'Using OURCs event #{event_id} for {series_text} {year}')
     
     except KeyError:
         raise ValueError(f'No OURCs event mapped for {series_text} {year}')
@@ -62,6 +65,6 @@ def get_crew_lists(series, year):
             crew, crew_list = _parse_crew_box(crew_box, club_box['id'][5:])
             crews[crew] = crew_list
     
-    print(f'Retrieved {len(crews)} crews from OURCs for {series_text} {year}')  # noqa: T201
+    logger.info(f'Retrieved {len(crews)} crews from OURCs for {series_text} {year}')
     return crews
 

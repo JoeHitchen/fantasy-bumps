@@ -1,4 +1,5 @@
 from unittest.mock import patch, Mock
+import logging
 
 from django.test import TestCase
 
@@ -7,6 +8,8 @@ from parsing import live_bumps, ourcs
 from ... import models
 from ...constants import Clubs, Sources
 from .renumbered_crew import Command as RenumberedCrew
+
+logging.disable(logging.CRITICAL)
 
 
 class Test__Renumbered_Crew(TestCase):
