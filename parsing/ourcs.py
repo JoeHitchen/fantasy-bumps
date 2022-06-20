@@ -27,8 +27,10 @@ def _parse_crew_box(box, ext_club):
 
 def get_crew_lists(series, year):
     """Generates a crew/crew-list map from the public OURCs records."""
+    
     series_text = series_text_map[series]
     logger.info(f'Retriving crew lists for {series_text} {year} from OURCs')
+    
     
     # Identify OURCs event
     try:
@@ -48,6 +50,7 @@ def get_crew_lists(series, year):
     except KeyError:
         raise ValueError(f'No OURCs event mapped for {series_text} {year}')
     
+    
     # Load page into parser
     response = requests.get(
         f'https://ourcs.co.uk/racing/entries/events/event/{event_id}/crew_lists/',
@@ -58,13 +61,14 @@ def get_crew_lists(series, year):
     
     soup = BeautifulSoup(response.text, 'html.parser')
     
+    
     # Extract crew lists
-    crews = {}
+    crew_lists = {}
     for club_box in soup.find_all(id = re.compile('club-[a-z]{4}')):
         for crew_box in club_box.find_all(class_ = 'panel-default'):
             crew, crew_list = _parse_crew_box(crew_box, club_box['id'][5:])
-            crews[crew] = crew_list
+            crew_lists[crew] = crew_list
     
-    logger.info(f'Retrieved {len(crews)} crews from OURCs for {series_text} {year}')
-    return crews
+    logger.info(f'Retrieved {len(crew_lists)} crews from OURCs for {series_text} {year}')
+    return crew_lists
 
