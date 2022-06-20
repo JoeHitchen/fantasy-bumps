@@ -1,13 +1,16 @@
 import re
 import html
+import logging
 
 from bs4 import BeautifulSoup
 import requests
 
-from .common import seat_parser, club_parser
+from .common import TORPIDS, EIGHTS, series_text_map, seat_parser, club_parser
+
+logger = logging.getLogger(__name__)
 
 
-def _crew_box(box, ext_club):
+def _parse_crew_box(box, ext_club):
     
     crew_header = box.find('a').string
     club = club_parser(crew_header)
@@ -22,22 +25,50 @@ def _crew_box(box, ext_club):
     return ((club, gender, rank), crew_list)
 
 
-def get_crew_lists(event_id):
-    print('Retriving OURCs crew lists for event #{}'.format(event_id))  # noqa: T201
+def get_crew_lists(series, year):
+    """Generates a crew/crew-list map from the public OURCs records."""
     
-    url = 'https://ourcs.co.uk/racing/entries/events/event/{}/crew_lists/'.format(event_id)
-    response = requests.get(url, allow_redirects = False)
+    series_text = series_text_map[series]
+    logger.info(f'Retriving crew lists for {series_text} {year} from OURCs')
     
-    if not response.status_code == 200:
-        raise IOError('Could not load crew lists page')
+    
+    # Identify OURCs event
+    try:
+        event_id = {
+            (TORPIDS, 2017): 173,
+            (EIGHTS, 2017): 174,
+            (TORPIDS, 2018): 184,
+            (EIGHTS, 2018): 186,
+            (TORPIDS, 2019): 195,
+            (EIGHTS, 2019): 198,
+            (TORPIDS, 2021): 217,
+            (TORPIDS, 2022): 229,
+            (EIGHTS, 2022): 230,
+        }[(series, year)]
+        logger.info(f'Using OURCs event #{event_id} for {series_text} {year}')
+    
+    except KeyError:
+        raise ValueError(f'No OURCs event mapped for {series_text} {year}')
+    
+    
+    # Load page into parser
+    response = requests.get(
+        f'https://ourcs.co.uk/racing/entries/events/event/{event_id}/crew_lists/',
+        allow_redirects = False,
+    )
+    if not response.ok:
+        raise response.raise_for_status()
     
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    crews = {}
+    
+    # Extract crew lists
+    crew_lists = {}
     for club_box in soup.find_all(id = re.compile('club-[a-z]{4}')):
         for crew_box in club_box.find_all(class_ = 'panel-default'):
-            crew = _crew_box(crew_box, club_box['id'][5:])
-            crews[crew[0]] = crew[1]
+            crew, crew_list = _parse_crew_box(crew_box, club_box['id'][5:])
+            crew_lists[crew] = crew_list
     
-    return crews
+    logger.info(f'Retrieved {len(crew_lists)} crews from OURCs for {series_text} {year}')
+    return crew_lists
 

@@ -3,6 +3,8 @@ TORPIDS = 'T'
 EIGHTS = 'E'
 LENTS = 'L'
 MAYS = 'M'
+series_text_map = {TORPIDS: 'Torpids', EIGHTS: 'Eights', LENTS: 'Lents', MAYS: 'Mays'}
+
 
 MEN = 'M'
 WOMEN = 'W'
