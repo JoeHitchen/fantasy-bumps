@@ -2,14 +2,84 @@ from unittest.mock import patch, Mock
 import logging
 
 from django.test import TestCase
+from django.utils import timezone
 
-from parsing import live_bumps, ourcs
+from parsing import live_bumps, anu, camfm, ourcs
 
 from ... import models
-from ...constants import Clubs, Sources
+from ...constants import Series, Clubs, Sources
+from .game_start import create_days
+from .game_advance import Command as GameAdvance, _demo_wrapper
 from .renumbered_crew import Command as RenumberedCrew
 
 logging.disable(logging.CRITICAL)
+
+
+def prepare_event(series, start_date):
+    event = models.Event.objects.create(
+        series = series,
+        year = start_date.year,
+        tag = f'{series.label.lower()}{start_date.year}',
+    )
+    create_days(event, start_date)
+    return event
+
+
+class Test__Game_Advance(TestCase):
+    
+    today = timezone.now().date()
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__oxford_default_source(self, perform_mock):
+        """Live Bumps is the default source used for Oxford events."""
+        
+        event = prepare_event(Series.TORPIDS, self.today)
+        
+        GameAdvance().handle()
+        perform_mock.assert_called_once_with(live_bumps.get_positions, event)
+    
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__oxford_specified_source(self, perform_mock):
+        """Alternative sources can be used for Oxford events."""
+        
+        event = prepare_event(Series.TORPIDS, self.today)
+        
+        GameAdvance().handle(oxf_source = 'anu')
+        perform_mock.assert_called_once_with(anu.get_positions, event)
+    
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__cambridge_default_source(self, perform_mock):
+        """CamFM is the default source used for Cambridge events."""
+        
+        event = prepare_event(Series.LENTS, self.today)
+        
+        GameAdvance().handle()
+        perform_mock.assert_called_once_with(camfm.get_positions, event)
+    
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__demo_default_source(self, perform_mock):
+        """An internal method is the default source used for Demo events."""
+        
+        event = prepare_event(Series.DEMO, self.today)
+        
+        GameAdvance().handle()
+        perform_mock.assert_called_once_with(_demo_wrapper, event)
+    
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__two_events(self, perform_mock):
+        """Two events can be updated simultaneously."""
+        
+        torpids = prepare_event(Series.TORPIDS, self.today)
+        lents = prepare_event(Series.LENTS, self.today)
+        
+        GameAdvance().handle()
+        self.assertEqual(perform_mock.call_count, 2)
+        perform_mock.assert_any_call(live_bumps.get_positions, torpids)
+        perform_mock.assert_any_call(camfm.get_positions, lents)
 
 
 class Test__Renumbered_Crew(TestCase):
