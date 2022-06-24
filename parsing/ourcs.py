@@ -29,7 +29,7 @@ def get_crew_lists(series, year):
     """Generates a crew/crew-list map from the public OURCs records."""
     
     series_text = series_text_map[series]
-    logger.info(f'Retriving crew lists for {series_text} {year} from OURCs')
+    logger.info(f'Retrieving crew lists for {series_text} {year} from OURCs')
     
     
     # Identify OURCs event
@@ -69,6 +69,6 @@ def get_crew_lists(series, year):
             crew, crew_list = _parse_crew_box(crew_box, club_box['id'][5:])
             crew_lists[crew] = crew_list
     
-    logger.info(f'Retrieved {len(crew_lists)} crews from OURCs for {series_text} {year}')
+    logger.info(f'Retrieved {len(crew_lists)} crews for {series_text} {year} from OURCs')
     return crew_lists
 
