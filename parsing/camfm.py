@@ -1,10 +1,13 @@
 from datetime import datetime
+import logging
 import re
 
 import requests
 from bs4 import BeautifulSoup
 
-from .common import LENTS, MAYS
+from .common import LENTS, MAYS, series_text_map
+
+logger = logging.getLogger(__name__)
 
 
 def _cambridge_club_parser(club_str):
@@ -94,40 +97,63 @@ def _get_positions_for_gender(division_soups, day_number):
 
 
 def get_positions(series, year, day_number):
-    """Generates the crew-position map for a given day of racing."""
+    """Generates a crew/position map from the CamFM records."""
+    
+    series_text = series_text_map[series]
+    logger.info('Retrieving crew positions for {} {} (day {}) from CamFM'.format(
+        series_text,
+        year,
+        day_number,
+    ))
     
     # Map historical events
-    event_id = {
-        (LENTS, 2017): 1029,
-        (MAYS, 2017): 1064,
-        (LENTS, 2018): 1175,
-        (MAYS, 2018): 1214,
-        (LENTS, 2019): 1318,
-        (MAYS, 2019): 1353,
-        (LENTS, 2020): 1400,
-        (LENTS, 2022): 2000,
-    }.get((series, year))
+    event_string = ''
+    try:
+        event_id = {
+            (LENTS, 2017): 1029,
+            (MAYS, 2017): 1064,
+            (LENTS, 2018): 1175,
+            (MAYS, 2018): 1214,
+            (LENTS, 2019): 1318,
+            (MAYS, 2019): 1353,
+            (LENTS, 2020): 1400,
+            (LENTS, 2022): 2000,
+        }[(series, year)]
+        
+        logger.info(f'Using CamFM event #{event_id} for {series_text} {year}')
+        event_string = f'&bumps_id={event_id}' if event_id else ''
     
-    if year <= datetime.now().year and not event_id:
-        raise ValueError('Historical results not mapped for {} {}'.format(
-            {LENTS: 'Lents', MAYS: 'Mays'}.get(series),
-            year,
-        ))
+    except KeyError:
+        if year < datetime.now().year and not event_id:
+            raise ValueError('Historical results not mapped for {} {}'.format(
+                {LENTS: 'Lents', MAYS: 'Mays'}.get(series),
+                year,
+            ))
+        logger.info(f'Using latest CamFM event for {series_text} {year}')
     
-    # Load results page into parser
-    event_string = f'&bumps_id={event_id}' if event_id else ''
+    
+    # Load page into parser
     response = requests.get(f'https://bumps.camfm.co.uk/?allboats=true{event_string}')
     if not response.ok:
         response.raise_for_status()
     
     soup = BeautifulSoup(response.text, 'html.parser')
-    charts = soup.find_all('div', {'class': 'bumps_container'})
     
-    # Generate positions map
+    
+    # Extract crew positions
+    charts = soup.find_all('div', {'class': 'bumps_container'})
     mens_divisions = charts[0].findChildren('div', {'class': 'bumps_division_container'})
     womens_divisions = charts[1].findChildren('div', {'class': 'bumps_division_container'})
-    return {
+    
+    positions = {
         **_get_positions_for_gender(mens_divisions, day_number),
         **_get_positions_for_gender(womens_divisions, day_number),
     }
+    logger.info('Retrieved {} crew positions for {} {} (day {}) from CamFM'.format(
+        len(positions),
+        series_text,
+        year,
+        day_number,
+    ))
+    return positions
 

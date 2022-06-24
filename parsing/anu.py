@@ -1,10 +1,12 @@
+import logging
 import re
 
 from bs4 import BeautifulSoup
 import requests
 
-from .common import club_parser, TORPIDS, EIGHTS, MEN, WOMEN
+from .common import club_parser, TORPIDS, series_text_map, MEN, WOMEN
 
+logger = logging.getLogger(__name__)
 BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
 
 
@@ -55,33 +57,52 @@ def _convert_divisions_to_ranking(divisions, gender):
 
 
 def get_positions(series, year, day_number):
+    """Generates a crew/position map from Anu's records."""
     
+    series_text = series_text_map[series]
+    logger.info('Retrieving crew positions for {} {} (day {}) from Anu'.format(
+        series_text,
+        year,
+        day_number,
+    ))
+    
+    # Map days of historical events
     if (series, year) == (TORPIDS, 2021):
         day_map = ['tue', 'wed', 'thu', 'fri', 'end']
     else:
         day_map = ['wed', 'thu', 'fri', 'sat', 'end']
     
-    url = BASE_URL + '{}/{}{}{}.html'.format(
-        {TORPIDS: 'torpids', EIGHTS: 'eights'}[series],
+    
+    # Load page into parser
+    response = requests.get(BASE_URL + '{}/{}{}{}.html'.format(
+        series_text.lower(),
         series.lower(),
         str(year)[-2:],
         day_map[day_number - 1],
-    )
-    response = requests.get(url)
+    ))
     if not response.ok:
         response.raise_for_status()
     
     soup = BeautifulSoup(response.text, 'html.parser')
     
+    
+    # Extract crew positions
     divisions = []
     for table in soup.find_all('table')[2:]:
-        
         if table.string is not None:
             continue
+        
         divisions.append(_parse_division(table))
     
-    mens_positions = _convert_divisions_to_ranking(divisions, MEN)
-    womens_positions = _convert_divisions_to_ranking(divisions, WOMEN)
-    
-    return {**mens_positions, **womens_positions}
+    positions = {
+        **_convert_divisions_to_ranking(divisions, MEN),
+        **_convert_divisions_to_ranking(divisions, WOMEN),
+    }
+    logger.info('Retrieved {} crew positions for {} {} (day {}) from Anu'.format(
+        len(positions),
+        series_text,
+        year,
+        day_number,
+    ))
+    return positions
 
