@@ -20,7 +20,7 @@ class Genders(models.TextChoices):
 
 
 class timings:
-    MARKET_OPENS = time(20, 00)
+    MARKET_OPENS = time(20, 30)
 
 
 class money:
@@ -68,7 +68,7 @@ class Clubs(models.TextChoices):
     WORC = ('worc', 'Worcester')
     ADDE = ('adde', 'Addenbrookes')
     ANGL = ('angl', 'Anglia Ruskin')
-    CAIU = ('caiu', 'Cauis')
+    CAIU = ('caiu', 'Caius')
     CHRC = ('chrc', "Christ's")
     CHUR = ('chur', 'Churchill')
     CLAR = ('clar', 'Clare')
