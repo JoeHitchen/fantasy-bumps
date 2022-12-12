@@ -13,7 +13,7 @@ class MessagesTestMixin():
     
     def assertMessages(self, response, expected):
         
-        sent = [msg for msg in messages.get_messages(response.wsgi_request)]
+        sent = list(messages.get_messages(response.wsgi_request))
         self.assertEqual(len(sent), len(expected))
         
         for i, msg in enumerate(expected):
