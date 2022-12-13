@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 
 from parsing import live_bumps, ourcs
 
-from ... import models, game_tools as tools
+from ... import models
 from ...constants import Clubs, Genders, Sources
 
 logging.basicConfig(level = logging.INFO)
@@ -59,12 +59,17 @@ class Command(BaseCommand):
         
         target_crew.crew_lists.filter(event = event).delete()
         # ^Linked purchases set to anon athlete
-        
-        tools.add_athletes(
-            event,
-            {target_crew.as_tuple(): target_crew},
-            {target_crew.as_tuple(): crew_lists[source_crew_tuple]},
-        )
+    
+        athletes = []
+        for seat in [seat.id for seat in models.Seat.objects.all()]:
+            if seat in crew_lists[source_crew_tuple]:
+                athletes.append(models.Athlete(
+                    event = event,
+                    crew = target_crew,
+                    seat_id = seat,
+                    name = crew_lists[source_crew_tuple][seat],
+                ))
+        models.Athlete.objects.bulk_create(athletes)
     
     
     def handle(self, *args, **kwargs):

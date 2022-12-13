@@ -5,24 +5,6 @@ from . import models
 from . import utils
 
 
-def add_athletes(event, crews, crew_lists):
-    
-    seats = {seat.id: seat for seat in models.Seat.objects.all()}
-    
-    athletes = []
-    for crew_id, crew in crews.items():
-        for seat_id, seat in seats.items():
-            if crew_id in crew_lists and seat_id in crew_lists[crew_id]:
-                athletes.append(models.Athlete(
-                    event = event,
-                    crew = crew,
-                    seat = seat,
-                    name = crew_lists[crew_id][seat_id],
-                ))
-    
-    models.Athlete.objects.bulk_create(athletes)
-
-
 def roll_over_purchases(day):
     """Creates a copy of all purchase records for today on the next day.
     

@@ -153,10 +153,10 @@ class Command(BaseCommand):
         
         utils.load_crew_rankings(source_function, weds)
         
-        if not source == self.CAMFM:
-            crews = models.Crew.objects.filter(positions__day = weds)
-            crew_tuple_map = utils.create_crew_tuple_map(crew.as_tuple() for crew in crews)
-            tools.add_athletes(event, crew_tuple_map, ourcs.get_crew_lists(series, year))
+        crew_list_source = None if source == self.CAMFM else ourcs.get_crew_lists
+        
+        if crew_list_source:
+            utils.load_crew_lists(crew_list_source, event)
 
 
 def create_days(event, start_date):

@@ -27,7 +27,7 @@ def prepare_event(series, start_date):
 
 
 class Test__Utils(TestCase):
-    fixtures = ['dev_event']
+    fixtures = ['dev_event', 'seats']
     
     @classmethod
     def setUpTestData(cls):
@@ -133,6 +133,43 @@ class Test__Utils(TestCase):
         for position in positions:
             with self.subTest(crew = str(position.crew)):
                 self.assertEqual(position.rank, rankings[position.crew.as_tuple()])
+    
+    
+    def test__crew_lists__source_call(self):
+        """The event information is passed to the source."""
+        
+        source_mock = Mock(return_value = {})
+        
+        utils.load_crew_lists(source_mock, self.event)
+        source_mock.assert_called_once_with(self.event.series, self.event.year)
+    
+    
+    def test__crew_lists__create(self):
+        """The crew lists provided by the source are stored against the event."""
+        
+        crew_lady = models.Crew.objects.create(club = Clubs.LADY, gender = Genders.WOMEN, rank = 1)
+        crew_wolf = models.Crew.objects.create(club = Clubs.WOLF, gender = Genders.WOMEN, rank = 2)
+        
+        day = self.event.days.first()
+        models.Position.objects.create(day = day, crew = crew_lady, rank = 13)
+        models.Position.objects.create(day = day, crew = crew_wolf, rank = 21)
+        
+        crew_lists = {
+            crew_lady.as_tuple(): {1: 'L1', 2: 'L2', 3: 'L3', 8: 'L8', 9: 'L9'},
+            crew_wolf.as_tuple(): {1: 'W1', 2: 'W2', 3: 'W3', 8: 'W8', 9: 'W9'},
+        }
+        source_mock = Mock(return_value = crew_lists)
+        
+        utils.load_crew_lists(source_mock, self.event)
+        
+        athletes = models.Athlete.objects.all()
+        self.assertEqual(len(athletes), 10)
+        for athlete in athletes:
+            with self.subTest(athlete = athlete.name):
+                self.assertEqual(
+                    crew_lists[athlete.crew.as_tuple()][athlete.seat.id],
+                    athlete.name,
+                )
 
 
 class Test__Game_Advance(TestCase):

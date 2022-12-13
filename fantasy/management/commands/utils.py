@@ -34,3 +34,25 @@ def load_crew_rankings(source_function, day):
         for crew_id, crew in create_crew_tuple_map(ranking.keys()).items()
     ])
 
+
+def load_crew_lists(source_function, event):
+    """Loads crew lists from the source provided for the given event, and optionally crew."""
+    
+    crew_lists = source_function(event.series, event.year)
+    
+    crew_tuple_map = create_crew_tuple_map(crew_lists.keys())
+    seats_map = {seat.id: seat for seat in models.Seat.objects.all()}
+    
+    athletes = []
+    for crew_tuple, crew in crew_tuple_map.items():
+        for seat_id, seat in seats_map.items():
+            if crew_tuple in crew_lists and seat_id in crew_lists[crew_tuple]:
+                athletes.append(models.Athlete(
+                    event = event,
+                    crew = crew,
+                    seat = seat,
+                    name = crew_lists[crew_tuple][seat_id],
+                ))
+    
+    models.Athlete.objects.bulk_create(athletes)
+
