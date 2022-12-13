@@ -9,6 +9,7 @@ from parsing import ourcs, live_bumps, anu, camfm
 from ... import models
 from ...constants import Series as EventSeries
 from ... import game_tools as tools
+from . import utils
 
 
 class Command(BaseCommand):
@@ -144,17 +145,18 @@ class Command(BaseCommand):
         
         # Bumps event
         if source == self.LIVE_BUMPS:
-            results = live_bumps.get_positions(series, year, 1)
+            source_function = live_bumps.get_positions
         elif source == self.CAMFM:
-            results = camfm.get_positions(series, year, 1)
+            source_function = camfm.get_positions
         else:
-            results = anu.get_positions(series, year, 1)
+            source_function = anu.get_positions
         
-        crews = tools.get_all_crews(results.keys())
-        tools.add_rankings(weds, crews, results)
+        utils.load_crew_rankings(source_function, weds)
         
         if not source == self.CAMFM:
-            tools.add_athletes(event, crews, live_bumps.get_crew_lists(series, year))
+            crews = models.Crew.objects.filter(positions__day = weds)
+            crew_tuple_map = utils.create_crew_tuple_map(crew.as_tuple() for crew in crews)
+            tools.add_athletes(event, crew_tuple_map, ourcs.get_crew_lists(series, year))
 
 
 def create_days(event, start_date):

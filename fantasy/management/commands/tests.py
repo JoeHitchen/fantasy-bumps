@@ -7,7 +7,8 @@ from django.utils import timezone
 from parsing import live_bumps, anu, camfm, ourcs
 
 from ... import models
-from ...constants import Series, Clubs, Sources
+from ...constants import Series, Clubs, Genders, Sources
+from . import utils
 from .game_start import create_days
 from .game_advance import Command as GameAdvance, _demo_wrapper
 from .renumbered_crew import Command as RenumberedCrew
@@ -23,6 +24,115 @@ def prepare_event(series, start_date):
     )
     create_days(event, start_date)
     return event
+
+
+class Test__Utils(TestCase):
+    fixtures = ['dev_event']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.event = prepare_event(Series.TORPIDS, timezone.now().date())
+    
+    
+    def test__crew_map__empty(self):
+        """Returns an empty map if no crews supplied."""
+        
+        crew_map = utils.create_crew_tuple_map([])
+        self.assertEqual(crew_map, {})
+    
+    
+    def test__crew_map__create(self):
+        """Creates missing crew records."""
+        
+        crew_lady = (Clubs.LADY, Genders.WOMEN, 1)
+        crew_wolf = (Clubs.WOLF, Genders.WOMEN, 2)
+        crews_in_event = [crew_lady, crew_wolf]
+        
+        crew_map = utils.create_crew_tuple_map(crews_in_event)
+        self.assertEqual(set(crew_map.keys()), set(crews_in_event))
+        
+        self.assertEqual(models.Crew.objects.count(), 2)
+    
+    
+    def test__crew_map__use_existing(self):
+        """References existing crew records where possible."""
+        
+        crew_hert = models.Crew.objects.create(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
+        crew_newc = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.WOMEN, rank = 2)
+        models.Crew.objects.create(club = Clubs.MANS, gender = Genders.MEN, rank = 1)
+        
+        crews_in_event = [crew_hert.as_tuple(), crew_newc.as_tuple()]
+        
+        crew_map = utils.create_crew_tuple_map(crews_in_event)
+        self.assertEqual(set(crew_map.keys()), set(crews_in_event))
+        
+        self.assertEqual(crew_map[crew_hert.as_tuple()], crew_hert)
+        self.assertEqual(crew_map[crew_newc.as_tuple()], crew_newc)
+        self.assertEqual(models.Crew.objects.count(), 3)
+    
+    
+    def test__crew_map__mixed(self):
+        """Will both create a reference crew records as required."""
+        
+        crew_lady_tuple = (Clubs.LADY, Genders.WOMEN, 1)
+        crew_wolf_tuple = (Clubs.WOLF, Genders.WOMEN, 2)
+        
+        crew_hert = models.Crew.objects.create(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
+        crew_newc = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.WOMEN, rank = 2)
+        models.Crew.objects.create(club = Clubs.MANS, gender = Genders.MEN, rank = 1)
+        
+        crews_in_event = [
+            crew_lady_tuple,
+            crew_wolf_tuple,
+            crew_hert.as_tuple(),
+            crew_newc.as_tuple(),
+        ]
+        
+        crew_map = utils.create_crew_tuple_map(crews_in_event)
+        self.assertEqual(set(crew_map.keys()), set(crews_in_event))
+        
+        self.assertEqual(crew_map[crew_hert.as_tuple()], crew_hert)
+        self.assertEqual(crew_map[crew_newc.as_tuple()], crew_newc)
+        self.assertEqual(models.Crew.objects.count(), 5)
+    
+    
+    def test__rankings__first_day(self):
+        """The event information and automatically-calculated day are passed to the source."""
+        
+        source_mock = Mock(return_value = {})
+        
+        utils.load_crew_rankings(source_mock, self.event.days.first())
+        source_mock.assert_called_once_with(self.event.series, self.event.year, 1)
+    
+    
+    def test__rankings__last_day(self):
+        """The event information and automatically-calculated day are passed to the source."""
+        
+        source_mock = Mock(return_value = {})
+        
+        utils.load_crew_rankings(source_mock, self.event.days.last())
+        source_mock.assert_called_once_with(self.event.series, self.event.year, 5)
+   
+   
+    def test__rankings__create(self):
+        """The rankings provided by the source are stored against the day."""
+        
+        rankings = {
+            (Clubs.LADY, Genders.WOMEN, 1): 13,
+            (Clubs.WOLF, Genders.WOMEN, 2): 21,
+            (Clubs.HERT, Genders.WOMEN, 1): 8,
+            (Clubs.NEWC, Genders.WOMEN, 2): 37,
+            (Clubs.MANS, Genders.MEN, 1): 25,
+        }
+        source_mock = Mock(return_value = rankings)
+        
+        utils.load_crew_rankings(source_mock, self.event.days.first())
+        
+        positions = models.Position.objects.all()
+        self.assertEqual(len(positions), 5)
+        for position in positions:
+            with self.subTest(crew = str(position.crew)):
+                self.assertEqual(position.rank, rankings[position.crew.as_tuple()])
 
 
 class Test__Game_Advance(TestCase):
