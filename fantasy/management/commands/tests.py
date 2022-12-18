@@ -1,4 +1,5 @@
 from unittest.mock import patch, Mock
+from datetime import time
 import logging
 
 from django.test import TestCase
@@ -22,7 +23,7 @@ def prepare_event(series, start_date):
         year = start_date.year,
         tag = f'{series.label.lower()}{start_date.year}',
     )
-    create_days(event, start_date)
+    create_days(event, start_date, time(12, 00), time(12, 00))
     return event
 
 

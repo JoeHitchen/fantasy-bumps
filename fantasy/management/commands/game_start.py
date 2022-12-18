@@ -8,7 +8,6 @@ from parsing import ourcs, live_bumps, anu, camfm
 
 from ... import models
 from ...constants import Series as EventSeries
-from ... import game_tools as tools
 from . import utils
 
 
@@ -90,57 +89,11 @@ class Command(BaseCommand):
         year = kwargs['year'] if kwargs['year'] else start_date.year
         source = kwargs.get('source', self.LIVE_BUMPS)
         
-        # Demo events
-        if is_demo_event:
-        
-            if models.Event.objects.exists():
-                raise CommandError('Cannot create a Demo event if the database is not empty!')
-            
-            call_command('loaddata', 'demo_crews', 'demo_event')
-            event = models.Event.objects.first()
-            year = event.year
-        
-        # Bumps events
-        else:
-            division_structure = {
-                EventSeries.TORPIDS: {
-                    'mens_division_sizes': [12, 12, 12, 12, 12, 13],
-                    'womens_division_sizes': [12, 12, 12, 12, 13],
-                },
-                EventSeries.EIGHTS: {
-                    'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
-                    'womens_division_sizes': [13, 13, 13, 13, 13, 14],
-                },
-                EventSeries.MAYS: {
-                    'mens_division_sizes': [17, 17, 17, 17, 17, 6],
-                    'womens_division_sizes': [17, 17, 17, 17, 9],
-                },
-            }[series]
-            
-            event_tag = '{}{}'.format(series.label.lower(), year)
-            event = models.Event.objects.create(
-                series = series,
-                year = year,
-                tag = event_tag,
-                **division_structure,
-            )
-        
-        
-        # Add days
-        weds = create_days(event, start_date)
-        
+        event, weds = create_event(is_demo_event, series, year, start_date)
         
         # Demo event with OURCs crew lists
         if is_demo_event:
             call_command('loaddata', 'demo_start_day1')
-            crews = {
-                (crew.club, crew.gender, crew.rank): crew
-                for crew in models.Crew.objects.all()
-            }
-            
-            crew_lists = ourcs.get_crew_lists(event_id = 103)
-            
-            tools.add_athletes(event, crews, crew_lists)
             return
         
         # Bumps event
@@ -159,32 +112,100 @@ class Command(BaseCommand):
             utils.load_crew_lists(crew_list_source, event)
 
 
-def create_days(event, start_date):
+def create_event(source, series, year, start_date):
+    
+    main_race_time = time(12, 00)
+    saturday_race_time = main_race_time
+    
+    # Demo events
+    if source:
+    
+        if models.Event.objects.exists():
+            raise CommandError('Cannot create a Demo event if the database is not empty!')
+        
+        call_command('loaddata', 'demo_crews', 'demo_event')
+        event = models.Event.objects.first()
+        year = event.year
+    
+    # Bumps events
+    else:
+        
+        if series == EventSeries.TORPIDS and year == 2021:
+            division_structure = {
+                'mens_division_sizes': [9, 9, 9, 9, 9, 9, 10],
+                'womens_division_sizes': [9, 9, 9, 9, 9, 9, 10],
+            }
+        elif series == EventSeries.TORPIDS:
+            division_structure = {
+                'mens_division_sizes': [12, 12, 12, 12, 12, 13],
+                'womens_division_sizes': [12, 12, 12, 12, 13],
+            }
+        elif series == EventSeries.EIGHTS and year == 2022:
+            main_race_time = time(12, 15)
+            saturday_race_time = time(11, 15)
+            division_structure = {
+                'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
+                'womens_division_sizes': [13, 13, 13, 13, 13, 14],
+            }
+        elif series == EventSeries.EIGHTS:
+            saturday_race_time = time(11, 00)
+            division_structure = {
+                'mens_division_sizes': [12, 12, 12, 12, 12, 12, 13],
+                'womens_division_sizes': [12, 12, 12, 12, 12, 12, 11],
+            }
+        elif series == EventSeries.MAYS and year == 2022:
+            main_race_time = time(13, 45)
+            saturday_race_time = time(11, 45)
+            division_structure = {
+                'mens_division_sizes': [17, 17, 17, 17, 12],
+                'womens_division_sizes': [17, 17, 17, 17, 6],
+            }
+        elif series == EventSeries.MAYS:
+            main_race_time = time(13, 45)
+            saturday_race_time = time(11, 45)
+            division_structure = {
+                'mens_division_sizes': [17, 17, 17, 17, 17, 6],
+                'womens_division_sizes': [17, 17, 17, 17, 9],
+            }
+        
+        event_tag = '{}{}'.format(series.label.lower(), year)
+        event = models.Event.objects.create(
+            series = series,
+            year = year,
+            tag = event_tag,
+            **division_structure,
+        )
+    
+    first_day = create_days(event, start_date, main_race_time, saturday_race_time)
+    return event, first_day
+
+
+def create_days(event, start_date, main_race_time, saturday_race_time):
     
     weds = models.Day(
         event = event,
         name = 'Wednesday',
         date = start_date,
-        first_race_time = time(12, 00),
+        first_race_time = main_race_time,
     )
     weds.save()
     
     event.days.create(
         name = 'Thursday',
         date = start_date + timedelta(1),
-        first_race_time = time(12, 00),
+        first_race_time = main_race_time,
     )
     
     event.days.create(
         name = 'Friday',
         date = start_date + timedelta(2),
-        first_race_time = time(12, 00),
+        first_race_time = main_race_time,
     )
     
     event.days.create(
         name = 'Saturday',
         date = start_date + timedelta(3),
-        first_race_time = time(12, 00),
+        first_race_time = saturday_race_time,
     )
     
     event.days.create(
