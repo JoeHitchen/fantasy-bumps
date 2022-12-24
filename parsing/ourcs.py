@@ -35,6 +35,7 @@ def get_crew_lists(series, year):
     # Identify OURCs event
     try:
         event_id = {
+            (TORPIDS, 2013): 103,
             (TORPIDS, 2017): 173,
             (EIGHTS, 2017): 174,
             (TORPIDS, 2018): 184,

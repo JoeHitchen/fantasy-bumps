@@ -1,4 +1,5 @@
 from unittest.mock import patch, Mock
+from datetime import date, time, timedelta
 import logging
 
 from django.test import TestCase
@@ -7,8 +8,10 @@ from django.utils import timezone
 from parsing import live_bumps, anu, camfm, ourcs
 
 from ... import models
-from ...constants import Series, Clubs, Sources
-from .game_start import create_days
+from ...constants import Series, Clubs, Genders, Sources
+from . import utils
+from .game_start import Command as GameStart, create_days
+from .game_start import _demo_positions, _demo_crew_lists, _noop_crew_lists
 from .game_advance import Command as GameAdvance, _demo_wrapper
 from .renumbered_crew import Command as RenumberedCrew
 
@@ -21,8 +24,324 @@ def prepare_event(series, start_date):
         year = start_date.year,
         tag = f'{series.label.lower()}{start_date.year}',
     )
-    create_days(event, start_date)
+    create_days(event, start_date, time(12, 00), time(12, 00))
     return event
+
+
+class Test__Utils(TestCase):
+    fixtures = ['dev_event', 'seats']
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.event = prepare_event(Series.TORPIDS, timezone.now().date())
+    
+    
+    def test__crew_map__empty(self):
+        """Returns an empty map if no crews supplied."""
+        
+        crew_map = utils.create_crew_tuple_map([])
+        self.assertEqual(crew_map, {})
+    
+    
+    def test__crew_map__create(self):
+        """Creates missing crew records."""
+        
+        crew_lady = (Clubs.LADY, Genders.WOMEN, 1)
+        crew_wolf = (Clubs.WOLF, Genders.WOMEN, 2)
+        crews_in_event = [crew_lady, crew_wolf]
+        
+        crew_map = utils.create_crew_tuple_map(crews_in_event)
+        self.assertEqual(set(crew_map.keys()), set(crews_in_event))
+        
+        self.assertEqual(models.Crew.objects.count(), 2)
+    
+    
+    def test__crew_map__use_existing(self):
+        """References existing crew records where possible."""
+        
+        crew_hert = models.Crew.objects.create(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
+        crew_newc = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.WOMEN, rank = 2)
+        models.Crew.objects.create(club = Clubs.MANS, gender = Genders.MEN, rank = 1)
+        
+        crews_in_event = [crew_hert.as_tuple(), crew_newc.as_tuple()]
+        
+        crew_map = utils.create_crew_tuple_map(crews_in_event)
+        self.assertEqual(set(crew_map.keys()), set(crews_in_event))
+        
+        self.assertEqual(crew_map[crew_hert.as_tuple()], crew_hert)
+        self.assertEqual(crew_map[crew_newc.as_tuple()], crew_newc)
+        self.assertEqual(models.Crew.objects.count(), 3)
+    
+    
+    def test__crew_map__mixed(self):
+        """Will both create a reference crew records as required."""
+        
+        crew_lady_tuple = (Clubs.LADY, Genders.WOMEN, 1)
+        crew_wolf_tuple = (Clubs.WOLF, Genders.WOMEN, 2)
+        
+        crew_hert = models.Crew.objects.create(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
+        crew_newc = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.WOMEN, rank = 2)
+        models.Crew.objects.create(club = Clubs.MANS, gender = Genders.MEN, rank = 1)
+        
+        crews_in_event = [
+            crew_lady_tuple,
+            crew_wolf_tuple,
+            crew_hert.as_tuple(),
+            crew_newc.as_tuple(),
+        ]
+        
+        crew_map = utils.create_crew_tuple_map(crews_in_event)
+        self.assertEqual(set(crew_map.keys()), set(crews_in_event))
+        
+        self.assertEqual(crew_map[crew_hert.as_tuple()], crew_hert)
+        self.assertEqual(crew_map[crew_newc.as_tuple()], crew_newc)
+        self.assertEqual(models.Crew.objects.count(), 5)
+    
+    
+    def test__rankings__first_day(self):
+        """The event information and automatically-calculated day are passed to the source."""
+        
+        source_mock = Mock(return_value = {})
+        
+        utils.load_crew_rankings(source_mock, self.event.days.first())
+        source_mock.assert_called_once_with(self.event.series, self.event.year, 1)
+    
+    
+    def test__rankings__last_day(self):
+        """The event information and automatically-calculated day are passed to the source."""
+        
+        source_mock = Mock(return_value = {})
+        
+        utils.load_crew_rankings(source_mock, self.event.days.last())
+        source_mock.assert_called_once_with(self.event.series, self.event.year, 5)
+   
+   
+    def test__rankings__create(self):
+        """The rankings provided by the source are stored against the day."""
+        
+        rankings = {
+            (Clubs.LADY, Genders.WOMEN, 1): 13,
+            (Clubs.WOLF, Genders.WOMEN, 2): 21,
+            (Clubs.HERT, Genders.WOMEN, 1): 8,
+            (Clubs.NEWC, Genders.WOMEN, 2): 37,
+            (Clubs.MANS, Genders.MEN, 1): 25,
+        }
+        source_mock = Mock(return_value = rankings)
+        
+        utils.load_crew_rankings(source_mock, self.event.days.first())
+        
+        positions = models.Position.objects.all()
+        self.assertEqual(len(positions), 5)
+        for position in positions:
+            with self.subTest(crew = str(position.crew)):
+                self.assertEqual(position.rank, rankings[position.crew.as_tuple()])
+    
+    
+    def test__crew_lists__source_call(self):
+        """The event information is passed to the source."""
+        
+        source_mock = Mock(return_value = {})
+        
+        utils.load_crew_lists(source_mock, self.event)
+        source_mock.assert_called_once_with(self.event.series, self.event.year)
+    
+    
+    def test__crew_lists__create(self):
+        """The crew lists provided by the source are stored against the event."""
+        
+        crew_lady = models.Crew.objects.create(club = Clubs.LADY, gender = Genders.WOMEN, rank = 1)
+        crew_wolf = models.Crew.objects.create(club = Clubs.WOLF, gender = Genders.WOMEN, rank = 2)
+        
+        day = self.event.days.first()
+        models.Position.objects.create(day = day, crew = crew_lady, rank = 13)
+        models.Position.objects.create(day = day, crew = crew_wolf, rank = 21)
+        
+        crew_lists = {
+            crew_lady.as_tuple(): {1: 'L1', 2: 'L2', 3: 'L3', 8: 'L8', 9: 'L9'},
+            crew_wolf.as_tuple(): {1: 'W1', 2: 'W2', 3: 'W3', 8: 'W8', 9: 'W9'},
+        }
+        source_mock = Mock(return_value = crew_lists)
+        
+        utils.load_crew_lists(source_mock, self.event)
+        
+        athletes = models.Athlete.objects.all()
+        self.assertEqual(len(athletes), 10)
+        for athlete in athletes:
+            with self.subTest(athlete = athlete.name):
+                self.assertEqual(
+                    crew_lists[athlete.crew.as_tuple()][athlete.seat.id],
+                    athlete.name,
+                )
+
+
+class Test__Game_Start(TestCase):
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__date_year__default(self, _, __):
+        """By default, the game is set to start in five days' time."""
+        
+        expected_date = timezone.now().date() + timedelta(5)
+        GameStart().handle(series = 'torpids', date = None, year = None)
+        
+        event = models.Event.objects.first()
+        self.assertEqual(event.first_day.date, expected_date)
+        self.assertEqual(event.year, expected_date.year)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__date_year__start_date(self, _, __):
+        """A specific start date can be provided to start the game on that date."""
+        
+        expected_date = date.fromisoformat('2022-11-30')
+        GameStart().handle(series = 'torpids', date = expected_date, year = None)
+        
+        event = models.Event.objects.first()
+        self.assertEqual(event.first_day.date, expected_date)
+        self.assertEqual(event.year, expected_date.year)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__date_year__year(self, _, __):
+        """A year can be provided to use data from that year with the default start date."""
+        
+        expected_date = timezone.now().date() + timedelta(5)
+        GameStart().handle(series = 'torpids', date = None, year = 2013)
+        
+        event = models.Event.objects.first()
+        self.assertEqual(event.first_day.date, expected_date)
+        self.assertEqual(event.year, 2013)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__date_year__both(self, _, __):
+        """When both are provided, the provided year overrides the year of the given date."""
+        
+        expected_date = date.fromisoformat('2022-11-30')
+        GameStart().handle(series = 'torpids', date = expected_date, year = 2013)
+        
+        event = models.Event.objects.first()
+        self.assertEqual(event.first_day.date, expected_date)
+        self.assertEqual(event.year, 2013)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__event_source__demo_default(self, _, rankings_mocks):
+        """The default source for Demo events is the demo handler."""
+        
+        GameStart().handle(series = 'demo', date = None, year = None)
+        
+        event = models.Event.objects.first()
+        rankings_mocks.assert_called_once_with(_demo_positions, event.first_day)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__event_source__oxford_default(self, _, rankings_mocks):
+        """The default source for Oxford events is Live Bumps."""
+        
+        GameStart().handle(series = 'torpids', date = None, year = None)
+        
+        event = models.Event.objects.first()
+        rankings_mocks.assert_called_once_with(live_bumps.get_positions, event.first_day)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__event_source__oxford_alternate(self, _, rankings_mocks):
+        """Anu can be used as an alternative source for Oxford events."""
+        
+        GameStart().handle(series = 'torpids', date = None, year = None, source = 'anu')
+        
+        event = models.Event.objects.first()
+        rankings_mocks.assert_called_once_with(anu.get_positions, event.first_day)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__event_source__cambridge_default(self, _, rankings_mocks):
+        """The default source for Cambridge events is CamFM."""
+        
+        GameStart().handle(series = 'mays', date = None, year = None)
+        
+        event = models.Event.objects.first()
+        rankings_mocks.assert_called_once_with(camfm.get_positions, event.first_day)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__event_source__invalid(self, _, rankings_mocks):
+        """An error is thrown if the preferred source is invalid."""
+        
+        with self.assertRaises(AssertionError):
+            GameStart().handle(
+                series = 'torpids',
+                date = None,
+                year = None,
+                source = 'camfm',
+            )
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__crew_lists_source__demo_default(self, crew_lists_mock, __):
+        """The default crew list source for Demo events is the demo handler."""
+        
+        GameStart().handle(series = 'demo', date = None, year = None)
+        
+        event = models.Event.objects.first()
+        crew_lists_mock.assert_called_once_with(_demo_crew_lists, event)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__crew_lists_source__oxford_default(self, crew_lists_mock, __):
+        """The default crew list source for Oxford events is Live Bumps."""
+        
+        GameStart().handle(series = 'torpids', date = None, year = None)
+        
+        event = models.Event.objects.first()
+        crew_lists_mock.assert_called_once_with(live_bumps.get_crew_lists, event)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__crew_lists_source__oxford_alternate(self, crew_lists_mock, __):
+        """OURCs can be used as an alternative crew list source for Oxford events."""
+        
+        GameStart().handle(series = 'torpids', date = None, year = None, crew_lists = 'ourcs')
+        
+        event = models.Event.objects.first()
+        crew_lists_mock.assert_called_once_with(ourcs.get_crew_lists, event)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__crew_lists_source__cambridge_default(self, crew_lists_mock, __):
+        """The default crew list source for Cambridge events is no-op source."""
+        
+        GameStart().handle(series = 'mays', date = None, year = None)
+        
+        event = models.Event.objects.first()
+        crew_lists_mock.assert_called_once_with(_noop_crew_lists, event)
+    
+    
+    @patch('fantasy.management.commands.utils.load_crew_rankings')
+    @patch('fantasy.management.commands.utils.load_crew_lists')
+    def test__handle__crew_lists_source__invalid(self, crew_lists_mock, __):
+        """An error is thrown if the preferred crew list source is invalid."""
+        
+        with self.assertRaises(AssertionError):
+            GameStart().handle(
+                series = 'torpids',
+                date = None,
+                year = None,
+                crew_lists = 'camfm',
+            )
 
 
 class Test__Game_Advance(TestCase):

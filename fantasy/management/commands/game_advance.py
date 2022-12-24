@@ -11,6 +11,7 @@ from parsing import live_bumps, anu, camfm
 from ... import models
 from ...constants import Series as EventSeries
 from ... import game_tools as tools
+from . import utils
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_advance')
@@ -85,14 +86,8 @@ class Command(BaseCommand):
             return
         
         
-        # Get positions
-        day_number = new_day.event.days.filter(date__lte = new_day.date).count()  # One-indexed
-        new_positions = source_function(event.series, event.year, day_number)
-        
-        
         # Update records
-        crews = tools.get_all_crews(new_positions.keys())
-        tools.add_rankings(new_day, crews, new_positions)
+        utils.load_crew_rankings(source_function, new_day)
         tools.roll_over_purchases(old_day)
         tools.evaluate_all_investments(old_day)
     
