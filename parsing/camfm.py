@@ -118,6 +118,7 @@ def get_positions(series, year, day_number):
             (MAYS, 2019): 1353,
             (LENTS, 2020): 1400,
             (LENTS, 2022): 2000,
+            (MAYS, 2022): 3100,
         }[(series, year)]
         
         logger.info(f'Using CamFM event #{event_id} for {series_text} {year}')
