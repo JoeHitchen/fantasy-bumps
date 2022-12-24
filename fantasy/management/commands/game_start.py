@@ -1,4 +1,5 @@
 from datetime import date, time, timedelta
+import logging
 
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
@@ -9,6 +10,9 @@ from parsing import live_bumps, anu, ourcs, camfm
 from ... import models
 from ...constants import Series as EventSeries
 from . import utils
+
+logging.basicConfig(level = logging.INFO)
+logger = logging.getLogger('fantasy.game_start')
 
 
 def _demo_positions(series, year, day_number):
@@ -131,6 +135,16 @@ class Command(BaseCommand):
             assert kwargs['crew_lists'] in valid_crew_list_sources, assert_error
             crew_list_source = kwargs['crew_lists']
         
+        logger.info('Creating a new game for {} {}, starting on {}'.format(
+            series.label,
+            year,
+            start_date.isoformat(),
+        ))
+        logger.info('Using `{}` as the event source and `{}` for crew lists'.format(
+            event_source,
+            crew_list_source,
+        ))
+        
         # Create event and load data
         event, weds = create_event(series, year, start_date)
         
@@ -139,6 +153,12 @@ class Command(BaseCommand):
         
         crew_lists_source_function = self.crew_list_source_function_map[crew_list_source]
         utils.load_crew_lists(crew_lists_source_function, event)
+        
+        logger.info('Created a new game for {} {}, starting on {}'.format(
+            series.label,
+            year,
+            start_date.isoformat(),
+        ))
 
 
 def create_event(series, year, start_date):
