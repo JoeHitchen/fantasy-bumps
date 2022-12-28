@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from ... import models
 from ... import game_tools as tools
+from ...constants import Locations
 from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
@@ -23,14 +24,12 @@ class Command(BaseCommand):
             help = 'Force advance by shifting dates forward by 1 day',
         )
         
-        oxford_sources = parsers.location_event_sources_map[parsers.Locations.OXFORD]
+        oxford_sources = parsers.location_event_sources_map[Locations.OXFORD]
         parser.add_argument(
             '--oxf-source',
             default = oxford_sources[0],
             choices = [src.value for src in oxford_sources],
-            help = 'The source of start order data for Oxford events (default: {})'.format(
-                parsers.location_event_sources_map[parsers.Locations.OXFORD][0],
-            ),
+            help = f'The source of start order data for Oxford events (default: {oxford_sources})',
         )
     
     
@@ -69,20 +68,12 @@ class Command(BaseCommand):
         """
         
         forced = bool(kwargs.get('forced', False))
+        oxford_source = kwargs.get('oxf_source')
         
         location_source_map = {
-            parsers.Locations.OXFORD: parsers.get_validated_event_source(
-                parsers.Locations.OXFORD,
-                kwargs.get('oxf_source'),
-            ),
-            parsers.Locations.CAMBRIDGE: parsers.get_validated_event_source(
-                parsers.Locations.CAMBRIDGE,
-                None,
-            ),
-            parsers.Locations.DEMO: parsers.get_validated_event_source(
-                parsers.Locations.DEMO,
-                None,
-            ),
+            Locations.OXFORD: parsers.get_validated_event_source(Locations.OXFORD, oxford_source),
+            Locations.CAMBRIDGE: parsers.get_validated_event_source(Locations.CAMBRIDGE, None),
+            Locations.DEMO: parsers.get_validated_event_source(Locations.DEMO, None),
         }
         series_source_map = {
             series: location_source_map[location]

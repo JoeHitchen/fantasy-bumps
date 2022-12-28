@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from ... import models
-from ...constants import Clubs, Genders
+from ...constants import Locations, Clubs, Genders
 from . import parsers
 
 logging.basicConfig(level = logging.INFO)
@@ -41,7 +41,7 @@ class Command(BaseCommand):
             help = 'The rank of the crew prior to renumbering',
         )
         
-        sources = parsers.location_crew_list_sources_map[parsers.Locations.OXFORD]
+        sources = parsers.location_crew_list_sources_map[Locations.OXFORD]
         parser.add_argument(
             '--source',
             choices = [src.value for src in sources],

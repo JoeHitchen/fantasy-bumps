@@ -1,6 +1,13 @@
 from datetime import time
+import enum
 
 from django.db import models
+
+
+class Locations(enum.Enum):
+    DEMO = 'DEMO'
+    OXFORD = 'OXF'
+    CAMBRIDGE = 'CAM'
 
 
 class Series(models.TextChoices):

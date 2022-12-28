@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from ... import models
-from ...constants import Series as EventSeries
+from ...constants import Locations, Series as EventSeries
 from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
@@ -44,8 +44,8 @@ class Command(BaseCommand):
                 for source in sources
             ],
             help = 'The source of start order data (default: {} or {})'.format(
-                parsers.location_event_sources_map[parsers.Locations.OXFORD][0],
-                parsers.location_event_sources_map[parsers.Locations.CAMBRIDGE][0],
+                parsers.location_event_sources_map[Locations.OXFORD][0],
+                parsers.location_event_sources_map[Locations.CAMBRIDGE][0],
             ),
         )
         parser.add_argument(
@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 for source in sources
             ],
             help = 'The source of crew list data (default: {})'.format(
-                parsers.location_crew_list_sources_map[parsers.Locations.OXFORD][0],
+                parsers.location_crew_list_sources_map[Locations.OXFORD][0],
             ),
         )
     

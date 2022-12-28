@@ -4,13 +4,7 @@ from django.core.management import call_command
 
 from parsing import live_bumps, anu, ourcs, camfm
 
-from ...constants import Series as EventSeries
-
-
-class Locations(enum.Enum):
-    DEMO = 'DEMO'
-    OXFORD = 'OXF'
-    CAMBRIDGE = 'CAM'
+from ...constants import Locations, Series as EventSeries
 
 
 class Sources(enum.Enum):
