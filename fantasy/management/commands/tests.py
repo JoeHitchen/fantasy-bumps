@@ -8,12 +8,11 @@ from django.utils import timezone
 from parsing import live_bumps, anu, camfm, ourcs
 
 from ... import models
-from ...constants import Series, Clubs, Genders, Sources
-from . import utils
+from ...constants import Series, Clubs, Genders
 from .game_start import Command as GameStart, create_days
-from .game_start import _demo_positions, _demo_crew_lists, _noop_crew_lists
-from .game_advance import Command as GameAdvance, _demo_wrapper
+from .game_advance import Command as GameAdvance
 from .renumbered_crew import Command as RenumberedCrew
+from . import utils, parsers
 
 logging.disable(logging.CRITICAL)
 
@@ -236,7 +235,7 @@ class Test__Game_Start(TestCase):
         GameStart().handle(series = 'demo', date = None, year = None)
         
         event = models.Event.objects.first()
-        rankings_mocks.assert_called_once_with(_demo_positions, event.first_day)
+        rankings_mocks.assert_called_once_with(parsers._demo_positions, event.first_day)
     
     
     @patch('fantasy.management.commands.utils.load_crew_rankings')
@@ -294,7 +293,7 @@ class Test__Game_Start(TestCase):
         GameStart().handle(series = 'demo', date = None, year = None)
         
         event = models.Event.objects.first()
-        crew_lists_mock.assert_called_once_with(_demo_crew_lists, event)
+        crew_lists_mock.assert_called_once_with(parsers._demo_crew_lists, event)
     
     
     @patch('fantasy.management.commands.utils.load_crew_rankings')
@@ -327,7 +326,7 @@ class Test__Game_Start(TestCase):
         GameStart().handle(series = 'mays', date = None, year = None)
         
         event = models.Event.objects.first()
-        crew_lists_mock.assert_called_once_with(_noop_crew_lists, event)
+        crew_lists_mock.assert_called_once_with(parsers._noop_crew_lists, event)
     
     
     @patch('fantasy.management.commands.utils.load_crew_rankings')
@@ -385,7 +384,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.DEMO, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(_demo_wrapper, event)
+        perform_mock.assert_called_once_with(parsers._demo_positions, event)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -420,6 +419,9 @@ class Test__Renumbered_Crew(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.event = models.Event.objects.first()
+        cls.event.series = Series.TORPIDS
+        cls.event.save()
+        
         cls.target_crew = models.Crew.objects.filter(club = Clubs.HERT).first()
         cls.source_crew_rank = cls.target_crew.rank + 1
         cls.source_crew_tpl = (
@@ -485,7 +487,7 @@ class Test__Renumbered_Crew(TestCase):
             gender = self.target_crew.gender,
             new_rank = self.target_crew.rank,
             old_rank = self.source_crew_rank,
-            source = Sources.OURCS,
+            source = parsers.Sources.OURCS,
         )
         
         perform_mock.assert_called_once_with(

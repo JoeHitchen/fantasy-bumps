@@ -2,52 +2,19 @@ from datetime import timedelta
 import logging
 
 from django.core.management.base import BaseCommand
-from django.core.management import call_command
 from django.db.models import F
 from django.utils import timezone
 
-from parsing import live_bumps, anu, camfm
-
 from ... import models
-from ...constants import Series as EventSeries
 from ... import game_tools as tools
-from . import utils
+from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_advance')
 
 
-def _demo_wrapper(event, year, day_number):
-    call_command(
-        'loaddata',
-        'demo_start_day{}'.format(day_number),
-    )
-    return {}
-
-
 class Command(BaseCommand):
     """Advance the game state by one (optionally forced) day."""
-    
-    LIVE = 'live'
-    ANU = 'anu'
-    CAMFM = 'camfm'
-    
-    OXFORD = 'OXFORD'
-    CAMBRIDGE = 'CAMBRIDGE'
-    DEMO = 'DEMO'
-    
-    oxford_source_map = {
-        LIVE: live_bumps.get_positions,
-        ANU: anu.get_positions,
-    }
-    
-    series_location_map = {
-        EventSeries.TORPIDS: OXFORD,
-        EventSeries.EIGHTS: OXFORD,
-        EventSeries.LENTS: CAMBRIDGE,
-        EventSeries.MAYS: CAMBRIDGE,
-        EventSeries.DEMO: DEMO,
-    }
     
     def add_arguments(self, parser):
         parser.add_argument(
@@ -56,11 +23,14 @@ class Command(BaseCommand):
             help = 'Force advance by shifting dates forward by 1 day',
         )
         
+        oxford_sources = parsers.location_event_sources_map[parsers.Locations.OXFORD]
         parser.add_argument(
             '--oxf-source',
-            default = self.LIVE,
-            choices = [self.LIVE, self.ANU],
-            help = f'The source of start order data for Oxford events (default: {self.LIVE})',
+            default = oxford_sources[0],
+            choices = [src.value for src in oxford_sources],
+            help = 'The source of start order data for Oxford events (default: {})'.format(
+                parsers.location_event_sources_map[parsers.Locations.OXFORD][0],
+            ),
         )
     
     
@@ -99,16 +69,24 @@ class Command(BaseCommand):
         """
         
         forced = bool(kwargs.get('forced', False))
-        oxford_source = kwargs.get('oxf_source', self.LIVE)
         
         location_source_map = {
-            self.OXFORD: self.oxford_source_map[oxford_source],
-            self.CAMBRIDGE: camfm.get_positions,
-            self.DEMO: _demo_wrapper,
+            parsers.Locations.OXFORD: parsers.get_validated_event_source(
+                parsers.Locations.OXFORD,
+                kwargs.get('oxf_source'),
+            ),
+            parsers.Locations.CAMBRIDGE: parsers.get_validated_event_source(
+                parsers.Locations.CAMBRIDGE,
+                None,
+            ),
+            parsers.Locations.DEMO: parsers.get_validated_event_source(
+                parsers.Locations.DEMO,
+                None,
+            ),
         }
         series_source_map = {
             series: location_source_map[location]
-            for series, location in self.series_location_map.items()
+            for series, location in parsers.series_location_map.items()
         }
         
         
@@ -123,6 +101,6 @@ class Command(BaseCommand):
             if forced:
                 event.days.update(date = F('date') - timedelta(1))
             
-            self.perform_game_advance(series_source_map[event.series], event)
+            self.perform_game_advance(series_source_map[event.series]['function'], event)
             logger.info(f'Advanced {event}')
 

@@ -100,8 +100,3 @@ class Clubs(models.TextChoices):
     TRIH = ('trih', 'Trinity Hall')
     WOLC = ('wolc', 'Wolfson')
 
-
-class Sources(models.TextChoices):
-    LIVE_BUMPS = ('live', 'Live Bumps')
-    OURCS = ('ourcs', 'OURCs')
-

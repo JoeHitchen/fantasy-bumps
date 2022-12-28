@@ -2,10 +2,9 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from parsing import live_bumps, ourcs
-
 from ... import models
-from ...constants import Clubs, Genders, Sources
+from ...constants import Clubs, Genders
+from . import parsers
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.renumbered')
@@ -42,11 +41,11 @@ class Command(BaseCommand):
             help = 'The rank of the crew prior to renumbering',
         )
         
+        sources = parsers.location_crew_list_sources_map[parsers.Locations.OXFORD]
         parser.add_argument(
             '--source',
-            default = Sources.LIVE_BUMPS,
-            choices = [Sources.LIVE_BUMPS, Sources.OURCS],
-            help = f'The source of start order data (default: {Sources.LIVE_BUMPS})',
+            choices = [src.value for src in sources],
+            help = 'The source of start order data (default: {})'.format(sources[0]),
         )
     
     @staticmethod
@@ -92,10 +91,10 @@ class Command(BaseCommand):
             source_crew_tpl[2],
         ))
         
-        crew_list_fcn = {
-            Sources.LIVE_BUMPS: live_bumps.get_crew_lists,
-            Sources.OURCS: ourcs.get_crew_lists,
-        }[kwargs.get('source', Sources.LIVE_BUMPS)]
+        crew_list_fcn = parsers.get_validated_crew_list_source(
+            parsers.series_location_map[event.series],
+            kwargs.get('source'),
+        )['function']
         
         self.perform_crew_list_update(crew_list_fcn, event, target_crew, source_crew_tpl)
         logger.info(f'Corrected crew list for {target_crew}')

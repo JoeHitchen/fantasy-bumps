@@ -2,34 +2,14 @@ from datetime import date, time, timedelta
 import logging
 
 from django.core.management.base import BaseCommand
-from django.core.management import call_command
 from django.utils import timezone
-
-from parsing import live_bumps, anu, ourcs, camfm
 
 from ... import models
 from ...constants import Series as EventSeries
-from . import utils
+from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_start')
-
-
-def _demo_positions(series, year, day_number):
-    call_command(
-        'loaddata',
-        'demo_crews',
-        'demo_start_day{}'.format(day_number),
-    )
-    return {}
-
-
-def _demo_crew_lists(series, year):
-    return ourcs.get_crew_lists(EventSeries.TORPIDS, 2013)
-
-
-def _noop_crew_lists(series, year):
-    return {}
 
 
 series_reverser = {series.label.lower(): series for series in EventSeries}
@@ -37,50 +17,6 @@ series_reverser = {series.label.lower(): series for series in EventSeries}
 
 class Command(BaseCommand):
     help = 'Creates a new event to play FantasyBumps against.'
-    
-    DEMO_LOC = 'D'
-    OXFORD = 'O'
-    CAMBRIDGE = 'C'
-    
-    DEMO_SRC = 'demo'
-    LIVE_BUMPS = 'live'
-    ANU = 'anu'
-    OURCS = 'ourcs'
-    CAMFM = 'camfm'
-    NOOP = 'noop'
-    
-    series_location_map = {
-        EventSeries.DEMO: DEMO_LOC,
-        EventSeries.TORPIDS: OXFORD,
-        EventSeries.EIGHTS: OXFORD,
-        EventSeries.MAYS: CAMBRIDGE,
-        EventSeries.MAYS: CAMBRIDGE,
-    }
-    
-    location_event_sources_map = {
-        DEMO_LOC: [DEMO_SRC],
-        OXFORD: [LIVE_BUMPS, ANU],
-        CAMBRIDGE: [CAMFM],
-    }
-    location_crew_list_sources_map = {
-        DEMO_LOC: [DEMO_SRC],
-        OXFORD: [LIVE_BUMPS, OURCS],
-        CAMBRIDGE: [NOOP],
-    }
-    
-    event_source_function_map = {
-        DEMO_SRC: _demo_positions,
-        LIVE_BUMPS: live_bumps.get_positions,
-        ANU: anu.get_positions,
-        CAMFM: camfm.get_positions,
-    }
-    
-    crew_list_source_function_map = {
-        DEMO_SRC: _demo_crew_lists,
-        LIVE_BUMPS: live_bumps.get_crew_lists,
-        OURCS: ourcs.get_crew_lists,
-        NOOP: _noop_crew_lists,
-    }
     
     def add_arguments(self, parser):
         
@@ -102,13 +38,26 @@ class Command(BaseCommand):
         
         parser.add_argument(
             '--source',
-            choices = [self.LIVE_BUMPS, self.ANU, self.CAMFM, self.DEMO_SRC],
-            help = f'The source of start order data (default: {self.LIVE_BUMPS} or {self.CAMFM})',
+            choices = [
+                source.value
+                for sources in parsers.location_event_sources_map.values()
+                for source in sources
+            ],
+            help = 'The source of start order data (default: {} or {})'.format(
+                parsers.location_event_sources_map[parsers.Locations.OXFORD][0],
+                parsers.location_event_sources_map[parsers.Locations.CAMBRIDGE][0],
+            ),
         )
         parser.add_argument(
             '--crew-lists',
-            choices = [self.LIVE_BUMPS, self.OURCS, self.DEMO_SRC],
-            help = f'The source of crew list data (default: {self.LIVE_BUMPS})',
+            choices = [
+                source.value
+                for sources in parsers.location_crew_list_sources_map.values()
+                for source in sources
+            ],
+            help = 'The source of crew list data (default: {})'.format(
+                parsers.location_crew_list_sources_map[parsers.Locations.OXFORD][0],
+            ),
         )
     
     
@@ -116,44 +65,31 @@ class Command(BaseCommand):
         
         # Parse series and date/year inputs
         series = series_reverser[kwargs['series']]
-        series_location = self.series_location_map[series]
+        series_location = parsers.series_location_map[series]
         start_date = kwargs['date'] if kwargs['date'] else timezone.now().date() + timedelta(5)
         year = kwargs['year'] if kwargs['year'] else start_date.year
-        
-        # Parse data source inputs
-        valid_event_sources = self.location_event_sources_map[series_location]
-        event_source = valid_event_sources[0]
-        if kwargs.get('source'):
-            assert_error = 'Source is invalid for this location'
-            assert kwargs['source'] in valid_event_sources, assert_error
-            event_source = kwargs['source']
-        
-        valid_crew_list_sources = self.location_crew_list_sources_map[series_location]
-        crew_list_source = valid_crew_list_sources[0]
-        if kwargs.get('crew_lists'):
-            assert_error = 'Crew lists are invalid for this location'
-            assert kwargs['crew_lists'] in valid_crew_list_sources, assert_error
-            crew_list_source = kwargs['crew_lists']
         
         logger.info('Creating a new game for {} {}, starting on {}'.format(
             series.label,
             year,
             start_date.isoformat(),
         ))
+        
+        # Parse data source inputs
+        event_source = parsers.get_validated_event_source(series_location, kwargs.get('source'))
+        crew_list_source = parsers.get_validated_crew_list_source(
+            series_location,
+            kwargs.get('crew_lists'),
+        )
         logger.info('Using `{}` as the event source and `{}` for crew lists'.format(
-            event_source,
-            crew_list_source,
+            event_source['source'],
+            crew_list_source['source'],
         ))
         
         # Create event and load data
         event, weds = create_event(series, year, start_date)
-        
-        event_source_function = self.event_source_function_map[event_source]
-        utils.load_crew_rankings(event_source_function, weds)
-        
-        crew_lists_source_function = self.crew_list_source_function_map[crew_list_source]
-        utils.load_crew_lists(crew_lists_source_function, event)
-        
+        utils.load_crew_rankings(event_source['function'], weds)
+        utils.load_crew_lists(crew_list_source['function'], event)
         logger.info('Created a new game for {} {}, starting on {}'.format(
             series.label,
             year,
