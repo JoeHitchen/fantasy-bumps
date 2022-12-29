@@ -1451,7 +1451,11 @@ class Test__Sell(TestCase, MessagesTestMixin):
         cls.crew = models.Crew.objects.first()
         cls.seat = models.Seat.objects.first()
         
-        cls.budgets = cls.team.entries.create(event = cls.day.event)
+        cls.budgets = cls.team.entries.create(
+            event = cls.day.event,
+            mens_balance = 650,
+            womens_balance = 650,
+        )
         
         cls.purchase = cls.team.purchases.create(
             day = cls.day,
