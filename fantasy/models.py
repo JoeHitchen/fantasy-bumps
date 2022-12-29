@@ -309,7 +309,7 @@ class Team(models.Model):
 
 @receiver(models.signals.post_save, sender = auth.User)
 def create_team(sender, instance, created, **kwargs):
-    if created:
+    if created and not kwargs['raw']:
         Team.objects.create(user = instance)
 
 
