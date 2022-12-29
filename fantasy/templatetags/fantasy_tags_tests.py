@@ -33,12 +33,12 @@ class Test__Market_Status_Box(TestCase):
     
     def setUp(self):
         self.day = self.event.days.create(
-            name = 'Market Status',
+            name = 'Status 1',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
         )
         self.next_day = self.event.days.create(
-            name = 'Market Status 2',
+            name = 'Status 2',
             date = timezone.localtime().date() + timedelta(2),  # Ensure market never opens today
             first_race_time = time(hour = 12),
         )
