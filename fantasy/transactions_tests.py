@@ -561,14 +561,14 @@ class Test__Switch(TestCase):
             seat = self.seat_two,
             name = 'Alternative',
         )
-        self.team.purchases.create(
+        purchase = self.team.purchases.create(
             day = self.day,
             seat = self.seat_two,
             crew = self.crew,
             athlete = athlete_alt,
         )
         
-        fresh_purchase = models.Purchase.objects.select_related().get(id = self.day.id)
+        fresh_purchase = models.Purchase.objects.select_related().get(id = purchase.id)
         
         with self.assertNumQueries(5):
             _switch_body(fresh_purchase, int(self.athlete.id), int(self.seat_two.id))
