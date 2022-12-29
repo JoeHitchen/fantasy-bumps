@@ -1,36 +1,22 @@
 from datetime import timedelta
+import logging
 
 from django.core.management.base import BaseCommand
-from django.core.management import call_command
 from django.db.models import F
 from django.utils import timezone
 
-from parsing import live_bumps, anu, camfm
-
 from ... import models
-from ...constants import Series as EventSeries
 from ... import game_tools as tools
+from ...constants import Locations
+from . import utils, parsers
 
-
-def _demo_wrapper(event, year, day_number):
-    call_command(
-        'loaddata',
-        'demo_start_day{}'.format(day_number),
-    )
-    return {}
+logging.basicConfig(level = logging.INFO)
+logger = logging.getLogger('fantasy.game_advance')
 
 
 class Command(BaseCommand):
     """Advance the game state by one (optionally forced) day."""
     
-    LIVE = 'live'
-    ANU = 'anu'
-    CAMFM = 'camfm'
-    
-    OXFORD = 'OXFORD'
-    CAMBRIDGE = 'CAMBRIDGE'
-    DEMO = 'DEMO'
-
     def add_arguments(self, parser):
         parser.add_argument(
             '--forced',
@@ -38,96 +24,74 @@ class Command(BaseCommand):
             help = 'Force advance by shifting dates forward by 1 day',
         )
         
+        oxford_sources = parsers.location_event_sources_map[Locations.OXFORD]
         parser.add_argument(
             '--oxf-source',
-            default = self.LIVE,
-            choices = [self.LIVE, self.ANU],
-            help = f'The source of start order data for Oxford (default: {self.LIVE})',
-        )
-        
-        parser.add_argument(
-            '--cam-source',
-            default = self.CAMFM,
-            choices = [self.CAMFM],
-            help = f'The source of start order data for Cambridge (default: {self.CAMFM})',
+            default = oxford_sources[0],
+            choices = [src.value for src in oxford_sources],
+            help = f'The source of start order data for Oxford events (default: {oxford_sources})',
         )
     
     
-    def handle(self, *args, **kwargs):
+    @staticmethod
+    def perform_game_advance(source_function, event):
+        """Loads any new results and updates the game state accordingly."""
         
-        # Parse command arguments
-        forced = bool(kwargs['forced'])
-        oxford_source = kwargs.get('oxf_source', self.LIVE)
-        cambridge_source = kwargs.get('cam_source', self.CAMFM)
-        
-        source_function_map = {
-            self.OXFORD: {
-                self.LIVE: live_bumps.get_positions,
-                self.ANU: anu.get_positions,
-            }[oxford_source],
-            self.CAMBRIDGE: {self.CAMFM: camfm.get_positions}[cambridge_source],
-            self.DEMO: _demo_wrapper,
-        }
-        series_source_map = {
-            EventSeries.TORPIDS: self.OXFORD,
-            EventSeries.EIGHTS: self.OXFORD,
-            EventSeries.LENTS: self.CAMBRIDGE,
-            EventSeries.MAYS: self.CAMBRIDGE,
-            EventSeries.DEMO: self.DEMO,
-        }
-        
-        
-        # Get current events
-        now = timezone.now()
-        events = (
-            models.Event.objects
-            .filter(days__date__range = (now - timedelta(7), now + timedelta(7)))
-            .distinct()
-        )
-        if not events:
-            self.stdout.write('No games to advance')
+        # Get relevant days
+        if event.active_day.first_race and timezone.now() >= event.active_day.first_race:
+            old_day = event.active_day  # Racing underway for active day
+            new_day = event.active_day.next
+        elif event.active_day.prev:
+            old_day = event.active_day.prev  # No active racing but a previous day exists
+            new_day = event.active_day
+        else:
+            logger.info(f'No new racing has occurred for {event}')  # Pre-event, no action required
             return
         
         
-        # Iterate over all events
+        # Check results required for new day
+        if new_day.ranking.count():
+            logger.info(f'Crew positions for the {new_day} of {event} are already loaded')
+            return
+        
+        
+        # Update records
+        utils.load_crew_rankings(source_function, new_day)
+        tools.roll_over_purchases(old_day)
+        tools.evaluate_all_investments(old_day)
+    
+    
+    def handle(self, *args, **kwargs):
+        """Identifies the sources and events for the `perform` function to act on.
+        
+        Optionally shifts all event dates to simulate a day passing.
+        """
+        
+        forced = bool(kwargs.get('forced', False))
+        oxford_source = kwargs.get('oxf_source')
+        
+        location_source_map = {
+            Locations.OXFORD: parsers.get_validated_event_source(Locations.OXFORD, oxford_source),
+            Locations.CAMBRIDGE: parsers.get_validated_event_source(Locations.CAMBRIDGE, None),
+            Locations.DEMO: parsers.get_validated_event_source(Locations.DEMO, None),
+        }
+        series_source_map = {
+            series: location_source_map[location]
+            for series, location in parsers.series_location_map.items()
+        }
+        
+        
+        date_range = (timezone.now() - timedelta(7), timezone.now() + timedelta(7))
+        events = models.Event.objects.filter(days__date__range = date_range).distinct()
+        if not events:
+            logger.info('No games to advance')
+            return
+        
         for event in events:
-            self.stdout.write('Advancing {}...'.format(event))
-            
-            # Shift dates for forced updates
+            logger.info(f'Advancing {event}')
             if forced:
                 event.days.update(date = F('date') - timedelta(1))
             
-            
-            # Get relevant days
-            if event.active_day.first_race and now >= event.active_day.first_race:
-                old_day = event.active_day  # Racing underway for active day
-                new_day = event.active_day.next
-            elif event.active_day.prev:
-                old_day = event.active_day.prev  # No active racing but a previous day exists
-                new_day = event.active_day
-            else:
-                self.stdout.write('No new racing has occurred.')  # Pre-event, no action required
-                continue
-            
-            
-            # Check results required for new day
-            if new_day.ranking.count():
-                self.stdout.write('Results for {} already loaded.'.format(new_day))
-                continue
-            
-            self.stdout.write('Loading start order for {}...'.format(new_day))
-            
-            
-            # Get positions
-            day_number = new_day.event.days.filter(date__lte = new_day.date).count()  # One-indexed
-            source = series_source_map[event.series]
-            new_positions = source_function_map[source](event.series, event.year, day_number)
-            
-            
-            # Update records
-            crews = tools.get_all_crews(new_positions.keys())
-            tools.add_rankings(new_day, crews, new_positions)
-            tools.roll_over_purchases(old_day)
-            tools.evaluate_all_investments(old_day)
-            self.stdout.write('Completed!')
+            self.perform_game_advance(series_source_map[event.series]['function'], event)
+            logger.info(f'Advanced {event}')
 

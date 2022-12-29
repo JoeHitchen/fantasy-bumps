@@ -1136,6 +1136,39 @@ class Test__Crew(TestCase):
         self.assertEqual(str(crew), 'New College W2')
     
     
+    def test__tuple__womens_first(self):
+        """Contains a crew's club, gender, and rank."""
+        
+        crew = models.Crew(
+            club = Clubs.NEWC,
+            gender = Genders.WOMEN,
+            rank = 1,
+        )
+        self.assertEqual(crew.as_tuple(), (Clubs.NEWC, Genders.WOMEN, 1))
+    
+    
+    def test__tuple__mens_first(self):
+        """Contains a crew's club, gender, and rank."""
+        
+        crew = models.Crew(
+            club = Clubs.NEWC,
+            gender = Genders.MEN,
+            rank = 1,
+        )
+        self.assertEqual(crew.as_tuple(), (Clubs.NEWC, Genders.MEN, 1))
+    
+    
+    def test__tuple__lower_boat(self):
+        """Contains a crew's club, gender, and rank."""
+        
+        crew = models.Crew(
+            club = Clubs.NEWC,
+            gender = Genders.WOMEN,
+            rank = 2,
+        )
+        self.assertEqual(crew.as_tuple(), (Clubs.NEWC, Genders.WOMEN, 2))
+    
+    
     def test__value__no_ranking(self):
         """Returns zero if the crew has no position for that day."""
         self.assertEqual(self.crew_unranked.value(self.day1), 0)

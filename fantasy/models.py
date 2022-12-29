@@ -230,6 +230,11 @@ class Crew(models.Model):
         return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
     
     
+    def as_tuple(self):
+        """Describes the crew in the tuple-form needed for parser interaction."""
+        return (self.club, self.gender, self.rank)
+    
+    
     def value(self, day):
         """The price of the crew for a given day."""
         

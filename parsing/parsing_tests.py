@@ -2,7 +2,7 @@ import json
 
 from django.test import TestCase, tag
 
-from . import live_bumps, anu, camfm
+from . import live_bumps, anu, ourcs, camfm
 from .common import TORPIDS, EIGHTS, LENTS, MAYS
 
 
@@ -24,7 +24,7 @@ def load_expected_positions(series, year, day):
 @tag('external')
 class Test__LiveBumps(TestCase):
     
-    def test__torpids_2022(self):
+    def test__positions__torpids_2022(self):
         """The positions given by the parser should match the expected results."""
         
         for day in [1, 2, 5]:
@@ -39,8 +39,8 @@ class Test__LiveBumps(TestCase):
                         self.assertEqual(parsed[crew], expected[crew])
     
     
-    def test__smoke(self):
-        """Checks that other historical events can be parsed without error."""
+    def test__positions__smoke(self):
+        """Positions from other historical events should be parsed without error."""
         
         events = [
             (TORPIDS, 2017, 134),
@@ -59,6 +59,28 @@ class Test__LiveBumps(TestCase):
                 
                 positions = live_bumps.get_positions(series, year, 5)
                 self.assertEqual(len(positions.keys()), num_crews)
+    
+    
+    def test__crew_lists__smoke(self):
+        """Crew lists from historical events should be parsed without error."""
+        
+        events = [
+            (TORPIDS, 2017, 166),
+            (EIGHTS, 2017, 177),
+            (TORPIDS, 2018, 163),
+            (EIGHTS, 2018, 174),
+            (TORPIDS, 2019, 157),
+            (EIGHTS, 2019, 169),
+            (TORPIDS, 2021, 137),
+            (TORPIDS, 2022, 164),
+            (EIGHTS, 2022, 181),
+        ]
+        
+        for series, year, num_crews in events:
+            with self.subTest([series, year]):
+                
+                crew_lists = live_bumps.get_crew_lists(series, year)
+                self.assertEqual(len(crew_lists.keys()), num_crews)
 
 
 @tag('external')
@@ -95,6 +117,31 @@ class Test__Anu(TestCase):
                     
                     positions = anu.get_positions(series, year, day_number)
                     self.assertEqual(len(positions.keys()), num_crews)
+
+
+@tag('external')
+class Test__OURCs(TestCase):
+    
+    def test__crew_lists__smoke(self):
+        """Crew lists from historical events should be parsed without error."""
+        
+        events = [
+            (TORPIDS, 2017, 166),
+            (EIGHTS, 2017, 177),
+            (TORPIDS, 2018, 163),
+            (EIGHTS, 2018, 174),
+            (TORPIDS, 2019, 157),
+            (EIGHTS, 2019, 169),
+            (TORPIDS, 2021, 137),
+            (TORPIDS, 2022, 164),
+            (EIGHTS, 2022, 181),
+        ]
+        
+        for series, year, num_crews in events:
+            with self.subTest([series, year]):
+                
+                crew_lists = ourcs.get_crew_lists(series, year)
+                self.assertEqual(len(crew_lists.keys()), num_crews)
 
 
 @tag('external')
