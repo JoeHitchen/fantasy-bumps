@@ -1,10 +1,15 @@
 import enum
+import logging
 
 from django.core.management import call_command
 
 from parsing import live_bumps, anu, ourcs, camfm
+from parsing.common import series_text_map
 
 from ...constants import Locations, Series as EventSeries
+
+logging.basicConfig(level = logging.INFO)
+logger = logging.getLogger('parsing.misc')
 
 
 class Sources(enum.Enum):
@@ -41,19 +46,25 @@ location_crew_list_sources_map = {
 
 
 def _demo_positions(series, year, day_number):
+    logger.info(f'Loading the demo crew positions for day {day_number}')
     call_command(
         'loaddata',
         'demo_crews',
         'demo_start_day{}'.format(day_number),
     )
+    logger.info(f'Loaded the demo crew positions for day {day_number}')
     return {}
 
 
 def _demo_crew_lists(series, year):
-    return ourcs.get_crew_lists(EventSeries.TORPIDS, 2013)
+    logger.info('Retrieving demo crew lists from OURCs as Torpids 2013')
+    crew_lists = ourcs.get_crew_lists(EventSeries.TORPIDS, 2013)
+    logger.info('Retrieved demo crew lists from OURCs as Torpids 2013')
+    return crew_lists
 
 
 def _noop_crew_lists(series, year):
+    logger.info(f'Not performing a crew list lookup for {series_text_map[series]} {year}')
     return {}
 
 
