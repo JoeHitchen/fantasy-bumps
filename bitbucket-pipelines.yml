@@ -10,6 +10,14 @@ pipelines:
           - pip install -r requirements_linting.txt
           - python project.py lint
     
+    - step: &type
+        name: Type
+        caches:
+          - pip
+        script:
+          - pip install -r requirements_typing.txt
+          - python project.py type
+    
     - step: &test
         name: Test
         caches:

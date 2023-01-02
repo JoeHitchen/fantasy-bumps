@@ -1,35 +1,44 @@
+from typing import List, Tuple
 import logging
 import re
 
 from bs4 import BeautifulSoup
 import requests
 
+from .types import PositionMap
 from .common import club_parser, TORPIDS, series_text_map, MEN, WOMEN
 
 logger = logging.getLogger(__name__)
 BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
 
+Bungline = Tuple[int, str, int]
+Division = Tuple[str, int, List[Bungline]]
 
-def _roman_parser(numerals):
-    return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7}.get(numerals)
+
+def _roman_parser(numerals: str) -> int:
+    return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}[numerals]
 
 
-def _parse_division(table):
+def _parse_division(table: str) -> Division:
     rows = re.split('<tr>', str(table))
     
     division_match = re.search(
         '<th colspan="2"> (?P<gender>Men|Women)\'s Div (?P<num>[IV]{1,3})',
         rows[1],
     )
+    assert division_match
     
     gender = division_match.group('gender')[0]
     division = _roman_parser(division_match.group('num'))
     
     start_order = []
     for row in rows[2:]:
+        
         url_pattern = BASE_URL + 'bumps/[a-z]{4}/(?P<club>[a-z]{4})_[mw](?P<rank>[0-9])'
         full_pattern = '(?P<bungline>[0-9]{{1,2}}). .*<td> <a href="{}'.format(url_pattern)
         bungline_match = re.search(full_pattern, row)
+        assert bungline_match
+        
         start_order.append((
             int(bungline_match.group('bungline')),
             club_parser(bungline_match.group('club')),
@@ -39,7 +48,7 @@ def _parse_division(table):
     return (gender, division, start_order)
 
 
-def _convert_divisions_to_ranking(divisions, gender):
+def _convert_divisions_to_ranking(divisions: List[Division], gender: str) -> PositionMap:
     
     gendered_divisions = [div for div in divisions if div[0] == gender]
     gendered_divisions.sort(key = lambda div: div[1])
@@ -56,7 +65,7 @@ def _convert_divisions_to_ranking(divisions, gender):
     return crews
 
 
-def get_positions(series, year, day_number):
+def get_positions(series: str, year: int, day_number: int) -> PositionMap:
     """Generates a crew/position map from Anu's records."""
     
     series_text = series_text_map[series]

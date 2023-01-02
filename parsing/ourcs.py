@@ -1,18 +1,20 @@
 import re
 import html
+from typing import Tuple, cast
 import logging
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import requests
 
+from .types import Crew, CrewList, CrewListMap
 from .common import TORPIDS, EIGHTS, series_text_map, seat_parser, club_parser
 
 logger = logging.getLogger(__name__)
 
 
-def _parse_crew_box(box, ext_club):
+def _parse_crew_box(box: Tag) -> Tuple[Crew, CrewList]:
     
-    crew_header = box.find('a').string
+    crew_header = cast(str, box.find('a').string)  # type: ignore
     club = club_parser(crew_header)
     gender = crew_header[-2]
     rank = int(crew_header[-1])
@@ -25,7 +27,7 @@ def _parse_crew_box(box, ext_club):
     return ((club, gender, rank), crew_list)
 
 
-def get_crew_lists(series, year):
+def get_crew_lists(series: str, year: int) -> CrewListMap:
     """Generates a crew/crew-list map from the public OURCs records."""
     
     series_text = series_text_map[series]
@@ -58,7 +60,7 @@ def get_crew_lists(series, year):
         allow_redirects = False,
     )
     if not response.ok:
-        raise response.raise_for_status()
+        response.raise_for_status()
     
     soup = BeautifulSoup(response.text, 'html.parser')
     
@@ -67,7 +69,7 @@ def get_crew_lists(series, year):
     crew_lists = {}
     for club_box in soup.find_all(id = re.compile('club-[a-z]{4}')):
         for crew_box in club_box.find_all(class_ = 'panel-default'):
-            crew, crew_list = _parse_crew_box(crew_box, club_box['id'][5:])
+            crew, crew_list = _parse_crew_box(crew_box)
             crew_lists[crew] = crew_list
     
     logger.info(f'Retrieved {len(crew_lists)} crews for {series_text} {year} from OURCs')
