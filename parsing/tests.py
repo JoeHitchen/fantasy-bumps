@@ -2,10 +2,11 @@ from unittest import TestCase
 import json
 
 from . import live_bumps, anu, ourcs, camfm
+from .types import PositionMap
 from .common import TORPIDS, EIGHTS, LENTS, MAYS
 
 
-def load_expected_positions(series, year, day):
+def load_expected_positions(series: str, year: int, day: int) -> PositionMap:
     """A helper to load expected positions from file."""
     
     series_tag = {TORPIDS: 'torpids', MAYS: 'mays'}.get(series)
@@ -22,7 +23,7 @@ def load_expected_positions(series, year, day):
 
 class Test__LiveBumps(TestCase):
     
-    def test__positions__torpids_2022(self):
+    def test__positions__torpids_2022(self) -> None:
         """The positions given by the parser should match the expected results."""
         
         for day in [1, 2, 5]:
@@ -37,7 +38,7 @@ class Test__LiveBumps(TestCase):
                         self.assertEqual(parsed[crew], expected[crew])
     
     
-    def test__positions__smoke(self):
+    def test__positions__smoke(self) -> None:
         """Positions from other historical events should be parsed without error."""
         
         events = [
@@ -59,7 +60,7 @@ class Test__LiveBumps(TestCase):
                 self.assertEqual(len(positions.keys()), num_crews)
     
     
-    def test__crew_lists__smoke(self):
+    def test__crew_lists__smoke(self) -> None:
         """Crew lists from historical events should be parsed without error."""
         
         events = [
@@ -83,7 +84,7 @@ class Test__LiveBumps(TestCase):
 
 class Test__Anu(TestCase):
     
-    def test__torpids_2022(self):
+    def test__torpids_2022(self) -> None:
         """The positions given by the parser should match the expected results."""
         
         for day in [1, 2, 5]:
@@ -98,7 +99,7 @@ class Test__Anu(TestCase):
                         self.assertEqual(parsed[crew], expected[crew])
     
     
-    def test__smoke(self):
+    def test__smoke(self) -> None:
         """Checks that other historical events can be parsed without error."""
         
         events = [
@@ -118,7 +119,7 @@ class Test__Anu(TestCase):
 
 class Test__OURCs(TestCase):
     
-    def test__crew_lists__smoke(self):
+    def test__crew_lists__smoke(self) -> None:
         """Crew lists from historical events should be parsed without error."""
         
         events = [
@@ -142,7 +143,7 @@ class Test__OURCs(TestCase):
 
 class Test__CamFM(TestCase):
     
-    def test__mays_2019(self):
+    def test__mays_2019(self) -> None:
         """The positions given by the parser should match the expected results."""
         
         for day in [1, 2, 5]:
@@ -157,7 +158,7 @@ class Test__CamFM(TestCase):
                         self.assertEqual(parsed[crew], expected[crew])
     
     
-    def test__smoke(self):
+    def test__smoke(self) -> None:
         """Checks that other historical events can be parsed without error."""
         
         events = [

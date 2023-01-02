@@ -1,16 +1,18 @@
 from datetime import datetime
+from typing import List, cast
 import logging
 import re
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
+from .types import Crew, PositionMap
 from .common import LENTS, MAYS, series_text_map
 
 logger = logging.getLogger(__name__)
 
 
-def _cambridge_club_parser(club_str):
+def _cambridge_club_parser(club_str: str) -> str:
     
     if club_str.lower() == 'clare hall':
         return 'clah'
@@ -32,7 +34,7 @@ def _cambridge_club_parser(club_str):
     }.get(club_str[0:5].lower(), club_str[0:4].lower())
 
 
-def _get_crews_for_division(division_soup):
+def _get_crews_for_division(division_soup: Tag) -> List[Crew]:
     
     start_div = division_soup.findChildren('div', {'class': 'division_boats_start'})[0]
     boat_divs = start_div.findChildren('div', {'class': 'boat_container'})
@@ -45,6 +47,8 @@ def _get_crews_for_division(division_soup):
             continue
         
         crew_match = re.match(r'(?P<club>.*) (?P<gender>[MW])(?P<number>\d)', crew_name[0].text)
+        if not crew_match:
+            continue
         
         crews.append((
             _cambridge_club_parser(crew_match.group('club')),
@@ -55,12 +59,12 @@ def _get_crews_for_division(division_soup):
     return crews
 
 
-def _get_moves_from_results_url(results_url):
+def _get_moves_from_results_url(results_url: str) -> List[int]:
     positions_strs = results_url.split('/')[-1].split('.')[0].split('_')[:-1]
     return [int(new) - old for new, old in zip(positions_strs, range(0, 18))]
 
 
-def _get_positions_for_gender(division_soups, day_number):
+def _get_positions_for_gender(division_soups: List[Tag], day_number: int) -> PositionMap:
     """Generates the crew-position map for one gender from a parsed set of divisions."""
     
     # Get starting positions map
@@ -78,7 +82,8 @@ def _get_positions_for_gender(division_soups, day_number):
         moves_maps = []
         for division_soup in division_soups:
             
-            results_url = division_soup.find('div', {'class': day_class}).find('img')['src']
+            selector = f'div.{day_class}>img'
+            results_url = cast(str, division_soup.select_one(selector)['src'])  # type: ignore
             moves = _get_moves_from_results_url(results_url)
             
             moves_maps.append({
@@ -96,7 +101,7 @@ def _get_positions_for_gender(division_soups, day_number):
     return positions
 
 
-def get_positions(series, year, day_number):
+def get_positions(series: str, year: int, day_number: int) -> PositionMap:
     """Generates a crew/position map from the CamFM records."""
     
     series_text = series_text_map[series]

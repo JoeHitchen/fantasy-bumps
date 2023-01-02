@@ -10,7 +10,7 @@ MEN = 'M'
 WOMEN = 'W'
 
 
-def seat_parser(seat_str):
+def seat_parser(seat_str: str) -> int:
     return {
         'Bow': 1,
         '2': 2,
@@ -25,7 +25,7 @@ def seat_parser(seat_str):
     }[seat_str]
 
 
-def club_parser(club_str):
+def club_parser(club_str: str) -> str:
     return {
         'green ': 'grte',
         'new co': 'newc',
@@ -41,7 +41,7 @@ def club_parser(club_str):
     }.get(club_str[0:6].lower(), club_str[0:4].lower())
 
 
-def boat_code_parser(boat_code):
+def boat_code_parser(boat_code: str) -> str:
     return {
         'BAL': 'ball', 'BRC': 'bras', 'CHB': 'chri', 'COO': 'corp',
         'EXC': 'exet', 'GTM': 'grte', 'HEC': 'hert', 'JEO': 'jesu',
