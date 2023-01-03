@@ -3,13 +3,13 @@ import logging
 
 from django.core.management import call_command
 
-from parsing import live_bumps, anu, ourcs, camfm
-from parsing.common import series_text_map
+from integrations import live_bumps, anu, ourcs, camfm
+from integrations.common import series_text_map
 
 from ...constants import Locations, Series as EventSeries
 
 logging.basicConfig(level = logging.INFO)
-logger = logging.getLogger('parsing.misc')
+logger = logging.getLogger('integrations.misc')
 
 
 class Sources(enum.Enum):

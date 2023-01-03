@@ -5,7 +5,7 @@ import logging
 from django.test import TestCase
 from django.utils import timezone
 
-from parsing import live_bumps, anu, camfm, ourcs
+from integrations import live_bumps, anu, camfm, ourcs
 
 from ... import models
 from ...constants import Series, Clubs, Genders
