@@ -1,13 +1,12 @@
 from datetime import date
-
-from django.test import TestCase
+from unittest import TestCase
 
 from . import common, anu
 
 
 class Test__Anu(TestCase):
     
-    def test__load_start_order__smoke(self):
+    def test__load_start_order__smoke(self) -> None:
         """Checks no errors are raised parsing all Anu's known start/finish order data files."""
         
         event_days = [

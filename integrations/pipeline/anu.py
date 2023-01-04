@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import logging
 import re
 
@@ -12,15 +12,17 @@ logger = logging.getLogger('Anu')
 logger.setLevel('INFO')
 
 
-def _roman_parser(numerals):
+def _roman_parser(numerals: str) -> int:
     """Maps roman numerals to integers."""
-    return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7}.get(numerals)
+    return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}[numerals]
 
 
-def _race_time_parser(day, div_header):
+def _race_time_parser(day: date, div_header: str) -> datetime:
     """Extracts the division time from the division header data."""
     
-    hour_str, min_str = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header).groups()[0:2]
+    time_match = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header)
+    assert time_match
+    hour_str, min_str = time_match.groups()[0:2]
     
     race_time = datetime.strptime('{} {}:{}'.format(day, hour_str, min_str), '%Y-%m-%d %H:%M')
     if race_time.hour < 9:
@@ -29,7 +31,7 @@ def _race_time_parser(day, div_header):
     return pytz.timezone('Europe/London').localize(race_time)
 
 
-def _club_parser(club_str):
+def _club_parser(club_str: str) -> str:
     """Maps club names onto to the standardised list."""
     return {
         'green ': 'grte',
@@ -48,7 +50,7 @@ def _club_parser(club_str):
     }.get(club_str[0:6].lower(), club_str[0:4].lower())
 
 
-def _get_datafile_url(series, day, gender, finish):
+def _get_datafile_url(series: str, day: date, gender: str, finish: bool) -> str:
     
     if series == common.TORPIDS and day.year == 2022:
         return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}/{}{}{}{}.dat'.format(
@@ -68,7 +70,12 @@ def _get_datafile_url(series, day, gender, finish):
         )
 
 
-def load_start_order(series, day, gender, finish = False):
+def load_start_order(
+    series: str,
+    day: date,
+    gender: str,
+    finish: bool = False,
+) -> common.StartOrder:
     """Retrieves the start order for a given race day and gender from Anu's data files."""
     logger.info('Retrieving results from Anu...\n  Options: {}, {}, {}, & {} '.format(
         series,
@@ -87,7 +94,9 @@ def load_start_order(series, day, gender, finish = False):
     
     # Parse header
     event = data.pop(0)  # noqa: 841
-    number_of_divisions = int(re.search(r'(\d) div', data.pop(0)).groups()[0])
+    num_div_match = re.search(r'(\d) div', data.pop(0))
+    assert num_div_match
+    number_of_divisions = int(num_div_match.groups()[0])
     
     # Parse divisions in turn
     divisions = []
@@ -95,11 +104,15 @@ def load_start_order(series, day, gender, finish = False):
         
         # Parses division rows
         div_header = data.pop(0)
-        division = {
+        div_number_match = re.search('([IV]+)', div_header)
+        div_size_match = re.search(r'(\d{1,2}) crews', div_header)
+        assert div_number_match and div_size_match
+        
+        division: common.StartOrderDivision = {
             'gender': gender,
-            'number': _roman_parser(re.search('([IV]+)', div_header).groups()[0]),
+            'number': _roman_parser(div_number_match.groups()[0]),
             'race_time': _race_time_parser(day, div_header),
-            'size': int(re.search(r'(\d{1,2}) crews', div_header).groups()[0]),
+            'size': int(div_size_match.groups()[0]),
             'finalised': '?' not in div_header,
             'crews': [],
         }
@@ -109,12 +122,17 @@ def load_start_order(series, day, gender, finish = False):
             crew_str = data.pop(0).strip()
             
             if crew_str[-1] in ['I', 'V']:
-                match = re.search("([A-Za-z'. ]+) ([IV]+)", crew_str).groups()
-                club_str = match[0]
-                crew_rank = _roman_parser(match[1])
+                crew_match = re.search("([A-Za-z'. ]+) ([IV]+)", crew_str)
+                assert crew_match
+                
+                club_str = crew_match[0]
+                crew_rank = _roman_parser(crew_match[1])
             
             else:
-                club_str = re.search("([A-Za-z'. ]+)", crew_str).groups()[0]
+                crew_match = re.search("([A-Za-z'. ]+)", crew_str)
+                assert crew_match
+                
+                club_str = crew_match.groups()[0]
                 crew_rank = 1
             
             division['crews'].append((

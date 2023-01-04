@@ -1,3 +1,4 @@
+from typing import List, Tuple, Dict, TypedDict
 import traceback
 import logging
 import os
@@ -9,6 +10,21 @@ from . import common
 
 logger = logging.getLogger('LiveBumps')
 logger.setLevel('INFO')
+
+Crew = Tuple[str, str, int]
+Ranking = Tuple[int, bool]
+
+StartOrder = List[common.StartOrderDivision]
+
+
+class Move(TypedDict):
+    moves: int
+    status: bool
+
+
+class CrewMoves(TypedDict):
+    start: int
+    moves: List[Move]
 
 
 boatcode_map = {
@@ -24,10 +40,10 @@ boatcode_map = {
 }
 
 
-def _rankings_to_moves(rankings):
+def _rankings_to_moves(rankings: List[Ranking]) -> List[Move]:
     """Converts a set of rankings into the format needed for Live Bumps."""
     
-    moves = []
+    moves: List[Move] = []
     start = rankings.pop(0)[0]
     for ranking in rankings:
         previous_moves = sum([move['moves'] for move in moves])
@@ -39,7 +55,7 @@ def _rankings_to_moves(rankings):
     return moves
 
 
-def post_single_crew_rankings(event, year, crew, rankings):
+def post_single_crew_rankings(event: str, year: int, crew: Crew, rankings: List[Ranking]) -> None:
     """Updates a single crew's rankings for the week on Live Bumps."""
     
     response = requests.post(
@@ -55,7 +71,7 @@ def post_single_crew_rankings(event, year, crew, rankings):
             'moves': _rankings_to_moves(rankings),
         },
         headers = {
-            'Authorization': os.environ.get('LIVE_BUMPS_KEY'),
+            'Authorization': os.environ.get('LIVE_BUMPS_KEY', ''),
             'Content-Type': 'application/json',
         },
     )
@@ -63,7 +79,7 @@ def post_single_crew_rankings(event, year, crew, rankings):
         response.raise_for_status()
 
 
-def post_all_rankings(event, year, rankings_by_day):
+def post_all_rankings(event: str, year: int, rankings_by_day: List[Dict[Crew, Ranking]]) -> None:
     """Updates Live Bumps with the rankings for all crews."""
     logging.info('Updating LiveBumps results for {} {} {}...'.format(
         event,
@@ -88,7 +104,10 @@ def post_all_rankings(event, year, rankings_by_day):
             ))
 
 
-def make_event_creation_structures(start_order_men, start_order_women):
+def make_event_creation_structures(
+    start_order_men: StartOrder,
+    start_order_women: StartOrder,
+) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[CrewMoves]]]]:
     """Creates the two event data structures needed as JSON files to set up a new event."""
 
     # Create required division data structure
@@ -110,7 +129,7 @@ def make_event_creation_structures(start_order_men, start_order_women):
     }
     
     # Create required ranking data structure
-    ranking_data = {}
+    ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Ranking]]]] = {}
     for crew, ranking in rankings_raw.items():
         
         club_code = boatcode_map[crew[0]]
@@ -123,15 +142,18 @@ def make_event_creation_structures(start_order_men, start_order_women):
         
         ranking_data[club_code][gender].append((crew, ranking))
     
+    ranking_out: Dict[str, Dict[str, List[CrewMoves]]] = {}
     for club_code, club_items in ranking_data.items():
+        ranking_out[club_code] = {}
         for gender_code, gender_items in club_items.items():
+            ranking_out[club_code][gender_code] = []
             
             gender_items.sort(key = lambda crew: crew[0][2])
-            for number, crew in enumerate(gender_items):
-                ranking_data[club_code][gender_code][number] = {
-                    'start': crew[1][0],
+            for number, crew_data in enumerate(gender_items):
+                ranking_out[club_code][gender_code].append({
+                    'start': crew_data[1][0],
                     'moves': [],
-                }
+                })
     
-    return division_data, ranking_data
+    return division_data, ranking_out
 
