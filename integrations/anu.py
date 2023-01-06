@@ -59,7 +59,7 @@ def _convert_divisions_to_ranking(divisions: List[Division], gender: str) -> Pos
     for (_, _, start_order) in gendered_divisions:
         
         for bungline, club, rank in start_order:
-            crews[(club, gender, rank)] = prev_lowest_bungline + bungline
+            crews[(club, gender, rank)] = (prev_lowest_bungline + bungline, True)
         
         prev_lowest_bungline += bungline
     

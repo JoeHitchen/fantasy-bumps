@@ -1,11 +1,10 @@
-from typing import List, Tuple, Dict, TypedDict
+from typing import List, Tuple, TypedDict
 from datetime import datetime
 
-from ..types import Crew
+from ..types import PositionMap
 
 
 StartOrderCrew = Tuple[str, str, int, bool]
-ProvisionalRanking = Tuple[int, bool]
 
 
 class StartOrderDivision(TypedDict):
@@ -18,10 +17,9 @@ class StartOrderDivision(TypedDict):
 
 
 StartOrder = List[StartOrderDivision]
-RankingMap = Dict[Crew, ProvisionalRanking]
 
 
-def start_order_to_ranking(start_order: StartOrder) -> RankingMap:
+def start_order_to_ranking(start_order: StartOrder) -> PositionMap:
     """Converts a start order to a bumps ranking."""
     
     rank = 0

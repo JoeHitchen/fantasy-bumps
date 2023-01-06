@@ -119,11 +119,11 @@ class Test__Utils(TestCase):
         """The rankings provided by the source are stored against the day."""
         
         rankings = {
-            (Clubs.LADY, Genders.WOMEN, 1): 13,
-            (Clubs.WOLF, Genders.WOMEN, 2): 21,
-            (Clubs.HERT, Genders.WOMEN, 1): 8,
-            (Clubs.NEWC, Genders.WOMEN, 2): 37,
-            (Clubs.MANS, Genders.MEN, 1): 25,
+            (Clubs.LADY, Genders.WOMEN, 1): (13, True),
+            (Clubs.WOLF, Genders.WOMEN, 2): (21, True),
+            (Clubs.HERT, Genders.WOMEN, 1): (8, True),
+            (Clubs.NEWC, Genders.WOMEN, 2): (37, False),
+            (Clubs.MANS, Genders.MEN, 1): (25, True),
         }
         source_mock = Mock(return_value = rankings)
         
@@ -133,7 +133,7 @@ class Test__Utils(TestCase):
         self.assertEqual(len(positions), 5)
         for position in positions:
             with self.subTest(crew = str(position.crew)):
-                self.assertEqual(position.rank, rankings[position.crew.as_tuple()])
+                self.assertEqual(position.rank, rankings[position.crew.as_tuple()][0])
     
     
     def test__crew_lists__source_call(self):

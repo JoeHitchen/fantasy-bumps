@@ -16,7 +16,7 @@ def load_expected_positions(series: str, year: int, day: int) -> PositionMap:
     results = {}
     for crew_key, position in raw.items():
         crew_code = (crew_key[0:4], crew_key[5].upper(), int(crew_key[6]))
-        results[crew_code] = int(position)
+        results[crew_code] = (int(position), True)
     
     return results
 

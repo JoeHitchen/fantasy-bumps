@@ -39,7 +39,7 @@ class Test__Anu(TestCase):
                 for division in start_order_men + start_order_women:
                     for div_crew in division['crews']:
                         ranks[div_crew[1]] += 1
-                        parsed[(div_crew[0], div_crew[1], div_crew[2])] = ranks[div_crew[1]]
+                        parsed[(*div_crew[0:3],)] = (ranks[div_crew[1]], True)
                 
                 expected = load_expected_positions(*day_code)
                 
@@ -78,12 +78,7 @@ class Test__Live_Bumps(TestCase):
     def test__(self, post_mock: Mock) -> None:
         
         all_positions = [load_expected_positions(TORPIDS, 2022, day) for day in range(1, 6)]
-        all_positions_with_status = [
-            {crew: (position, True) for crew, position in day_positions.items()}
-            for day_positions in all_positions
-        ]
-        
-        live.post_all_rankings(TORPIDS, 2022, all_positions_with_status)
+        live.post_all_rankings(TORPIDS, 2022, all_positions)
         
         self.assertEqual(post_mock.call_count, 134)
         with open('integrations/expected_results/torpids_2022_live_bumps.json') as file:

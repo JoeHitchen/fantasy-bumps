@@ -72,7 +72,7 @@ def _get_positions_for_gender(division_soups: List[Tag], day_number: int) -> Pos
     for division_soup in division_soups:
         ranking.extend(_get_crews_for_division(division_soup))
     
-    positions = {crew: rank0 + 1 for rank0, crew in enumerate(ranking)}
+    positions = {crew: (rank0 + 1, True) for rank0, crew in enumerate(ranking)}
     
     # Modify positions for racing
     for day_class in ['race_1', 'race_2', 'race_3', 'race_4'][0:day_number - 1]:
@@ -95,8 +95,8 @@ def _get_positions_for_gender(division_soups: List[Tag], day_number: int) -> Pos
         # Apply position-move maps in reverse division order
         for moves_map in moves_maps[::-1]:
             for crew, position in positions.items():
-                if position in moves_map:
-                    positions[crew] = position + moves_map[position]
+                if position[0] in moves_map:
+                    positions[crew] = (position[0] + moves_map[position[0]], True)
     
     return positions
 

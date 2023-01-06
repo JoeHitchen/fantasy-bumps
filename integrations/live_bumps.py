@@ -4,7 +4,7 @@ import logging
 
 import requests
 
-from .types import CrewListMap, PositionMap
+from .types import CrewListMap, Position, PositionMap
 from .common import MEN, WOMEN, series_text_map, seat_parser, boat_code_parser
 
 logger = logging.getLogger(__name__)
@@ -25,11 +25,11 @@ class CrewSeatData(TypedDict):
     name: str
 
 
-def _crew_results(crew_data: CrewPosData) -> List[int]:
-    positions = [crew_data['start']]
+def _crew_results(crew_data: CrewPosData) -> List[Position]:
+    positions = [(crew_data['start'], True)]
     
     for move in crew_data['moves']:
-        positions.append(positions[-1] - move['moves'])  # Sign reversed
+        positions.append((positions[-1][0] - move['moves'], move['status']))  # Sign reversed
     
     return positions
 

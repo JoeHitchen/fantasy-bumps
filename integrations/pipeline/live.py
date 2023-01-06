@@ -6,7 +6,7 @@ import os
 import requests
 
 from . import common
-from ..types import Crew
+from ..types import Crew, Position, PositionMap
 from ..common import series_text_map, gender_map
 from ..live_bumps import CrewMove, CrewPosData
 
@@ -28,7 +28,7 @@ boatcode_map = {
 }
 
 
-def _rankings_to_moves(rankings: List[common.ProvisionalRanking]) -> List[CrewMove]:
+def _rankings_to_moves(rankings: List[Position]) -> List[CrewMove]:
     """Converts a set of rankings into the format needed for Live Bumps."""
     
     moves: List[CrewMove] = []
@@ -47,7 +47,7 @@ def post_single_crew_rankings(
     event: str,
     year: int,
     crew: Crew,
-    rankings: List[common.ProvisionalRanking],
+    rankings: List[Position],
 ) -> None:
     """Updates a single crew's rankings for the week on Live Bumps."""
     
@@ -75,7 +75,7 @@ def post_single_crew_rankings(
 def post_all_rankings(
     event: str,
     year: int,
-    rankings_by_day: List[Dict[Crew, common.ProvisionalRanking]],
+    rankings_by_day: List[PositionMap],
 ) -> None:
     """Updates Live Bumps with the rankings for all crews."""
     logging.info('Updating LiveBumps results for {} {} {}...'.format(
@@ -126,7 +126,7 @@ def make_event_creation_structures(
     }
     
     # Create required ranking data structure
-    ranking_data: Dict[str, Dict[str, List[Tuple[Crew, common.ProvisionalRanking]]]] = {}
+    ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Position]]]] = {}
     for crew, ranking in rankings_raw.items():
         
         club_code = boatcode_map[crew[0]]
