@@ -125,8 +125,8 @@ def load_start_order(
                 crew_match = re.search("([A-Za-z'. ]+) ([IV]+)", crew_str)
                 assert crew_match
                 
-                club_str = crew_match[0]
-                crew_rank = _roman_parser(crew_match[1])
+                club_str = crew_match.groups()[0]
+                crew_rank = _roman_parser(crew_match.groups()[1])
             
             else:
                 crew_match = re.search("([A-Za-z'. ]+)", crew_str)
