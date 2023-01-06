@@ -6,24 +6,10 @@ import os
 
 import requests
 
-from . import common, anu, live
+from . import anu, live
 from ..types import PositionMap
-from ..common import boat_code_parser
-
-
-def load_expected_positions(series: str, year: int, day: int) -> PositionMap:
-    """A helper to load expected positions from file."""
-    
-    series_tag = common.event_map[series].lower()
-    with open(f'integrations/expected_results/{series_tag}_{year}_day{day}.json') as file:
-        raw = json.load(file)
-    
-    results = {}
-    for crew_key, position in raw.items():
-        crew_code = (crew_key[0:4], crew_key[5].upper(), int(crew_key[6]))
-        results[crew_code] = int(position)
-    
-    return results
+from ..common import TORPIDS, MEN, WOMEN, boat_code_parser
+from ..tests import load_expected_positions
 
 
 class Test__Anu(TestCase):
@@ -34,21 +20,21 @@ class Test__Anu(TestCase):
         for day in [1, 2, 5]:
             with self.subTest(day = day):
                 
-                day_code = (common.TORPIDS, 2022, day)
+                day_code = (TORPIDS, 2022, day)
                 
                 start_order_men = anu.load_start_order(
                     day_code[0],
                     date(day_code[1], 3, 1) + timedelta(day),
-                    common.MEN,
+                    MEN,
                     day == 5,
                 )
                 start_order_women = anu.load_start_order(
                     day_code[0],
                     date(day_code[1], 3, 1) + timedelta(day),
-                    common.WOMEN,
+                    WOMEN,
                     day == 5,
                 )
-                ranks = {common.MEN: 0, common.WOMEN: 0}
+                ranks = {MEN: 0, WOMEN: 0}
                 parsed: PositionMap = {}
                 for division in start_order_men + start_order_women:
                     for div_crew in division['crews']:
@@ -66,18 +52,18 @@ class Test__Anu(TestCase):
         """Checks no errors are raised parsing all Anu's known start/finish order data files."""
         
         event_days = [
-            (common.TORPIDS, '2022-03-02', False),
-            (common.TORPIDS, '2022-03-03', False),
-            (common.TORPIDS, '2022-03-04', False),
-            (common.TORPIDS, '2022-03-05', False),
-            (common.TORPIDS, '2022-03-06', True),
+            (TORPIDS, '2022-03-02', False),
+            (TORPIDS, '2022-03-03', False),
+            (TORPIDS, '2022-03-04', False),
+            (TORPIDS, '2022-03-05', False),
+            (TORPIDS, '2022-03-06', True),
         ]
         
         for day in event_days:
             
             event_date = date.fromisoformat(day[1])
-            mens_args = (day[0], event_date, common.MEN, day[2])
-            womens_args = (day[0], event_date, common.WOMEN, day[2])
+            mens_args = (day[0], event_date, MEN, day[2])
+            womens_args = (day[0], event_date, WOMEN, day[2])
         
             with self.subTest(call_args = mens_args):
                 anu.load_start_order(*mens_args)
@@ -91,13 +77,13 @@ class Test__Live_Bumps(TestCase):
     @patch.object(requests, 'post')
     def test__(self, post_mock: Mock) -> None:
         
-        all_positions = [load_expected_positions(common.TORPIDS, 2022, day) for day in range(1, 6)]
+        all_positions = [load_expected_positions(TORPIDS, 2022, day) for day in range(1, 6)]
         all_positions_with_status = [
             {crew: (position, True) for crew, position in day_positions.items()}
             for day_positions in all_positions
         ]
         
-        live.post_all_rankings(common.TORPIDS, 2022, all_positions_with_status)
+        live.post_all_rankings(TORPIDS, 2022, all_positions_with_status)
         
         self.assertEqual(post_mock.call_count, 134)
         with open('integrations/expected_results/torpids_2022_live_bumps.json') as file:

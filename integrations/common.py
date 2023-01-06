@@ -8,6 +8,7 @@ series_text_map = {TORPIDS: 'Torpids', EIGHTS: 'Eights', LENTS: 'Lents', MAYS: '
 
 MEN = 'M'
 WOMEN = 'W'
+gender_map = {MEN: 'Men', WOMEN: 'Women'}
 
 
 def seat_parser(seat_str: str) -> int:
@@ -28,12 +29,14 @@ def seat_parser(seat_str: str) -> int:
 def club_parser(club_str: str) -> str:
     return {
         'green ': 'grte',
+        'l.m.h.': 'lady',
         'new co': 'newc',
         'st ann': 'sann',
         'st ant': 'sant',
         'st ben': 'sben',
         'st cat': 'scat',
         'st edm': 'sedm',
+        's.e.h.': 'sedm',
         'st hil': 'shil',
         'st hug': 'shug',
         'st joh': 'sjoh',

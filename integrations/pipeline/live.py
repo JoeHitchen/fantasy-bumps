@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, TypedDict
+from typing import List, Tuple, Dict
 import traceback
 import logging
 import os
@@ -6,25 +6,13 @@ import os
 import requests
 
 from . import common
+from ..types import Crew
+from ..common import series_text_map, gender_map
+from ..live_bumps import CrewMove, CrewPosData
 
 
 logger = logging.getLogger('LiveBumps')
 logger.setLevel('INFO')
-
-Crew = Tuple[str, str, int]
-Ranking = Tuple[int, bool]
-
-StartOrder = List[common.StartOrderDivision]
-
-
-class Move(TypedDict):
-    moves: int
-    status: bool
-
-
-class CrewMoves(TypedDict):
-    start: int
-    moves: List[Move]
 
 
 boatcode_map = {
@@ -40,10 +28,10 @@ boatcode_map = {
 }
 
 
-def _rankings_to_moves(rankings: List[Ranking]) -> List[Move]:
+def _rankings_to_moves(rankings: List[common.ProvisionalRanking]) -> List[CrewMove]:
     """Converts a set of rankings into the format needed for Live Bumps."""
     
-    moves: List[Move] = []
+    moves: List[CrewMove] = []
     start = rankings.pop(0)[0]
     for ranking in rankings:
         previous_moves = sum([move['moves'] for move in moves])
@@ -55,18 +43,23 @@ def _rankings_to_moves(rankings: List[Ranking]) -> List[Move]:
     return moves
 
 
-def post_single_crew_rankings(event: str, year: int, crew: Crew, rankings: List[Ranking]) -> None:
+def post_single_crew_rankings(
+    event: str,
+    year: int,
+    crew: Crew,
+    rankings: List[common.ProvisionalRanking],
+) -> None:
     """Updates a single crew's rankings for the week on Live Bumps."""
     
     response = requests.post(
         'https://{}/bump/{}/{}'.format(
             os.environ.get('LIVE_BUMPS_HOST'),
-            common.event_map[event].lower(),
+            series_text_map[event].lower(),
             year,
         ),
         json = {
             'club': boatcode_map.get(crew[0]),
-            'gender': common.gender_map[crew[1]].lower(),
+            'gender': gender_map[crew[1]].lower(),
             'number': crew[2] - 1,
             'moves': _rankings_to_moves(rankings),
         },
@@ -79,7 +72,11 @@ def post_single_crew_rankings(event: str, year: int, crew: Crew, rankings: List[
         response.raise_for_status()
 
 
-def post_all_rankings(event: str, year: int, rankings_by_day: List[Dict[Crew, Ranking]]) -> None:
+def post_all_rankings(
+    event: str,
+    year: int,
+    rankings_by_day: List[Dict[Crew, common.ProvisionalRanking]],
+) -> None:
     """Updates Live Bumps with the rankings for all crews."""
     logging.info('Updating LiveBumps results for {} {} {}...'.format(
         event,
@@ -105,9 +102,9 @@ def post_all_rankings(event: str, year: int, rankings_by_day: List[Dict[Crew, Ra
 
 
 def make_event_creation_structures(
-    start_order_men: StartOrder,
-    start_order_women: StartOrder,
-) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[CrewMoves]]]]:
+    start_order_men: common.StartOrder,
+    start_order_women: common.StartOrder,
+) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[CrewPosData]]]]:
     """Creates the two event data structures needed as JSON files to set up a new event."""
 
     # Create required division data structure
@@ -129,20 +126,20 @@ def make_event_creation_structures(
     }
     
     # Create required ranking data structure
-    ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Ranking]]]] = {}
+    ranking_data: Dict[str, Dict[str, List[Tuple[Crew, common.ProvisionalRanking]]]] = {}
     for crew, ranking in rankings_raw.items():
         
         club_code = boatcode_map[crew[0]]
         if club_code not in ranking_data:
             ranking_data[club_code] = {}
         
-        gender = common.gender_map[crew[1]].lower()
+        gender = gender_map[crew[1]].lower()
         if gender not in ranking_data[club_code]:
             ranking_data[club_code][gender] = []
         
         ranking_data[club_code][gender].append((crew, ranking))
     
-    ranking_out: Dict[str, Dict[str, List[CrewMoves]]] = {}
+    ranking_out: Dict[str, Dict[str, List[CrewPosData]]] = {}
     for club_code, club_items in ranking_data.items():
         ranking_out[club_code] = {}
         for gender_code, gender_items in club_items.items():

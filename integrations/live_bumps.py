@@ -10,13 +10,14 @@ from .common import MEN, WOMEN, series_text_map, seat_parser, boat_code_parser
 logger = logging.getLogger(__name__)
 
 
-class CrewMoves(TypedDict):
+class CrewMove(TypedDict):
     moves: int
+    status: bool
 
 
 class CrewPosData(TypedDict):
     start: int
-    moves: List[CrewMoves]
+    moves: List[CrewMove]
 
 
 class CrewSeatData(TypedDict):

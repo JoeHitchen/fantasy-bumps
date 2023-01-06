@@ -6,15 +6,12 @@ import requests
 import pytz
 
 from . import common
+from ..common import TORPIDS, club_parser
+from ..anu import _roman_parser
 
 
 logger = logging.getLogger('Anu')
 logger.setLevel('INFO')
-
-
-def _roman_parser(numerals: str) -> int:
-    """Maps roman numerals to integers."""
-    return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}[numerals]
 
 
 def _race_time_parser(day: date, div_header: str) -> datetime:
@@ -31,28 +28,9 @@ def _race_time_parser(day: date, div_header: str) -> datetime:
     return pytz.timezone('Europe/London').localize(race_time)
 
 
-def _club_parser(club_str: str) -> str:
-    """Maps club names onto to the standardised list."""
-    return {
-        'green ': 'grte',
-        'l.m.h.': 'lady',
-        'new co': 'newc',
-        'st ann': 'sann',
-        'st ant': 'sant',
-        'st ben': 'sben',
-        'st cat': 'scat',
-        'st edm': 'sedm',
-        's.e.h.': 'sedm',
-        'st hil': 'shil',
-        'st hug': 'shug',
-        'st joh': 'sjoh',
-        'st pet': 'spet',
-    }.get(club_str[0:6].lower(), club_str[0:4].lower())
-
-
 def _get_datafile_url(series: str, day: date, gender: str, finish: bool) -> str:
     
-    if series == common.TORPIDS and day.year == 2022:
+    if series == TORPIDS and day.year == 2022:
         return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}/{}{}{}{}.dat'.format(
             {'T': 'Torpids', 'E': 'Eights'}[series].lower(),
             series.lower(),
@@ -136,7 +114,7 @@ def load_start_order(
                 crew_rank = 1
             
             division['crews'].append((
-                _club_parser(club_str.strip()),
+                club_parser(club_str.strip()),
                 gender,
                 crew_rank,
                 division['finalised'] and '?' not in crew_str,

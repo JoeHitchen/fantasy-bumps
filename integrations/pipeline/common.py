@@ -1,8 +1,9 @@
 from typing import List, Tuple, Dict, TypedDict
 from datetime import datetime
 
+from ..types import Crew
 
-Crew = Tuple[str, str, int]
+
 StartOrderCrew = Tuple[str, str, int, bool]
 ProvisionalRanking = Tuple[int, bool]
 
@@ -18,16 +19,6 @@ class StartOrderDivision(TypedDict):
 
 StartOrder = List[StartOrderDivision]
 RankingMap = Dict[Crew, ProvisionalRanking]
-
-
-TORPIDS = 'T'
-EIGHTS = 'E'
-event_map = {TORPIDS: 'Torpids', EIGHTS: 'Eights'}
-
-MEN = 'M'
-WOMEN = 'W'
-gender_map = {MEN: 'Men', WOMEN: 'Women'}
-
 
 
 def start_order_to_ranking(start_order: StartOrder) -> RankingMap:
