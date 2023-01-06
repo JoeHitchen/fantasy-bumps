@@ -7,7 +7,7 @@ if not args:
 commands = {
     'test': 'python manage.py test --pattern=*tests.py fantasy core',
     'test:ff': 'python project.py test --failfast',
-    'test:external': 'python -m unittest integrations.tests',
+    'test:external': 'python -m unittest integrations.tests integrations.pipeline.tests',
     'type': 'mypy',
     'lint': 'flake8',
 }
