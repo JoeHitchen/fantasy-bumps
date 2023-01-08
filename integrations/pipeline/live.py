@@ -5,8 +5,8 @@ import os
 
 import requests
 
-from . import common
-from ..types import Crew, Position, PositionMap
+from . import utils
+from ..types import Crew, Position, PositionMap, StartOrder
 from ..common import series_text_map, gender_map
 from ..live_bumps import CrewMove, CrewPosData
 
@@ -102,8 +102,8 @@ def post_all_rankings(
 
 
 def make_event_creation_structures(
-    start_order_men: common.StartOrder,
-    start_order_women: common.StartOrder,
+    start_order_men: StartOrder,
+    start_order_women: StartOrder,
 ) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[CrewPosData]]]]:
     """Creates the two event data structures needed as JSON files to set up a new event."""
 
@@ -121,8 +121,8 @@ def make_event_creation_structures(
     
     # Convert start orders to ranking
     rankings_raw = {
-        **common.start_order_to_ranking(start_order_men),
-        **common.start_order_to_ranking(start_order_women),
+        **utils.start_order_to_ranking(start_order_men),
+        **utils.start_order_to_ranking(start_order_women),
     }
     
     # Create required ranking data structure

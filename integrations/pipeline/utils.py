@@ -1,11 +1,24 @@
 from datetime import datetime, date, timedelta
 import logging
 
-from . import common, anu, live
-
+from ..types import PositionMap, StartOrder
+from . import anu, live
 
 logger = logging.getLogger('BumpsTasks')
 logger.setLevel('INFO')
+
+
+def start_order_to_ranking(start_order: StartOrder) -> PositionMap:
+    """Converts a start order to a bumps ranking."""
+    
+    rank = 0
+    ranking = {}
+    for division in start_order:
+        for crew, status in division['crews']:
+            rank += 1
+            ranking[crew] = (rank, status)
+    
+    return ranking
 
 
 def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
@@ -24,7 +37,7 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
     for day in active_days:
         
         start_order = anu.load_start_order(series, day, gender, day == days[-1])
-        rankings.append(common.start_order_to_ranking(start_order))
+        rankings.append(start_order_to_ranking(start_order))
         if not day == active_days[-1]:
             prev_start_order = start_order
     

@@ -5,7 +5,7 @@ import re
 import requests
 import pytz
 
-from . import common
+from ..types import Division, StartOrder
 from ..common import TORPIDS, club_parser
 from ..anu import _roman_parser
 
@@ -53,7 +53,7 @@ def load_start_order(
     day: date,
     gender: str,
     finish: bool = False,
-) -> common.StartOrder:
+) -> StartOrder:
     """Retrieves the start order for a given race day and gender from Anu's data files."""
     logger.info('Retrieving results from Anu...\n  Options: {}, {}, {}, & {} '.format(
         series,
@@ -86,7 +86,7 @@ def load_start_order(
         div_size_match = re.search(r'(\d{1,2}) crews', div_header)
         assert div_number_match and div_size_match
         
-        division: common.StartOrderDivision = {
+        division: Division = {
             'gender': gender,
             'number': _roman_parser(div_number_match.groups()[0]),
             'race_time': _race_time_parser(day, div_header),
