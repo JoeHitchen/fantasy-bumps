@@ -1,104 +1,14 @@
 from typing import List, Tuple, Dict
-import traceback
 import logging
-import os
-
-import requests
 
 from . import utils
-from ..types import Crew, Position, PositionMap, StartOrder
-from ..common import series_text_map, gender_map
-from ..live_bumps import CrewMove, CrewPosData
+from ..types import Crew, Position, StartOrder
+from ..common import gender_map, boat_code_map
+from ..live_bumps import CrewPosData
 
 
 logger = logging.getLogger('LiveBumps')
 logger.setLevel('INFO')
-
-
-boatcode_map = {
-    'ball': 'BAL', 'bras': 'BRC', 'chri': 'CHB', 'corp': 'COO',
-    'exet': 'EXC', 'grte': 'GTM', 'hert': 'HEC', 'jesu': 'JEO',
-    'kebl': 'KEB', 'lady': 'LMH', 'lina': 'LIN', 'linc': 'LIC',
-    'magd': 'MAG', 'mans': 'MAN', 'mert': 'MER', 'newc': 'NEC',
-    'orie': 'ORO', 'osle': 'OSG', 'pemb': 'PMB', 'quee': 'QCO',
-    'rege': 'RPC', 'some': 'SOM', 'sann': 'SAC', 'sant': 'SAY',
-    'sben': 'SBH', 'scat': 'SCO', 'sedm': 'SEH', 'shil': 'SHI',
-    'shug': 'SHG', 'sjoh': 'SJO', 'spet': 'SPC', 'trin': 'TRO',
-    'univ': 'UCO', 'wadh': 'WAD', 'wolf': 'WOO', 'worc': 'WRO',
-}
-
-
-def _rankings_to_moves(rankings: List[Position]) -> List[CrewMove]:
-    """Converts a set of rankings into the format needed for Live Bumps."""
-    
-    moves: List[CrewMove] = []
-    start = rankings.pop(0)[0]
-    for ranking in rankings:
-        previous_moves = sum([move['moves'] for move in moves])
-        moves.append({
-            'moves': start - previous_moves - ranking[0],  # Signs reversed
-            'status': ranking[1],
-        })
-    
-    return moves
-
-
-def post_single_crew_rankings(
-    event: str,
-    year: int,
-    crew: Crew,
-    rankings: List[Position],
-) -> None:
-    """Updates a single crew's rankings for the week on Live Bumps."""
-    
-    response = requests.post(
-        'https://{}/bump/{}/{}'.format(
-            os.environ.get('LIVE_BUMPS_HOST'),
-            series_text_map[event].lower(),
-            year,
-        ),
-        json = {
-            'club': boatcode_map.get(crew[0]),
-            'gender': gender_map[crew[1]].lower(),
-            'number': crew[2] - 1,
-            'moves': _rankings_to_moves(rankings),
-        },
-        headers = {
-            'Authorization': os.environ.get('LIVE_BUMPS_KEY', ''),
-            'Content-Type': 'application/json',
-        },
-    )
-    if not response.ok:
-        response.raise_for_status()
-
-
-def post_all_rankings(
-    event: str,
-    year: int,
-    rankings_by_day: List[PositionMap],
-) -> None:
-    """Updates Live Bumps with the rankings for all crews."""
-    logging.info('Updating LiveBumps results for {} {} {}...'.format(
-        event,
-        year,
-        list(rankings_by_day[0].keys())[0][1],
-    ))
-    
-    for crew in rankings_by_day[0].keys():
-        try:
-            post_single_crew_rankings(
-                event,
-                year,
-                crew,
-                [ranking[crew] for ranking in rankings_by_day if crew in ranking],
-            )
-        except Exception:
-            logger.error('Error during LiveBumps update for {} {}{}\n  {}'.format(
-                crew[0].upper(),
-                crew[1],
-                crew[2],
-                '\n  '.join(traceback.format_exc().split('\n')),
-            ))
 
 
 def make_event_creation_structures(
@@ -129,7 +39,7 @@ def make_event_creation_structures(
     ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Position]]]] = {}
     for crew, ranking in rankings_raw.items():
         
-        club_code = boatcode_map[crew[0]]
+        club_code = boat_code_map[crew[0]]
         if club_code not in ranking_data:
             ranking_data[club_code] = {}
         

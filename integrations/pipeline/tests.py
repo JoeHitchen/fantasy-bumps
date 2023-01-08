@@ -1,14 +1,9 @@
 from datetime import date, timedelta
 from unittest import TestCase
-from unittest.mock import Mock, patch, call
-import json
-import os
 
-import requests
-
-from . import anu, live
+from . import anu
 from ..types import PositionMap
-from ..common import TORPIDS, MEN, WOMEN, boat_code_parser
+from ..common import TORPIDS, MEN, WOMEN
 from ..tests import load_expected_positions
 
 
@@ -71,40 +66,4 @@ class Test__Anu(TestCase):
             with self.subTest(call_args = womens_args):
                 anu.load_start_order(*womens_args)
 
-
-class Test__Live_Bumps(TestCase):
-    
-    @patch.object(requests, 'post')
-    def test__(self, post_mock: Mock) -> None:
-        
-        all_positions = [load_expected_positions(TORPIDS, 2022, day) for day in range(1, 6)]
-        live.post_all_rankings(TORPIDS, 2022, all_positions)
-        
-        self.assertEqual(post_mock.call_count, 134)
-        with open('integrations/expected_results/torpids_2022_live_bumps.json') as file:
-            target_data = json.load(file)
-        
-        for club_code, club_data in target_data.items():
-            for gender, gender_data in club_data.items():
-                for rank, crew_data in enumerate(gender_data, 1):
-                    crew_tuple = (boat_code_parser(club_code), gender[0].upper(), rank)
-                    with self.subTest(crew = crew_tuple):
-                        self.assertIn(
-                            call(
-                                'https://{}/bump/torpids/2022'.format((
-                                    os.environ.get('LIVE_BUMPS_HOST')
-                                )),
-                                json = {
-                                    'club': club_code,
-                                    'gender': gender,
-                                    'number': rank - 1,
-                                    'moves': crew_data['moves'],
-                                },
-                                headers = {
-                                    'Authorization': os.environ.get('LIVE_BUMPS_KEY', ''),
-                                    'Content-Type': 'application/json',
-                                },
-                            ),
-                            post_mock.call_args_list,
-                        )
 

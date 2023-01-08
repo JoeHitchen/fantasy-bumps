@@ -2,7 +2,8 @@ from datetime import datetime, date, timedelta
 import logging
 
 from ..types import PositionMap, StartOrder
-from . import anu, live
+from . import anu
+from .. import live_bumps
 
 logger = logging.getLogger('BumpsTasks')
 logger.setLevel('INFO')
@@ -51,5 +52,5 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
         del rankings[-1][crew]
     
     # Update Live Bumps
-    live.post_all_rankings(series, first_day.year, rankings)
+    live_bumps.write_positions(series, first_day.year, rankings)
 
