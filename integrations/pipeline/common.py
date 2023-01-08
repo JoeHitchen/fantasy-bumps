@@ -1,10 +1,7 @@
 from typing import List, Tuple, TypedDict
 from datetime import datetime
 
-from ..types import PositionMap
-
-
-StartOrderCrew = Tuple[str, str, int, bool]
+from ..types import Crew, PositionStatus, PositionMap
 
 
 class StartOrderDivision(TypedDict):
@@ -12,7 +9,7 @@ class StartOrderDivision(TypedDict):
     number: int
     race_time: datetime
     size: int
-    crews: List[StartOrderCrew]
+    crews: List[Tuple[Crew, PositionStatus]]
     finalised: bool
 
 
@@ -25,9 +22,9 @@ def start_order_to_ranking(start_order: StartOrder) -> PositionMap:
     rank = 0
     ranking = {}
     for division in start_order:
-        for club, gender, crew_rank, finalised in division['crews']:
+        for crew, status in division['crews']:
             rank += 1
-            ranking[(club, gender, crew_rank)] = (rank, finalised)
+            ranking[crew] = (rank, status)
     
     return ranking
 

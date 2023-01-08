@@ -4,6 +4,7 @@ Crew = Tuple[str, str, int]
 CrewList = Dict[int, str]
 CrewListMap = Dict[Crew, CrewList]
 
-Position = Tuple[int, bool]
+PositionStatus = bool
+Position = Tuple[int, PositionStatus]
 PositionMap = Dict[Crew, Position]
 

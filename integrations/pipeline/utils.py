@@ -33,10 +33,7 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
         division for division in prev_start_order
         if division['race_time'] >= datetime.now()
     ]
-    unraced_crews = [
-        (club, gender, crew_rank) for division in unraced_divisions
-        for club, gender, crew_rank, _ in division['crews']
-    ]
+    unraced_crews = [crew for division in unraced_divisions for crew, _ in division['crews']]
     for crew in unraced_crews:
         del rankings[-1][crew]
     

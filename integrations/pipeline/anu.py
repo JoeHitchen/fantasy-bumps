@@ -114,9 +114,7 @@ def load_start_order(
                 crew_rank = 1
             
             division['crews'].append((
-                club_parser(club_str.strip()),
-                gender,
-                crew_rank,
+                (club_parser(club_str.strip()), gender, crew_rank),
                 division['finalised'] and '?' not in crew_str,
             ))
         
