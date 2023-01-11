@@ -1,25 +1,11 @@
 from datetime import datetime, date, timedelta
 import logging
 
-from ..types import PositionMap, StartOrder
 from . import anu
 from .. import live_bumps
 
 logger = logging.getLogger('BumpsTasks')
 logger.setLevel('INFO')
-
-
-def start_order_to_ranking(start_order: StartOrder) -> PositionMap:
-    """Converts a start order to a bumps ranking."""
-    
-    rank = 0
-    ranking = {}
-    for division in start_order:
-        for crew, status in division['crews']:
-            rank += 1
-            ranking[crew] = (rank, status)
-    
-    return ranking
 
 
 def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
@@ -33,12 +19,12 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
     if len(active_days) < 2:
         return
     
-    # Get event rankings
-    rankings = []
+    # Get event positions
+    positions = []
     for day in active_days:
         
         start_order = anu.load_start_order(series, day, gender, day == days[-1])
-        rankings.append(start_order_to_ranking(start_order))
+        positions.append(anu.__start_order_to_positions(start_order))
         if not day == active_days[-1]:
             prev_start_order = start_order
     
@@ -49,8 +35,8 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
     ]
     unraced_crews = [crew for division in unraced_divisions for crew, _ in division['crews']]
     for crew in unraced_crews:
-        del rankings[-1][crew]
+        del positions[-1][crew]
     
     # Update Live Bumps
-    live_bumps.write_positions(series, first_day.year, rankings)
+    live_bumps.write_positions(series, first_day.year, positions)
 

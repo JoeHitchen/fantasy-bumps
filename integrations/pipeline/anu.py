@@ -5,7 +5,7 @@ import re
 import requests
 import pytz
 
-from ..types import Division, StartOrder
+from ..types import PositionMap, Division, StartOrder
 from ..common import TORPIDS, club_parser
 from ..anu import _roman_parser
 
@@ -26,6 +26,19 @@ def _race_time_parser(day: date, div_header: str) -> datetime:
         race_time += timedelta(hours = 12)
     
     return pytz.timezone('Europe/London').localize(race_time)
+
+
+def __start_order_to_positions(start_order: StartOrder) -> PositionMap:
+    """Converts a start order to a set of positions."""
+    
+    rank = 0
+    positions = {}
+    for division in start_order:
+        for crew, status in division['crews']:
+            rank += 1
+            positions[crew] = (rank, status)
+    
+    return positions
 
 
 def _get_datafile_url(series: str, day: date, gender: str, finish: bool) -> str:
