@@ -1,9 +1,8 @@
-from datetime import datetime, date, timedelta
+from datetime import time
 import logging
 import re
 
 import requests
-import pytz
 
 from ..types import PositionMap, Division, StartOrder
 from ..common import TORPIDS, club_parser
@@ -14,18 +13,13 @@ logger = logging.getLogger('Anu')
 logger.setLevel('INFO')
 
 
-def _race_time_parser(day: date, div_header: str) -> datetime:
+def _race_time_parser(div_header: str) -> time:
     """Extracts the division time from the division header data."""
     
     time_match = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header)
     assert time_match
     hour_str, min_str = time_match.groups()[0:2]
-    
-    race_time = datetime.strptime('{} {}:{}'.format(day, hour_str, min_str), '%Y-%m-%d %H:%M')
-    if race_time.hour < 9:
-        race_time += timedelta(hours = 12)
-    
-    return pytz.timezone('Europe/London').localize(race_time)
+    return time(int(hour_str), int(min_str))
 
 
 def __start_order_to_positions(start_order: StartOrder) -> PositionMap:
@@ -41,42 +35,49 @@ def __start_order_to_positions(start_order: StartOrder) -> PositionMap:
     return positions
 
 
-def _get_datafile_url(series: str, day: date, gender: str, finish: bool) -> str:
+def _get_datafile_url(series: str, year: int, gender: str, day_number: int) -> str:
     
-    if series == TORPIDS and day.year == 2022:
+    # Get day string map
+    if (series, year) == (TORPIDS, 2021):
+        day_map = ['tue', 'wed', 'thu', 'fri', 'end']
+    else:
+        day_map = ['wed', 'thu', 'fri', 'sat', 'end']
+    
+    # Generate URL
+    if series == TORPIDS and year == 2022:
         return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}/{}{}{}{}.dat'.format(
             {'T': 'Torpids', 'E': 'Eights'}[series].lower(),
             series.lower(),
-            day.strftime('%y'),
-            'end' if finish else day.strftime('%a').lower(),
+            str(year)[2:4],
+            day_map[day_number - 1],
             gender.lower(),
         )
     
     else:
         return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}{}{}{}.dat'.format(
             series.lower(),
-            day.strftime('%y'),
-            'end' if finish else day.strftime('%a').lower(),
+            str(year)[2:4],
+            day_map[day_number - 1],
             gender.lower(),
         )
 
 
-def load_start_order(
+def load_start_order_by_gender(
     series: str,
-    day: date,
+    year: int,
     gender: str,
-    finish: bool = False,
+    day_number: int,
 ) -> StartOrder:
     """Retrieves the start order for a given race day and gender from Anu's data files."""
     logger.info('Retrieving results from Anu...\n  Options: {}, {}, {}, & {} '.format(
         series,
-        day,
+        year,
         gender,
-        finish,
+        day_number,
     ))
     
     # Get raw data
-    url = _get_datafile_url(series, day, gender, finish)
+    url = _get_datafile_url(series, year, gender, day_number)
     response = requests.get(url)
     if not response.ok:
         response.raise_for_status()
@@ -102,7 +103,7 @@ def load_start_order(
         division: Division = {
             'gender': gender,
             'number': _roman_parser(div_number_match.groups()[0]),
-            'race_time': _race_time_parser(day, div_header),
+            'race_time': _race_time_parser(div_header),
             'size': int(div_size_match.groups()[0]),
             'finalised': '?' not in div_header,
             'crews': [],

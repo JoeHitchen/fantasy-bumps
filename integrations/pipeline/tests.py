@@ -1,4 +1,3 @@
-from datetime import date, timedelta
 from unittest import TestCase
 
 from . import anu
@@ -15,20 +14,9 @@ class Test__Anu(TestCase):
         for day in [1, 2, 5]:
             with self.subTest(day = day):
                 
-                day_code = (TORPIDS, 2022, day)
+                start_order_men = anu.load_start_order_by_gender(TORPIDS, 2022, MEN, day)
+                start_order_women = anu.load_start_order_by_gender(TORPIDS, 2022, WOMEN, day)
                 
-                start_order_men = anu.load_start_order(
-                    day_code[0],
-                    date(day_code[1], 3, 1) + timedelta(day),
-                    MEN,
-                    day == 5,
-                )
-                start_order_women = anu.load_start_order(
-                    day_code[0],
-                    date(day_code[1], 3, 1) + timedelta(day),
-                    WOMEN,
-                    day == 5,
-                )
                 ranks = {MEN: 0, WOMEN: 0}
                 parsed: PositionMap = {}
                 for division in start_order_men + start_order_women:
@@ -36,7 +24,7 @@ class Test__Anu(TestCase):
                         ranks[div_crew[1]] += 1
                         parsed[(*div_crew[0:3],)] = (ranks[div_crew[1]], True)
                 
-                expected = load_expected_positions(*day_code)
+                expected = load_expected_positions(TORPIDS, 2022, day)
                 
                 for crew in parsed.keys():
                     with self.subTest(crew = crew):
@@ -44,26 +32,19 @@ class Test__Anu(TestCase):
     
     
     def test__positions__smoke(self) -> None:
-        """Checks no errors are raised parsing all Anu's known start/finish order data files."""
+        """Positions from other historical events should be parsed without error."""
         
-        event_days = [
-            (TORPIDS, '2022-03-02', False),
-            (TORPIDS, '2022-03-03', False),
-            (TORPIDS, '2022-03-04', False),
-            (TORPIDS, '2022-03-05', False),
-            (TORPIDS, '2022-03-06', True),
+        events = [
+            # At time of writing, only one start order is available
+            (TORPIDS, 2022, 134),
         ]
         
-        for day in event_days:
-            
-            event_date = date.fromisoformat(day[1])
-            mens_args = (day[0], event_date, MEN, day[2])
-            womens_args = (day[0], event_date, WOMEN, day[2])
-        
-            with self.subTest(call_args = mens_args):
-                anu.load_start_order(*mens_args)
-            
-            with self.subTest(call_args = womens_args):
-                anu.load_start_order(*womens_args)
-
+        for series, year, num_crews in events:
+            for day in range(1, 6):
+                
+                with self.subTest([series, year, MEN, day]):
+                    anu.load_start_order_by_gender(series, year, MEN, day)
+                
+                with self.subTest([series, year, WOMEN, day]):
+                    anu.load_start_order_by_gender(series, year, WOMEN, day)
 

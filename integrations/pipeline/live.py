@@ -20,11 +20,11 @@ def make_event_creation_structures(
     # Create required division data structure
     division_data = {
         'men': [
-            division['race_time'].time().strftime('%H:%M')
+            division['race_time'].strftime('%H:%M')
             for division in start_order_men
         ],
         'women': [
-            division['race_time'].time().strftime('%H:%M')
+            division['race_time'].strftime('%H:%M')
             for division in start_order_women
         ],
     }

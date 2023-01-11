@@ -21,17 +21,18 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
     
     # Get event positions
     positions = []
-    for day in active_days:
+    for day_index, day in enumerate(active_days, 1):
         
-        start_order = anu.load_start_order(series, day, gender, day == days[-1])
+        start_order = anu.load_start_order_by_gender(series, day.year, gender, day_index)
         positions.append(anu.__start_order_to_positions(start_order))
-        if not day == active_days[-1]:
+        if not day_index == len(active_days):
             prev_start_order = start_order
     
     # Prune un-raced crews
+    now = datetime.now()
     unraced_divisions = [
         division for division in prev_start_order
-        if division['race_time'] >= datetime.now()
+        if active_days[-2] <= now.date() and division['race_time'] >= now.time()
     ]
     unraced_crews = [crew for division in unraced_divisions for crew, _ in division['crews']]
     for crew in unraced_crews:

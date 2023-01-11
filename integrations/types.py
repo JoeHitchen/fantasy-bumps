@@ -1,5 +1,5 @@
 from typing import List, Tuple, Dict, TypedDict
-from datetime import datetime
+from datetime import time
 
 Crew = Tuple[str, str, int]
 CrewList = Dict[int, str]
@@ -13,7 +13,7 @@ PositionMap = Dict[Crew, Position]
 class Division(TypedDict):
     gender: str
     number: int
-    race_time: datetime
+    race_time: time
     size: int
     crews: List[Tuple[Crew, PositionStatus]]
     finalised: bool
