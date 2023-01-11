@@ -1,14 +1,15 @@
 import html
-from typing import List, Dict, TypedDict
+from typing import List, Tuple, Dict, TypedDict
 import logging
 import traceback
 import os
 
 import requests
 
-from .types import CrewListMap, Position, PositionMap
+from .types import Crew, CrewListMap, Position, PositionMap, StartOrder
 from .common import MEN, WOMEN, gender_map, series_text_map
 from .common import seat_parser, boat_code_parser, boat_code_map
+from . import anu_dat
 
 logger = logging.getLogger(__name__)
 
@@ -166,4 +167,58 @@ def write_positions(
                 crew[2],
                 '\n  '.join(traceback.format_exc().split('\n')),
             ))
+
+
+def __make_event_creation_structures(
+    start_order_men: StartOrder,
+    start_order_women: StartOrder,
+) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[CrewPosData]]]]:
+    """Creates the two event data structures needed as JSON files to set up a new event."""
+    
+    # Create required division data structure
+    division_data = {
+        'men': [
+            division['race_time'].strftime('%H:%M')
+            for division in start_order_men
+        ],
+        'women': [
+            division['race_time'].strftime('%H:%M')
+            for division in start_order_women
+        ],
+    }
+    
+    # Convert start orders to positions
+    rankings_raw = {
+        **anu_dat.__start_order_to_positions(start_order_men),
+        **anu_dat.__start_order_to_positions(start_order_women),
+    }
+    
+    # Create required ranking data structure
+    ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Position]]]] = {}
+    for crew, ranking in rankings_raw.items():
+        
+        club_code = boat_code_map[crew[0]]
+        if club_code not in ranking_data:
+            ranking_data[club_code] = {}
+        
+        gender = gender_map[crew[1]].lower()
+        if gender not in ranking_data[club_code]:
+            ranking_data[club_code][gender] = []
+        
+        ranking_data[club_code][gender].append((crew, ranking))
+    
+    ranking_out: Dict[str, Dict[str, List[CrewPosData]]] = {}
+    for club_code, club_items in ranking_data.items():
+        ranking_out[club_code] = {}
+        for gender_code, gender_items in club_items.items():
+            ranking_out[club_code][gender_code] = []
+            
+            gender_items.sort(key = lambda crew: crew[0][2])
+            for number, crew_data in enumerate(gender_items):
+                ranking_out[club_code][gender_code].append({
+                    'start': crew_data[1][0],
+                    'moves': [],
+                })
+    
+    return division_data, ranking_out
 
