@@ -5,7 +5,7 @@ import re
 import requests
 
 from ..types import PositionMap, Division, StartOrder
-from ..common import TORPIDS, club_parser
+from ..common import TORPIDS, MEN, WOMEN, club_parser
 from ..anu import _roman_parser
 
 
@@ -135,4 +135,19 @@ def load_start_order_by_gender(
         divisions.append(division)
     
     return divisions
+
+
+def get_positions_by_gender(series: str, year: int, gender: str, day_number: int) -> PositionMap:
+    """Generates a crew/position map for one gender from Anu's .dat files."""
+    
+    return __start_order_to_positions(load_start_order_by_gender(series, year, gender, day_number))
+
+
+def get_positions(series: str, year: int, day_number: int) -> PositionMap:
+    """Generates a crew/position map from Anu's .dat files."""
+    
+    return {
+        **get_positions_by_gender(series, year, MEN, day_number),
+        **get_positions_by_gender(series, year, WOMEN, day_number),
+    }
 

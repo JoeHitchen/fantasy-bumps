@@ -1,14 +1,48 @@
 from unittest import TestCase
+import logging
 
 from . import anu
 from ..types import PositionMap
 from ..common import TORPIDS, MEN, WOMEN
 from ..tests import load_expected_positions
 
+logging.disable(logging.CRITICAL)
+
 
 class Test__Anu(TestCase):
     
     def test__positions__torpids_2022(self) -> None:
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (TORPIDS, 2022, day)
+                parsed = anu.get_positions(*day_code)
+                expected = load_expected_positions(*day_code)
+                
+                for crew in parsed.keys():
+                    with self.subTest(crew = crew):
+                        self.assertEqual(parsed[crew], expected[crew])
+    
+    
+    def test__positions__smoke(self) -> None:
+        """Positions from other historical events should be parsed without error."""
+        
+        events = [
+            # At time of writing, only one start order is available
+            (TORPIDS, 2022, 134),
+        ]
+        
+        for series, year, num_crews in events:
+            for day_number in range(1, 6):
+                with self.subTest([series, year, day_number]):
+                    
+                    positions = anu.get_positions(series, year, day_number)
+                    self.assertEqual(len(positions.keys()), num_crews)
+    
+    
+    def test__start_orders__torpids_2022(self) -> None:
         """The positions given by the parser should match the expected results."""
         
         for day in [1, 2, 5]:
@@ -31,7 +65,7 @@ class Test__Anu(TestCase):
                         self.assertEqual(parsed[crew], expected[crew])
     
     
-    def test__positions__smoke(self) -> None:
+    def test__start_orders__smoke(self) -> None:
         """Positions from other historical events should be parsed without error."""
         
         events = [
