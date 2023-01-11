@@ -1,8 +1,7 @@
 from datetime import datetime, date, timedelta
 import logging
 
-from . import common, anu, live
-
+from .. import anu_dat, live_bumps
 
 logger = logging.getLogger('BumpsTasks')
 logger.setLevel('INFO')
@@ -19,24 +18,25 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
     if len(active_days) < 2:
         return
     
-    # Get event rankings
-    rankings = []
-    for day in active_days:
+    # Get event positions
+    positions = []
+    for day_index, day in enumerate(active_days, 1):
         
-        start_order = anu.load_start_order(series, day, gender, day == days[-1])
-        rankings.append(common.start_order_to_ranking(start_order))
-        if not day == active_days[-1]:
+        start_order = anu_dat.load_start_order_by_gender(series, day.year, gender, day_index)
+        positions.append(anu_dat.__start_order_to_positions(start_order))
+        if not day_index == len(active_days):
             prev_start_order = start_order
     
     # Prune un-raced crews
+    now = datetime.now()
     unraced_divisions = [
         division for division in prev_start_order
-        if division['race_time'] >= datetime.now()
+        if active_days[-2] <= now.date() and division['race_time'] >= now.time()
     ]
     unraced_crews = [crew for division in unraced_divisions for crew, _ in division['crews']]
     for crew in unraced_crews:
-        del rankings[-1][crew]
+        del positions[-1][crew]
     
     # Update Live Bumps
-    live.post_all_rankings(series, first_day.year, rankings)
+    live_bumps.write_positions(series, first_day.year, positions)
 

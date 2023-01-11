@@ -11,6 +11,12 @@ WOMEN = 'W'
 gender_map = {MEN: 'Men', WOMEN: 'Women'}
 
 
+def roman_parser(numerals: str) -> int:
+    """Maps roman numerals to integers."""
+    
+    return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}[numerals]
+
+
 def seat_parser(seat_str: str) -> int:
     return {
         'Bow': 1,
@@ -57,3 +63,17 @@ def boat_code_parser(boat_code: str) -> str:
         'UCO': 'univ', 'WAD': 'wadh', 'WOO': 'wolf', 'WRO': 'worc',
         'OSL': 'osle',
     }[boat_code.upper()]
+
+
+boat_code_map = {
+    'ball': 'BAL', 'bras': 'BRC', 'chri': 'CHB', 'corp': 'COO',
+    'exet': 'EXC', 'grte': 'GTM', 'hert': 'HEC', 'jesu': 'JEO',
+    'kebl': 'KEB', 'lady': 'LMH', 'lina': 'LIN', 'linc': 'LIC',
+    'magd': 'MAG', 'mans': 'MAN', 'mert': 'MER', 'newc': 'NEC',
+    'orie': 'ORO', 'osle': 'OSG', 'pemb': 'PMB', 'quee': 'QCO',
+    'rege': 'RPC', 'some': 'SOM', 'sann': 'SAC', 'sant': 'SAY',
+    'sben': 'SBH', 'scat': 'SCO', 'sedm': 'SEH', 'shil': 'SHI',
+    'shug': 'SHG', 'sjoh': 'SJO', 'spet': 'SPC', 'trin': 'TRO',
+    'univ': 'UCO', 'wadh': 'WAD', 'wolf': 'WOO', 'worc': 'WRO',
+}
+
