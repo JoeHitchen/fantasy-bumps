@@ -1,8 +1,7 @@
 from datetime import datetime, date, timedelta
 import logging
 
-from . import anu
-from .. import live_bumps
+from .. import anu_dat, live_bumps
 
 logger = logging.getLogger('BumpsTasks')
 logger.setLevel('INFO')
@@ -23,8 +22,8 @@ def anu_to_live_bumps(series: str, first_day_str: str, gender: str) -> None:
     positions = []
     for day_index, day in enumerate(active_days, 1):
         
-        start_order = anu.load_start_order_by_gender(series, day.year, gender, day_index)
-        positions.append(anu.__start_order_to_positions(start_order))
+        start_order = anu_dat.load_start_order_by_gender(series, day.year, gender, day_index)
+        positions.append(anu_dat.__start_order_to_positions(start_order))
         if not day_index == len(active_days):
             prev_start_order = start_order
     

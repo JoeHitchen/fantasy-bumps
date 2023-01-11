@@ -4,13 +4,10 @@ import re
 
 import requests
 
-from ..types import PositionMap, Division, StartOrder
-from ..common import TORPIDS, MEN, WOMEN, club_parser
-from ..anu import _roman_parser
+from .types import PositionMap, Division, StartOrder
+from .common import TORPIDS, MEN, WOMEN, roman_parser, club_parser
 
-
-logger = logging.getLogger('Anu')
-logger.setLevel('INFO')
+logger = logging.getLogger(__name__)
 
 
 def _race_time_parser(div_header: str) -> time:
@@ -102,7 +99,7 @@ def load_start_order_by_gender(
         
         division: Division = {
             'gender': gender,
-            'number': _roman_parser(div_number_match.groups()[0]),
+            'number': roman_parser(div_number_match.groups()[0]),
             'race_time': _race_time_parser(div_header),
             'size': int(div_size_match.groups()[0]),
             'finalised': '?' not in div_header,
@@ -118,7 +115,7 @@ def load_start_order_by_gender(
                 assert crew_match
                 
                 club_str = crew_match.groups()[0]
-                crew_rank = _roman_parser(crew_match.groups()[1])
+                crew_rank = roman_parser(crew_match.groups()[1])
             
             else:
                 crew_match = re.search("([A-Za-z'. ]+)", crew_str)

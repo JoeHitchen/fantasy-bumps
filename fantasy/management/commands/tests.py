@@ -5,7 +5,7 @@ import logging
 from django.test import TestCase
 from django.utils import timezone
 
-from integrations import live_bumps, anu, camfm, ourcs
+from integrations import live_bumps, anu_html, camfm, ourcs
 
 from ... import models
 from ...constants import Series, Clubs, Genders
@@ -254,10 +254,10 @@ class Test__Game_Start(TestCase):
     def test__handle__event_source__oxford_alternate(self, _, rankings_mocks):
         """Anu can be used as an alternative source for Oxford events."""
         
-        GameStart().handle(series = 'torpids', date = None, year = None, source = 'anu')
+        GameStart().handle(series = 'torpids', date = None, year = None, source = 'anu-html')
         
         event = models.Event.objects.first()
-        rankings_mocks.assert_called_once_with(anu.get_positions, event.first_day)
+        rankings_mocks.assert_called_once_with(anu_html.get_positions, event.first_day)
     
     
     @patch('fantasy.management.commands.utils.load_crew_rankings')
@@ -363,8 +363,8 @@ class Test__Game_Advance(TestCase):
         
         event = prepare_event(Series.TORPIDS, self.today)
         
-        GameAdvance().handle(oxf_source = 'anu')
-        perform_mock.assert_called_once_with(anu.get_positions, event)
+        GameAdvance().handle(oxf_source = 'anu-html')
+        perform_mock.assert_called_once_with(anu_html.get_positions, event)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')

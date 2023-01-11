@@ -1,7 +1,7 @@
 from typing import List, Tuple, Dict
 import logging
 
-from . import anu
+from .. import anu_dat
 from ..types import Crew, Position, StartOrder
 from ..common import gender_map, boat_code_map
 from ..live_bumps import CrewPosData
@@ -31,8 +31,8 @@ def make_event_creation_structures(
     
     # Convert start orders to positions
     rankings_raw = {
-        **anu.__start_order_to_positions(start_order_men),
-        **anu.__start_order_to_positions(start_order_women),
+        **anu_dat.__start_order_to_positions(start_order_men),
+        **anu_dat.__start_order_to_positions(start_order_women),
     }
     
     # Create required ranking data structure
