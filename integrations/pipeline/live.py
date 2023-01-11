@@ -1,7 +1,7 @@
 from typing import List, Tuple, Dict
 import logging
 
-from . import utils
+from .. import anu_dat
 from ..types import Crew, Position, StartOrder
 from ..common import gender_map, boat_code_map
 from ..live_bumps import CrewPosData
@@ -20,19 +20,19 @@ def make_event_creation_structures(
     # Create required division data structure
     division_data = {
         'men': [
-            division['race_time'].time().strftime('%H:%M')
+            division['race_time'].strftime('%H:%M')
             for division in start_order_men
         ],
         'women': [
-            division['race_time'].time().strftime('%H:%M')
+            division['race_time'].strftime('%H:%M')
             for division in start_order_women
         ],
     }
     
-    # Convert start orders to ranking
+    # Convert start orders to positions
     rankings_raw = {
-        **utils.start_order_to_ranking(start_order_men),
-        **utils.start_order_to_ranking(start_order_women),
+        **anu_dat.__start_order_to_positions(start_order_men),
+        **anu_dat.__start_order_to_positions(start_order_women),
     }
     
     # Create required ranking data structure

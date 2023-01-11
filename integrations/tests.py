@@ -4,9 +4,9 @@ import json
 
 import requests
 
-from . import live_bumps, anu, ourcs, camfm
+from . import live_bumps, anu_html, anu_dat, ourcs, camfm
 from .types import PositionMap
-from .common import TORPIDS, EIGHTS, LENTS, MAYS, boat_code_parser
+from .common import TORPIDS, EIGHTS, LENTS, MAYS, MEN, WOMEN, boat_code_parser
 
 
 def load_expected_positions(series: str, year: int, day: int) -> PositionMap:
@@ -121,7 +121,7 @@ class Test__LiveBumps(TestCase):
                         )
 
 
-class Test__Anu(TestCase):
+class Test__Anu__HTML(TestCase):
     
     def test__torpids_2022(self) -> None:
         """The positions given by the parser should match the expected results."""
@@ -130,7 +130,7 @@ class Test__Anu(TestCase):
             with self.subTest(day = day):
                 
                 day_code = (TORPIDS, 2022, day)
-                parsed = anu.get_positions(*day_code)
+                parsed = anu_html.get_positions(*day_code)
                 expected = load_expected_positions(*day_code)
                 
                 for crew in parsed.keys():
@@ -152,8 +152,82 @@ class Test__Anu(TestCase):
             for day_number in range(1, 6):
                 with self.subTest([series, year, day_number]):
                     
-                    positions = anu.get_positions(series, year, day_number)
+                    positions = anu_html.get_positions(series, year, day_number)
                     self.assertEqual(len(positions.keys()), num_crews)
+
+
+class Test__Anu__Dat(TestCase):
+    
+    def test__positions__torpids_2022(self) -> None:
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (TORPIDS, 2022, day)
+                parsed = anu_dat.get_positions(*day_code)
+                expected = load_expected_positions(*day_code)
+                
+                for crew in parsed.keys():
+                    with self.subTest(crew = crew):
+                        self.assertEqual(parsed[crew], expected[crew])
+    
+    
+    def test__positions__smoke(self) -> None:
+        """Positions from other historical events should be parsed without error."""
+        
+        events = [
+            # At time of writing, only one start order is available
+            (TORPIDS, 2022, 134),
+        ]
+        
+        for series, year, num_crews in events:
+            for day_number in range(1, 6):
+                with self.subTest([series, year, day_number]):
+                    
+                    positions = anu_dat.get_positions(series, year, day_number)
+                    self.assertEqual(len(positions.keys()), num_crews)
+    
+    
+    def test__start_orders__torpids_2022(self) -> None:
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                start_order_men = anu_dat.load_start_order_by_gender(TORPIDS, 2022, MEN, day)
+                start_order_women = anu_dat.load_start_order_by_gender(TORPIDS, 2022, WOMEN, day)
+                
+                ranks = {MEN: 0, WOMEN: 0}
+                parsed: PositionMap = {}
+                for division in start_order_men + start_order_women:
+                    for div_crew, _ in division['crews']:
+                        ranks[div_crew[1]] += 1
+                        parsed[(*div_crew[0:3],)] = (ranks[div_crew[1]], True)
+                
+                expected = load_expected_positions(TORPIDS, 2022, day)
+                
+                for crew in parsed.keys():
+                    with self.subTest(crew = crew):
+                        self.assertEqual(parsed[crew], expected[crew])
+    
+    
+    def test__start_orders__smoke(self) -> None:
+        """Positions from other historical events should be parsed without error."""
+        
+        events = [
+            # At time of writing, only one start order is available
+            (TORPIDS, 2022, 134),
+        ]
+        
+        for series, year, num_crews in events:
+            for day in range(1, 6):
+                
+                with self.subTest([series, year, MEN, day]):
+                    anu_dat.load_start_order_by_gender(series, year, MEN, day)
+                
+                with self.subTest([series, year, WOMEN, day]):
+                    anu_dat.load_start_order_by_gender(series, year, WOMEN, day)
 
 
 class Test__OURCs(TestCase):

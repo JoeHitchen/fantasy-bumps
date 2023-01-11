@@ -3,7 +3,7 @@ import logging
 
 from django.core.management import call_command
 
-from integrations import live_bumps, anu, ourcs, camfm
+from integrations import live_bumps, anu_html, anu_dat, ourcs, camfm
 from integrations.common import series_text_map
 
 from ...constants import Locations, Series as EventSeries
@@ -15,7 +15,8 @@ logger = logging.getLogger('integrations.misc')
 class Sources(enum.Enum):
     DEMO = 'demo'
     LIVE = 'live'
-    ANU = 'anu'
+    ANU_HTML = 'anu-html'
+    ANU_DAT = 'anu-dat'
     OURCS = 'ourcs'
     CAMFM = 'camfm'
     NOOP = 'noop'
@@ -35,7 +36,7 @@ series_location_map = {
 
 location_event_sources_map = {
     Locations.DEMO: [Sources.DEMO],
-    Locations.OXFORD: [Sources.LIVE, Sources.ANU],
+    Locations.OXFORD: [Sources.LIVE, Sources.ANU_HTML, Sources.ANU_DAT],
     Locations.CAMBRIDGE: [Sources.CAMFM],
 }
 location_crew_list_sources_map = {
@@ -71,7 +72,8 @@ def _noop_crew_lists(series, year):
 _event_source_function_map = {
     Sources.DEMO: _demo_positions,
     Sources.LIVE: live_bumps.get_positions,
-    Sources.ANU: anu.get_positions,
+    Sources.ANU_HTML: anu_html.get_positions,
+    Sources.ANU_DAT: anu_dat.get_positions,
     Sources.CAMFM: camfm.get_positions,
 }
 _crew_list_source_function_map = {
