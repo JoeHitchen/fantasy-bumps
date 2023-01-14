@@ -169,6 +169,12 @@ def write_positions(
             ))
 
 
+def wipe_positions(series: str, year: int) -> None:
+    """A light wrapper to reset the positions for an event."""
+    
+    write_positions(series, year, [get_positions(series, year, 1)])
+
+
 def __make_event_creation_structures(
     start_order_men: StartOrder,
     start_order_women: StartOrder,
