@@ -12,6 +12,7 @@ from ...constants import Series, Clubs, Genders
 from .game_start import Command as GameStart, create_days
 from .game_advance import Command as GameAdvance
 from .renumbered_crew import Command as RenumberedCrew
+from .wipe_live_bumps import Command as WipeLiveBumps
 from . import utils, parsers
 
 logging.disable(logging.CRITICAL)
@@ -573,4 +574,15 @@ class Test__Renumbered_Crew(TestCase):
             )),
             [(seat, name) for seat, name in self.crew_list.items() if seat < 10],
         )
+
+
+class Test__Live_Bumps(TestCase):
+    
+    @patch('integrations.live_bumps.wipe_positions')
+    def test__wipe(self, wipe_mock):
+        """Provides an interface to the Live Bumps wipe command."""
+        
+        WipeLiveBumps().handle(series = 'torpids', year = 2022)
+        
+        wipe_mock.assert_called_once_with(Series.TORPIDS, 2022)
 
