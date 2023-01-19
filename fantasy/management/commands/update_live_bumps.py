@@ -36,7 +36,10 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         """Loads crew positions from Anu's data files and pushes them to Live Bumps."""
         
-        event = models.Event.objects.get(series = kwargs['series'], year = kwargs['year'])
+        event = models.Event.objects.get(
+            series = series_reverser[kwargs['series']],
+            year = kwargs['year'],
+        )
         active_days = event.days.filter(date__lte = timezone.now() + timedelta(1))
         if active_days.count() < 2:
             return
@@ -47,7 +50,7 @@ class Command(BaseCommand):
             positions_by_day.append(anu_dat.get_positions_by_gender(
                 event.series,
                 event.year,
-                kwargs['gender'],
+                gender_reverser[kwargs['gender']],
                 day_number,
             ))
         
@@ -58,7 +61,7 @@ class Command(BaseCommand):
             start_order = anu_dat.load_start_order_by_gender(
                 event.series,
                 event.year,
-                kwargs['gender'],
+                gender_reverser[kwargs['gender']],
                 active_days.count() - 1,
             )
             unraced_crews = [

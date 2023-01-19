@@ -593,7 +593,11 @@ class Test__Live_Bumps(TestCase):
         """No action is taken before the first day."""
         
         event = prepare_event(Series.TORPIDS, timezone.now().date() + timedelta(1))
-        UpdateLiveBumps().handle(series = event.series, year = event.year, gender = Genders.WOMEN)
+        UpdateLiveBumps().handle(
+            series = event.series.label.lower(),
+            year = event.year,
+            gender = Genders.WOMEN.label.lower(),
+        )
         
         positions_mock.assert_not_called()
     
@@ -605,7 +609,11 @@ class Test__Live_Bumps(TestCase):
         """Positions are processed for the next day, current day, and all previous days."""
         
         event = prepare_event(Series.TORPIDS, timezone.now().date())
-        UpdateLiveBumps().handle(series = event.series, year = event.year, gender = Genders.WOMEN)
+        UpdateLiveBumps().handle(
+            series = event.series.label.lower(),
+            year = event.year,
+            gender = Genders.WOMEN.label.lower(),
+        )
         
         self.assertEqual(
             positions_mock.call_args_list,
@@ -632,7 +640,11 @@ class Test__Live_Bumps(TestCase):
         """Positions are processed for the next day, current day, and all previous days."""
         
         event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(1))
-        UpdateLiveBumps().handle(series = event.series, year = event.year, gender = Genders.WOMEN)
+        UpdateLiveBumps().handle(
+            series = event.series.label.lower(),
+            year = event.year,
+            gender = Genders.WOMEN.label.lower(),
+        )
         
         self.assertEqual(
             positions_mock.call_args_list,
@@ -659,7 +671,11 @@ class Test__Live_Bumps(TestCase):
         """Positions are processed for the next day, current day, and all previous days."""
         
         event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(3))
-        UpdateLiveBumps().handle(series = event.series, year = event.year, gender = Genders.WOMEN)
+        UpdateLiveBumps().handle(
+            series = event.series.label.lower(),
+            year = event.year,
+            gender = Genders.WOMEN.label.lower(),
+        )
         
         self.assertEqual(
             positions_mock.call_args_list,
@@ -686,7 +702,11 @@ class Test__Live_Bumps(TestCase):
         """Positions are processed for the whole event after it has finished."""
         
         event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(4))
-        UpdateLiveBumps().handle(series = event.series, year = event.year, gender = Genders.WOMEN)
+        UpdateLiveBumps().handle(
+            series = event.series.label.lower(),
+            year = event.year,
+            gender = Genders.WOMEN.label.lower(),
+        )
         
         self.assertEqual(
             positions_mock.call_args_list,
@@ -724,7 +744,11 @@ class Test__Live_Bumps(TestCase):
         ]
         
         event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(1))
-        UpdateLiveBumps().handle(series = event.series, year = event.year, gender = Genders.WOMEN)
+        UpdateLiveBumps().handle(
+            series = event.series.label.lower(),
+            year = event.year,
+            gender = Genders.WOMEN.label.lower(),
+        )
         
         expected_positions = [
             dummy_positions_by_gender(event.series, event.year, Genders.WOMEN, day_number)
