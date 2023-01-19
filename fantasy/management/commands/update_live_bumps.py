@@ -41,6 +41,7 @@ class Command(BaseCommand):
         if active_days.count() < 2:
             return
         
+        # Load positions
         positions_by_day = []
         for day_number, day in enumerate(active_days, 1):
             positions_by_day.append(anu_dat.get_positions_by_gender(
@@ -50,7 +51,22 @@ class Command(BaseCommand):
                 day_number,
             ))
         
-        # Todo: Prune unraced crews here
+        # Prune unraced crews
+        now = timezone.now()
+        if active_days.last().date > now.date():
+            
+            start_order = anu_dat.load_start_order_by_gender(
+                event.series,
+                event.year,
+                kwargs['gender'],
+                active_days.count() - 1,
+            )
+            unraced_crews = [
+                crew for division in start_order for crew, _ in division['crews']
+                if division['race_time'] >= now.time()
+            ]
+            for crew in unraced_crews:
+                del positions_by_day[-1][crew]
         
         live_bumps.write_positions(event.series, event.year, positions_by_day)
 
