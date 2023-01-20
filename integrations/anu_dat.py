@@ -15,8 +15,9 @@ def _race_time_parser(div_header: str) -> time:
     
     time_match = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header)
     assert time_match
-    hour_str, min_str = time_match.groups()[0:2]
-    return time(int(hour_str), int(min_str))
+    hour = int(time_match.groups()[0])
+    mins = int(time_match.groups()[1])
+    return time(hour if hour > 9 else hour + 12, mins)
 
 
 def __start_order_to_positions(start_order: StartOrder) -> PositionMap:
