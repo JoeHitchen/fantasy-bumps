@@ -1,22 +1,25 @@
 from unittest import TestCase
+from unittest.mock import Mock, patch, call
 import json
 
-from . import live_bumps, anu, ourcs, camfm
+import requests
+
+from . import live_bumps, anu_html, anu_dat, ourcs, camfm
 from .types import PositionMap
-from .common import TORPIDS, EIGHTS, LENTS, MAYS
+from .common import TORPIDS, EIGHTS, LENTS, MAYS, MEN, WOMEN, boat_code_parser
 
 
 def load_expected_positions(series: str, year: int, day: int) -> PositionMap:
     """A helper to load expected positions from file."""
     
     series_tag = {TORPIDS: 'torpids', MAYS: 'mays'}.get(series)
-    with open(f'parsing/expected_results/{series_tag}_{year}_day{day}.json') as file:
+    with open(f'integrations/expected_results/{series_tag}_{year}_day{day}.json') as file:
         raw = json.load(file)
     
     results = {}
     for crew_key, position in raw.items():
         crew_code = (crew_key[0:4], crew_key[5].upper(), int(crew_key[6]))
-        results[crew_code] = int(position)
+        results[crew_code] = (int(position), True)
     
     return results
 
@@ -80,9 +83,45 @@ class Test__LiveBumps(TestCase):
                 
                 crew_lists = live_bumps.get_crew_lists(series, year)
                 self.assertEqual(len(crew_lists.keys()), num_crews)
+    
+    
+    @patch.object(requests, 'post')
+    def test__write_positions(self, post_mock: Mock) -> None:
+        """Writes all results for Torpids 2022."""
+        
+        all_positions = [load_expected_positions(TORPIDS, 2022, day) for day in range(1, 6)]
+        with open('integrations/expected_results/torpids_2022_live_bumps.json') as file:
+            expected_data = json.load(file)
+        
+        live_bumps.write_positions(TORPIDS, 2022, all_positions)
+        self.assertEqual(post_mock.call_count, 134)
+        
+        for club_code, club_data in expected_data.items():
+            for gender, gender_data in club_data.items():
+                for rank, crew_data in enumerate(gender_data, 1):
+                    
+                    crew_tuple = (boat_code_parser(club_code), gender[0].upper(), rank)
+                    with self.subTest(crew = crew_tuple):
+                        
+                        self.assertIn(
+                            call(
+                                '{}/bump/torpids/2022'.format(live_bumps.BASE_URL),
+                                headers = {
+                                    'Authorization': live_bumps.AUTH_KEY,
+                                    'Content-Type': 'application/json',
+                                },
+                                json = {
+                                    'club': club_code,
+                                    'gender': gender,
+                                    'number': rank - 1,
+                                    'moves': crew_data['moves'],
+                                },
+                            ),
+                            post_mock.call_args_list,
+                        )
 
 
-class Test__Anu(TestCase):
+class Test__Anu__HTML(TestCase):
     
     def test__torpids_2022(self) -> None:
         """The positions given by the parser should match the expected results."""
@@ -91,7 +130,7 @@ class Test__Anu(TestCase):
             with self.subTest(day = day):
                 
                 day_code = (TORPIDS, 2022, day)
-                parsed = anu.get_positions(*day_code)
+                parsed = anu_html.get_positions(*day_code)
                 expected = load_expected_positions(*day_code)
                 
                 for crew in parsed.keys():
@@ -113,8 +152,82 @@ class Test__Anu(TestCase):
             for day_number in range(1, 6):
                 with self.subTest([series, year, day_number]):
                     
-                    positions = anu.get_positions(series, year, day_number)
+                    positions = anu_html.get_positions(series, year, day_number)
                     self.assertEqual(len(positions.keys()), num_crews)
+
+
+class Test__Anu__Dat(TestCase):
+    
+    def test__positions__torpids_2022(self) -> None:
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (TORPIDS, 2022, day)
+                parsed = anu_dat.get_positions(*day_code)
+                expected = load_expected_positions(*day_code)
+                
+                for crew in parsed.keys():
+                    with self.subTest(crew = crew):
+                        self.assertEqual(parsed[crew], expected[crew])
+    
+    
+    def test__positions__smoke(self) -> None:
+        """Positions from other historical events should be parsed without error."""
+        
+        events = [
+            # At time of writing, only one start order is available
+            (TORPIDS, 2022, 134),
+        ]
+        
+        for series, year, num_crews in events:
+            for day_number in range(1, 6):
+                with self.subTest([series, year, day_number]):
+                    
+                    positions = anu_dat.get_positions(series, year, day_number)
+                    self.assertEqual(len(positions.keys()), num_crews)
+    
+    
+    def test__start_orders__torpids_2022(self) -> None:
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                start_order_men = anu_dat.load_start_order_by_gender(TORPIDS, 2022, MEN, day)
+                start_order_women = anu_dat.load_start_order_by_gender(TORPIDS, 2022, WOMEN, day)
+                
+                ranks = {MEN: 0, WOMEN: 0}
+                parsed: PositionMap = {}
+                for division in start_order_men + start_order_women:
+                    for div_crew, _ in division['crews']:
+                        ranks[div_crew[1]] += 1
+                        parsed[(*div_crew[0:3],)] = (ranks[div_crew[1]], True)
+                
+                expected = load_expected_positions(TORPIDS, 2022, day)
+                
+                for crew in parsed.keys():
+                    with self.subTest(crew = crew):
+                        self.assertEqual(parsed[crew], expected[crew])
+    
+    
+    def test__start_orders__smoke(self) -> None:
+        """Positions from other historical events should be parsed without error."""
+        
+        events = [
+            # At time of writing, only one start order is available
+            (TORPIDS, 2022, 134),
+        ]
+        
+        for series, year, num_crews in events:
+            for day in range(1, 6):
+                
+                with self.subTest([series, year, MEN, day]):
+                    anu_dat.load_start_order_by_gender(series, year, MEN, day)
+                
+                with self.subTest([series, year, WOMEN, day]):
+                    anu_dat.load_start_order_by_gender(series, year, WOMEN, day)
 
 
 class Test__OURCs(TestCase):

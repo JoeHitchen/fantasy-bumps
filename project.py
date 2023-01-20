@@ -7,7 +7,7 @@ if not args:
 commands = {
     'test': ['python manage.py test --pattern=*tests.py', 'fantasy core'],
     'test:ff': ['python manage.py test --pattern=*tests.py --fastfail', 'fantasy core'],
-    'test:external': ['python -m unittest', 'parsing.tests'],
+    'test:external': ['python -m unittest', 'integrations.tests'],
     'type': ['mypy'],
     'lint': ['flake8'],
 }

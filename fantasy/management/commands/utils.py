@@ -29,7 +29,7 @@ def load_crew_rankings(source_function, day):
         models.Position(
             day = day,
             crew = crew,
-            rank = ranking[crew_id],
+            rank = ranking[crew_id][0],
         )
         for crew_id, crew in create_crew_tuple_map(ranking.keys()).items()
     ])

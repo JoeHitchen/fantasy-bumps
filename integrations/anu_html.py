@@ -6,17 +6,13 @@ from bs4 import BeautifulSoup
 import requests
 
 from .types import PositionMap
-from .common import club_parser, TORPIDS, series_text_map, MEN, WOMEN
+from .common import roman_parser, club_parser, TORPIDS, series_text_map, MEN, WOMEN
 
 logger = logging.getLogger(__name__)
 BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
 
 Bungline = Tuple[int, str, int]
 Division = Tuple[str, int, List[Bungline]]
-
-
-def _roman_parser(numerals: str) -> int:
-    return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}[numerals]
 
 
 def _parse_division(table: str) -> Division:
@@ -29,7 +25,7 @@ def _parse_division(table: str) -> Division:
     assert division_match
     
     gender = division_match.group('gender')[0]
-    division = _roman_parser(division_match.group('num'))
+    division = roman_parser(division_match.group('num'))
     
     start_order = []
     for row in rows[2:]:
@@ -58,7 +54,7 @@ def _convert_divisions_to_ranking(divisions: List[Division], gender: str) -> Pos
     for (_, _, start_order) in gendered_divisions:
         
         for bungline, club, rank in start_order:
-            crews[(club, gender, rank)] = prev_lowest_bungline + bungline
+            crews[(club, gender, rank)] = (prev_lowest_bungline + bungline, True)
         
         prev_lowest_bungline += bungline
     
