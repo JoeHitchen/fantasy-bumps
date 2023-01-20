@@ -734,11 +734,11 @@ class Test__Live_Bumps(TestCase):
         
         start_order_mock.return_value = [
             {
-                'race_time': (self.now - timedelta(minutes = 15)).time(),
+                'race_time': (self.now - timedelta(minutes = 2)).time(),
                 'crews': [((Clubs.HERT, Genders.WOMEN, 1), None)],
             },
             {
-                'race_time': (self.now + timedelta(minutes = 15)).time(),
+                'race_time': (self.now + timedelta(minutes = 2)).time(),
                 'crews': [((Clubs.LADY, Genders.WOMEN, 1), None)],
             },
         ]
