@@ -5,7 +5,7 @@ import re
 import requests
 
 from .types import PositionMap, Division, StartOrder
-from .common import TORPIDS, MEN, WOMEN, roman_parser, club_parser
+from .common import TORPIDS, series_text_map, MEN, WOMEN, gender_map, roman_parser, club_parser
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +67,10 @@ def load_start_order_by_gender(
     day_number: int,
 ) -> StartOrder:
     """Retrieves the start order for a given race day and gender from Anu's data files."""
-    logger.info('Retrieving results from Anu...\n  Options: {}, {}, {}, & {} '.format(
-        series,
+    logger.info("Retrieving {}'s start order for {} {} (day {}) from Anu .dat".format(
+        gender_map[gender].lower(),
+        series_text_map[series],
         year,
-        gender,
         day_number,
     ))
     
@@ -132,6 +132,14 @@ def load_start_order_by_gender(
         
         divisions.append(division)
     
+    logger.info("Retrieved {} {}'s divisions and {} crews for {} {} (day {}) from Anu .dat".format(
+        len(divisions),
+        gender_map[gender].lower(),
+        sum(len(division['crews']) for division in divisions),
+        series_text_map[series],
+        year,
+        day_number,
+    ))
     return divisions
 
 

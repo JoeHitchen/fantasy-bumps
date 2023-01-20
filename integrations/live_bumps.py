@@ -136,8 +136,9 @@ def write_positions(
     positions_by_day: List[PositionMap],
 ) -> None:
     """Updates Live Bumps with the rankings for all crews."""
-    logging.info('Updating LiveBumps results for {} {}...'.format(series, year))
+    logger.info('Updating Live Bumps results for {} {}'.format(series_text_map[series], year))
     
+    error_count = 0
     for crew in positions_by_day[0].keys():
         try:
             
@@ -161,12 +162,20 @@ def write_positions(
                 response.raise_for_status()
             
         except Exception:
-            logger.error('Error during LiveBumps update for {} {}{}\n  {}'.format(
+            error_count += 1
+            logger.error('Error during Live Bumps update for {} {}{}\n  {}'.format(
                 crew[0].upper(),
                 crew[1],
                 crew[2],
                 '\n  '.join(traceback.format_exc().split('\n')),
             ))
+    
+    logger.info('Updated {} results on Live Bumps for {} {} ({} errors)'.format(
+        len(positions_by_day[0].keys()) - error_count,
+        series_text_map[series],
+        year,
+        error_count,
+    ))
 
 
 def wipe_positions(series: str, year: int) -> None:

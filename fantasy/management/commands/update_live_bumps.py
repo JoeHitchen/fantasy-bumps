@@ -1,4 +1,5 @@
 from datetime import timedelta
+import logging
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -7,6 +8,9 @@ from integrations import anu_dat, live_bumps
 
 from ...constants import Series, Genders
 from ... import models
+
+logging.basicConfig(level = logging.INFO)
+logger = logging.getLogger('fantasy.live_pipeline')
 
 series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
@@ -36,10 +40,12 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         """Loads crew positions from Anu's data files and pushes them to Live Bumps."""
         
-        event = models.Event.objects.get(
-            series = series_reverser[kwargs['series']],
-            year = kwargs['year'],
-        )
+        series = Series(series_reverser[kwargs['series']])
+        year = kwargs['year']
+        gender = Genders(gender_reverser[kwargs['gender']])
+        logger.info('Updating Live Bumps for {} {} ({})'.format(series.label, year, gender.label))
+        
+        event = models.Event.objects.get(series = series, year = year)
         active_days = event.days.filter(date__lte = timezone.now() + timedelta(1))
         if active_days.count() < 2:
             return
@@ -50,7 +56,7 @@ class Command(BaseCommand):
             positions_by_day.append(anu_dat.get_positions_by_gender(
                 event.series,
                 event.year,
-                gender_reverser[kwargs['gender']],
+                gender,
                 day_number,
             ))
         
@@ -61,7 +67,7 @@ class Command(BaseCommand):
             start_order = anu_dat.load_start_order_by_gender(
                 event.series,
                 event.year,
-                gender_reverser[kwargs['gender']],
+                gender,
                 active_days.count() - 1,
             )
             unraced_crews = [
@@ -72,4 +78,5 @@ class Command(BaseCommand):
                 del positions_by_day[-1][crew]
         
         live_bumps.write_positions(event.series, event.year, positions_by_day)
+        logger.info('Updated Live Bumps for {} {} ({})'.format(series.label, year, gender.label))
 
