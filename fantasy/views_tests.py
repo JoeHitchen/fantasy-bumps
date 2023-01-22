@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.contrib.auth import models as auth
 from django.urls import reverse
 
-from common.testing import MessagesTestMixin
+from core.tests import MessagesTestMixin
 
 from .constants import Series, Genders, GENDERS_OVERALL, money
 from . import models

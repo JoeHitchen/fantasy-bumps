@@ -1,10 +1,28 @@
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib import auth
-
-from common.testing import MessagesTestMixin
+from django.contrib import auth, messages
 
 from . import forms
+
+
+class MessagesTestMixin():
+    
+    levels_matrix = {10: 'debug', 20: 'info', 25: 'success', 30: 'warning', 40: 'error'}
+        
+    @classmethod
+    def message_tuple(cls, msg):
+        """Converts a message object into a tuple for easy comparison."""
+        return (cls.levels_matrix[msg.level], msg.message)
+    
+    
+    def assertMessages(self, response, expected):
+        
+        sent = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(sent), len(expected))
+        
+        for i, msg in enumerate(expected):
+            with self.subTest(index = i):
+                self.assertEqual(self.message_tuple(sent[i]), msg)
 
 
 class Test__URLs(TestCase):
