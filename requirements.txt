@@ -5,4 +5,4 @@ requests
 beautifulsoup4
 
 # Task processing
-django-q
+django-q2
