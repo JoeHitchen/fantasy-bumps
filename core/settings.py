@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'fantasy',
+    'django_q',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +74,15 @@ DATABASES = {
     },
 }
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+
+# Task workers
+
+Q_CLUSTER = {
+    'orm': 'default',
+    'timeout': 45,
+    'catch_up': False,
+}
 
 
 # Email
