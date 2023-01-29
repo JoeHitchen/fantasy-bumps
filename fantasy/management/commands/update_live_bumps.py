@@ -1,8 +1,11 @@
 from datetime import timedelta
+from typing import TypedDict
+from argparse import ArgumentParser
 import logging
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from typing_extensions import Unpack
 
 from integrations import anu_dat, live_bumps
 
@@ -16,10 +19,16 @@ series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
 
 
+class UpdateArgs(TypedDict):
+    series: str
+    year: int
+    gender: str
+
+
 class Command(BaseCommand):
     help = 'Updates the results on Live Bumps for one gender.'
     
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             'series',
             choices = series_reverser.keys(),
@@ -37,7 +46,7 @@ class Command(BaseCommand):
         )
     
     
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs: Unpack[UpdateArgs]) -> None:
         """Loads crew positions from Anu's data files and pushes them to Live Bumps."""
         
         series = Series(series_reverser[kwargs['series']])
@@ -46,8 +55,8 @@ class Command(BaseCommand):
         logger.info('Updating Live Bumps for {} {} ({})'.format(series.label, year, gender.label))
         
         event = models.Event.objects.get(series = series, year = year)
-        active_days = event.days.filter(date__lte = timezone.now() + timedelta(1))
-        if active_days.count() < 2:
+        active_days = list(event.days.filter(date__lte = timezone.now() + timedelta(1)))
+        if len(active_days) < 2:
             return
         
         # Load positions
@@ -62,13 +71,13 @@ class Command(BaseCommand):
         
         # Prune unraced crews
         now = timezone.now()
-        if active_days.last().date > now.date():
+        if active_days[-1].date > now.date():
             
             start_order = anu_dat.load_start_order_by_gender(
                 event.series,
                 event.year,
                 gender,
-                active_days.count() - 1,
+                len(active_days) - 1,
             )
             unraced_crews = [
                 crew for division in start_order for crew, _ in division['crews']

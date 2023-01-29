@@ -1,5 +1,13 @@
+from typing import TypedDict
+from argparse import ArgumentParser
+
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
+from typing_extensions import Unpack
+
+
+class DumpDBArgs(TypedDict):
+    filename: str
 
 
 class Command(BaseCommand):
@@ -16,14 +24,14 @@ class Command(BaseCommand):
         '--skip-checks',
     ]
     
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             'filename',
             help = 'The filename for the generated data. `.json` is added if missing.',
         )
     
     
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs: Unpack[DumpDBArgs]) -> None:
         
         filename = kwargs['filename']
         if len(filename.split('.')) == 1 or not filename.split('.')[-1] == 'json':

@@ -1,4 +1,9 @@
 mypy
+django-stubs
 types-pytz
 types-requests
 types-beautifulsoup4
+
+# Project Installs
+pytz
+django-q2

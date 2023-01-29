@@ -1,8 +1,11 @@
 from datetime import date, time, timedelta
+from typing import Tuple, Optional, TypedDict
+from argparse import ArgumentParser
 import logging
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from typing_extensions import Unpack, NotRequired
 
 from ... import models
 from ...constants import Locations, Series as EventSeries
@@ -15,10 +18,18 @@ logger = logging.getLogger('fantasy.game_start')
 series_reverser = {series.label.lower(): series for series in EventSeries}
 
 
+class StartArgs(TypedDict):
+    series: str
+    date: Optional[date]
+    year: Optional[int]
+    source: NotRequired[str]
+    crew_lists: NotRequired[str]
+
+
 class Command(BaseCommand):
     help = 'Creates a new event to play FantasyBumps against.'
     
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         
         parser.add_argument(
             'series',
@@ -61,7 +72,7 @@ class Command(BaseCommand):
         )
     
     
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs: Unpack[StartArgs]) -> None:
         
         # Parse series and date/year inputs
         series = series_reverser[kwargs['series']]
@@ -76,10 +87,13 @@ class Command(BaseCommand):
         ))
         
         # Parse data source inputs
-        event_source = parsers.get_validated_event_source(series_location, kwargs.get('source'))
+        event_source = parsers.get_validated_event_source(
+            series_location,
+            kwargs.get('source', ''),
+        )
         crew_list_source = parsers.get_validated_crew_list_source(
             series_location,
-            kwargs.get('crew_lists'),
+            kwargs.get('crew_lists', ''),
         )
         logger.info('Using `{}` as the event source and `{}` for crew lists'.format(
             event_source['source'],
@@ -97,7 +111,11 @@ class Command(BaseCommand):
         ))
 
 
-def create_event(series, year, start_date):
+def create_event(
+    series: EventSeries,
+    year: int,
+    start_date: date,
+) -> Tuple[models.Event, models.Day]:
     
     main_race_time = time(12, 00)
     saturday_race_time = main_race_time
@@ -158,7 +176,12 @@ def create_event(series, year, start_date):
     return event, first_day
 
 
-def create_days(event, start_date, main_race_time, saturday_race_time):
+def create_days(
+    event: models.Event,
+    start_date: date,
+    main_race_time: time,
+    saturday_race_time: time,
+) -> models.Day:
     
     weds = models.Day(
         event = event,

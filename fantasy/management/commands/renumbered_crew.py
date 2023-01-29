@@ -1,20 +1,34 @@
+from typing import TypedDict
+from argparse import ArgumentParser
 import logging
 
 from django.core.management.base import BaseCommand
+from typing_extensions import Unpack, NotRequired
+
+from integrations import types as integrations
 
 from ... import models
-from ...constants import Locations, Clubs, Genders
+from ...constants import Locations, Series, Clubs, Genders
 from . import parsers
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.renumbered')
 
 
+class RenumberedArgs(TypedDict):
+    event_tag: str
+    club: str
+    gender: str
+    new_rank: int
+    old_rank: int
+    source: NotRequired[str]
+
+
 class Command(BaseCommand):
     help = 'Corrects the crew list for a renumbered crew.'
         
     
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         
         parser.add_argument(
             'event_tag',
@@ -49,7 +63,12 @@ class Command(BaseCommand):
         )
     
     @staticmethod
-    def perform_crew_list_update(source_function, event, target_crew, source_crew_tuple):
+    def perform_crew_list_update(
+        source_function: integrations.CrewListFcn,
+        event: models.Event,
+        target_crew: models.Crew,
+        source_crew_tuple: models.Crew.Tuple,
+    ) -> None:
         """Retrieves the source crew's crew list and stores it for the target crew."""
         
         crew_lists = source_function(event.series, event.year)
@@ -71,7 +90,7 @@ class Command(BaseCommand):
         models.Athlete.objects.bulk_create(athletes)
     
     
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs: Unpack[RenumberedArgs]) -> None:
         """Validates and converts the inputs for the `perform` function."""
         
         event = models.Event.objects.get(tag = kwargs['event_tag'])
@@ -92,8 +111,8 @@ class Command(BaseCommand):
         ))
         
         crew_list_fcn = parsers.get_validated_crew_list_source(
-            parsers.series_location_map[event.series],
-            kwargs.get('source'),
+            parsers.series_location_map[Series(event.series)],
+            kwargs.get('source', ''),
         )['function']
         
         self.perform_crew_list_update(crew_list_fcn, event, target_crew, source_crew_tpl)

@@ -1,7 +1,14 @@
+from typing import Dict, Iterable
+
+from integrations import types
+
 from ... import models
 
 
-def create_crew_tuple_map(crews_for_map):
+CrewTupleMap = Dict[models.Crew.Tuple, models.Crew.Tuple]
+
+
+def create_crew_tuple_map(crews_for_map: Iterable[models.Crew.Tuple]) -> CrewTupleMap:
     """Creates a mapping from crew tuples to crew objects for a given set of crews."""
     
     crews_in_db = [crew.as_tuple() for crew in models.Crew.objects.all()]
@@ -19,7 +26,7 @@ def create_crew_tuple_map(crews_for_map):
     }
 
 
-def load_crew_rankings(source_function, day):
+def load_crew_rankings(source_function: types.PositionFcn, day: models.Day) -> None:
     """Loads crew rankings from the source provided for a given day."""
 
     day_number = day.event.days.filter(date__lte = day.date).count()  # One-indexed
@@ -35,7 +42,7 @@ def load_crew_rankings(source_function, day):
     ])
 
 
-def load_crew_lists(source_function, event):
+def load_crew_lists(source_function: types.CrewListFcn, event: models.Event) -> None:
     """Loads crew lists from the source provided for the given event, and optionally crew."""
     
     crew_lists = source_function(event.series, event.year)
