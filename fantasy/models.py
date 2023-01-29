@@ -237,7 +237,7 @@ class Crew(models.Model):
         return (self.club, self.gender, self.rank)
     
     
-    def value(self, day):
+    def value(self, day) -> int:
         """The price of the crew for a given day."""
         
         try:
@@ -304,7 +304,7 @@ class Team(models.Model):
         return self.user.username
     
     
-    def get_crew(self, day, gender):
+    def get_crew(self, day: Day, gender: str) -> models.QuerySet['Purchase']:
         """Return all purchases for a day, and gender."""
         return self.purchases.filter(day = day, crew__gender = gender)
 

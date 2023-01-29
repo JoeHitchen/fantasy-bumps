@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.db import transaction
 from django.db.models import F
 from django.core.exceptions import MultipleObjectsReturned
@@ -6,7 +8,13 @@ from . import models
 from . import errors
 
 
-def buy(team, day, seat, crew, athlete = None):
+def buy(
+    team: models.Team,
+    day: models.Day,
+    seat: models.Seat,
+    crew: models.Crew,
+    athlete: Optional[models.Athlete] = None,
+) -> None:
     """Transaction-wrapped buy action.
     
     Checks the team has sufficients funds and updates their balance, before creating the purchase.
@@ -26,7 +34,13 @@ def buy(team, day, seat, crew, athlete = None):
         _buy_body(team, day, seat, crew, athlete)
 
 
-def _buy_body(team, day, seat, crew, athlete = None):
+def _buy_body(
+    team: models.Team,
+    day: models.Day,
+    seat: models.Seat,
+    crew: models.Crew,
+    athlete: Optional[models.Athlete] = None,
+) -> None:
     """INTERNAL METHOD allowing non-transaction access to buy action for query counting."""
     
     budgets = models.GameEntry.objects.select_for_update().get_or_create(
@@ -66,7 +80,7 @@ def _buy_body(team, day, seat, crew, athlete = None):
     team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
 
 
-def sell(purchase):
+def sell(purchase: models.Purchase) -> None:
     """Transaction-wrapped sell action.
     
     Adds the sale value to the purchased crew's gender's balance, and deletes the purchase object.
@@ -85,7 +99,7 @@ def sell(purchase):
         _sell_body(purchase)
 
 
-def _sell_body(purchase):
+def _sell_body(purchase: models.Purchase) -> None:
     """INTERNAL METHOD allowing non-transaction access to sell action for query counting."""
     
     balance_field = {
@@ -105,13 +119,17 @@ def _sell_body(purchase):
     try:
         deleted = purchase.delete()
     except AssertionError:
-        deleted = [0]
+        deleted = (0, {})
     
     if deleted[0] != 1:
         raise purchase.DoesNotExist
 
 
-def switch(purchase, athlete_id, seat_id):
+def switch(
+    purchase: models.Purchase,
+    seat: models.Seat,
+    athlete: Optional[models.Athlete],
+) -> models.Purchase:
     """Transaction-wrapped switch action.
     
     Changes the purchase's athlete to another member of the crew (or None for '0') and swaps the
@@ -129,19 +147,22 @@ def switch(purchase, athlete_id, seat_id):
     """
     
     with transaction.atomic():
-        return _switch_body(purchase, athlete_id, seat_id)
+        return _switch_body(purchase, seat, athlete)
 
 
-def _switch_body(purchase, athlete_id, seat_id):
+def _switch_body(
+    purchase: models.Purchase,
+    seat: models.Seat,
+    athlete: Optional[models.Athlete],
+) -> models.Purchase:
     """INTERNAL METHOD allowing non-transaction access to switch action for query counting."""
     
     # Athlete switching
-    purchase.athlete = models.Athlete.objects.get(
-        event = purchase.day.event,
-        crew = purchase.crew,
-        seat__cox = False,
-        id = athlete_id,
-    ) if int(athlete_id) else None
+    if athlete and purchase.athlete and not athlete.crew_id == purchase.athlete.crew_id:
+        raise errors.WrongCrewError
+    
+    if athlete and athlete.seat.cox:
+        raise errors.ReverseNinthSeatError
     
     other_purchases = (
         purchase.team
@@ -150,12 +171,14 @@ def _switch_body(purchase, athlete_id, seat_id):
         .select_related('athlete')
         .select_for_update()
     )
-    if purchase.athlete and any(p.athlete == purchase.athlete for p in other_purchases):
+    if athlete and any(p.athlete == athlete for p in other_purchases):
         raise errors.DuplicateAthleteError
+    
+    purchase.athlete = athlete
     
     # Seat switching
     old_seat = purchase.seat
-    purchase.seat = models.Seat.objects.get(id = seat_id)
+    purchase.seat = seat
     
     if purchase.seat.cox:
         raise errors.NinthSeatError

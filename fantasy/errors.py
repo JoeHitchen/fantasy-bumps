@@ -20,6 +20,16 @@ class NinthSeatError(ValueError):
     message = 'Cannot put a rower in a coxing seat'
 
 
+class ReverseNinthSeatError(ValueError):
+    """Raised if a cox is found rowing or that action is being attempted."""
+    message = 'Cannot allow coxes to row'
+
+
+class WrongCrewError(ValueError):
+    """Raised if an athlete is found in the wrong crew or that action is being attempted."""
+    message = 'Athletes must stay with their crew'
+
+
 class InsufficientFundsError(ValueError):
     """Raised if a team does not have sufficient funds for a purchase."""
     message = 'Insufficient funds for this purchase.'

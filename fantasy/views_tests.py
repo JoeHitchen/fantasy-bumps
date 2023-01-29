@@ -2153,9 +2153,11 @@ class Test__Switch(TestCase, MessagesTestMixin):
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
             (1) SELECT purchase, crew, day, event, and seat
-            (1) SELECT purchase.athlete  (Skipped by above, because nullable)
+            (1) SELECT new seat
+            (1) SELECT new athlete
             (2) Transaction overhead
-            (5) Main action
+            (1) SELECT purchase.athlete  (Skipped by above, because nullable)
+            (3) Main action
         """
         
         self.client.login(username = 'DevTeam', password = 'password')

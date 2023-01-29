@@ -569,17 +569,21 @@ class Switch(FantasyBaseMixin, TemplateView):
         Requires 12 queries.
         """
         
-        old_athlete_id = self.purchase.athlete.id if self.purchase.athlete else 0
-        
         # Perform action
         try:
-            updated_purchase = transactions.switch(
-                self.purchase,
-                request.POST.get('athlete', old_athlete_id),
-                request.POST.get('seat', '0'),
-            )
+            seat = models.Seat.objects.get(id = request.POST.get('seat'))
+            if 'athlete' in request.POST:
+                athlete = (
+                    models.Athlete.objects
+                    .filter(id = request.POST.get('athlete'))
+                    .select_related('seat').first()
+                )
+            else:
+                athlete = self.purchase.athlete
+            
+            updated_purchase = transactions.switch(self.purchase, seat, athlete)
         
-        except models.Athlete.DoesNotExist:
+        except (models.Athlete.DoesNotExist, errors.ReverseNinthSeatError, errors.WrongCrewError):
             messages.warning(request, 'Must pick a rower from the purchased crew.')
         
         except errors.DuplicateAthleteError:
