@@ -1,5 +1,5 @@
 from unittest.mock import patch, Mock, call
-from typing import Dict, Optional, TypeVar
+from typing import Dict
 from datetime import date, time, timedelta
 import logging
 
@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from integrations import live_bumps, anu_html, camfm, ourcs
+from core.tests import exists
 
 from ... import models
 from ...constants import Series, Clubs, Genders
@@ -18,14 +19,6 @@ from .wipe_live_bumps import Command as WipeLiveBumps
 from . import utils, parsers
 
 logging.disable(logging.CRITICAL)
-
-
-Obj = TypeVar('Obj')
-
-
-def exists(obj: Optional[Obj]) -> Obj:
-    assert obj
-    return obj
 
 
 def prepare_event(series: Series, start_date: date) -> models.Event:

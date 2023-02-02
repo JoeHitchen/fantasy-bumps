@@ -1,20 +1,12 @@
-from typing import Optional, TypeVar
-
 from django.test import TestCase, tag
 from django.contrib.auth import models as auth
+
+from core.tests import exists
 
 from . import models
 from . import errors
 from .constants import Genders, money
 from .transactions import buy, sell, switch, _buy_body, _sell_body, _switch_body
-
-
-ModelObject = TypeVar('ModelObject')
-
-
-def exists(obj: Optional[ModelObject]) -> ModelObject:
-    assert obj
-    return obj
 
 
 class Test__Buy(TestCase):

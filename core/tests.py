@@ -1,8 +1,18 @@
+from typing import Optional, TypeVar
+
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib import auth, messages
 
 from . import forms
+
+
+Obj = TypeVar('Obj')
+
+
+def exists(obj: Optional[Obj]) -> Obj:
+    assert obj
+    return obj
 
 
 class MessagesTestMixin():
