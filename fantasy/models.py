@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
+from typing import Tuple
 
 from django.db import models
 from django.contrib.auth import models as auth
@@ -33,7 +34,7 @@ class Event(models.Model):
     
     
     @cached_property
-    def first_day(self):
+    def first_day(self) -> 'Day':
         if hasattr(self, '_days'):
             return self._days[0]
         return self.days.first()
@@ -213,6 +214,7 @@ class Division:
 
 class Crew(models.Model):
     """Describes a crew (e.g. New College W1)"""
+    Tuple = Tuple[Clubs, Genders, int]
     
     club = models.CharField(
         max_length = 4,
@@ -230,12 +232,12 @@ class Crew(models.Model):
         return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
     
     
-    def as_tuple(self):
+    def as_tuple(self) -> 'Crew.Tuple':
         """Describes the crew in the tuple-form needed for parser interaction."""
         return (self.club, self.gender, self.rank)
     
     
-    def value(self, day):
+    def value(self, day) -> int:
         """The price of the crew for a given day."""
         
         try:
@@ -302,7 +304,7 @@ class Team(models.Model):
         return self.user.username
     
     
-    def get_crew(self, day, gender):
+    def get_crew(self, day: Day, gender: str) -> models.QuerySet['Purchase']:
         """Return all purchases for a day, and gender."""
         return self.purchases.filter(day = day, crew__gender = gender)
 

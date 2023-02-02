@@ -1,23 +1,32 @@
 from datetime import timedelta
+from typing import Dict, TypedDict
+from argparse import ArgumentParser
 import logging
 
 from django.core.management.base import BaseCommand
 from django.db.models import F
 from django.utils import timezone
+from typing_extensions import Unpack, NotRequired
+
+from integrations import types as integrations
 
 from ... import models
 from ... import game_tools as tools
-from ...constants import Locations
+from ...constants import Locations, Series
 from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_advance')
 
 
+class AdvanceArgs(TypedDict):
+    oxf_source: NotRequired[str]
+
+
 class Command(BaseCommand):
     """Advance the game state by one (optionally forced) day."""
     
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             '--forced',
             action = 'store_true',
@@ -34,7 +43,10 @@ class Command(BaseCommand):
     
     
     @staticmethod
-    def perform_game_advance(source_function, event):
+    def perform_game_advance(
+        source_function: integrations.PositionFcn,
+        event: models.Event,
+    ) -> None:
         """Loads any new results and updates the game state accordingly."""
         
         # Get relevant days
@@ -61,21 +73,21 @@ class Command(BaseCommand):
         tools.evaluate_all_investments(old_day)
     
     
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs: Unpack[AdvanceArgs]) -> None:
         """Identifies the sources and events for the `perform` function to act on.
         
         Optionally shifts all event dates to simulate a day passing.
         """
         
         forced = bool(kwargs.get('forced', False))
-        oxford_source = kwargs.get('oxf_source')
+        oxford_source = kwargs.get('oxf_source', '')
         
-        location_source_map = {
+        location_source_map: Dict[Locations, parsers.PositionSource] = {
             Locations.OXFORD: parsers.get_validated_event_source(Locations.OXFORD, oxford_source),
-            Locations.CAMBRIDGE: parsers.get_validated_event_source(Locations.CAMBRIDGE, None),
-            Locations.DEMO: parsers.get_validated_event_source(Locations.DEMO, None),
+            Locations.CAMBRIDGE: parsers.get_validated_event_source(Locations.CAMBRIDGE, ''),
+            Locations.DEMO: parsers.get_validated_event_source(Locations.DEMO, ''),
         }
-        series_source_map = {
+        series_source_map: Dict[Series, parsers.PositionSource] = {
             series: location_source_map[location]
             for series, location in parsers.series_location_map.items()
         }
@@ -92,6 +104,6 @@ class Command(BaseCommand):
             if forced:
                 event.days.update(date = F('date') - timedelta(1))
             
-            self.perform_game_advance(series_source_map[event.series]['function'], event)
+            self.perform_game_advance(series_source_map[Series(event.series)]['function'], event)
             logger.info(f'Advanced {event}')
 

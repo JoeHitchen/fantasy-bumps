@@ -10,9 +10,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'ThisMustBeReplaced')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG').lower() == 'true' if 'DJANGO_DEBUG' in os.environ else False
+DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_HOSTS').split(',') if 'DJANGO_HOSTS' in os.environ else []
+ALLOWED_HOSTS = os.environ.get('DJANGO_HOSTS', '').split(',')
 
 
 # Application definition
@@ -96,7 +96,6 @@ DEFAULT_FROM_EMAIL = 'no-reply@mail.fantasybumps.org.uk'
 SERVER_EMAIL = 'server-notice@mail.fantasybumps.org.uk'
 EMAIL_SUBJECT_PREFIX = '[FantasyBumps] '
 ADMINS = [('Joe Hitchen', 'hitchenjoe+sysadmin@gmail.com')]
-IGNORABLE_404_URLS = []
 
 
 # Password validation

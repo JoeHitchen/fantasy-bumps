@@ -5,7 +5,7 @@ from . import models
 from . import utils
 
 
-def roll_over_purchases(day):
+def roll_over_purchases(day: models.Day) -> None:
     """Creates a copy of all purchase records for today on the next day.
     
     MAX four queries. Recommend fetching day with select_related.
@@ -23,7 +23,7 @@ def roll_over_purchases(day):
     ])
 
 
-def evaluate_all_investments(day):
+def evaluate_all_investments(day: models.Day) -> None:
     """Update entered teams budgets for changes in crew value from places gained/lost on day."""
     
     def purchases_prefetch(day, gender, target):
