@@ -18,7 +18,7 @@ def schedule_live_bumps_updates(event):
     
     now = timezone.now()
     last_update = event.last_racing_day.first_race + timedelta(hours = 12)
-    repeats = maths.ceil((last_update - now).seconds / 60)
+    repeats = maths.ceil((last_update - now).total_seconds() / 60)
     
     Schedule.objects.update_or_create(
         func = 'fantasy.management.tasks.update_live_bumps',
