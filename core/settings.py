@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'fantasy',
-    'django_q',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -78,11 +78,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Task workers
 
-Q_CLUSTER = {
-    'orm': 'default',
-    'timeout': 45,
-    'catch_up': False,
-}
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_WORKER_LOG_FORMAT = '%(processName)-17s %(levelname)-8s %(message)s'
 
 
 # Email

@@ -1,8 +1,8 @@
 from datetime import timedelta
-import math as maths
+import json
 
-from django.utils import timezone
-from django_q.tasks import Schedule
+from celery import shared_task
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
 from fantasy import models
 from fantasy.constants import Series, Genders
@@ -12,6 +12,7 @@ series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
 
 
+@shared_task
 def update_live_bumps(**kwargs):
     """A light wrapper that calls the Update Live Bumps management command."""
     
@@ -27,26 +28,23 @@ def update_live_bumps(**kwargs):
 def schedule_live_bumps_updates(event):
     """Schedules a minutely update of Live Bumps until after the expected end of racing."""
     
-    now = timezone.now()
-    last_update = event.last_racing_day.first_race + timedelta(hours = 12)
-    repeats = maths.ceil((last_update - now).total_seconds() / 60)
+    every_minute, _ = IntervalSchedule.objects.get_or_create(
+        period = IntervalSchedule.MINUTES,
+        every = 1,
+    )
     
-    Schedule.objects.update_or_create(
-        func = 'fantasy.management.tasks.update_live_bumps',
-        kwargs = {
-            'series': event.get_series_display().lower(),
-            'year': event.year,
-            'gender': Genders.MEN.label.lower(),
-        },
-        defaults = {'schedule_type': Schedule.MINUTES, 'repeats': repeats},
-    )
-    Schedule.objects.update_or_create(
-        func = 'fantasy.management.tasks.update_live_bumps',
-        kwargs = {
-            'series': event.get_series_display().lower(),
-            'year': event.year,
-            'gender': Genders.WOMEN.label.lower(),
-        },
-        defaults = {'schedule_type': Schedule.MINUTES, 'repeats': repeats},
-    )
+    for gender in Genders:
+        PeriodicTask.objects.update_or_create(
+            task = 'fantasy.management.tasks.update_live_bumps',
+            kwargs = json.dumps({
+                'series': event.get_series_display().lower(),
+                'year': event.year,
+                'gender': gender.label.lower(),
+            }),
+            defaults = {
+                'name': 'Live Bumps // {} {}'.format(event, gender.label),
+                'interval': every_minute,
+                'expires': event.last_racing_day.first_race + timedelta(hours = 12),
+            },
+        )
 
