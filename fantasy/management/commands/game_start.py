@@ -130,10 +130,15 @@ def create_event(
             'mens_division_sizes': [9, 9, 9, 9, 9, 9, 10],
             'womens_division_sizes': [9, 9, 9, 9, 9, 9, 10],
         }
-    elif series == EventSeries.TORPIDS:
+    elif series == EventSeries.TORPIDS and year < 2021:
         division_structure = {
             'mens_division_sizes': [12, 12, 12, 12, 12, 13],
             'womens_division_sizes': [12, 12, 12, 12, 13],
+        }
+    elif series == EventSeries.TORPIDS:
+        division_structure = {
+            'mens_division_sizes': [12, 12, 12, 12, 12, 13],
+            'womens_division_sizes': [12, 12, 12, 12, 12, 13],
         }
     elif series == EventSeries.EIGHTS and year == 2022:
         main_race_time = time(12, 15)
@@ -142,11 +147,17 @@ def create_event(
             'mens_division_sizes': [12, 12, 12, 12, 12, 12, 13],
             'womens_division_sizes': [12, 12, 12, 12, 12, 12, 11],
         }
-    elif series == EventSeries.EIGHTS:
+    elif series == EventSeries.EIGHTS and year < 2022:
         saturday_race_time = time(11, 00)
         division_structure = {
             'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
             'womens_division_sizes': [13, 13, 13, 13, 13, 14],
+        }
+    elif series == EventSeries.EIGHTS:
+        saturday_race_time = time(11, 00)
+        division_structure = {
+            'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
+            'womens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
         }
     elif series == EventSeries.MAYS and year == 2022:
         main_race_time = time(13, 45)
