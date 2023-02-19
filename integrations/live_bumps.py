@@ -32,6 +32,9 @@ class CrewSeatData(TypedDict):
     name: str
 
 
+WriteOutcome = Tuple[int, int, int]
+
+
 def _moves_to_positions(crew_data: CrewPosData) -> List[Position]:
     """Converts a set of moves in the Live Bumps format to standardised positions."""
     
@@ -142,7 +145,7 @@ def write_positions(
     series: str,
     year: int,
     positions_by_day: List[PositionMap],
-) -> Tuple[int, int, int]:
+) -> WriteOutcome:
     """Updates Live Bumps with the rankings for all crews."""
     logger.info('Updating Live Bumps results for {} {}'.format(series_text_map[series], year))
     
@@ -204,10 +207,10 @@ def write_positions(
     return len(positions_by_crew), error_count, len(skip_list)
 
 
-def wipe_positions(series: str, year: int) -> None:
+def wipe_positions(series: str, year: int) -> WriteOutcome:
     """A light wrapper to reset the positions for an event."""
     
-    write_positions(series, year, [get_positions(series, year, 1)])
+    return write_positions(series, year, [get_positions(series, year, 1)])
 
 
 def __make_event_creation_structures(

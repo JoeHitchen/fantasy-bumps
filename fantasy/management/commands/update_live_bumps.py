@@ -45,19 +45,13 @@ class Command(BaseCommand):
             help = 'The gender to update',
         )
     
-    
-    def handle(self, **kwargs: Unpack[UpdateArgs]) -> None:
+    @staticmethod
+    def perform_update(event: models.Event, gender: Genders) -> live_bumps.WriteOutcome:
         """Loads crew positions from Anu's data files and pushes them to Live Bumps."""
         
-        series = Series(series_reverser[kwargs['series']])
-        year = kwargs['year']
-        gender = Genders(gender_reverser[kwargs['gender']])
-        logger.info('Updating Live Bumps for {} {} ({})'.format(series.label, year, gender.label))
-        
-        event = models.Event.objects.get(series = series, year = year)
         active_days = list(event.days.filter(date__lte = timezone.now() + timedelta(1)))
         if len(active_days) < 2:
-            return
+            return (0, 0, 0)
         
         # Load positions
         positions_by_day = []
@@ -86,6 +80,18 @@ class Command(BaseCommand):
             for crew in unraced_crews:
                 del positions_by_day[-1][crew]
         
-        live_bumps.write_positions(event.series, event.year, positions_by_day)
+        return live_bumps.write_positions(event.series, event.year, positions_by_day)
+    
+    
+    def handle(self, **kwargs: Unpack[UpdateArgs]) -> None:
+        """A wrapper to parse the inputs for the main `perform_update` routine."""
+        
+        series = series_reverser[kwargs['series']]
+        year = kwargs['year']
+        gender = gender_reverser[kwargs['gender']]
+        logger.info('Updating Live Bumps for {} {} ({})'.format(series.label, year, gender.label))
+        
+        event = models.Event.objects.get(series = series, year = year)
+        self.perform_update(event, gender)
         logger.info('Updated Live Bumps for {} {} ({})'.format(series.label, year, gender.label))
 
