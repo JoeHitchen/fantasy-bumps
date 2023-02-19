@@ -7,5 +7,4 @@ types-beautifulsoup4
 
 # Project Installs
 pytz
-celery
 django-celery-beat
