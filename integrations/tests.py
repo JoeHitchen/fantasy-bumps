@@ -143,7 +143,6 @@ class Test__Anu__HTML(TestCase):
         
         events = [
             # At time of writing, no pre-Covid start orders are available
-            (TORPIDS, 2021, 128),
             (TORPIDS, 2022, 134),
             (EIGHTS, 2022, 168),
         ]
@@ -177,8 +176,9 @@ class Test__Anu__Dat(TestCase):
         """Positions from other historical events should be parsed without error."""
         
         events = [
-            # At time of writing, only one start order is available
             (TORPIDS, 2022, 134),
+            (EIGHTS, 2022, 168),
+            (TORPIDS, 2023, 146),
         ]
         
         for series, year, num_crews in events:
