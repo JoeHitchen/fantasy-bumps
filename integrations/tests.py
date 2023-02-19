@@ -6,7 +6,8 @@ import requests
 
 from . import live_bumps, anu_html, anu_dat, ourcs, camfm
 from .types import PositionMap
-from .common import TORPIDS, EIGHTS, LENTS, MAYS, MEN, WOMEN, boat_code_parser
+from .common import TORPIDS, EIGHTS, LENTS, MAYS, MEN, WOMEN
+from .common import gender_map, boat_code_parser, boat_code_map
 
 
 def load_expected_positions(series: str, year: int, day: int) -> PositionMap:
@@ -86,14 +87,16 @@ class Test__LiveBumps(TestCase):
     
     
     @patch.object(requests, 'post')
-    def test__write_positions(self, post_mock: Mock) -> None:
+    @patch('integrations.live_bumps.get_all_positions')
+    def test__write_positions__updates(self, live_positions_mock: Mock, post_mock: Mock) -> None:
         """Writes all results for Torpids 2022."""
         
         all_positions = [load_expected_positions(TORPIDS, 2022, day) for day in range(1, 6)]
         with open('integrations/expected_results/torpids_2022_live_bumps.json') as file:
             expected_data = json.load(file)
         
-        live_bumps.write_positions(TORPIDS, 2022, all_positions)
+        outcome = live_bumps.write_positions(TORPIDS, 2022, all_positions)
+        self.assertEqual(outcome, (134, 0, 0))
         self.assertEqual(post_mock.call_count, 134)
         
         for club_code, club_data in expected_data.items():
@@ -119,6 +122,57 @@ class Test__LiveBumps(TestCase):
                             ),
                             post_mock.call_args_list,
                         )
+    
+    
+    @patch.object(requests, 'post')
+    @patch('integrations.live_bumps.get_all_positions')
+    def test__write_positions__skips(self, live_positions_mock: Mock, post_mock: Mock) -> None:
+        """Positions which are match the already live positions are not updated."""
+        
+        all_positions = [load_expected_positions(TORPIDS, 2022, day) for day in range(1, 6)]
+        
+        # Exclude four crews
+        crews = [('lady', 'W', 1), ('newc', 'W', 2), ('wadh', 'M', 3), ('wolf', 'W', 4)]
+        live_positions_mock.return_value = {}
+        for day_positions in all_positions:
+            for crew, position in day_positions.items():
+                if crew not in crews:
+                    continue
+                if crew not in live_positions_mock.return_value:
+                    live_positions_mock.return_value[crew] = []
+                live_positions_mock.return_value[crew].append(position)
+        
+        
+        outcome = live_bumps.write_positions(TORPIDS, 2022, all_positions)
+        self.assertEqual(outcome, (130, 0, 4))
+        self.assertEqual(post_mock.call_count, 130)
+        
+        for crew in crews:
+            with self.subTest(crew = crew):
+                
+                crew_positions = [
+                    position
+                    for day_positions in all_positions
+                    for itr_crew, position in day_positions.items()
+                    if itr_crew == crew
+                ]
+                
+                self.assertNotIn(
+                    call(
+                        '{}/bump/torpids/2022'.format(live_bumps.BASE_URL),
+                        headers = {
+                            'Authorization': live_bumps.AUTH_KEY,
+                            'Content-Type': 'application/json',
+                        },
+                        json = {
+                            'club': boat_code_map[crew[0]],
+                            'gender': gender_map[crew[1]].lower(),
+                            'number': crew[2] - 1,
+                            'moves': live_bumps._positions_to_moves(crew_positions)['moves'],
+                        },
+                    ),
+                    post_mock.call_args_list,
+                )
 
 
 class Test__Anu__HTML(TestCase):

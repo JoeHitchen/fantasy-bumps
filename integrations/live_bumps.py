@@ -32,6 +32,9 @@ class CrewSeatData(TypedDict):
     name: str
 
 
+WriteOutcome = Tuple[int, int, int]
+
+
 def _moves_to_positions(crew_data: CrewPosData) -> List[Position]:
     """Converts a set of moves in the Live Bumps format to standardised positions."""
     
@@ -65,6 +68,27 @@ def _parse_crew_list(crew_data: List[CrewSeatData]) -> Dict[int, str]:
     }
 
 
+def get_all_positions(series: str, year: int) -> Dict[Crew, List[Position]]:
+    
+    # Load data
+    response = requests.get(f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}.json')
+    if not response.ok:
+        response.raise_for_status()
+    
+    # Extract crew positions
+    positions = {}
+    for boat_code, club_data in response.json().items():
+        club = boat_code_parser(boat_code)
+        
+        for crew_rank, crew_data in enumerate(club_data['men']):
+            positions[(club, MEN, crew_rank + 1)] = _moves_to_positions(crew_data)
+        
+        for crew_rank, crew_data in enumerate(club_data['women']):
+            positions[(club, WOMEN, crew_rank + 1)] = _moves_to_positions(crew_data)
+    
+    return positions
+
+
 def get_positions(series: str, year: int, day_number: int) -> PositionMap:
     """Generates a crew/position map from the Live Bumps records."""
     
@@ -75,33 +99,20 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
         day_number,
     ))
     
-    # Load data
-    response = requests.get(f'{BASE_URL}/data/{series_text.lower()}_{year}.json')
-    if not response.ok:
-        response.raise_for_status()
-    
-    # Extract crew positions
-    positions = {}
-    for boat_code, club_data in response.json().items():
-        club = boat_code_parser(boat_code)
-        
-        for crew_rank, crew_data in enumerate(club_data['men']):
-            crew_results = _moves_to_positions(crew_data)
-            index = min(day_number, len(crew_results)) - 1
-            positions[(club, MEN, crew_rank + 1)] = crew_results[index]
-        
-        for crew_rank, crew_data in enumerate(club_data['women']):
-            crew_results = _moves_to_positions(crew_data)
-            index = min(day_number, len(crew_results)) - 1
-            positions[(club, WOMEN, crew_rank + 1)] = crew_results[index]
+    day_positions = {}
+    for crew, positions in get_all_positions(series, year).items():
+        try:
+            day_positions[crew] = positions[day_number - 1]
+        except IndexError:
+            day_positions[crew] = positions[-1]
     
     logger.info('Retrieved {} crew positions for {} {} (day {}) from Live Bumps'.format(
-        len(positions),
+        len(day_positions),
         series_text,
         year,
         day_number,
     ))
-    return positions
+    return day_positions
 
 
 def get_crew_lists(series: str, year: int) -> CrewListMap:
@@ -134,24 +145,40 @@ def write_positions(
     series: str,
     year: int,
     positions_by_day: List[PositionMap],
-) -> None:
+) -> WriteOutcome:
     """Updates Live Bumps with the rankings for all crews."""
     logger.info('Updating Live Bumps results for {} {}'.format(series_text_map[series], year))
     
+    # Convert input positions
+    positions_by_crew: Dict[Crew, List[Position]] = {}
+    for day_positions in positions_by_day:
+        for crew, position in day_positions.items():
+            if crew not in positions_by_crew:
+                positions_by_crew[crew] = []
+            positions_by_crew[crew].append(position)
+    
+    
+    # Skip unchanged crews
+    skip_list = []
+    live_positions_by_crew = get_all_positions(series, year)
+    for crew, positions in positions_by_crew.items():
+        if positions == live_positions_by_crew.get(crew):
+            skip_list.append(crew)
+    
+    for skip_crew in skip_list:
+        positions_by_crew.pop(skip_crew)
+    
+    
+    # Write updates
     error_count = 0
-    for crew in positions_by_day[0].keys():
+    for crew in positions_by_crew.keys():
         try:
             
-            crew_positions = [
-                day_positions[crew]
-                for day_positions in positions_by_day
-                if crew in day_positions
-            ]
             payload = {
                 'club': boat_code_map.get(crew[0]),
                 'gender': gender_map[crew[1]].lower(),
                 'number': crew[2] - 1,  # Live Bumps is zero-indexed for crew numbers
-                'moves': _positions_to_moves(crew_positions)['moves'],
+                'moves': _positions_to_moves(positions_by_crew[crew])['moves'],
             }
             response = requests.post(
                 f'{BASE_URL}/bump/{series_text_map[series].lower()}/{year}',
@@ -170,18 +197,20 @@ def write_positions(
                 '\n  '.join(traceback.format_exc().split('\n')),
             ))
     
-    logger.info('Updated {} results on Live Bumps for {} {} ({} errors)'.format(
-        len(positions_by_day[0].keys()) - error_count,
+    logger.info('Updated {} results on Live Bumps for {} {} ({} errors, {} skipped)'.format(
+        len(positions_by_crew) - error_count,
         series_text_map[series],
         year,
         error_count,
+        len(skip_list),
     ))
+    return len(positions_by_crew), error_count, len(skip_list)
 
 
-def wipe_positions(series: str, year: int) -> None:
+def wipe_positions(series: str, year: int) -> WriteOutcome:
     """A light wrapper to reset the positions for an event."""
     
-    write_positions(series, year, [get_positions(series, year, 1)])
+    return write_positions(series, year, [get_positions(series, year, 1)])
 
 
 def __make_event_creation_structures(
