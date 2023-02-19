@@ -47,6 +47,7 @@ def get_crew_lists(series: str, year: int) -> CrewListMap:
             (TORPIDS, 2021): 217,
             (TORPIDS, 2022): 229,
             (EIGHTS, 2022): 230,
+            (TORPIDS, 2023): 239,
         }[(series, year)]
         logger.info(f'Using OURCs event #{event_id} for {series_text} {year}')
     
