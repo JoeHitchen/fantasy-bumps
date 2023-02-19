@@ -198,7 +198,7 @@ def write_positions(
             ))
     
     logger.info('Updated {} results on Live Bumps for {} {} ({} errors, {} skipped)'.format(
-        len(positions_by_day[0].keys()) - error_count,
+        len(positions_by_crew) - error_count,
         series_text_map[series],
         year,
         error_count,
