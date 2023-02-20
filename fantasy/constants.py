@@ -28,6 +28,7 @@ class Genders(models.TextChoices):
 
 class timings:
     MARKET_OPENS = time(18, 30)
+    GAME_ADVANCE = time(18, 15)  # Only used in Rules page
 
 
 class money:

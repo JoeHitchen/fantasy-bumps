@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 
-from .constants import Genders, GENDERS_OVERALL, money
+from .constants import Genders, GENDERS_OVERALL, money, timings
 from . import models
 from . import utils
 from . import transactions
@@ -20,6 +20,7 @@ class FantasyBaseMixin():
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['money'] = money
+        context['timings'] = timings
         
         events = utils.ordered_events()
         if 'event' in context:
