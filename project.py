@@ -10,7 +10,6 @@ commands = {
     'test:external': ['python -m unittest', 'integrations.tests'],
     'type': ['mypy'],
     'lint': ['flake8'],
-    'worker': ['python manage.py qcluster'],
 }
 
 command = args[0]

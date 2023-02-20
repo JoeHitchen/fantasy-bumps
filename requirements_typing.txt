@@ -1,9 +1,10 @@
 mypy
 django-stubs
+celery-types
 types-pytz
 types-requests
 types-beautifulsoup4
 
 # Project Installs
 pytz
-django-q2
+django-celery-beat

@@ -5,7 +5,8 @@ requests
 beautifulsoup4
 
 # Task processing
-django-q2
+celery
+django-celery-beat
 
 # Typing
 typing-extensions
