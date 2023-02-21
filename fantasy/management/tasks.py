@@ -1,8 +1,11 @@
 from datetime import timedelta
 import json
+import logging
 
 from celery import shared_task
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from django.utils import timezone
+from django.db.models import F
 
 from fantasy import models
 from fantasy.constants import Series, Genders
@@ -10,6 +13,34 @@ from fantasy.management.commands.update_live_bumps import Command as UpdateLiveB
 
 series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
+
+logger = logging.getLogger('fantasy.tasks')
+
+
+def boost_crabs(team, event, amounts, apply_at = timezone.now()):
+    """A wrapper for the boost crabs task to be applied at a certain time."""
+    boost_crabs_task.apply_async((str(team), event.tag, amounts), eta = apply_at)
+
+
+@shared_task
+def boost_crabs_task(team_name, event_tag, amounts):
+    """Provides a crab boost to a given team for an event."""
+    
+    logger.info('Boosting {} for {} by {} (men) & {} (women)'.format(
+        team_name,
+        event_tag,
+        *amounts,
+    ))
+    
+    models.GameEntry.objects.filter(
+        team__user__username = team_name,
+        event__tag = event_tag,
+    ).update(
+        mens_budget = F('mens_budget') + amounts[0],
+        womens_budget = F('womens_budget') + amounts[1],
+        mens_balance = F('mens_balance') + amounts[0],
+        womens_balance = F('womens_balance') + amounts[1],
+    )
 
 
 @shared_task
