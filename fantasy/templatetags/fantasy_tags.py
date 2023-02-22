@@ -45,6 +45,14 @@ def market_status_box(day, allow_dismiss = True):
         }
     
     
+    # Held closed
+    if day.event.market_held_closed:
+        return {
+            'style': 'danger',
+            'dismissable': False,
+            'message': 'The market is being held closed for technical reasons.',
+        }
+    
     # After racing
     if not day.next:
         return {

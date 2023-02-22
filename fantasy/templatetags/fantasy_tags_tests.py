@@ -230,6 +230,25 @@ class Test__Market_Status_Box(TestCase):
             props['message'],
             'This event has concluded.',
         )
+    
+    
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 5))
+    def test__held_closed(self, closes_mock, opens_mock):
+        """Returns a non-dismissable danger alert."""
+        
+        # Alter test setup
+        self.day.event.market_held_closed = True
+        
+        # Call and test method
+        props = tags.market_status_box(self.day)
+        
+        self.assertEqual(props['style'], 'danger')
+        self.assertFalse(props['dismissable'])
+        self.assertEqual(
+            props['message'],
+            'The market is being held closed for technical reasons.',
+        )
 
 
 

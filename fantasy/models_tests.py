@@ -1016,6 +1016,23 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertFalse(day.market_is_open)
+    
+    
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
+    def test__market_is_open__held_closed(self, closes_mock, opens_mock):
+        """Returns False if the event has markets held closed."""
+        
+        self.event.market_held_closed = True
+        self.event.save()
+        
+        day = self.event.days.create(
+            name = 'Markets',
+            date = timezone.localtime().date(),
+            first_race_time = time(hour = 12),
+        )
+        
+        self.assertFalse(day.market_is_open)
 
 
 

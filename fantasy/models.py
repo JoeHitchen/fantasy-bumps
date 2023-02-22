@@ -29,6 +29,8 @@ class Event(models.Model):
     mens_division_sizes = models.JSONField(default = list)
     womens_division_sizes = models.JSONField(default = list)
     
+    market_held_closed = models.BooleanField(default = False)
+    
     def __str__(self):
         return '{} {}'.format(self.get_series_display(), self.year)
     
@@ -180,7 +182,7 @@ class Day(models.Model):
     @cached_property
     def market_is_open(self):
         """Indicates whether the market is currently open for trading."""
-        if not self.first_race:
+        if not self.first_race or self.event.market_held_closed:
             return False
         return self.market_opens <= timezone.localtime() < self.market_closes
 
