@@ -81,6 +81,7 @@ def load_start_order_by_gender(
         response.raise_for_status()
     
     data = response.text.split('\n')
+    data = [line for line in data if line.strip()]
     
     # Parse header
     event = data.pop(0)  # noqa: 841
