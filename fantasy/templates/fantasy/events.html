@@ -5,7 +5,7 @@
 
 <h3 class="mb-3">Latest events</h3>
 {% for event in recent_events %}
-{% event_box event %}
+{% event_box event user %}
 {% empty %}
 There are no events available
 {% endfor %}
@@ -13,7 +13,7 @@ There are no events available
 {% if past_events %}
 <h3 class="mb-3">Past events</h3>
 {% for event in past_events %}
-{% event_box event %}
+{% event_box event user %}
 {% endfor %}
 {% endif %}
 

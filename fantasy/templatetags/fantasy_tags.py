@@ -405,6 +405,6 @@ def crew_ready_button(event, gender):
 
 
 @register.inclusion_tag('fantasy/event-box.html')
-def event_box(event):
-    return {'event': event, 'genders': Genders}
+def event_box(event, user):
+    return {'event': event, 'genders': Genders, 'user': user}
 
