@@ -2177,3 +2177,109 @@ class Test__Switch(TestCase, MessagesTestMixin):
         with self.assertNumQueries(12):
             self.client.post(self.url, {'athlete': self.ath_thr.id, 'seat': self.seat_two.id})
 
+
+
+class Test__Market_Hold(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_team']
+    url = reverse('fantasy:market-hold')
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.event = models.Event.objects.first()
+    
+    
+    def test__deny_get(self):
+        """Rejects non-POST requests."""
+        
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+    
+    
+    def test__no_login(self):
+        """Redirects non-logged in users."""
+        
+        response = self.client.post(self.url)
+        self.assertRedirects(response, reverse('login'))
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+    
+    
+    def test__not_superuser(self):
+        """Redirects non-superusers."""
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url)
+        self.assertRedirects(response, reverse('login'))
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+    
+    
+    def test__no_event(self):
+        """Raises a 404 if the event is not known."""
+        
+        user = auth.User.objects.get(username = 'DevTeam')
+        user.is_superuser = True
+        user.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'event': 'unknown'})
+        self.assertEqual(response.status_code, 404)
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+    
+    
+    def test__no_toggle_status(self):
+        """Markets stay open if no previous toggle status is specified."""
+        
+        user = auth.User.objects.get(username = 'DevTeam')
+        user.is_superuser = True
+        user.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'event': self.event.tag})
+        self.assertRedirects(response, reverse('fantasy:index'))
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+    
+    
+    def test__close_market(self):
+        """Toggles the `market_held_closed` flag."""
+        
+        user = auth.User.objects.get(username = 'DevTeam')
+        user.is_superuser = True
+        user.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'event': self.event.tag, 'toggle-from': 'False'})
+        self.assertRedirects(response, reverse('fantasy:index'))
+        
+        self.event.refresh_from_db()
+        self.assertTrue(self.event.market_held_closed)
+    
+    
+    def test__reopen_market(self):
+        """Toggles the `market_held_closed` flag."""
+        
+        user = auth.User.objects.get(username = 'DevTeam')
+        user.is_superuser = True
+        user.save()
+        
+        self.client.login(username = 'DevTeam', password = 'password')
+        
+        response = self.client.post(self.url, {'event': self.event.tag, 'toggle-from': 'True'})
+        self.assertRedirects(response, reverse('fantasy:index'))
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+
