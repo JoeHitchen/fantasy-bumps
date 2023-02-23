@@ -94,7 +94,12 @@ class Command(BaseCommand):
         
         
         date_range = (timezone.now() - timedelta(7), timezone.now() + timedelta(7))
-        events = models.Event.objects.filter(days__date__range = date_range).distinct()
+        events = (
+            models.Event.objects
+            .filter(days__date__range = date_range)
+            .exclude(market_held_closed = True)
+            .distinct()
+        )
         if not events:
             logger.info('No games to advance')
             return

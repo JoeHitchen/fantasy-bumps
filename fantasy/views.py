@@ -4,7 +4,7 @@ from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import models as db
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 
@@ -615,4 +615,16 @@ class Switch(FantasyBaseMixin, TemplateView):
         
         
         return self.market_redirect
+
+
+@require_POST
+@user_passes_test(lambda user: user.is_superuser, redirect_field_name = None)
+def market_hold(request):
+    """Toggles the `market_held_closed` flag for an event."""
+    
+    event = get_object_or_404(models.Event, tag = request.POST.get('event'))
+    event.market_held_closed = request.POST.get('toggle-from') == 'False'
+    event.save()
+    
+    return redirect('fantasy:index')
 

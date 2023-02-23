@@ -1,0 +1,6 @@
+<form id="buy-form" action="{% url 'fantasy:market-hold' %}" method="post" style="display: inline">
+          {% csrf_token %}
+          <input id="event" name="event" type="hidden" value="{{ event.tag }}" />
+          <input id="toggle-from" name="toggle-from" type="hidden" value="{{ event.market_held_closed }}" />
+          <input type="submit" class="btn btn-danger btn-sm" value="{% if event.market_held_closed %}Re-open{% else %}Close{% endif %}" />
+        </form>

@@ -4,7 +4,7 @@
 {% block content %}
 
 {% for event in recent_events %}
-{% event_box event %}
+{% event_box event user %}
 {% empty %}
 There are no events available
 {% endfor %}

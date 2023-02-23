@@ -431,6 +431,19 @@ class Test__Game_Advance(TestCase):
         self.assertEqual(perform_mock.call_count, 2)
         perform_mock.assert_any_call(live_bumps.get_positions, torpids)
         perform_mock.assert_any_call(camfm.get_positions, lents)
+    
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__held_closed(self, perform_mock: Mock) -> None:
+        """Events held closed are excluded from advancement."""
+        
+        torpids = prepare_event(Series.TORPIDS, self.today)
+        torpids.market_held_closed = True
+        torpids.save()
+        lents = prepare_event(Series.LENTS, self.today)
+        
+        GameAdvance().handle()
+        perform_mock.assert_called_once_with(camfm.get_positions, lents)  # Does not call Torpids
 
 
 class Test__Renumbered_Crew(TestCase):
