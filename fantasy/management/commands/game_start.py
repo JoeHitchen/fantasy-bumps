@@ -9,6 +9,7 @@ from typing_extensions import Unpack, NotRequired
 
 from ... import models
 from ...constants import Locations, Series as EventSeries
+from ..actions import create_days
 from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
@@ -118,7 +119,6 @@ def create_event(
 ) -> Tuple[models.Event, models.Day]:
     
     main_race_time = time(12, 00)
-    saturday_race_time = main_race_time
     
     if series == EventSeries.DEMO:
         division_structure = {
@@ -142,33 +142,28 @@ def create_event(
         }
     elif series == EventSeries.EIGHTS and year == 2022:
         main_race_time = time(12, 15)
-        saturday_race_time = time(11, 15)
         division_structure = {
             'mens_division_sizes': [12, 12, 12, 12, 12, 12, 13],
             'womens_division_sizes': [12, 12, 12, 12, 12, 12, 11],
         }
     elif series == EventSeries.EIGHTS and year < 2022:
-        saturday_race_time = time(11, 00)
         division_structure = {
             'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
             'womens_division_sizes': [13, 13, 13, 13, 13, 14],
         }
     elif series == EventSeries.EIGHTS:
-        saturday_race_time = time(11, 00)
         division_structure = {
             'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
             'womens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
         }
     elif series == EventSeries.MAYS and year == 2022:
         main_race_time = time(13, 45)
-        saturday_race_time = time(11, 45)
         division_structure = {
             'mens_division_sizes': [17, 17, 17, 17, 12],
             'womens_division_sizes': [17, 17, 17, 17, 6],
         }
     elif series == EventSeries.MAYS:
         main_race_time = time(13, 45)
-        saturday_race_time = time(11, 45)
         division_structure = {
             'mens_division_sizes': [17, 17, 17, 17, 17, 6],
             'womens_division_sizes': [17, 17, 17, 17, 9],
@@ -183,47 +178,6 @@ def create_event(
         **division_structure,
     )
     
-    first_day = create_days(event, start_date, main_race_time, saturday_race_time)
+    first_day = create_days(event, start_date, main_race_time)
     return event, first_day
-
-
-def create_days(
-    event: models.Event,
-    start_date: date,
-    main_race_time: time,
-    saturday_race_time: time,
-) -> models.Day:
-    
-    weds = models.Day(
-        event = event,
-        name = 'Wednesday',
-        date = start_date,
-        first_race_time = main_race_time,
-    )
-    weds.save()
-    
-    event.days.create(
-        name = 'Thursday',
-        date = start_date + timedelta(1),
-        first_race_time = main_race_time,
-    )
-    
-    event.days.create(
-        name = 'Friday',
-        date = start_date + timedelta(2),
-        first_race_time = main_race_time,
-    )
-    
-    event.days.create(
-        name = 'Saturday',
-        date = start_date + timedelta(3),
-        first_race_time = saturday_race_time,
-    )
-    
-    event.days.create(
-        name = 'Finish',
-        date = start_date + timedelta(4),
-    )
-    
-    return weds
 

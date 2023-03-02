@@ -11,7 +11,8 @@ from core.tests import exists
 
 from ... import models
 from ...constants import Series, Clubs, Genders
-from .game_start import Command as GameStart, create_days
+from ..actions import create_days
+from .game_start import Command as GameStart
 from .game_advance import Command as GameAdvance
 from .renumbered_crew import Command as RenumberedCrew
 from .update_live_bumps import Command as UpdateLiveBumps
@@ -27,7 +28,7 @@ def prepare_event(series: Series, start_date: date) -> models.Event:
         year = start_date.year,
         tag = f'{series.label.lower()}{start_date.year}',
     )
-    create_days(event, start_date, time(12, 00), time(12, 00))
+    create_days(event, start_date, time(12, 00))
     return event
 
 
