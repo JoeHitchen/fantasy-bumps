@@ -17,7 +17,7 @@ class Division(TypedDict):
     number: int
     race_time: time
     size: int
-    crews: List[Tuple[Crew, PositionStatus]]
+    crews: List[Tuple[Crew, PositionStatus]]  # Implicitly top bungline first
     finalised: bool
 
 

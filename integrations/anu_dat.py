@@ -1,23 +1,13 @@
-from datetime import time
 import logging
 import re
 
 import requests
 
 from .types import PositionMap, Division, StartOrder
-from .common import TORPIDS, series_text_map, MEN, WOMEN, gender_map, roman_parser, club_parser
+from .common import TORPIDS, series_text_map, MEN, WOMEN, gender_map
+from .common import roman_parser, race_time_parser, club_parser
 
 logger = logging.getLogger(__name__)
-
-
-def _race_time_parser(div_header: str) -> time:
-    """Extracts the division time from the division header data."""
-    
-    time_match = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header)
-    assert time_match
-    hour = int(time_match.groups()[0])
-    mins = int(time_match.groups()[1])
-    return time(hour if hour > 9 else hour + 12, mins)
 
 
 def __start_order_to_positions(start_order: StartOrder) -> PositionMap:
@@ -102,7 +92,7 @@ def load_start_order_by_gender(
         division: Division = {
             'gender': gender,
             'number': roman_parser(div_number_match.groups()[0]),
-            'race_time': _race_time_parser(div_header),
+            'race_time': race_time_parser(div_header),
             'size': int(div_size_match.groups()[0]),
             'finalised': '?' not in div_header,
             'crews': [],

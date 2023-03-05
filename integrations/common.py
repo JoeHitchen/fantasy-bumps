@@ -1,3 +1,5 @@
+from datetime import time
+import re
 
 TORPIDS = 'T'
 EIGHTS = 'E'
@@ -15,6 +17,16 @@ def roman_parser(numerals: str) -> int:
     """Maps roman numerals to integers."""
     
     return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}[numerals]
+
+
+def race_time_parser(div_header: str) -> time:
+    """Extracts the division time from the division header data."""
+    
+    time_match = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header)
+    assert time_match
+    hour = int(time_match.groups()[0])
+    mins = int(time_match.groups()[1])
+    return time(hour if hour > 9 else hour + 12, mins)
 
 
 def seat_parser(seat_str: str) -> int:

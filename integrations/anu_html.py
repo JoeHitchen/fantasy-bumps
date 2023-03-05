@@ -1,18 +1,17 @@
-from typing import List, Tuple
+from typing import List
 import logging
 import re
 
 from bs4 import BeautifulSoup
 import requests
 
-from .types import PositionMap
-from .common import roman_parser, club_parser, TORPIDS, series_text_map, MEN, WOMEN
+from .types import PositionMap, Division
+from .common import TORPIDS, series_text_map, MEN, WOMEN
+from .common import roman_parser, race_time_parser, club_parser
+
 
 logger = logging.getLogger(__name__)
 BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
-
-Bungline = Tuple[int, str, int]
-Division = Tuple[str, int, List[Bungline]]
 
 
 def _parse_division(table: str) -> Division:
@@ -25,7 +24,8 @@ def _parse_division(table: str) -> Division:
     assert division_match
     
     gender = division_match.group('gender')[0]
-    division = roman_parser(division_match.group('num'))
+    division_number = roman_parser(division_match.group('num'))
+    division_time = race_time_parser(rows[1])
     
     start_order = []
     for row in rows[2:]:
@@ -36,27 +36,36 @@ def _parse_division(table: str) -> Division:
         assert bungline_match
         
         start_order.append((
-            int(bungline_match.group('bungline')),
-            club_parser(bungline_match.group('club')),
-            int(bungline_match.group('rank')),
+            (
+                club_parser(bungline_match.group('club')),
+                gender,
+                int(bungline_match.group('rank')),
+            ),
+            True,
         ))
     
-    return (gender, division, start_order)
+    return Division(
+        gender = gender,
+        number = division_number,
+        race_time = division_time,
+        size = len(start_order),
+        crews = start_order,
+        finalised = True,
+    )
 
 
 def _convert_divisions_to_ranking(divisions: List[Division], gender: str) -> PositionMap:
     
-    gendered_divisions = [div for div in divisions if div[0] == gender]
-    gendered_divisions.sort(key = lambda div: div[1])
+    gendered_divisions = [div for div in divisions if div['gender'] == gender]
+    gendered_divisions.sort(key = lambda div: div['number'])
     
     crews = {}
-    prev_lowest_bungline = 0
-    for (_, _, start_order) in gendered_divisions:
+    bungline = 0
+    for division in gendered_divisions:
         
-        for bungline, club, rank in start_order:
-            crews[(club, gender, rank)] = (prev_lowest_bungline + bungline, True)
-        
-        prev_lowest_bungline += bungline
+        for crew, position_status in division['crews']:
+            bungline += 1
+            crews[crew] = (bungline, position_status)
     
     return crews
 
