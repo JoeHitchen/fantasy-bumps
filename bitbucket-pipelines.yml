@@ -29,6 +29,7 @@ pipelines:
   branches:
     deploy:
       - step: *lint
+      - step: *type
       - step: *test
       - step:
           name: Build
