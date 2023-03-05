@@ -1,4 +1,3 @@
-from typing import List
 import logging
 import re
 
@@ -6,8 +5,8 @@ from bs4 import BeautifulSoup
 import requests
 
 from .types import PositionMap, Division
-from .common import TORPIDS, series_text_map, MEN, WOMEN
-from .common import roman_parser, race_time_parser, club_parser
+from .common import TORPIDS, series_text_map
+from .common import roman_parser, race_time_parser, club_parser, start_order_to_positions
 
 
 logger = logging.getLogger(__name__)
@@ -54,22 +53,6 @@ def _parse_division(table: str) -> Division:
     )
 
 
-def _convert_divisions_to_ranking(divisions: List[Division], gender: str) -> PositionMap:
-    
-    gendered_divisions = [div for div in divisions if div['gender'] == gender]
-    gendered_divisions.sort(key = lambda div: div['number'])
-    
-    crews = {}
-    bungline = 0
-    for division in gendered_divisions:
-        
-        for crew, position_status in division['crews']:
-            bungline += 1
-            crews[crew] = (bungline, position_status)
-    
-    return crews
-
-
 def get_positions(series: str, year: int, day_number: int) -> PositionMap:
     """Generates a crew/position map from Anu's records."""
     
@@ -107,11 +90,9 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
             continue
         
         divisions.append(_parse_division(table))
+    divisions.sort(key = lambda div: div['race_time'])
     
-    positions = {
-        **_convert_divisions_to_ranking(divisions, MEN),
-        **_convert_divisions_to_ranking(divisions, WOMEN),
-    }
+    positions = start_order_to_positions(divisions)
     logger.info('Retrieved {} crew positions for {} {} (day {}) from Anu'.format(
         len(positions),
         series_text,

@@ -254,7 +254,7 @@ class Test__Anu__Dat(TestCase):
                 
                 ranks = {MEN: 0, WOMEN: 0}
                 parsed: PositionMap = {}
-                for division in start_order_men + start_order_women:
+                for division in (start_order_men + start_order_women)[::-1]:
                     for div_crew, _ in division['crews']:
                         ranks[div_crew[1]] += 1
                         parsed[(*div_crew[0:3],)] = (ranks[div_crew[1]], True)

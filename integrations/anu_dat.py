@@ -5,22 +5,9 @@ import requests
 
 from .types import PositionMap, Division, StartOrder
 from .common import TORPIDS, series_text_map, MEN, WOMEN, gender_map
-from .common import roman_parser, race_time_parser, club_parser
+from .common import roman_parser, race_time_parser, club_parser, start_order_to_positions
 
 logger = logging.getLogger(__name__)
-
-
-def __start_order_to_positions(start_order: StartOrder) -> PositionMap:
-    """Converts a start order to a set of positions."""
-    
-    rank = 0
-    positions = {}
-    for division in start_order:
-        for crew, status in division['crews']:
-            rank += 1
-            positions[crew] = (rank, status)
-    
-    return positions
 
 
 def _get_datafile_url(series: str, year: int, gender: str, day_number: int) -> str:
@@ -122,6 +109,7 @@ def load_start_order_by_gender(
             ))
         
         divisions.append(division)
+    divisions.sort(key = lambda div: div['race_time'])
     
     logger.info("Retrieved {} {}'s divisions and {} crews for {} {} (day {}) from Anu .dat".format(
         len(divisions),
@@ -137,7 +125,7 @@ def load_start_order_by_gender(
 def get_positions_by_gender(series: str, year: int, gender: str, day_number: int) -> PositionMap:
     """Generates a crew/position map for one gender from Anu's .dat files."""
     
-    return __start_order_to_positions(load_start_order_by_gender(series, year, gender, day_number))
+    return start_order_to_positions(load_start_order_by_gender(series, year, gender, day_number))
 
 
 def get_positions(series: str, year: int, day_number: int) -> PositionMap:

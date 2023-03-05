@@ -1,6 +1,8 @@
 from datetime import time
 import re
 
+from .types import StartOrder, PositionMap
+
 TORPIDS = 'T'
 EIGHTS = 'E'
 LENTS = 'L'
@@ -88,4 +90,25 @@ boat_code_map = {
     'shug': 'SHG', 'sjoh': 'SJO', 'spet': 'SPC', 'trin': 'TRO',
     'univ': 'UCO', 'wadh': 'WAD', 'wolf': 'WOO', 'worc': 'WRO',
 }
+
+
+def start_order_to_positions(start_order: StartOrder) -> PositionMap:
+    """Converts a start order to a map of positions."""
+    
+    ordered_divisions = sorted(start_order, key = lambda div: div['race_time'])
+    
+    positions = {}
+    for gender in [MEN, WOMEN]:
+        
+        bungline = 0
+        for division in ordered_divisions[::-1]:
+            
+            if division['gender'] != gender:
+                continue
+            
+            for crew, position_status in division['crews']:
+                bungline += 1
+                positions[crew] = (bungline, position_status)
+    
+    return positions
 

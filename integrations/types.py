@@ -21,5 +21,5 @@ class Division(TypedDict):
     finalised: bool
 
 
-StartOrder = List[Division]
+StartOrder = List[Division]  # Implicitly first race first
 
