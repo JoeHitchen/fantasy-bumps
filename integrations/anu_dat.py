@@ -6,17 +6,12 @@ import requests
 from .types import PositionMap, Division, StartOrder
 from .common import TORPIDS, series_text_map, MEN, WOMEN, gender_map
 from .common import roman_parser, race_time_parser, club_parser, start_order_to_positions
+from . import magic
 
 logger = logging.getLogger(__name__)
 
 
 def _get_datafile_url(series: str, year: int, gender: str, day_number: int) -> str:
-    
-    # Get day string map
-    if (series, year) == (TORPIDS, 2021):
-        day_map = ['tue', 'wed', 'thu', 'fri', 'end']
-    else:
-        day_map = ['wed', 'thu', 'fri', 'sat', 'end']
     
     # Generate URL
     if series == TORPIDS and year == 2022:
@@ -24,7 +19,7 @@ def _get_datafile_url(series: str, year: int, gender: str, day_number: int) -> s
             {'T': 'Torpids', 'E': 'Eights'}[series].lower(),
             series.lower(),
             str(year)[2:4],
-            day_map[day_number - 1],
+            magic.anu_day_code(series, year, day_number),
             gender.lower(),
         )
     
@@ -32,7 +27,7 @@ def _get_datafile_url(series: str, year: int, gender: str, day_number: int) -> s
         return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}{}{}{}.dat'.format(
             series.lower(),
             str(year)[2:4],
-            day_map[day_number - 1],
+            magic.anu_day_code(series, year, day_number),
             gender.lower(),
         )
 

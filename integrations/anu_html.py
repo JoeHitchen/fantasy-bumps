@@ -5,8 +5,9 @@ from bs4 import BeautifulSoup
 import requests
 
 from .types import PositionMap, Division, StartOrder
-from .common import TORPIDS, series_text_map
+from .common import series_text_map
 from .common import roman_parser, race_time_parser, club_parser, start_order_to_positions
+from . import magic
 
 
 logger = logging.getLogger(__name__)
@@ -63,19 +64,13 @@ def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
         day_number,
     ))
     
-    # Map days of historical events
-    if (series, year) == (TORPIDS, 2021):
-        day_map = ['tue', 'wed', 'thu', 'fri', 'end']
-    else:
-        day_map = ['wed', 'thu', 'fri', 'sat', 'end']
-    
     
     # Load page into parser
     response = requests.get(BASE_URL + '{}/{}{}{}.html'.format(
         series_text.lower(),
         series.lower(),
         str(year)[-2:],
-        day_map[day_number - 1],
+        magic.anu_day_code(series, year, day_number),
     ))
     if not response.ok:
         response.raise_for_status()
