@@ -4,7 +4,7 @@ import re
 from bs4 import BeautifulSoup
 import requests
 
-from .types import PositionMap, Division
+from .types import PositionMap, Division, StartOrder
 from .common import TORPIDS, series_text_map
 from .common import roman_parser, race_time_parser, club_parser, start_order_to_positions
 
@@ -53,11 +53,11 @@ def _parse_division(table: str) -> Division:
     )
 
 
-def get_positions(series: str, year: int, day_number: int) -> PositionMap:
-    """Generates a crew/position map from Anu's records."""
+def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
+    """Retrieves the day's start order from Anu's records."""
     
     series_text = series_text_map[series]
-    logger.info('Retrieving crew positions for {} {} (day {}) from Anu'.format(
+    logger.info('Retrieving start order for {} {} (day {}) from Anu'.format(
         series_text,
         year,
         day_number,
@@ -90,14 +90,18 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
             continue
         
         divisions.append(_parse_division(table))
-    divisions.sort(key = lambda div: div['race_time'])
     
-    positions = start_order_to_positions(divisions)
-    logger.info('Retrieved {} crew positions for {} {} (day {}) from Anu'.format(
-        len(positions),
+    logger.info('Retrieved start order ({} crews) for {} {} (day {}) from Anu'.format(
+        sum(len(division['crews']) for division in divisions),
         series_text,
         year,
         day_number,
     ))
-    return positions
+    return sorted(divisions, key = lambda div: div['race_time'])
+
+
+def get_positions(series: str, year: int, day_number: int) -> PositionMap:
+    """Generates a crew/position map from Anu's records."""
+    
+    return start_order_to_positions(get_start_order(series, year, day_number))
 
