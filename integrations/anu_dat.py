@@ -4,32 +4,12 @@ import re
 import requests
 
 from .types import PositionMap, Division, StartOrder
-from .common import TORPIDS, series_text_map, MEN, WOMEN, gender_map
+from .common import series_text_map, MEN, WOMEN, gender_map
 from .common import roman_parser, race_time_parser, club_parser, start_order_to_positions
 from . import magic
 
 logger = logging.getLogger(__name__)
-
-
-def _get_datafile_url(series: str, year: int, gender: str, day_number: int) -> str:
-    
-    # Generate URL
-    if series == TORPIDS and year == 2022:
-        return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}/{}{}{}{}.dat'.format(
-            {'T': 'Torpids', 'E': 'Eights'}[series].lower(),
-            series.lower(),
-            str(year)[2:4],
-            magic.anu_day_code(series, year, day_number),
-            gender.lower(),
-        )
-    
-    else:
-        return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}{}{}{}.dat'.format(
-            series.lower(),
-            str(year)[2:4],
-            magic.anu_day_code(series, year, day_number),
-            gender.lower(),
-        )
+BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
 
 
 def load_start_order_by_gender(
@@ -47,8 +27,13 @@ def load_start_order_by_gender(
     ))
     
     # Get raw data
-    url = _get_datafile_url(series, year, gender, day_number)
-    response = requests.get(url)
+    response = requests.get(BASE_URL + magic.anu_data_url_template(series, year).format(
+        series_text_map[series].lower(),
+        series.lower(),
+        str(year)[2:4],
+        magic.anu_day_code(series, year, day_number),
+        gender.lower(),
+    ))
     if not response.ok:
         response.raise_for_status()
     
