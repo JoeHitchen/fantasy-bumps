@@ -90,6 +90,45 @@ class Test__LiveBumps(TestCase):
                 self.assertEqual(len(positions.keys()), num_crews)
     
     
+    def test__start_orders__torpids_2022(self) -> None:
+        """The start order given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (TORPIDS, 2022, day)
+                parsed = live_bumps.get_start_order(*day_code)
+                expected = load_expected_start_order(*day_code)
+                
+                for index, division in enumerate(parsed):
+                    with self.subTest('{}Div{}'.format(division['gender'], division['number'])):
+                        self.assertEqual(division, expected[index])
+    
+    
+    def test__start_orders__smoke(self) -> None:
+        """Checks that other historical events can be parsed without error."""
+        
+        events = [
+            (TORPIDS, 2017, 11, 134),
+            (EIGHTS, 2017, 13, 170),
+            (TORPIDS, 2018, 11, 134),
+            (EIGHTS, 2018, 13, 171),
+            (TORPIDS, 2019, 11, 134),
+            (EIGHTS, 2019, 13, 168),
+            (TORPIDS, 2021, 14, 128),
+            (TORPIDS, 2022, 11, 134),
+            (EIGHTS, 2022, 14, 168),
+        ]
+        
+        for series, year, num_divs, num_crews in events:
+            for day_number in range(1, 6):
+                with self.subTest([series, year, day_number]):
+                    
+                    start_order = live_bumps.get_start_order(series, year, day_number)
+                    self.assertEqual(len(start_order), num_divs)
+                    self.assertEqual(sum(len(div['crews']) for div in start_order), num_crews)
+    
+    
     def test__crew_lists__smoke(self) -> None:
         """Crew lists from historical events should be parsed without error."""
         

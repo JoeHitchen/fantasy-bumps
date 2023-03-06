@@ -6,9 +6,10 @@ import os
 
 import requests
 
-from .types import Crew, CrewListMap, Position, PositionMap, StartOrder
+from .types import Crew, CrewListMap, Position, PositionMap, Division, StartOrder
 from .common import MEN, WOMEN, gender_map, series_text_map
-from .common import seat_parser, boat_code_parser, boat_code_map, start_order_to_positions
+from .common import seat_parser, boat_code_parser, boat_code_map, race_time_parser
+from .common import start_order_to_positions, add_crews_by_gender
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +113,31 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
         day_number,
     ))
     return day_positions
+
+
+def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
+    
+    response = requests.get(f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}_divs.json')
+    if not response.ok:
+        response.raise_for_status()
+    
+    divisions = []
+    for gender in [MEN, WOMEN]:
+        gendered_divisions = response.json()[gender_map[gender].lower()]
+        for number, div in enumerate(gendered_divisions, start = 1):
+            divisions.append(Division(
+                gender = gender,
+                number = number,
+                race_time = race_time_parser(div['time']),
+                size = div['size'] + (number == len(gendered_divisions)),
+                crews = [],
+                finalised = True,
+            ))
+    divisions.sort(key = lambda div: div['race_time'])
+    
+    add_crews_by_gender(divisions, get_positions(series, year, day_number), MEN)
+    add_crews_by_gender(divisions, get_positions(series, year, day_number), WOMEN)
+    return divisions
 
 
 def get_crew_lists(series: str, year: int) -> CrewListMap:

@@ -24,7 +24,7 @@ def roman_parser(numerals: str) -> int:
 def race_time_parser(div_header: str) -> time:
     """Extracts the division time from the division header data."""
     
-    time_match = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header)
+    time_match = re.search(r'(\d\d?)[:.](\d\d)', div_header)
     assert time_match
     hour = int(time_match.groups()[0])
     mins = int(time_match.groups()[1])
@@ -111,4 +111,29 @@ def start_order_to_positions(start_order: StartOrder) -> PositionMap:
                 positions[crew] = (bungline, position_status)
     
     return positions
+
+
+def add_crews_by_gender(start_order: StartOrder, positions: PositionMap, gender: str) -> None:
+    """Populates a start order from a position map for the gender given."""
+    
+    ordered_divisions = sorted(start_order, key = lambda div: div['race_time'])
+    
+    position_order = [
+        (crew, position)
+        for crew, position in positions.items()
+        if crew[1] == gender
+    ]
+    position_order.sort(key = lambda item: item[1])
+    
+    for division in ordered_divisions[::-1]:
+        
+        if not division['gender'] == gender:
+            continue
+        
+        division['crews'] = [
+            (crew, position[1])
+            for crew, position
+            in position_order[:division['size']]
+        ]
+        position_order = position_order[division['size']:]
 
