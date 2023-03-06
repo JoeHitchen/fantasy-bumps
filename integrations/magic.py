@@ -10,7 +10,15 @@ def anu_day_code(series: str, year: int, day_number: int) -> str:
         return ['tue', 'wed', 'thu', 'fri', 'end'][day_number - 1]
     
     return ['wed', 'thu', 'fri', 'sat', 'end'][day_number - 1]
+
+
+def anu_data_url_template(series: str, year: int) -> str:
+    """Generates the template for the dynamic part of Anu's data file's URLs."""
     
+    if (series, year) == (TORPIDS, 2022):
+        return '{}/{}{}{}{}.dat'
+    
+    return '{1}{2}{3}{4}.dat'
 
 
 def saturday_race_time_shift(series: str) -> timedelta:

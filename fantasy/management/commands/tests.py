@@ -645,7 +645,7 @@ class Test__Live_Bumps(TestCase):
     
     
     @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.load_start_order_by_gender')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
     @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
     def test__update__first_day(
         self,
@@ -681,7 +681,7 @@ class Test__Live_Bumps(TestCase):
     
     
     @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.load_start_order_by_gender')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
     @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
     def test__update__second_day(
         self,
@@ -717,7 +717,7 @@ class Test__Live_Bumps(TestCase):
     
     
     @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.load_start_order_by_gender')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
     @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
     def test__update__final_day(
         self,
@@ -753,7 +753,7 @@ class Test__Live_Bumps(TestCase):
     
     
     @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.load_start_order_by_gender')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
     @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
     def test__update__after_event(
         self,
@@ -789,7 +789,7 @@ class Test__Live_Bumps(TestCase):
     
     
     @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.load_start_order_by_gender')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
     @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
     def test__update__racetime_filter(
         self,
