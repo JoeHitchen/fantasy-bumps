@@ -1,0 +1,235 @@
+[
+  {
+    "gender": "M",
+    "number": 6,
+    "race_time": "12:00",
+    "size": 13,
+    "crews": [
+      "wolf-m3",
+      "wadh-m3",
+      "sedm-m3",
+      "magd-m3",
+      "newc-m3",
+      "sjoh-m2",
+      "orie-m3",
+      "grte-m2",
+      "chri-m4",
+      "chri-m3",
+      "wolf-m4",
+      "spet-m3",
+      "sedm-m4"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "W",
+    "number": 5,
+    "race_time": "12:30",
+    "size": 13,
+    "crews": [
+      "mans-w2",
+      "wolf-w4",
+      "sedm-w2",
+      "osle-w2",
+      "sant-w2",
+      "newc-w3",
+      "chri-w3",
+      "bras-w2",
+      "kebl-w2",
+      "pemb-w2",
+      "grte-w2",
+      "mert-w2",
+      "wolf-w5"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "M",
+    "number": 5,
+    "race_time": "13:00",
+    "size": 12,
+    "crews": [
+      "magd-m2",
+      "mert-m2",
+      "linc-m2",
+      "bras-m2",
+      "shug-m2",
+      "exet-m2",
+      "quee-m2",
+      "lina-m2",
+      "trin-m3",
+      "univ-m3",
+      "spet-m2",
+      "hert-m2"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "W",
+    "number": 4,
+    "race_time": "13:30",
+    "size": 12,
+    "crews": [
+      "newc-w2",
+      "some-w2",
+      "chri-w2",
+      "lina-w2",
+      "quee-w1",
+      "rege-w1",
+      "osle-w1",
+      "worc-w2",
+      "magd-w2",
+      "linc-w2",
+      "sjoh-w2",
+      "wadh-w2"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "M",
+    "number": 4,
+    "race_time": "14:00",
+    "size": 12,
+    "crews": [
+      "wadh-m2",
+      "trin-m2",
+      "sant-m1",
+      "kebl-m2",
+      "newc-m2",
+      "sann-m1",
+      "sben-m1",
+      "univ-m2",
+      "sedm-m2",
+      "ball-m2",
+      "jesu-m2",
+      "rege-m1"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "W",
+    "number": 3,
+    "race_time": "14:30",
+    "size": 12,
+    "crews": [
+      "lina-w1",
+      "sant-w1",
+      "exet-w1",
+      "shug-w1",
+      "sjoh-w1",
+      "spet-w1",
+      "worc-w1",
+      "mert-w1",
+      "wolf-w3",
+      "shil-w1",
+      "orie-w2",
+      "univ-w2"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "M",
+    "number": 3,
+    "race_time": "15:00",
+    "size": 12,
+    "crews": [
+      "mans-m1",
+      "bras-m1",
+      "spet-m1",
+      "chri-m2",
+      "orie-m2",
+      "worc-m1",
+      "wolf-m2",
+      "corp-m1",
+      "scat-m2",
+      "grte-m1",
+      "pemb-m2",
+      "shil-m1"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "W",
+    "number": 2,
+    "race_time": "15:30",
+    "size": 12,
+    "crews": [
+      "lady-w1",
+      "grte-w1",
+      "bras-w1",
+      "sann-w1",
+      "sedm-w1",
+      "linc-w1",
+      "ball-w1",
+      "scat-w1",
+      "wolf-w2",
+      "some-w1",
+      "mans-w1",
+      "corp-w1"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "M",
+    "number": 2,
+    "race_time": "16:00",
+    "size": 12,
+    "crews": [
+      "newc-m1",
+      "magd-m1",
+      "jesu-m1",
+      "quee-m1",
+      "hert-m1",
+      "lady-m1",
+      "shug-m1",
+      "exet-m1",
+      "linc-m1",
+      "sjoh-m1",
+      "lina-m1",
+      "some-m1"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "W",
+    "number": 1,
+    "race_time": "16:30",
+    "size": 12,
+    "crews": [
+      "wolf-w1",
+      "univ-w1",
+      "wadh-w1",
+      "pemb-w1",
+      "orie-w1",
+      "chri-w1",
+      "kebl-w1",
+      "hert-w1",
+      "jesu-w1",
+      "trin-w1",
+      "magd-w1",
+      "newc-w1"
+    ],
+    "finalised": true
+  },
+  {
+    "gender": "M",
+    "number": 1,
+    "race_time": "17:00",
+    "size": 12,
+    "crews": [
+      "orie-m1", 
+      "chri-m1",
+      "scat-m1",
+      "wolf-m1",
+      "ball-m1",
+      "wadh-m1",
+      "pemb-m1",
+      "sedm-m1",
+      "univ-m1",
+      "kebl-m1",
+      "mert-m1",
+      "trin-m1"
+    ],
+    "finalised": true
+  }
+]

@@ -8,8 +8,7 @@ import requests
 
 from .types import Crew, CrewListMap, Position, PositionMap, StartOrder
 from .common import MEN, WOMEN, gender_map, series_text_map
-from .common import seat_parser, boat_code_parser, boat_code_map
-from . import anu_dat
+from .common import seat_parser, boat_code_parser, boat_code_map, start_order_to_positions
 
 logger = logging.getLogger(__name__)
 
@@ -232,14 +231,11 @@ def __make_event_creation_structures(
     }
     
     # Convert start orders to positions
-    rankings_raw = {
-        **anu_dat.__start_order_to_positions(start_order_men),
-        **anu_dat.__start_order_to_positions(start_order_women),
-    }
+    positions_raw = start_order_to_positions(start_order_men + start_order_women)
     
     # Create required ranking data structure
     ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Position]]]] = {}
-    for crew, ranking in rankings_raw.items():
+    for crew, ranking in positions_raw.items():
         
         club_code = boat_code_map[crew[0]]
         if club_code not in ranking_data:
