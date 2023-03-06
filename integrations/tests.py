@@ -7,7 +7,7 @@ import requests
 
 from . import live_bumps, anu_html, anu_dat, ourcs, camfm
 from .types import PositionMap, Division, StartOrder
-from .common import TORPIDS, EIGHTS, LENTS, MAYS, MEN, WOMEN
+from .common import TORPIDS, EIGHTS, LENTS, MAYS
 from .common import gender_map, boat_code_parser, boat_code_map
 
 
@@ -270,6 +270,39 @@ class Test__Anu__HTML(TestCase):
 
 class Test__Anu__Dat(TestCase):
     
+    def test__start_orders__torpids_2022(self) -> None:
+        """The start order given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (TORPIDS, 2022, day)
+                parsed = anu_dat.get_start_order(*day_code)
+                expected = load_expected_start_order(*day_code)
+                
+                for index, division in enumerate(parsed):
+                    with self.subTest('{}Div{}'.format(division['gender'], division['number'])):
+                        self.assertEqual(division, expected[index])
+    
+    
+    def test__start_orders__smoke(self) -> None:
+        """Checks that other historical events can be parsed without error."""
+        
+        events = [
+            (TORPIDS, 2022, 11, 134),
+            (EIGHTS, 2022, 14, 168),
+            (TORPIDS, 2023, 12, 146),
+        ]
+        
+        for series, year, num_divs, num_crews in events:
+            for day_number in range(1, 6):
+                with self.subTest([series, year, day_number]):
+                    
+                    start_order = anu_dat.get_start_order(series, year, day_number)
+                    self.assertEqual(len(start_order), num_divs)
+                    self.assertEqual(sum(len(div['crews']) for div in start_order), num_crews)
+    
+    
     def test__positions__torpids_2022(self) -> None:
         """The positions given by the parser should match the expected results."""
         
@@ -300,47 +333,6 @@ class Test__Anu__Dat(TestCase):
                     
                     positions = anu_dat.get_positions(series, year, day_number)
                     self.assertEqual(len(positions.keys()), num_crews)
-    
-    
-    def test__start_orders__torpids_2022(self) -> None:
-        """The positions given by the parser should match the expected results."""
-        
-        for day in [1, 2, 5]:
-            with self.subTest(day = day):
-                
-                start_order_men = anu_dat.load_start_order_by_gender(TORPIDS, 2022, MEN, day)
-                start_order_women = anu_dat.load_start_order_by_gender(TORPIDS, 2022, WOMEN, day)
-                
-                ranks = {MEN: 0, WOMEN: 0}
-                parsed: PositionMap = {}
-                for division in (start_order_men + start_order_women)[::-1]:
-                    for div_crew, _ in division['crews']:
-                        ranks[div_crew[1]] += 1
-                        parsed[(*div_crew[0:3],)] = (ranks[div_crew[1]], True)
-                
-                expected = load_expected_positions(TORPIDS, 2022, day)
-                
-                for crew in parsed.keys():
-                    with self.subTest(crew = crew):
-                        self.assertEqual(parsed[crew], expected[crew])
-    
-    
-    def test__start_orders__smoke(self) -> None:
-        """Positions from other historical events should be parsed without error."""
-        
-        events = [
-            # At time of writing, only one start order is available
-            (TORPIDS, 2022, 134),
-        ]
-        
-        for series, year, num_crews in events:
-            for day in range(1, 6):
-                
-                with self.subTest([series, year, MEN, day]):
-                    anu_dat.load_start_order_by_gender(series, year, MEN, day)
-                
-                with self.subTest([series, year, WOMEN, day]):
-                    anu_dat.load_start_order_by_gender(series, year, WOMEN, day)
 
 
 class Test__OURCs(TestCase):

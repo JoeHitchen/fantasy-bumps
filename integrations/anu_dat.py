@@ -38,7 +38,7 @@ def load_start_order_by_gender(
     gender: str,
     day_number: int,
 ) -> StartOrder:
-    """Retrieves the start order for a given race day and gender from Anu's data files."""
+    """Retrieves the start order for a given race day and gender from Anu's .dat files."""
     logger.info("Retrieving {}'s start order for {} {} (day {}) from Anu .dat".format(
         gender_map[gender].lower(),
         series_text_map[series],
@@ -117,6 +117,15 @@ def load_start_order_by_gender(
     return divisions
 
 
+def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
+    """Retrieves the day's start order from Anu's .dat files."""
+    
+    return sorted([
+        *load_start_order_by_gender(series, year, MEN, day_number),
+        *load_start_order_by_gender(series, year, WOMEN, day_number),
+    ], key = lambda div: div['race_time'])
+
+
 def get_positions_by_gender(series: str, year: int, gender: str, day_number: int) -> PositionMap:
     """Generates a crew/position map for one gender from Anu's .dat files."""
     
@@ -126,8 +135,5 @@ def get_positions_by_gender(series: str, year: int, gender: str, day_number: int
 def get_positions(series: str, year: int, day_number: int) -> PositionMap:
     """Generates a crew/position map from Anu's .dat files."""
     
-    return {
-        **get_positions_by_gender(series, year, MEN, day_number),
-        **get_positions_by_gender(series, year, WOMEN, day_number),
-    }
+    return start_order_to_positions(get_start_order(series, year, day_number))
 
