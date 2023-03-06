@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
 
 
-def load_start_order_by_gender(
+def get_start_order_by_gender(
     series: str,
     year: int,
     gender: str,
@@ -106,15 +106,15 @@ def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
     """Retrieves the day's start order from Anu's .dat files."""
     
     return sorted([
-        *load_start_order_by_gender(series, year, MEN, day_number),
-        *load_start_order_by_gender(series, year, WOMEN, day_number),
+        *get_start_order_by_gender(series, year, MEN, day_number),
+        *get_start_order_by_gender(series, year, WOMEN, day_number),
     ], key = lambda div: div['race_time'])
 
 
 def get_positions_by_gender(series: str, year: int, gender: str, day_number: int) -> PositionMap:
     """Generates a crew/position map for one gender from Anu's .dat files."""
     
-    return start_order_to_positions(load_start_order_by_gender(series, year, gender, day_number))
+    return start_order_to_positions(get_start_order_by_gender(series, year, gender, day_number))
 
 
 def get_positions(series: str, year: int, day_number: int) -> PositionMap:

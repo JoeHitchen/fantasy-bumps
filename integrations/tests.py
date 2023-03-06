@@ -7,7 +7,7 @@ import requests
 
 from . import live_bumps, anu_html, anu_dat, ourcs, camfm
 from .types import PositionMap, Division, StartOrder
-from .common import TORPIDS, EIGHTS, LENTS, MAYS
+from .common import TORPIDS, EIGHTS, LENTS, MAYS, MEN, WOMEN
 from .common import gender_map, boat_code_parser, boat_code_map
 
 
@@ -301,6 +301,30 @@ class Test__Anu__Dat(TestCase):
                     start_order = anu_dat.get_start_order(series, year, day_number)
                     self.assertEqual(len(start_order), num_divs)
                     self.assertEqual(sum(len(div['crews']) for div in start_order), num_crews)
+    
+    
+    def test__start_orders_by_gender__torpids_2022(self) -> None:
+        """The start order given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            for gender in [MEN, WOMEN]:
+                with self.subTest(day = day, gender = gender):
+                    
+                    day_code = (TORPIDS, 2022, day)
+                    parsed = anu_dat.get_start_order_by_gender(
+                        day_code[0],
+                        day_code[1],
+                        gender,
+                        day_code[2],
+                    )
+                    expected = [
+                        div for div in load_expected_start_order(*day_code)
+                        if div['gender'] == gender
+                    ]
+                    
+                    for index, div in enumerate(parsed):
+                        with self.subTest('{}Div{}'.format(div['gender'], div['number'])):
+                            self.assertEqual(div, expected[index])
     
     
     def test__positions__torpids_2022(self) -> None:
