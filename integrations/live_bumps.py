@@ -135,8 +135,9 @@ def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
             ))
     divisions.sort(key = lambda div: div['race_time'])
     
-    add_crews_by_gender(divisions, get_positions(series, year, day_number), MEN)
-    add_crews_by_gender(divisions, get_positions(series, year, day_number), WOMEN)
+    positions = get_positions(series, year, day_number)
+    add_crews_by_gender(divisions, positions, MEN)
+    add_crews_by_gender(divisions, positions, WOMEN)
     return divisions
 
 
