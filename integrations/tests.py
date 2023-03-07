@@ -458,4 +458,20 @@ class Test__CamFM(TestCase):
                 
                 positions = camfm.get_positions(series, year, 5)
                 self.assertEqual(len(positions.keys()), num_crews)
+    
+    
+    def test__start_orders__mays_2019(self) -> None:
+        """The positions given by the parser should match the expected results."""
+        
+        for day in [1, 2, 5]:
+            with self.subTest(day = day):
+                
+                day_code = (MAYS, 2019, day)
+                parsed = camfm.get_start_order(*day_code)
+                expected = load_expected_start_order(*day_code)
+                
+                self.assertEqual(len(parsed), len(expected))
+                for index, division in enumerate(parsed):
+                    with self.subTest('{}Div{}'.format(division['gender'], division['number'])):
+                        self.assertEqual(division, expected[index])
 

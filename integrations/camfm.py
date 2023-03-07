@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from typing import List, cast
 import logging
 import re
@@ -6,8 +6,8 @@ import re
 import requests
 from bs4 import BeautifulSoup, Tag
 
-from .types import Crew, PositionMap
-from .common import LENTS, MAYS, series_text_map
+from .types import Crew, PositionMap, Division, StartOrder
+from .common import LENTS, MAYS, series_text_map, MEN, WOMEN, add_crews_by_gender
 
 logger = logging.getLogger(__name__)
 
@@ -162,4 +162,37 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
         day_number,
     ))
     return positions
+
+
+def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
+    """Recreates the start order from the CamFM records."""
+    
+    division_specs = [
+        ('M', 1, time(19, 45), 17),
+        ('W', 1, time(19, 0), 17),
+        ('M', 2, time(18, 15), 17),
+        ('W', 2, time(17, 30), 17),
+        ('M', 3, time(16, 45), 17),
+        ('W', 3, time(16, 0), 17),
+        ('M', 4, time(15, 15), 17),
+        ('W', 4, time(14, 30), 17),
+        ('M', 5, time(13, 45), 17),
+        ('W', 5, time(13, 4), 9),
+        ('M', 6, time(13, 0), 6),
+    ]
+    
+    divisions = [Division(
+        gender = spec[0],
+        number = spec[1],
+        race_time = spec[2],
+        size = spec[3],
+        crews = [],
+        finalised = True,
+    ) for spec in division_specs]
+    divisions.sort(key = lambda div: div['race_time'])
+    
+    positions = get_positions(series, year, day_number)
+    add_crews_by_gender(divisions, positions, MEN)
+    add_crews_by_gender(divisions, positions, WOMEN)
+    return divisions
 
