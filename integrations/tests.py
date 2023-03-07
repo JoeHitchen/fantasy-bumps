@@ -100,6 +100,7 @@ class Test__LiveBumps(TestCase):
                 parsed = live_bumps.get_start_order(*day_code)
                 expected = load_expected_start_order(*day_code)
                 
+                self.assertEqual(len(parsed), len(expected))
                 for index, division in enumerate(parsed):
                     with self.subTest('{}Div{}'.format(division['gender'], division['number'])):
                         self.assertEqual(division, expected[index])
@@ -252,6 +253,7 @@ class Test__Anu__HTML(TestCase):
                 parsed = anu_html.get_start_order(*day_code)
                 expected = load_expected_start_order(*day_code)
                 
+                self.assertEqual(len(parsed), len(expected))
                 for index, division in enumerate(parsed):
                     with self.subTest('{}Div{}'.format(division['gender'], division['number'])):
                         self.assertEqual(division, expected[index])
@@ -319,6 +321,7 @@ class Test__Anu__Dat(TestCase):
                 parsed = anu_dat.get_start_order(*day_code)
                 expected = load_expected_start_order(*day_code)
                 
+                self.assertEqual(len(parsed), len(expected))
                 for index, division in enumerate(parsed):
                     with self.subTest('{}Div{}'.format(division['gender'], division['number'])):
                         self.assertEqual(division, expected[index])
