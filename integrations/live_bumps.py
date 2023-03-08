@@ -116,6 +116,7 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
 
 
 def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
+    """Constructs a start order based on position and division information from Live Bumps."""
     
     response = requests.get(f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}_divs.json')
     if not response.ok:
