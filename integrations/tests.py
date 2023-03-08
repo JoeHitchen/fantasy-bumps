@@ -40,7 +40,8 @@ def load_expected_positions(series: str, year: int, day: int) -> PositionMap:
     """A helper to load expected positions from file."""
     
     series_tag = {TORPIDS: 'torpids', MAYS: 'mays'}.get(series)
-    with open(f'integrations/expected_results/{series_tag}_{year}_day{day}.json') as file:
+    filename = f'integrations/expected_results/{series_tag}_{year}_day{day}_positions.json'
+    with open(filename) as file:
         raw = json.load(file)
     
     results = {}
