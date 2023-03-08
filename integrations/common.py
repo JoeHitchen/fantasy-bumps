@@ -135,5 +135,10 @@ def add_crews_by_gender(start_order: StartOrder, positions: PositionMap, gender:
             for crew, position
             in position_order[:division['size']]
         ]
+        
+        if len(position_order) < division['size']:
+            division['size'] = len(position_order)
+            return
+        
         position_order = position_order[division['size']:]
 

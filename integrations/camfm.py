@@ -1,13 +1,14 @@
-from datetime import datetime
 from typing import List, cast
+from datetime import time
 import logging
 import re
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
-from .types import Crew, PositionMap
-from .common import LENTS, MAYS, series_text_map
+from .types import Crew, PositionMap, Division, StartOrder
+from .common import series_text_map, MEN, WOMEN, race_time_parser, add_crews_by_gender
+from . import magic
 
 logger = logging.getLogger(__name__)
 
@@ -111,32 +112,11 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
         day_number,
     ))
     
-    # Map historical events
-    event_string = ''
-    try:
-        event_id = {
-            (LENTS, 2017): 1029,
-            (MAYS, 2017): 1064,
-            (LENTS, 2018): 1175,
-            (MAYS, 2018): 1214,
-            (LENTS, 2019): 1318,
-            (MAYS, 2019): 1353,
-            (LENTS, 2020): 1400,
-            (LENTS, 2022): 2000,
-            (MAYS, 2022): 3100,
-        }[(series, year)]
-        
-        logger.info(f'Using CamFM event #{event_id} for {series_text} {year}')
-        event_string = f'&bumps_id={event_id}' if event_id else ''
-    
-    except KeyError:
-        if year < datetime.now().year and not event_id:
-            raise ValueError('Historical results not mapped for {} {}'.format(
-                {LENTS: 'Lents', MAYS: 'Mays'}.get(series),
-                year,
-            ))
-        logger.info(f'Using latest CamFM event for {series_text} {year}')
-    
+    # Get CamFM event ID
+    event_id = magic.camfm_event_id(series, year)
+    event_id_log = f'Using CamFM event #{event_id}' if event_id else 'Using latest CamFM event'
+    logger.info(event_id_log + f' for {series_text} {year}')
+    event_string = f'&bumps_id={event_id}' if event_id else ''
     
     # Load page into parser
     response = requests.get(f'https://bumps.camfm.co.uk/?allboats=true{event_string}')
@@ -162,4 +142,58 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
         day_number,
     ))
     return positions
+
+
+def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
+    """Recreates the start order from the CamFM records."""
+    
+    def gun_time(time_str: str, split: bool) -> time:
+        """The time the start gun fires, accounting for split divisions."""
+        if not split:
+            return race_time_parser(time_str)
+        return race_time_parser(time_str[:-1] + str(int(time_str[-1]) + 4))
+    
+    # Get CamFM event ID
+    event_id = magic.camfm_event_id(series, year)
+    event_id_log = f'Using CamFM event #{event_id}' if event_id else 'Using latest CamFM event'
+    logger.info(event_id_log + f' for {series_text_map[series]} {year}')
+    event_string = f'&bumps_id={event_id}' if event_id else ''
+    
+    # Load page into parser
+    response = requests.get(f'https://bumps.camfm.co.uk/?{event_string}')
+    if not response.ok:
+        response.raise_for_status()
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    race_time_table = soup.select_one('table.racetimes')
+    assert race_time_table
+    
+    # Get division structure
+    divisions = []
+    for row in race_time_table.findChildren('tr'):
+        
+        if 'racetimesheader' in row.get_attribute_list('class'):
+            continue
+        
+        cells = row.findChildren('td')
+        div_ids = next(cells[0].children).text.split('/')
+        race_time_string = next(cells[1].children).text
+        
+        for div_id in div_ids:
+            divisions.append(Division(
+                gender = div_id[0],
+                number = int(div_id[1]),
+                race_time = gun_time(race_time_string, div_id != div_ids[-1]),
+                size = 17,
+                crews = [],
+                finalised = True,
+            ))
+    divisions.sort(key = lambda div: div['race_time'])
+    divisions[0]['size'] += 1  # Add footship crews
+    divisions[1]['size'] += 1
+    
+    positions = get_positions(series, year, day_number)
+    add_crews_by_gender(divisions, positions, MEN)
+    add_crews_by_gender(divisions, positions, WOMEN)
+    return divisions
 
