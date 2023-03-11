@@ -1,72 +1,24 @@
-from datetime import time
 import logging
 import re
 
 import requests
 
 from .types import PositionMap, Division, StartOrder
-from .common import TORPIDS, series_text_map, MEN, WOMEN, gender_map, roman_parser, club_parser
+from .common import series_text_map, MEN, WOMEN, gender_map
+from .common import roman_parser, race_time_parser, club_parser, start_order_to_positions
+from . import magic
 
 logger = logging.getLogger(__name__)
+BASE_URL = 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/'
 
 
-def _race_time_parser(div_header: str) -> time:
-    """Extracts the division time from the division header data."""
-    
-    time_match = re.search(r'\((\d\d?)[:.](\d\d)\)', div_header)
-    assert time_match
-    hour = int(time_match.groups()[0])
-    mins = int(time_match.groups()[1])
-    return time(hour if hour > 9 else hour + 12, mins)
-
-
-def __start_order_to_positions(start_order: StartOrder) -> PositionMap:
-    """Converts a start order to a set of positions."""
-    
-    rank = 0
-    positions = {}
-    for division in start_order:
-        for crew, status in division['crews']:
-            rank += 1
-            positions[crew] = (rank, status)
-    
-    return positions
-
-
-def _get_datafile_url(series: str, year: int, gender: str, day_number: int) -> str:
-    
-    # Get day string map
-    if (series, year) == (TORPIDS, 2021):
-        day_map = ['tue', 'wed', 'thu', 'fri', 'end']
-    else:
-        day_map = ['wed', 'thu', 'fri', 'sat', 'end']
-    
-    # Generate URL
-    if series == TORPIDS and year == 2022:
-        return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}/{}{}{}{}.dat'.format(
-            {'T': 'Torpids', 'E': 'Eights'}[series].lower(),
-            series.lower(),
-            str(year)[2:4],
-            day_map[day_number - 1],
-            gender.lower(),
-        )
-    
-    else:
-        return 'http://eodg.atm.ox.ac.uk/user/dudhia/rowing/{}{}{}{}.dat'.format(
-            series.lower(),
-            str(year)[2:4],
-            day_map[day_number - 1],
-            gender.lower(),
-        )
-
-
-def load_start_order_by_gender(
+def get_start_order_by_gender(
     series: str,
     year: int,
     gender: str,
     day_number: int,
 ) -> StartOrder:
-    """Retrieves the start order for a given race day and gender from Anu's data files."""
+    """Retrieves the start order for a given race day and gender from Anu's .dat files."""
     logger.info("Retrieving {}'s start order for {} {} (day {}) from Anu .dat".format(
         gender_map[gender].lower(),
         series_text_map[series],
@@ -75,8 +27,13 @@ def load_start_order_by_gender(
     ))
     
     # Get raw data
-    url = _get_datafile_url(series, year, gender, day_number)
-    response = requests.get(url)
+    response = requests.get(BASE_URL + magic.anu_data_url_template(series, year).format(
+        series_text_map[series].lower(),
+        series.lower(),
+        str(year)[2:4],
+        magic.anu_day_code(series, year, day_number),
+        gender.lower(),
+    ))
     if not response.ok:
         response.raise_for_status()
     
@@ -102,7 +59,7 @@ def load_start_order_by_gender(
         division: Division = {
             'gender': gender,
             'number': roman_parser(div_number_match.groups()[0]),
-            'race_time': _race_time_parser(div_header),
+            'race_time': race_time_parser(div_header),
             'size': int(div_size_match.groups()[0]),
             'finalised': '?' not in div_header,
             'crews': [],
@@ -132,6 +89,7 @@ def load_start_order_by_gender(
             ))
         
         divisions.append(division)
+    divisions.sort(key = lambda div: div['race_time'])
     
     logger.info("Retrieved {} {}'s divisions and {} crews for {} {} (day {}) from Anu .dat".format(
         len(divisions),
@@ -144,17 +102,23 @@ def load_start_order_by_gender(
     return divisions
 
 
+def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
+    """Retrieves the day's start order from Anu's .dat files."""
+    
+    return sorted([
+        *get_start_order_by_gender(series, year, MEN, day_number),
+        *get_start_order_by_gender(series, year, WOMEN, day_number),
+    ], key = lambda div: div['race_time'])
+
+
 def get_positions_by_gender(series: str, year: int, gender: str, day_number: int) -> PositionMap:
     """Generates a crew/position map for one gender from Anu's .dat files."""
     
-    return __start_order_to_positions(load_start_order_by_gender(series, year, gender, day_number))
+    return start_order_to_positions(get_start_order_by_gender(series, year, gender, day_number))
 
 
 def get_positions(series: str, year: int, day_number: int) -> PositionMap:
     """Generates a crew/position map from Anu's .dat files."""
     
-    return {
-        **get_positions_by_gender(series, year, MEN, day_number),
-        **get_positions_by_gender(series, year, WOMEN, day_number),
-    }
+    return start_order_to_positions(get_start_order(series, year, day_number))
 

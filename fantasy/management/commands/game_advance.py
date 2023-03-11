@@ -80,12 +80,12 @@ class Command(BaseCommand):
         """
         
         forced = bool(kwargs.get('forced', False))
-        oxford_source = kwargs.get('oxf_source', '')
+        oxf_source = kwargs.get('oxf_source', '')
         
         location_source_map: Dict[Locations, parsers.PositionSource] = {
-            Locations.OXFORD: parsers.get_validated_event_source(Locations.OXFORD, oxford_source),
-            Locations.CAMBRIDGE: parsers.get_validated_event_source(Locations.CAMBRIDGE, ''),
-            Locations.DEMO: parsers.get_validated_event_source(Locations.DEMO, ''),
+            Locations.OXFORD: parsers.get_validated_position_source(Locations.OXFORD, oxf_source),
+            Locations.CAMBRIDGE: parsers.get_validated_position_source(Locations.CAMBRIDGE, ''),
+            Locations.DEMO: parsers.get_validated_position_source(Locations.DEMO, ''),
         }
         series_source_map: Dict[Series, parsers.PositionSource] = {
             series: location_source_map[location]

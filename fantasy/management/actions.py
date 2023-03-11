@@ -1,8 +1,8 @@
 from datetime import date, time, timedelta
 
 from integrations.types import StartOrder
+from integrations import magic
 
-from . import magic
 from ..constants import Series, Genders
 from .. import models
 from .commands.utils import create_crew_tuple_map

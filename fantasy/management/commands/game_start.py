@@ -88,7 +88,7 @@ class Command(BaseCommand):
         ))
         
         # Parse data source inputs
-        event_source = parsers.get_validated_event_source(
+        event_source = parsers.get_validated_position_source(
             series_location,
             kwargs.get('source', ''),
         )

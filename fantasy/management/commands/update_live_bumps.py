@@ -67,7 +67,7 @@ class Command(BaseCommand):
         now = timezone.now()
         if active_days[-1].date > now.date():
             
-            start_order = anu_dat.load_start_order_by_gender(
+            start_order = anu_dat.get_start_order_by_gender(
                 event.series,
                 event.year,
                 gender,
