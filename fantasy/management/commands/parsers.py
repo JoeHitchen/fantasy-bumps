@@ -49,6 +49,19 @@ location_crew_list_sources_map: Dict[Locations, List[Sources]] = {
 }
 
 
+def _demo_start_order(series: str, year: int, day_number: int) -> integrations.StartOrder:
+    logger.info(f'Loading the demo start order for day {day_number}')
+    call_command(
+        'loaddata',
+        'demo_event',
+        'demo_days',
+        'demo_crews',
+        'demo_start_day{}'.format(day_number),
+    )
+    logger.info(f'Loaded the demo start order for day {day_number}')
+    return []
+
+
 def _demo_positions(series: str, year: int, day_number: int) -> integrations.PositionMap:
     logger.info(f'Loading the demo crew positions for day {day_number}')
     call_command(
@@ -72,7 +85,15 @@ def _noop_crew_lists(series: str, year: int) -> integrations.CrewListMap:
     return {}
 
 
-_event_source_function_map: Dict[Sources, integrations.PositionFcn] = {
+_start_order_source_function_map: Dict[Sources, integrations.StartOrderFcn] = {
+    Sources.DEMO: _demo_start_order,
+    Sources.LIVE: live_bumps.get_start_order,
+    Sources.ANU_HTML: anu_html.get_start_order,
+    Sources.ANU_DAT: anu_dat.get_start_order,
+    Sources.CAMFM: camfm.get_start_order,
+}
+
+_position_source_function_map: Dict[Sources, integrations.PositionFcn] = {
     Sources.DEMO: _demo_positions,
     Sources.LIVE: live_bumps.get_positions,
     Sources.ANU_HTML: anu_html.get_positions,
@@ -88,6 +109,11 @@ _crew_list_source_function_map: Dict[Sources, integrations.CrewListFcn] = {
 }
 
 
+class StartOrderSource(TypedDict):
+    source: Sources
+    function: integrations.StartOrderFcn
+
+
 class PositionSource(TypedDict):
     source: Sources
     function: integrations.PositionFcn
@@ -98,7 +124,20 @@ class CrewListSource(TypedDict):
     function: integrations.CrewListFcn
 
 
-def get_validated_event_source(location: Locations, source_request: str) -> PositionSource:
+def get_validated_start_order_source(location: Locations, source_request: str) -> StartOrderSource:
+    
+    valid_sources = location_event_sources_map[location]
+    
+    try:
+        source = Sources(source_request)
+    except ValueError:
+        source = valid_sources[0]
+    
+    assert source in valid_sources, f'`{source_request}` invalid start order source for {location}'
+    return {'source': source, 'function': _start_order_source_function_map[source]}
+
+
+def get_validated_position_source(location: Locations, source_request: str) -> PositionSource:
     
     valid_sources = location_event_sources_map[location]
     
@@ -108,7 +147,7 @@ def get_validated_event_source(location: Locations, source_request: str) -> Posi
         source = valid_sources[0]
     
     assert source in valid_sources, f'`{source_request}` invalid event source for {location}'
-    return {'source': source, 'function': _event_source_function_map[source]}
+    return {'source': source, 'function': _position_source_function_map[source]}
 
 
 def get_validated_crew_list_source(location: Locations, source_request: str) -> CrewListSource:

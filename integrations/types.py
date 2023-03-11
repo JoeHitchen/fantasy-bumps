@@ -22,4 +22,5 @@ class Division(TypedDict):
 
 
 StartOrder = List[Division]  # Implicitly first race first
+StartOrderFcn = Callable[[str, int, int], StartOrder]
 
