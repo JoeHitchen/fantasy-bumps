@@ -267,43 +267,51 @@ class Test__Game_Start(TestCase):
     
     @start_order_source_patch
     @patch('fantasy.management.commands.utils.load_crew_lists')
-    def test__handle__event_source__demo_default(self, _: Mock, rankings_mocks: Mock) -> None:
+    def test__handle__event_source__demo_default(self, _: Mock, start_order_mock: Mock) -> None:
         """The default source for Demo events is the demo handler."""
         
         GameStart().handle(series = 'demo', date = None, year = None)
-        rankings_mocks.assert_called_once_with(Locations.DEMO, '')
+        start_order_mock.assert_called_once_with(Locations.DEMO, '')
     
     
     @start_order_source_patch
     @patch('fantasy.management.commands.utils.load_crew_lists')
-    def test__handle__event_source__oxford_default(self, _: Mock, rankings_mocks: Mock) -> None:
+    def test__handle__event_source__oxford_default(self, _: Mock, start_order_mock: Mock) -> None:
         """The default source for Oxford events is Live Bumps."""
         
         GameStart().handle(series = 'torpids', date = None, year = None)
-        rankings_mocks.assert_called_once_with(Locations.OXFORD, '')
+        start_order_mock.assert_called_once_with(Locations.OXFORD, '')
     
     
     @start_order_source_patch
     @patch('fantasy.management.commands.utils.load_crew_lists')
-    def test__handle__event_source__oxford_alternate(self, _: Mock, rankings_mocks: Mock) -> None:
+    def test__handle__event_source__oxford_alternate(
+        self,
+        _: Mock,
+        start_order_mock: Mock,
+    ) -> None:
         """Anu can be used as an alternative source for Oxford events."""
         
         GameStart().handle(series = 'torpids', date = None, year = None, source = 'anu-html')
-        rankings_mocks.assert_called_once_with(Locations.OXFORD, 'anu-html')
+        start_order_mock.assert_called_once_with(Locations.OXFORD, 'anu-html')
     
     
     @start_order_source_patch
     @patch('fantasy.management.commands.utils.load_crew_lists')
-    def test__handle__event_source__cambridge_default(self, _: Mock, rankings_mocks: Mock) -> None:
+    def test__handle__event_source__cambridge_default(
+        self,
+        _: Mock,
+        start_order_mock: Mock,
+    ) -> None:
         """The default source for Cambridge events is CamFM."""
         
         GameStart().handle(series = 'mays', date = None, year = None)
-        rankings_mocks.assert_called_once_with(Locations.CAMBRIDGE, '')
+        start_order_mock.assert_called_once_with(Locations.CAMBRIDGE, '')
     
     
     @start_order_source_patch
     @patch('fantasy.management.commands.utils.load_crew_lists')
-    def test__handle__event_source__invalid(self, _: Mock, rankings_mocks: Mock) -> None:
+    def test__handle__event_source__invalid(self, _: Mock, start_order_mock: Mock) -> None:
         """An error is thrown if the preferred source is invalid."""
         self.skipTest('Temporarily invalid')
         
