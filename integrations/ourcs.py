@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup, Tag
 import requests
 
 from .types import Crew, CrewList, CrewListMap
-from .common import TORPIDS, EIGHTS, series_text_map, seat_parser, club_parser
+from .common import series_text_map, seat_parser, club_parser
+from . import magic
 
 logger = logging.getLogger(__name__)
 
@@ -33,27 +34,9 @@ def get_crew_lists(series: str, year: int) -> CrewListMap:
     series_text = series_text_map[series]
     logger.info(f'Retrieving crew lists for {series_text} {year} from OURCs')
     
-    
     # Identify OURCs event
-    try:
-        event_id = {
-            (TORPIDS, 2013): 103,
-            (TORPIDS, 2017): 173,
-            (EIGHTS, 2017): 174,
-            (TORPIDS, 2018): 184,
-            (EIGHTS, 2018): 186,
-            (TORPIDS, 2019): 195,
-            (EIGHTS, 2019): 198,
-            (TORPIDS, 2021): 217,
-            (TORPIDS, 2022): 229,
-            (EIGHTS, 2022): 230,
-            (TORPIDS, 2023): 239,
-        }[(series, year)]
-        logger.info(f'Using OURCs event #{event_id} for {series_text} {year}')
-    
-    except KeyError:
-        raise ValueError(f'No OURCs event mapped for {series_text} {year}')
-    
+    event_id = magic.ourcs_event_id(series, year)
+    logger.info(f'Using OURCs event #{event_id} for {series_text} {year}')
     
     # Load page into parser
     response = requests.get(

@@ -22,6 +22,28 @@ def anu_data_url_template(series: str, year: int) -> str:
     return '{1}{2}{3}{4}.dat'
 
 
+def ourcs_event_id(series: str, year: int) -> int:
+    """Returns the OURCs event ID for historical events."""
+    
+    try:
+        return {
+            (TORPIDS, 2013): 103,
+            (TORPIDS, 2017): 173,
+            (EIGHTS, 2017): 174,
+            (TORPIDS, 2018): 184,
+            (EIGHTS, 2018): 186,
+            (TORPIDS, 2019): 195,
+            (EIGHTS, 2019): 198,
+            (TORPIDS, 2021): 217,
+            (TORPIDS, 2022): 229,
+            (EIGHTS, 2022): 230,
+            (TORPIDS, 2023): 239,
+        }[(series, year)]
+    
+    except KeyError:
+        raise ValueError(f'No OURCs event mapped for {series_text_map.get(series)} {year}')
+
+
 def camfm_event_id(series: str, year: int) -> Optional[int]:
     """Returns the CamFM event ID for historical events."""
     
