@@ -1,15 +1,16 @@
-from datetime import date, time, timedelta
-from typing import Tuple, Optional, TypedDict
+from datetime import date, timedelta
+from typing import Optional, TypedDict
 from argparse import ArgumentParser
 import logging
 
 from django.core.management.base import BaseCommand
+from django.db import models as db
 from django.utils import timezone
 from typing_extensions import Unpack, NotRequired
 
-from ... import models
 from ...constants import Locations, Series as EventSeries
-from ..actions import create_days
+from ... import models
+from ..actions import create_event
 from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
@@ -88,7 +89,7 @@ class Command(BaseCommand):
         ))
         
         # Parse data source inputs
-        event_source = parsers.get_validated_position_source(
+        event_source = parsers.get_validated_start_order_source(
             series_location,
             kwargs.get('source', ''),
         )
@@ -102,82 +103,16 @@ class Command(BaseCommand):
         ))
         
         # Create event and load data
-        event, weds = create_event(series, year, start_date)
-        utils.load_crew_rankings(event_source['function'], weds)
+        start_order = event_source['function'](series, year, 1)
+        if series_location != Locations.DEMO:
+            event = create_event(series, year, start_date, start_order)
+        else:
+            event = models.Event.objects.get(tag = 'demogame')
+            event.days.update(date = db.F('date') + (start_date - event.first_day.date))
         utils.load_crew_lists(crew_list_source['function'], event)
         logger.info('Created a new game for {} {}, starting on {}'.format(
             series.label,
             year,
             start_date.isoformat(),
         ))
-
-
-def create_event(
-    series: EventSeries,
-    year: int,
-    start_date: date,
-) -> Tuple[models.Event, models.Day]:
-    
-    main_race_time = time(12, 00)
-    
-    if series == EventSeries.DEMO:
-        division_structure = {
-            'mens_division_sizes': [12, 12, 12, 12, 12, 13],
-            'womens_division_sizes': [12, 12, 12, 12, 13],
-        }
-    if series == EventSeries.TORPIDS and year == 2021:
-        division_structure = {
-            'mens_division_sizes': [9, 9, 9, 9, 9, 9, 10],
-            'womens_division_sizes': [9, 9, 9, 9, 9, 9, 10],
-        }
-    elif series == EventSeries.TORPIDS and year < 2021:
-        division_structure = {
-            'mens_division_sizes': [12, 12, 12, 12, 12, 13],
-            'womens_division_sizes': [12, 12, 12, 12, 13],
-        }
-    elif series == EventSeries.TORPIDS:
-        division_structure = {
-            'mens_division_sizes': [12, 12, 12, 12, 12, 13],
-            'womens_division_sizes': [12, 12, 12, 12, 12, 13],
-        }
-    elif series == EventSeries.EIGHTS and year == 2022:
-        main_race_time = time(12, 15)
-        division_structure = {
-            'mens_division_sizes': [12, 12, 12, 12, 12, 12, 13],
-            'womens_division_sizes': [12, 12, 12, 12, 12, 12, 11],
-        }
-    elif series == EventSeries.EIGHTS and year < 2022:
-        division_structure = {
-            'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
-            'womens_division_sizes': [13, 13, 13, 13, 13, 14],
-        }
-    elif series == EventSeries.EIGHTS:
-        division_structure = {
-            'mens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
-            'womens_division_sizes': [13, 13, 13, 13, 13, 13, 14],
-        }
-    elif series == EventSeries.MAYS and year == 2022:
-        main_race_time = time(13, 45)
-        division_structure = {
-            'mens_division_sizes': [17, 17, 17, 17, 12],
-            'womens_division_sizes': [17, 17, 17, 17, 6],
-        }
-    elif series == EventSeries.MAYS:
-        main_race_time = time(13, 45)
-        division_structure = {
-            'mens_division_sizes': [17, 17, 17, 17, 17, 6],
-            'womens_division_sizes': [17, 17, 17, 17, 9],
-        }
-    
-    event_tag = '{}{}'.format(series.label.lower(), year)
-    event = models.Event.objects.create(
-        id = 1 if series == EventSeries.DEMO else None,
-        series = series,
-        year = year,
-        tag = event_tag,
-        **division_structure,
-    )
-    
-    first_day = create_days(event, start_date, main_race_time)
-    return event, first_day
 
