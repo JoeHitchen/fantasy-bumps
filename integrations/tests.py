@@ -433,7 +433,7 @@ class Test__OURCs(TestCase):
 
 class Test__CamFM(TestCase):
     
-    def test__mays_2019(self) -> None:
+    def test__positions__mays_2019(self) -> None:
         """The positions given by the parser should match the expected results."""
         
         for day in [1, 2, 5]:
@@ -448,7 +448,7 @@ class Test__CamFM(TestCase):
                         self.assertEqual(parsed[crew], expected[crew])
     
     
-    def test__smoke(self) -> None:
+    def test__positions__smoke(self) -> None:
         """Checks that other historical events can be parsed without error."""
         
         events = [
