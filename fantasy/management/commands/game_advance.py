@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db.models import F
+from django.db import models as db, transaction
 from django.utils import timezone
 from typing_extensions import Unpack, NotRequired
 
@@ -43,6 +43,16 @@ class Command(BaseCommand):
     
     
     @staticmethod
+    def advance_core(day: models.Day, source_function: integrations.PositionFcn) -> None:
+        """The sensitive core of the game advance routine."""
+        
+        with transaction.atomic():
+            utils.load_crew_rankings(source_function, day.next)
+            tools.roll_over_purchases(day)
+            tools.evaluate_all_investments(day)
+    
+    
+    @staticmethod
     def perform_game_advance(
         source_function: integrations.PositionFcn,
         event: models.Event,
@@ -68,9 +78,7 @@ class Command(BaseCommand):
         
         
         # Update records
-        utils.load_crew_rankings(source_function, new_day)
-        tools.roll_over_purchases(old_day)
-        tools.evaluate_all_investments(old_day)
+        Command.advance_core(old_day, source_function)
     
     
     def handle(self, **kwargs: Unpack[AdvanceArgs]) -> None:
@@ -107,7 +115,7 @@ class Command(BaseCommand):
         for event in events:
             logger.info(f'Advancing {event}')
             if forced:
-                event.days.update(date = F('date') - timedelta(1))
+                event.days.update(date = db.F('date') - timedelta(1))
             
             self.perform_game_advance(series_source_map[Series(event.series)]['function'], event)
             logger.info(f'Advanced {event}')
