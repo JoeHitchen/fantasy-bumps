@@ -14,7 +14,7 @@
   "pk": 2,
   "fields": {
     "event": 1,
-    "name": "Wednesday",
+    "name": "Thursday",
     "date": "2020-02-27",
     "first_race_time": "12:00:00"
   }
@@ -24,7 +24,7 @@
   "pk": 3,
   "fields": {
     "event": 1,
-    "name": "Wednesday",
+    "name": "Friday",
     "date": "2020-02-28",
     "first_race_time": "12:00:00"
   }
@@ -34,7 +34,7 @@
   "pk": 4,
   "fields": {
     "event": 1,
-    "name": "Wednesday",
+    "name": "Saturday",
     "date": "2020-02-29",
     "first_race_time": "12:00:00"
   }
@@ -44,7 +44,7 @@
   "pk": 5,
   "fields": {
     "event": 1,
-    "name": "Wednesday",
+    "name": "Finish",
     "date": "2020-03-01",
     "first_race_time": "12:00:00"
   }
