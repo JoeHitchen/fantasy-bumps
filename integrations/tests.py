@@ -82,6 +82,7 @@ class Test__LiveBumps(TestCase):
             (TORPIDS, 2021, 128),
             (TORPIDS, 2022, 134),
             (EIGHTS, 2022, 168),
+            (TORPIDS, 2023, 146),
         ]
         
         for series, year, num_crews in events:
@@ -120,6 +121,7 @@ class Test__LiveBumps(TestCase):
             (TORPIDS, 2021, 14, 128),
             (TORPIDS, 2022, 11, 134),
             (EIGHTS, 2022, 14, 168),
+            (TORPIDS, 2023, 12, 146),
         ]
         
         for series, year, num_divs, num_crews in events:
@@ -144,6 +146,7 @@ class Test__LiveBumps(TestCase):
             (TORPIDS, 2021, 137),
             (TORPIDS, 2022, 164),
             (EIGHTS, 2022, 181),
+            (TORPIDS, 2023, 164),
         ]
         
         for series, year, num_crews in events:
@@ -300,6 +303,7 @@ class Test__Anu__HTML(TestCase):
             # At time of writing, no pre-Covid start orders are available
             (TORPIDS, 2022, 134),
             (EIGHTS, 2022, 168),
+            (TORPIDS, 2023, 146),
         ]
         
         for series, year, num_crews in events:
@@ -417,6 +421,7 @@ class Test__OURCs(TestCase):
             (TORPIDS, 2021, 137),
             (TORPIDS, 2022, 164),
             (EIGHTS, 2022, 181),
+            (TORPIDS, 2023, 164),
         ]
         
         for series, year, num_crews in events:
@@ -455,6 +460,8 @@ class Test__CamFM(TestCase):
             (MAYS, 2019, 168),
             (LENTS, 2020, 120),
             (LENTS, 2022, 120),
+            (MAYS, 2022, 154),
+            (LENTS, 2023, 119),  # Should be 120 but CamFM messed up Magd & Robi W1s
         ]
         
         for series, year, num_crews in events:
@@ -487,6 +494,7 @@ class Test__CamFM(TestCase):
             (MAYS, 2017, 9, 155),
             (MAYS, 2018, 9, 154),
             (MAYS, 2019, 11, 168),
+            (MAYS, 2022, 10, 154),
         ]
         
         for series, year, num_divs, num_crews in events:
