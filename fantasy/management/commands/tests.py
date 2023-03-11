@@ -445,6 +445,8 @@ class Test__Game_Advance_Core(TestCase):
         
         GameAdvance.advance_core(self.day, roll_over_positions)
         
+        self.day.refresh_from_db()
+        self.assertTrue(self.day.advanced)
         self.assertEqual(self.day.next.ranking.count(), 18)
         self.assertEqual(self.day.next.purchases.count(), 18)
         
@@ -453,6 +455,27 @@ class Test__Game_Advance_Core(TestCase):
         self.assertNotEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
         self.assertNotEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
         self.assertNotEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__already_advanced(self) -> None:
+        """The advance is rejected with an error if the day has already been advanced."""
+        
+        self.day.advanced = True
+        self.day.save()
+        
+        with self.assertRaises(models.Day.DoesNotExist):
+            GameAdvance.advance_core(self.day, roll_over_positions)
+        
+        self.day.refresh_from_db()
+        self.assertTrue(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 0)
+        self.assertEqual(self.day.next.purchases.count(), 0)
+        
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
     
     
     @patch('fantasy.game_tools.evaluate_all_investments')
@@ -468,6 +491,8 @@ class Test__Game_Advance_Core(TestCase):
         with self.assertRaises(Exception):
             GameAdvance.advance_core(self.day, roll_over_positions)
         
+        self.day.refresh_from_db()
+        self.assertFalse(self.day.advanced)
         self.assertEqual(self.day.next.ranking.count(), 0)
         self.assertEqual(self.day.next.purchases.count(), 0)
         

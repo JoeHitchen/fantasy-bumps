@@ -47,9 +47,18 @@ class Command(BaseCommand):
         """The sensitive core of the game advance routine."""
         
         with transaction.atomic():
-            utils.load_crew_rankings(source_function, day.next)
-            tools.roll_over_purchases(day)
-            tools.evaluate_all_investments(day)
+            transaction_day = (
+                models.Day.objects
+                .select_for_update()
+                .get(id = day.id, advanced = False)
+            )
+            
+            utils.load_crew_rankings(source_function, transaction_day.next)
+            tools.roll_over_purchases(transaction_day)
+            tools.evaluate_all_investments(transaction_day)
+            
+            transaction_day.advanced = True
+            transaction_day.save()
     
     
     @staticmethod
