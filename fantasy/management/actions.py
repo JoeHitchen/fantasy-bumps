@@ -23,6 +23,7 @@ def create_event(
     event = models.Event.objects.create(
         series = series,
         year = year,  # Can't use start_date.year to support historical events
+        tag = f'{series.label.lower()}{year}',
         mens_division_sizes = [div['size'] for div in mens_divisions],
         womens_division_sizes = [div['size'] for div in womens_divisions],
     )
