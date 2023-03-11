@@ -481,6 +481,47 @@ class Test__Game_Advance_Core(TestCase):
         self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
     
     
+    def test__market_hold(self) -> None:
+        """The advance is rejected with an error if the markets are held closed."""
+        
+        self.day.event.market_held_closed = True
+        self.day.event.save()
+        
+        with self.assertRaises(models.Day.DoesNotExist):
+            GameAdvance.advance_core(self.day, roll_over_positions)
+        
+        self.day.refresh_from_db()
+        self.assertFalse(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 0)
+        self.assertEqual(self.day.next.purchases.count(), 0)
+        
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__market_hold_override(self) -> None:
+        """The market hold rejection can be overriden if desired."""
+        
+        self.day.event.market_held_closed = True
+        self.day.event.save()
+        
+        GameAdvance.advance_core(self.day, roll_over_positions, override_hold = True)
+        
+        self.day.refresh_from_db()
+        self.assertTrue(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 18)
+        self.assertEqual(self.day.next.purchases.count(), 18)
+        
+        self.entry.refresh_from_db()
+        self.assertNotEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
     @patch('fantasy.game_tools.evaluate_all_investments')
     def test__error_rollback(self, evaluate_mock: Mock) -> None:
         """All changes should be rolled back if an error occurs."""
@@ -556,7 +597,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.TORPIDS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(live_bumps.get_positions, event)
+        perform_mock.assert_called_once_with(live_bumps.get_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -566,7 +607,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.TORPIDS, self.today)
         
         GameAdvance().handle(oxf_source = 'anu-html')
-        perform_mock.assert_called_once_with(anu_html.get_positions, event)
+        perform_mock.assert_called_once_with(anu_html.get_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -576,7 +617,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.LENTS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(camfm.get_positions, event)
+        perform_mock.assert_called_once_with(camfm.get_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -586,7 +627,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.DEMO, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(parsers._demo_positions, event)
+        perform_mock.assert_called_once_with(parsers._demo_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -598,8 +639,8 @@ class Test__Game_Advance(TestCase):
         
         GameAdvance().handle()
         self.assertEqual(perform_mock.call_count, 2)
-        perform_mock.assert_any_call(live_bumps.get_positions, torpids)
-        perform_mock.assert_any_call(camfm.get_positions, lents)
+        perform_mock.assert_any_call(live_bumps.get_positions, torpids, False)
+        perform_mock.assert_any_call(camfm.get_positions, lents, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -612,7 +653,23 @@ class Test__Game_Advance(TestCase):
         lents = prepare_event(Series.LENTS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(camfm.get_positions, lents)  # Does not call Torpids
+        perform_mock.assert_called_once_with(camfm.get_positions, lents, False)
+        # ^ Does not call Torpids
+    
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__held_closed_override(self, perform_mock: Mock) -> None:
+        """The market hold status can be ignored on demand."""
+        
+        torpids = prepare_event(Series.TORPIDS, self.today)
+        torpids.market_held_closed = True
+        torpids.save()
+        lents = prepare_event(Series.LENTS, self.today)
+        
+        GameAdvance().handle(override = True)
+        self.assertEqual(perform_mock.call_count, 2)
+        perform_mock.assert_any_call(live_bumps.get_positions, torpids, True)
+        perform_mock.assert_any_call(camfm.get_positions, lents, True)
 
 
 class Test__Renumbered_Crew(TestCase):

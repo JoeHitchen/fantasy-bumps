@@ -22,6 +22,7 @@ logger = logging.getLogger('fantasy.game_advance')
 
 class AdvanceArgs(TypedDict):
     oxf_source: NotRequired[str]
+    override: NotRequired[bool]
 
 
 class Command(BaseCommand):
@@ -32,6 +33,11 @@ class Command(BaseCommand):
             '--forced',
             action = 'store_true',
             help = 'Force advance by shifting dates forward by 1 day',
+        )
+        parser.add_argument(
+            '--override',
+            action = 'store_true',
+            help = 'Overrides any market holds in place',
         )
         
         oxford_sources = parsers.location_event_sources_map[Locations.OXFORD]
@@ -44,13 +50,20 @@ class Command(BaseCommand):
     
     
     @staticmethod
-    def advance_core(day: models.Day, source_function: integrations.PositionFcn) -> None:
+    def advance_core(
+        day: models.Day,
+        source_function: integrations.PositionFcn,
+        override_hold: bool = False,
+    ) -> None:
         """The sensitive core of the game advance routine."""
+        
+        reject_for_hold_args = {'event__market_held_closed': False} if not override_hold else {}
         
         with transaction.atomic():
             transaction_day = (
                 models.Day.objects
                 .select_for_update()
+                .filter(**reject_for_hold_args)
                 .get(id = day.id, advanced = False)
             )
             
@@ -66,6 +79,7 @@ class Command(BaseCommand):
     def perform_game_advance(
         source_function: integrations.PositionFcn,
         event: models.Event,
+        override_hold: bool = False,
     ) -> None:
         """Loads any new results and updates the game state accordingly."""
         
@@ -89,7 +103,7 @@ class Command(BaseCommand):
         
         # Update records
         try:
-            Command.advance_core(old_day, source_function)
+            Command.advance_core(old_day, source_function, override_hold)
             
         except models.Day.DoesNotExist:
             logger.info(f'{old_day} of {event} has already been advanced')
@@ -116,6 +130,7 @@ class Command(BaseCommand):
         
         forced = bool(kwargs.get('forced', False))
         oxf_source = kwargs.get('oxf_source', '')
+        override_hold = bool(kwargs.get('override', False))
         
         location_source_map: Dict[Locations, parsers.PositionSource] = {
             Locations.OXFORD: parsers.get_validated_position_source(Locations.OXFORD, oxf_source),
@@ -129,10 +144,11 @@ class Command(BaseCommand):
         
         
         date_range = (timezone.now() - timedelta(7), timezone.now() + timedelta(7))
+        market_hold_args = {'market_held_closed': True} if not override_hold else {}
         events = (
             models.Event.objects
             .filter(days__date__range = date_range)
-            .exclude(market_held_closed = True)
+            .exclude(**market_hold_args)
             .distinct()
         )
         if not events:
@@ -144,6 +160,10 @@ class Command(BaseCommand):
             if forced:
                 event.days.update(date = db.F('date') - timedelta(1))
             
-            self.perform_game_advance(series_source_map[Series(event.series)]['function'], event)
+            self.perform_game_advance(
+                series_source_map[Series(event.series)]['function'],
+                event,
+                override_hold,
+            )
             logger.info(f'Advanced {event}')
 
