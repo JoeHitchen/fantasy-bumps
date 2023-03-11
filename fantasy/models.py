@@ -87,6 +87,8 @@ class Day(models.Model):
     date = models.DateField(db_index = True)
     first_race_time = models.TimeField(null = True, db_index = True)
     
+    advanced = models.BooleanField(default = False)
+    
     class Meta:
         ordering = ['event', 'date']
     

@@ -5,12 +5,15 @@ import logging
 
 from django.test import TestCase
 from django.utils import timezone
+from django.core import mail
 
+from integrations.types import PositionMap
 from integrations import live_bumps, anu_html, camfm, ourcs
 from core.tests import exists
 
 from ... import models
-from ...constants import Locations, Series, Clubs, Genders
+from ...constants import Locations, Series, Clubs, Genders, money
+from ...game_tools import evaluate_all_investments
 from ..actions import create_days
 from .game_start import Command as GameStart
 from .game_advance import Command as GameAdvance
@@ -30,6 +33,15 @@ def prepare_event(series: Series, start_date: date) -> models.Event:
     )
     create_days(event, start_date, time(12, 00))
     return event
+
+
+def roll_over_positions(series: str, year: int, day_number: int) -> PositionMap:
+    days = list(exists(models.Event.objects.first()).days.all())
+    positions = days[day_number - 2].ranking.all()
+    return {
+        position.crew.as_tuple(): (position.rank, True)
+        for position in positions
+    }
 
 
 def dummy_positions_by_gender(
@@ -401,8 +413,179 @@ class Test__Game_Start(TestCase):
 
 
 class Test__Game_Advance(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
+    
+    event: models.Event
+    day: models.Day
+    entry: models.GameEntry
     
     today = timezone.now().date()
+    
+    @classmethod
+    def setUpTestData(cls) -> None:
+        
+        cls.event = models.Event.objects.get(tag = 'devgame')
+        cls.day = cls.event.first_day
+        crew_men = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN, rank = 1)
+        crew_women = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
+        
+        team = models.Team.objects.get(user__username = 'DevTeam')
+        cls.entry = team.entries.create(event = cls.day.event)
+        
+        for seat in models.Seat.objects.all():
+            team.purchases.create(
+                day = cls.day,
+                seat = seat,
+                crew = crew_men,
+            )
+            team.purchases.create(
+                day = cls.day,
+                seat = seat,
+                crew = crew_women,
+            )
+    
+    
+    def test__core__success(self) -> None:
+        """Loads positions, rolls over purchases, and awards payouts."""
+        
+        GameAdvance.advance_core(self.day, roll_over_positions)
+        
+        self.day.refresh_from_db()
+        self.assertTrue(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 18)
+        self.assertEqual(self.day.next.purchases.count(), 18)
+        
+        self.entry.refresh_from_db()
+        self.assertNotEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__core__already_advanced(self) -> None:
+        """The advance is rejected with an error if the day has already been advanced."""
+        
+        self.day.advanced = True
+        self.day.save()
+        
+        with self.assertRaises(models.Day.DoesNotExist):
+            GameAdvance.advance_core(self.day, roll_over_positions)
+        
+        self.day.refresh_from_db()
+        self.assertTrue(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 0)
+        self.assertEqual(self.day.next.purchases.count(), 0)
+        
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__core__market_hold(self) -> None:
+        """The advance is rejected with an error if the markets are held closed."""
+        
+        self.day.event.market_held_closed = True
+        self.day.event.save()
+        
+        with self.assertRaises(models.Day.DoesNotExist):
+            GameAdvance.advance_core(self.day, roll_over_positions)
+        
+        self.day.refresh_from_db()
+        self.assertFalse(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 0)
+        self.assertEqual(self.day.next.purchases.count(), 0)
+        
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    def test__core__market_hold_override(self) -> None:
+        """The market hold rejection can be overriden if desired."""
+        
+        self.day.event.market_held_closed = True
+        self.day.event.save()
+        
+        GameAdvance.advance_core(self.day, roll_over_positions, override_hold = True)
+        
+        self.day.refresh_from_db()
+        self.assertTrue(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 18)
+        self.assertEqual(self.day.next.purchases.count(), 18)
+        
+        self.entry.refresh_from_db()
+        self.assertNotEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertNotEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    @patch('fantasy.game_tools.evaluate_all_investments')
+    def test__core__error_rollback(self, evaluate_mock: Mock) -> None:
+        """All changes should be rolled back if an error occurs."""
+        
+        def evaluate_then_error(day: models.Day) -> None:
+            evaluate_all_investments(day)
+            raise Exception('Rollback Test')
+        
+        evaluate_mock.side_effect = evaluate_then_error
+        
+        with self.assertRaises(Exception):
+            GameAdvance.advance_core(self.day, roll_over_positions)
+        
+        self.day.refresh_from_db()
+        self.assertFalse(self.day.advanced)
+        self.assertEqual(self.day.next.ranking.count(), 0)
+        self.assertEqual(self.day.next.purchases.count(), 0)
+        
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
+        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    @patch.object(GameAdvance, 'advance_core')
+    def test__perform__success(self, core_mock: Mock) -> None:
+        """No special actions are performed upon success."""
+        
+        GameAdvance.perform_game_advance(roll_over_positions, self.event)
+        core_mock.assert_called_once()
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 0)
+    
+    
+    @patch.object(GameAdvance, 'advance_core')
+    def test__perform__unknown_core_error(self, core_mock: Mock) -> None:
+        """Markets are held closed and an e-mail sent upon unknown core error."""
+        
+        core_mock.side_effect = ValueError('Unknown Error')
+        
+        GameAdvance.perform_game_advance(roll_over_positions, self.event)
+
+        self.event.refresh_from_db()
+        self.assertTrue(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 1)
+    
+    
+    @patch.object(GameAdvance, 'advance_core')
+    def test__perform__core_rejection(self, core_mock: Mock) -> None:
+        """No special actions are if the advance is rejected."""
+        
+        core_mock.side_effect = models.Day.DoesNotExist
+        
+        GameAdvance.perform_game_advance(roll_over_positions, self.event)
+
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 0)
+    
     
     @patch.object(GameAdvance, 'perform_game_advance')
     def test__handle__oxford_default_source(self, perform_mock: Mock) -> None:
@@ -411,7 +594,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.TORPIDS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(live_bumps.get_positions, event)
+        perform_mock.assert_called_once_with(live_bumps.get_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -421,7 +604,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.TORPIDS, self.today)
         
         GameAdvance().handle(oxf_source = 'anu-html')
-        perform_mock.assert_called_once_with(anu_html.get_positions, event)
+        perform_mock.assert_called_once_with(anu_html.get_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -431,7 +614,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.LENTS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(camfm.get_positions, event)
+        perform_mock.assert_called_once_with(camfm.get_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -441,7 +624,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.DEMO, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(parsers._demo_positions, event)
+        perform_mock.assert_called_once_with(parsers._demo_positions, event, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -453,8 +636,8 @@ class Test__Game_Advance(TestCase):
         
         GameAdvance().handle()
         self.assertEqual(perform_mock.call_count, 2)
-        perform_mock.assert_any_call(live_bumps.get_positions, torpids)
-        perform_mock.assert_any_call(camfm.get_positions, lents)
+        perform_mock.assert_any_call(live_bumps.get_positions, torpids, False)
+        perform_mock.assert_any_call(camfm.get_positions, lents, False)
     
     
     @patch.object(GameAdvance, 'perform_game_advance')
@@ -467,7 +650,23 @@ class Test__Game_Advance(TestCase):
         lents = prepare_event(Series.LENTS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(camfm.get_positions, lents)  # Does not call Torpids
+        perform_mock.assert_called_once_with(camfm.get_positions, lents, False)
+        # ^ Does not call Torpids
+    
+    
+    @patch.object(GameAdvance, 'perform_game_advance')
+    def test__handle__held_closed_override(self, perform_mock: Mock) -> None:
+        """The market hold status can be ignored on demand."""
+        
+        torpids = prepare_event(Series.TORPIDS, self.today)
+        torpids.market_held_closed = True
+        torpids.save()
+        lents = prepare_event(Series.LENTS, self.today)
+        
+        GameAdvance().handle(override = True)
+        self.assertEqual(perform_mock.call_count, 2)
+        perform_mock.assert_any_call(live_bumps.get_positions, torpids, True)
+        perform_mock.assert_any_call(camfm.get_positions, lents, True)
 
 
 class Test__Renumbered_Crew(TestCase):
