@@ -6,6 +6,7 @@ import logging
 from django.core.management.base import BaseCommand
 from django.db import models as db, transaction
 from django.utils import timezone
+from django.core.mail import mail_admins
 from typing_extensions import Unpack, NotRequired
 
 from integrations import types as integrations
@@ -87,7 +88,24 @@ class Command(BaseCommand):
         
         
         # Update records
-        Command.advance_core(old_day, source_function)
+        try:
+            Command.advance_core(old_day, source_function)
+            
+        except models.Day.DoesNotExist:
+            logger.info(f'{old_day} of {event} has already been advanced')
+            
+        except Exception as err:
+            logger.error(f'An error occurred advancing {old_day} of {event}\n >> {err}')
+            
+            event.market_held_closed = True
+            event.save()
+            
+            mail_admins(f'Game Advance Failed - {event}', (
+                f'An unknown error occurred when advancing {old_day} of {event}.'
+                + f'\n\n >> {err}'
+                + '\n\nThe markets are held closed. '
+                + "Hopefully it's an easy fix..."
+            ), fail_silently = True)
     
     
     def handle(self, **kwargs: Unpack[AdvanceArgs]) -> None:

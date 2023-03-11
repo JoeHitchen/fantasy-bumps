@@ -5,6 +5,7 @@ import logging
 
 from django.test import TestCase
 from django.utils import timezone
+from django.core import mail
 
 from integrations.types import PositionMap
 from integrations import live_bumps, anu_html, camfm, ourcs
@@ -414,13 +415,15 @@ class Test__Game_Start(TestCase):
 class Test__Game_Advance_Core(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
     
+    event: models.Event
     day: models.Day
     entry: models.GameEntry
     
     @classmethod
     def setUpTestData(cls) -> None:
         
-        cls.day = exists(models.Day.objects.first())
+        cls.event = models.Event.objects.get(tag = 'devgame')
+        cls.day = cls.event.first_day
         crew_men = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN, rank = 1)
         crew_women = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
         
@@ -501,6 +504,45 @@ class Test__Game_Advance_Core(TestCase):
         self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
         self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
         self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
+    
+    
+    @patch.object(GameAdvance, 'advance_core')
+    def test__perform__success(self, core_mock: Mock) -> None:
+        """No special actions are performed upon success."""
+        
+        GameAdvance.perform_game_advance(roll_over_positions, self.event)
+        core_mock.assert_called_once()
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 0)
+    
+    
+    @patch.object(GameAdvance, 'advance_core')
+    def test__perform__unknown_core_error(self, core_mock: Mock) -> None:
+        """Markets are held closed and an e-mail sent upon unknown core error."""
+        
+        core_mock.side_effect = ValueError('Unknown Error')
+        
+        GameAdvance.perform_game_advance(roll_over_positions, self.event)
+
+        self.event.refresh_from_db()
+        self.assertTrue(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 1)
+    
+    
+    @patch.object(GameAdvance, 'advance_core')
+    def test__perform__core_rejection(self, core_mock: Mock) -> None:
+        """No special actions are if the advance is rejected."""
+        
+        core_mock.side_effect = models.Day.DoesNotExist
+        
+        GameAdvance.perform_game_advance(roll_over_positions, self.event)
+
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 0)
+        
 
 
 class Test__Game_Advance(TestCase):
