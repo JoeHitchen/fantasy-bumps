@@ -346,18 +346,19 @@ def crew_list_box(crew_list, seats, finances = None, show_actions = False):
 '''))
 def crew_status_box(event, gender, crew_valid, other_crew_valid):
 
-    def styling(gender, valid):
+    def styling(gender, valid, done):
         return {
-            'colour': 'success' if valid else 'danger',
+            'colour': 'primary' if done else 'success' if valid else 'danger',
             'crew': "{}'s crew".format(gender.label),
-            'text': 'Ready' if valid else 'Not ready',
+            'text': 'Concluded ' if done else 'Ready' if valid else 'Not ready',
         }
     
+    event_done = not event.active_day.first_race
     other_gender = utils.reverse_gender(gender)
     
     return {
-        'main': styling(gender, crew_valid),
-        'other': styling(other_gender, other_crew_valid),
+        'main': styling(gender, crew_valid, event_done),
+        'other': styling(other_gender, other_crew_valid, event_done),
         'other_gender_link': reverse(
             'fantasy:{}'.format(other_gender.label.lower()),
             kwargs = {'event_tag': event.tag},
