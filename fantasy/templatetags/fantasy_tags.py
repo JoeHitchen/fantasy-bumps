@@ -383,10 +383,11 @@ def crew_ready_button(event, gender):
         }[gender]
     
     except AttributeError:
+        action = 'compete' if event.active_day.first_race else 'view your results'
         return {
             'link': reverse('login'),
             'colour': 'primary',
-            'text': 'Sign in to compete',
+            'text': f'Sign in to {action}',
         }
     
     if not event.active_day.first_race:
