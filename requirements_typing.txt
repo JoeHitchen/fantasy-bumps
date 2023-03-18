@@ -6,5 +6,4 @@ types-requests
 types-beautifulsoup4
 
 # Project Installs
-pytz
 django-celery-beat
