@@ -741,7 +741,22 @@ class Test__Crew_List(TestCase):
 
 @tag('frontend')
 class Test__Event_Box(TestCase):
-    fixtures = ['dev_event', 'dev_days']
+    fixtures = ['dev_event']
+    
+    @classmethod
+    def setUpTestData(cls):
+        event = models.Event.objects.first()
+        event.days.create(
+            name = 'Day One',
+            date = timezone.now().date(),
+            first_race_time = time(12, 00),
+        )
+        event.days.create(
+            name = 'Day Two',
+            date = timezone.now().date() + timedelta(1),
+            first_race_time = time(12, 00),
+        )
+        event.days.create(name = 'Finish', date = timezone.now().date() + timedelta(2))
     
     @staticmethod
     def crew_ready_button(event, gender):
@@ -768,6 +783,24 @@ class Test__Event_Box(TestCase):
         
         # Test containment
         self.assertInHTML('Sign in to compete', html)
+    
+    
+    def test__crew_ready_button__no_crew_valid_flags_after_racing(self):
+        """Renders a standard button that directs the user to the sign in page."""
+        
+        # Generate button
+        event = models.Event.objects.first()
+        event.days.update(date = db.F('date') - timedelta(2))
+        html = self.crew_ready_button(event, Genders.WOMEN)
+        
+        # Test root
+        button = parser(html)
+        self.assertEqual(button.tag, 'a')
+        self.assertEqual(button.get('href'), reverse('login'))
+        self.assertIn('btn-primary', button.get('class').split())
+        
+        # Test containment
+        self.assertInHTML('Sign in to view your results', html)
     
     
     def test__crew_ready_button__crew_ready(self):
@@ -852,6 +885,7 @@ class Test__Event_Box(TestCase):
         
         # Generate button
         event = models.Event.objects.first()
+        event.days.update(date = db.F('date') - timedelta(2))
         event.mens_crew_ready = True
         event.womens_crew_ready = False
         html = self.crew_ready_button(event, Genders.WOMEN)
