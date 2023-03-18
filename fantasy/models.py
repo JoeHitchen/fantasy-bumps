@@ -32,7 +32,12 @@ class Event(models.Model):
     market_held_closed = models.BooleanField(default = False)
     
     def __str__(self):
-        return '{} {}'.format(self.get_series_display(), self.year)
+        series_long = {
+            Series.EIGHTS: 'Summer Eights',
+            Series.LENTS: 'Lent Bumps',
+            Series.MAYS: 'May Bumps',
+        }.get(self.series, self.get_series_display())
+        return '{} {}'.format(series_long, self.year)
     
     
     @cached_property
