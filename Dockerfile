@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM python:3.11-alpine
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
@@ -16,9 +16,7 @@ RUN apk add --no-cache --update mariadb-connector-c-dev \
  && apk del --purge .build
 
 COPY --chown=python requirements.txt .
-RUN apk add --no-cache --virtual .build gcc musl-dev \
- && pip install --no-cache-dir -r requirements.txt \
- && apk del --purge .build
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=python . .
 
