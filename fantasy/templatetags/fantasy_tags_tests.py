@@ -800,7 +800,7 @@ class Test__Event_Box(TestCase):
         self.assertIn('btn-primary', button.get('class').split())
         
         # Test containment
-        self.assertInHTML('Sign in to view your results', html)
+        self.assertInHTML('Sign in for your team', html)
     
     
     def test__crew_ready_button__crew_ready(self):
