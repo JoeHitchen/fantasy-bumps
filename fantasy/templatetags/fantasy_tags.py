@@ -389,12 +389,12 @@ def crew_ready_button(event, gender):
             'text': 'Sign in to compete',
         }
     
-    if crew_ready:
+    if not event.active_day.first_race:
+        styles = {'colour': 'primary', 'text': 'View final crew'}
+    elif crew_ready:
         styles = {'colour': 'success', 'text': 'Ready to race'}
     elif event.active_day == event.first_day:
         styles = {'colour': 'danger', 'text': 'Entry incomplete'}
-    elif not event.active_day.first_race:
-        styles = {'colour': 'primary', 'text': 'View final crew'}
     else:
         styles = {'colour': 'danger', 'text': 'Subs required'}
     
