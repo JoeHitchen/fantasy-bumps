@@ -2,11 +2,11 @@ from datetime import timedelta
 import json
 import logging
 
-from celery import shared_task
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from django.utils import timezone
 from django.db.models import F
 
+from core.tasks import app
 from fantasy import models
 from fantasy.constants import Series, Genders
 from fantasy.management.commands.update_live_bumps import Command as UpdateLiveBumps
@@ -22,7 +22,7 @@ def boost_crabs(team, event, amounts, apply_at = timezone.now()):
     boost_crabs_task.apply_async((str(team), event.tag, amounts), eta = apply_at)
 
 
-@shared_task
+@app.task
 def boost_crabs_task(team_name, event_tag, amounts):
     """Provides a crab boost to a given team for an event."""
     
@@ -43,7 +43,7 @@ def boost_crabs_task(team_name, event_tag, amounts):
     )
 
 
-@shared_task
+@app.task
 def update_live_bumps(**kwargs):
     """A light wrapper that calls the Update Live Bumps management command."""
     
