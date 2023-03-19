@@ -8,7 +8,7 @@ from django.db.models import F
 
 from core.tasks import app
 from fantasy import models
-from fantasy.constants import Series, Genders
+from fantasy.constants import Series, Genders, money
 from fantasy.management.commands.update_live_bumps import Command as UpdateLiveBumps
 
 series_reverser = {series.label.lower(): series for series in Series}
@@ -24,7 +24,10 @@ def boost_crabs(team, event, amounts, apply_at = timezone.now()):
 
 @app.task
 def boost_crabs_task(team_name, event_tag, amounts):
-    """Provides a crab boost to a given team for an event."""
+    """Provides a crab boost to a given team for an event.
+    
+    *Assumes that the target team is on the starting budget.*
+    """
     
     logger.info('Boosting {} for {} by {} (men) & {} (women)'.format(
         team_name,
@@ -32,15 +35,19 @@ def boost_crabs_task(team_name, event_tag, amounts):
         *amounts,
     ))
     
-    models.GameEntry.objects.filter(
+    outcome = models.GameEntry.objects.filter(
         team__user__username = team_name,
         event__tag = event_tag,
+        mens_budget = money.INITIAL_BALANCE,  # Protection against double execution
+        womens_budget = money.INITIAL_BALANCE,
     ).update(
         mens_budget = F('mens_budget') + amounts[0],
         womens_budget = F('womens_budget') + amounts[1],
         mens_balance = F('mens_balance') + amounts[0],
         womens_balance = F('womens_balance') + amounts[1],
     )
+    
+    logger.info(f'Boost of {team_name} for {event_tag} ' + ('successful' if outcome else 'failed'))
 
 
 @app.task
