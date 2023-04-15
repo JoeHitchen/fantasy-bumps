@@ -48,7 +48,10 @@
           {% if event %}<a class="dropdown-item" href="{% url 'fantasy:team' event.tag user.username %}">My Crews</a>{% endif %}
           <a class="dropdown-item" href="{% url 'profile'%}">My Account</a>
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="{% url 'logout' %}">Sign out</a>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="dropdown-item">Sign out</button>
+          </form>
         </div>
       </div>
       {% else %}

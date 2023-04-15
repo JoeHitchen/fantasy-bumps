@@ -33,7 +33,7 @@ class Test__Ordered_Events(TestCase):
         t12.save()
         t12.days.create(date = '2012-02-26')
         
-        self.assertQuerysetEqual(utils.ordered_events(), [t15, t14, t13, t12])
+        self.assertQuerySetEqual(utils.ordered_events(), [t15, t14, t13, t12])
 
 
 

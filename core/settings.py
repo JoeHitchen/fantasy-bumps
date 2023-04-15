@@ -123,8 +123,6 @@ LANGUAGE_CODE = 'en-gb'
 USE_TZ = True
 TIME_ZONE = 'Europe/London'
 
-USE_L10N = False
-
 
 # Static files (CSS, JavaScript, Images)
 

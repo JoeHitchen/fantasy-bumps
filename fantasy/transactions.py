@@ -117,11 +117,8 @@ def _sell_body(purchase: models.Purchase) -> None:
         raise MultipleObjectsReturned
 
     try:
-        deleted = purchase.delete()
-    except AssertionError:
-        deleted = (0, {})
-    
-    if deleted[0] != 1:
+        purchase.delete()
+    except ValueError:
         raise purchase.DoesNotExist
 
 
