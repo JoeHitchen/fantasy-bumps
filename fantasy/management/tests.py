@@ -68,7 +68,7 @@ class Test__EventCreation(TestCase):
         self.assertEqual(event.womens_division_sizes, [4, 4, 5])
         
         self.assertEqual(event.days.count(), 5)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             event.days.values_list('first_race_time', flat = True),
             [time(11, 55), time(11, 55), time(11, 55), time(11, 55), None],
         )
@@ -93,7 +93,7 @@ class Test__EventCreation(TestCase):
         self.assertEqual(event.womens_division_sizes, [4, 4, 5])
         
         self.assertEqual(event.days.count(), 5)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             event.days.values_list('first_race_time', flat = True),
             [time(11, 55), time(11, 55), time(11, 55), time(10, 55), None],
         )

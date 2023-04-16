@@ -1,8 +1,8 @@
 from unittest.mock import patch, PropertyMock
 from datetime import datetime, timedelta
+import zoneinfo
 
 from django.utils import timezone
-import pytz
 
 from core.settings import TIME_ZONE
 
@@ -16,15 +16,13 @@ def localtime_time(time, shift = timedelta(0)):
     operation.
     """
     
-    naive = datetime.combine(
+    localtime = datetime.combine(
         timezone.localtime().date(),
         time,
+        tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
     ) + shift
     
-    return patch(
-        'django.utils.timezone.localtime',
-        return_value = pytz.timezone(TIME_ZONE).localize(naive),
-    )
+    return patch('django.utils.timezone.localtime', return_value = localtime)
 
 
 def market_opens(datetime):

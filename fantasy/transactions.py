@@ -71,10 +71,10 @@ def _buy_body(
         .select_related('seat', 'athlete')
     )
     
-    if any([purchase.seat == seat for purchase in crew_list]):
+    if any(purchase.seat == seat for purchase in crew_list):
         raise errors.DuplicateSeatError
     
-    if athlete and any([purchase.athlete == athlete for purchase in crew_list]):
+    if athlete and any(purchase.athlete == athlete for purchase in crew_list):
         athlete = None
     
     team.purchases.create(day = day, seat = seat, crew = crew, athlete = athlete)
@@ -117,11 +117,8 @@ def _sell_body(purchase: models.Purchase) -> None:
         raise MultipleObjectsReturned
 
     try:
-        deleted = purchase.delete()
-    except AssertionError:
-        deleted = (0, {})
-    
-    if deleted[0] != 1:
+        purchase.delete()
+    except ValueError:
         raise purchase.DoesNotExist
 
 

@@ -76,7 +76,7 @@ class Test__Index(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
         
-        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
         
         for event in response.context['recent_events']:
             with self.subTest(year = event.year):
@@ -92,7 +92,7 @@ class Test__Index(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
         
-        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
         
         for event in response.context['recent_events']:
             with self.subTest(year = event.year):
@@ -152,7 +152,7 @@ class Test__GuideRules(TestCase):
         
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/rules.html')
-        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
         self.assertEqual(response.context['money'], money)
     
     
@@ -322,7 +322,7 @@ class GamePageBase():
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertFalse('team' in response.context)
-        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
         
         self.extra_context_without_user(response.context)
     
@@ -343,7 +343,7 @@ class GamePageBase():
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertEqual(response.context['team'], self.team)
-        self.assertQuerysetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
         
         self.extra_context_with_user(response.context)
     
@@ -525,7 +525,7 @@ class MarketPageBase(GamePageBase):
         
         for index in range(0, len(expected)):
             with self.subTest(division_index = index):
-                self.assertQuerysetEqual(received[index], expected[index])
+                self.assertQuerySetEqual(received[index], expected[index])
     
     
     def extra_context_without_user(self, context):
@@ -1845,23 +1845,23 @@ class Test__Switch(TestCase, MessagesTestMixin):
         self.assertTemplateUsed(response, self.template)
         
         self.assertEqual(response.context['purchase'], self.purchase)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             response.context['rowers'],
             [self.ath_bow, self.ath_two, self.ath_thr],  # Does not include ath_cox
         )
         
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             response.context['other_purchased_athletes'],
             [self.ath_two],
         )
         
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             response.context['seats'],
             models.Seat.objects.all(),
             ordered = False,
         )
         
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             response.context['recent_events'],
             models.Event.objects.all(),
         )
