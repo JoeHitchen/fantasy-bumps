@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Tuple
+import zoneinfo
 
 from django.db import models
 from django.contrib.auth import models as auth
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.dispatch import receiver
-import pytz
 
 from core.settings import TIME_ZONE
 
@@ -125,8 +125,11 @@ class Day(models.Model):
         if not self.first_race_time:
             return None
         
-        naive = datetime.combine(self.date, self.first_race_time)
-        return pytz.timezone(TIME_ZONE).localize(naive)
+        return datetime.combine(
+            self.date,
+            self.first_race_time,
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+        )
     
     
     @lru_cache(maxsize=2)
@@ -173,11 +176,11 @@ class Day(models.Model):
         if not self.first_race:
             return
         
-        naive = datetime.combine(
+        return datetime.combine(
             self.prev.date if self.prev else self.date - timedelta(3),
             timings.MARKET_OPENS,
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
         )
-        return pytz.timezone(TIME_ZONE).localize(naive)
     
     
     @cached_property
