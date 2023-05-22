@@ -14,6 +14,11 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_HOSTS', '').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    '{}://{}'.format('http' if DEBUG else 'https', domain)
+    for domain in ALLOWED_HOSTS
+]
+
 
 # Application definition
 
