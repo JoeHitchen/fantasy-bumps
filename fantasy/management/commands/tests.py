@@ -850,7 +850,7 @@ class Test__Renumbered_Crew(TestCase):
 
 class Test__Live_Bumps(TestCase):
     
-    now = timezone.now()
+    now = timezone.localtime(timezone.now())
     
     @patch('integrations.anu_dat.get_positions_by_gender')
     def test__update__before_first_day(self, positions_mock: Mock) -> None:

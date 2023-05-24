@@ -49,7 +49,8 @@ class Command(BaseCommand):
     def perform_update(event: models.Event, gender: Genders) -> live_bumps.WriteOutcome:
         """Loads crew positions from Anu's data files and pushes them to Live Bumps."""
         
-        active_days = list(event.days.filter(date__lte = timezone.now() + timedelta(1)))
+        now = timezone.localtime(timezone.now())
+        active_days = list(event.days.filter(date__lte = now + timedelta(1)))
         if len(active_days) < 2:
             return (0, 0, 0)
         
@@ -64,7 +65,6 @@ class Command(BaseCommand):
             ))
         
         # Prune unraced crews
-        now = timezone.now()
         if active_days[-1].date > now.date():
             
             start_order = anu_dat.get_start_order_by_gender(
