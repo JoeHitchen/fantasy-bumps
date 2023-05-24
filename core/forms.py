@@ -14,6 +14,8 @@ username_blacklist_regexes = [
         'The admin requests that you do not feature them in your team name.'
         + ' Also you spelt it wrong.',
     ],
+    ['quarrell', 'This team name is not allowed to prevent violations of rule F0.'],
+    ['rq', 'This team name is not allowed to prevent violations of rule F0.'],
 ]
 
 
