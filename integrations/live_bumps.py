@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 BASE_URL = 'https://{}'.format(os.environ.get('LIVE_BUMPS_HOST', 'bumps.live'))
 AUTH_KEY = os.environ.get('LIVE_BUMPS_KEY', '')
 
+write_enabled = bool(os.environ.get('LIVE_BUMPS_HOST') and os.environ.get('LIVE_BUMPS_KEY'))
+
 
 class LiveBumpsDivision(TypedDict):
     time: str
