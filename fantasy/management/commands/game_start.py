@@ -8,6 +8,8 @@ from django.db import models as db
 from django.utils import timezone
 from typing_extensions import Unpack, NotRequired
 
+from integrations import live_bumps
+
 from ...constants import Locations, Series as EventSeries
 from ... import models
 from ..actions import create_event
@@ -110,6 +112,11 @@ class Command(BaseCommand):
             event = models.Event.objects.get(tag = 'demogame')
             event.days.update(date = db.F('date') + (start_date - event.first_day.date))
         utils.load_crew_lists(crew_list_source['function'], event)
+        
+        # Ancillary actions
+        if series_location == Locations.OXFORD and live_bumps.write_enabled:
+            live_bumps.create_event(event.series, event.year, start_order)
+        
         logger.info('Created a new game for {} {}, starting on {}'.format(
             series.label,
             year,

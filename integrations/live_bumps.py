@@ -16,6 +16,13 @@ logger = logging.getLogger(__name__)
 BASE_URL = 'https://{}'.format(os.environ.get('LIVE_BUMPS_HOST', 'bumps.live'))
 AUTH_KEY = os.environ.get('LIVE_BUMPS_KEY', '')
 
+write_enabled = bool(os.environ.get('LIVE_BUMPS_HOST') and os.environ.get('LIVE_BUMPS_KEY'))
+
+
+class LiveBumpsDivision(TypedDict):
+    time: str
+    size: int
+
 
 class CrewMove(TypedDict):
     moves: int
@@ -25,6 +32,9 @@ class CrewMove(TypedDict):
 class CrewPosData(TypedDict):
     start: int
     moves: List[CrewMove]
+
+
+ClubPosData = Dict[str, List[CrewPosData]]
 
 
 class CrewSeatData(TypedDict):
@@ -240,26 +250,23 @@ def wipe_positions(series: str, year: int) -> WriteOutcome:
     return write_positions(series, year, [get_positions(series, year, 1)])
 
 
-def __make_event_creation_structures(
-    start_order_men: StartOrder,
-    start_order_women: StartOrder,
-) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[CrewPosData]]]]:
-    """Creates the two event data structures needed as JSON files to set up a new event."""
+def _create_gendered_divisions_structure(
+    start_order: StartOrder,
+    gender: str,
+) -> List[LiveBumpsDivision]:
+    """Creates a list of the times and sizes of the divisions for a given gender."""
     
-    # Create required division data structure
-    division_data = {
-        'men': [
-            division['race_time'].strftime('%H:%M')
-            for division in start_order_men
-        ],
-        'women': [
-            division['race_time'].strftime('%H:%M')
-            for division in start_order_women
-        ],
-    }
+    return [{
+        'time': division['race_time'].strftime('%H:%M'),
+        'size': division['size'],
+    } for division in start_order[::-1] if division['gender'] == gender]
+
+
+def _create_start_order_structure(start_order: StartOrder) -> Dict[str, ClubPosData]:
+    """Creates the structure for the initial crew positions."""
     
     # Convert start orders to positions
-    positions_raw = start_order_to_positions(start_order_men + start_order_women)
+    positions_raw = start_order_to_positions(start_order)
     
     # Create required ranking data structure
     ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Position]]]] = {}
@@ -275,7 +282,7 @@ def __make_event_creation_structures(
         
         ranking_data[club_code][gender].append((crew, ranking))
     
-    ranking_out: Dict[str, Dict[str, List[CrewPosData]]] = {}
+    ranking_out: Dict[str, ClubPosData] = {}
     for club_code, club_items in ranking_data.items():
         ranking_out[club_code] = {}
         for gender_code, gender_items in club_items.items():
@@ -288,5 +295,29 @@ def __make_event_creation_structures(
                     'moves': [],
                 })
     
-    return division_data, ranking_out
+    return ranking_out
+
+
+def create_event(series: str, year: int, start_order: StartOrder) -> None:
+    """Creates a new event on Live Bumps. Also performs an update if no results have been added."""
+    logger.info('Creating Live Bumps event for {} {}'.format(series_text_map[series], year))
+    
+    # Create event
+    response = requests.post(
+        f'{BASE_URL}/event',
+        headers = {'Authorization': AUTH_KEY, 'Content-Type': 'application/json'},
+        json = {
+            'name': series_text_map[series].lower(),
+            'year': year,
+            'divs': {
+                'men': _create_gendered_divisions_structure(start_order, MEN),
+                'women': _create_gendered_divisions_structure(start_order, WOMEN),
+            },
+            'order': _create_start_order_structure(start_order),
+        },
+    )
+    if not response.ok:
+        response.raise_for_status()
+    
+    logger.info('Created Live Bumps event for {} {}'.format(series_text_map[series], year))
 
