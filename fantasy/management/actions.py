@@ -27,33 +27,46 @@ def create_event(
         mens_division_sizes = [div['size'] for div in mens_divisions],
         womens_division_sizes = [div['size'] for div in womens_divisions],
     )
-    create_days(event, start_date, ordered_divisions[-1]['race_time'])
+    create_days(
+        event,
+        start_date,
+        ordered_divisions[-1]['race_time'],
+        ordered_divisions[0]['race_time'],
+    )
     create_gendered_crew_positions(event, mens_divisions)
     create_gendered_crew_positions(event, womens_divisions)
     return event
 
 
-def create_days(event: models.Event, start_date: date, main_race_time: time) -> models.Day:
+def create_days(
+    event: models.Event,
+    start_date: date,
+    first_race_time: time,
+    last_race_time: time,
+) -> models.Day:
     """Creates days for a standard four-day bumps regatta."""
     
     weds = models.Day(
         event = event,
         name = 'Wednesday',
         date = start_date,
-        first_race_time = main_race_time,
+        first_race_time = first_race_time,
+        last_race_time = last_race_time,
     )
     weds.save()
     
     event.days.create(
         name = 'Thursday',
         date = start_date + timedelta(1),
-        first_race_time = main_race_time,
+        first_race_time = first_race_time,
+        last_race_time = last_race_time,
     )
     
     event.days.create(
         name = 'Friday',
         date = start_date + timedelta(2),
-        first_race_time = main_race_time,
+        first_race_time = first_race_time,
+        last_race_time = last_race_time,
     )
     
     saturday_shift = magic.saturday_race_time_shift(Series(event.series))
@@ -61,6 +74,7 @@ def create_days(event: models.Event, start_date: date, main_race_time: time) -> 
         name = 'Saturday',
         date = start_date + timedelta(3),
         first_race_time = (weds.first_race - saturday_shift).time(),
+        last_race_time = (weds.last_race - saturday_shift).time(),
     )
     
     event.days.create(
