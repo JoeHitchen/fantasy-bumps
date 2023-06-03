@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, timedelta
 import enum
 
 from django.db import models
@@ -28,6 +28,8 @@ class Genders(models.TextChoices):
 
 class timings:
     MARKET_OPENS = time(20, 00)
+    MARKET_INITIAL = time(20, 00)
+    MARKET_DELAY = timedelta(hours = 1)
     GAME_ADVANCE = time(19, 45)  # Only used in Rules page
 
 

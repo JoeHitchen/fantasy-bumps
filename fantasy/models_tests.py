@@ -949,7 +949,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
     
@@ -964,7 +964,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
         self.assertEqual(day.market_opens.tzname(), 'BST')
     
     
@@ -985,7 +985,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), prev.date)
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), time.fromisoformat('18:45:00'))
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
     
@@ -1006,7 +1006,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), prev.date)
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), time.fromisoformat('18:45:00'))
         self.assertEqual(day.market_opens.tzname(), 'BST')
     
     

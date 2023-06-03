@@ -190,15 +190,18 @@ class Day(models.Model):
     def market_opens(self):
         """Gives the time that markets open for trading, for racing days.
         
-        Markets always open at 8:00PM. On the first day, they open four days before racing. For
-        later days they open the day before racing."""
+        Before racing, the markets open at 8pm, three days before the first racing day, and
+        otherwise open one hour after the last race of the previous day."""
         
         if not self.is_racing_day:
-            return
+            return None
+        
+        if self.prev and self.prev.is_racing_day:
+            return self.prev.last_race + timings.MARKET_DELAY
         
         return datetime.combine(
-            self.prev.date if self.prev else self.date - timedelta(3),
-            timings.MARKET_OPENS,
+            self.date - timedelta(3),
+            timings.MARKET_INITIAL,
             tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
         )
     
