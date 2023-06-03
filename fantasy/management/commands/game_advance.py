@@ -84,7 +84,7 @@ class Command(BaseCommand):
         """Loads any new results and updates the game state accordingly."""
         
         # Get relevant days
-        if event.active_day.first_race and timezone.now() >= event.active_day.first_race:
+        if event.active_day.is_racing_day and timezone.now() >= event.active_day.first_race:
             old_day = event.active_day  # Racing underway for active day
             new_day = event.active_day.next
         elif event.active_day.prev:

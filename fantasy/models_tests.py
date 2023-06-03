@@ -1100,8 +1100,8 @@ class Test__Day__Market_Status(TestCase):
     
     @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
     @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
-    def test__market_is_open__without_first_race(self, closes_mock, opens_mock):
-        """Returns False if first_race_time is not set."""
+    def test__market_is_open__non_racing_day(self, closes_mock, opens_mock):
+        """Returns False if it is not a racing day."""
         
         day = self.event.days.create(
             name = 'Markets',
