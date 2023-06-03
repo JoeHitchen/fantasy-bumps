@@ -26,17 +26,20 @@ class Test__Event(TestCase):
             name = 'Yesterday',
             date = timezone.localtime().date() - timedelta(1),
             first_race_time = time(12, 00),
+            last_race_time = time(18, 45),
         )
         cls.today = cls.event.days.create(
             name = 'Today',
             date = timezone.localtime().date(),
             first_race_time = time(12, 00),
+            last_race_time = time(18, 45),
         )
         cls.tomorrow = models.Day(
             event = cls.event,
             name = 'Tomorrow',
             date = timezone.localtime().date() + timedelta(1),
             first_race_time = time(12, 00),
+            last_race_time = time(18, 45),
         )  # Saved per-test due to isolation conflict
         cls.future = models.Day(
             event = cls.event,
@@ -304,6 +307,7 @@ class Test__Day__Core(TestCase):
             name = 'Racing',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         day_str = str(day)
         self.assertEqual(day_str, day.name)
@@ -316,12 +320,14 @@ class Test__Day__Core(TestCase):
             name = 'Prev',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertIsNone(curr.next)
@@ -334,12 +340,14 @@ class Test__Day__Core(TestCase):
             name = 'Prev',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -356,12 +364,14 @@ class Test__Day__Core(TestCase):
             name = 'Prev',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         with self.assertNumQueries(1):
@@ -378,12 +388,14 @@ class Test__Day__Core(TestCase):
             name = 'Prev',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -398,18 +410,21 @@ class Test__Day__Core(TestCase):
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         future_1 = self.event.days.create(
             name = 'Future 1',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Future 2',
             date = self.today + timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertEqual(curr.next, future_1)
@@ -422,18 +437,21 @@ class Test__Day__Core(TestCase):
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         future_1 = self.event.days.create(
             name = 'Future 1',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Future 2',
             date = self.today + timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -450,18 +468,21 @@ class Test__Day__Core(TestCase):
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Future 1',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Future 2',
             date = self.today + timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         with self.assertNumQueries(1):
@@ -478,18 +499,21 @@ class Test__Day__Core(TestCase):
             name = 'Next',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Future 1',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Future 2',
             date = self.today + timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -504,18 +528,21 @@ class Test__Day__Core(TestCase):
             name = 'Prev 2',
             date = self.today - timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         prev_1 = self.event.days.create(
             name = 'Prev 1',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertEqual(curr.prev, prev_1)
@@ -528,18 +555,21 @@ class Test__Day__Core(TestCase):
             name = 'Prev 2',
             date = self.today - timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         prev_1 = self.event.days.create(
             name = 'Prev 1',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -556,18 +586,21 @@ class Test__Day__Core(TestCase):
             name = 'Prev 2',
             date = self.today - timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Prev 1',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         with self.assertNumQueries(1):
@@ -584,18 +617,21 @@ class Test__Day__Core(TestCase):
             name = 'Prev 2',
             date = self.today - timedelta(2),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Prev 1',
             date = self.today - timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         curr = self.event.days.create(
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -610,12 +646,14 @@ class Test__Day__Core(TestCase):
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Next',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertIsNone(curr.prev)
@@ -628,12 +666,14 @@ class Test__Day__Core(TestCase):
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Next',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -650,12 +690,14 @@ class Test__Day__Core(TestCase):
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Next',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         with self.assertNumQueries(1):
@@ -672,12 +714,14 @@ class Test__Day__Core(TestCase):
             name = 'Curr',
             date = self.today,
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.event.days.create(
             name = 'Next',
             date = self.today + timedelta(1),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -693,6 +737,7 @@ class Test__Day__Core(TestCase):
         first_race = self.event.days.create(
             date = race_date,
             first_race_time = race_time,
+            last_race_time = time(hour = 18, minute = 30),
         ).first_race
         
         self.assertIsInstance(first_race, datetime)
@@ -709,12 +754,47 @@ class Test__Day__Core(TestCase):
         first_race = self.event.days.create(
             date = race_date,
             first_race_time = race_time,
+            last_race_time = time(hour = 18, minute = 30),
         ).first_race
         
         self.assertIsInstance(first_race, datetime)
         self.assertEqual(first_race.date(), race_date)
         self.assertEqual(first_race.time(), race_time)
         self.assertEqual(first_race.tzname(), 'BST')
+    
+    
+    def test__last_race__winter(self):
+        """Constructs a datetime object from the date, last race time, and system timezone."""
+        
+        race_date = date.fromisoformat('2021-01-05')
+        race_time = time(18, 45)
+        last_race = self.event.days.create(
+            date = race_date,
+            first_race_time = time(hour = 12),
+            last_race_time = race_time,
+        ).last_race
+        
+        self.assertIsInstance(last_race, datetime)
+        self.assertEqual(last_race.date(), race_date)
+        self.assertEqual(last_race.time(), race_time)
+        self.assertEqual(last_race.tzname(), 'GMT')
+    
+    
+    def test__last_race__summer(self):
+        """Constructs a datetime object from the date, last race time, and system timezone."""
+        
+        race_date = date.fromisoformat('2021-07-05')
+        race_time = time(18, 45)
+        last_race = self.event.days.create(
+            date = race_date,
+            first_race_time = time(hour = 12),
+            last_race_time = race_time,
+        ).last_race
+        
+        self.assertIsInstance(last_race, datetime)
+        self.assertEqual(last_race.date(), race_date)
+        self.assertEqual(last_race.time(), race_time)
+        self.assertEqual(last_race.tzname(), 'BST')
 
 
 
@@ -852,6 +932,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Main',
             date = race_date,
             first_race_time = None,
+            last_race_time = None,
         )
         
         self.assertIsNone(day.market_opens)
@@ -864,6 +945,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Main',
             date = date.fromisoformat('2021-01-05'),
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('18:30:00'),
         )
         
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
@@ -878,6 +960,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Main',
             date = date.fromisoformat('2021-07-05'),
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('18:30:00'),
         )
         
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
@@ -892,11 +975,13 @@ class Test__Day__Market_Status(TestCase):
             name = 'Main',
             date = date.fromisoformat('2021-01-05'),
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('18:30:00'),
         )
         prev = self.event.days.create(
             name = 'Prior',
             date = day.date - timedelta(2),  # Demonstrates linked to previous day, not yesterday
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('17:45:00'),
         )
         
         self.assertEqual(day.market_opens.date(), prev.date)
@@ -911,11 +996,13 @@ class Test__Day__Market_Status(TestCase):
             name = 'Main',
             date = date.fromisoformat('2021-07-05'),
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('18:30:00'),
         )
         prev = self.event.days.create(
             name = 'Prior',
             date = day.date - timedelta(2),  # Demonstrates linked to previous day, not yesterday
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('17:45:00'),
         )
         
         self.assertEqual(day.market_opens.date(), prev.date)
@@ -929,6 +1016,8 @@ class Test__Day__Market_Status(TestCase):
         day = self.event.days.create(
             name = 'Main',
             date = date.fromisoformat('2021-07-05'),
+            first_race_time = None,
+            last_race_time = None,
         )
         
         self.assertIsNone(day.market_closes)
@@ -941,6 +1030,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Main',
             date = date.fromisoformat('2021-01-05'),
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('18:30:00'),
         )
         
         self.assertEqual(day.market_closes.date(), day.date)
@@ -955,6 +1045,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Main',
             date = date.fromisoformat('2021-07-05'),
             first_race_time = time.fromisoformat('12:00:00'),
+            last_race_time = time.fromisoformat('18:30:00'),
         )
         
         self.assertEqual(day.market_closes.date(), day.date)
@@ -971,6 +1062,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Markets',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertFalse(day.market_is_open)
@@ -985,6 +1077,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Markets',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertTrue(day.market_is_open)
@@ -999,6 +1092,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Markets',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertFalse(day.market_is_open)
@@ -1013,6 +1107,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Markets',
             date = timezone.localtime().date(),
             first_race_time = None,
+            last_race_time = None,
         )
         
         self.assertFalse(day.market_is_open)
@@ -1030,6 +1125,7 @@ class Test__Day__Market_Status(TestCase):
             name = 'Markets',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         
         self.assertFalse(day.market_is_open)

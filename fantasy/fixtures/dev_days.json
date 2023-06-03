@@ -6,7 +6,8 @@
       "event": 1,
       "name": "Wednesday",
       "date": "2019-02-27",
-      "first_race_time": "12:00"
+      "first_race_time": "12:00",
+      "last_race_time": "18:45"
     }
   },
   {
@@ -16,7 +17,8 @@
       "event": 1,
       "name": "Thursday",
       "date": "2019-02-28",
-      "first_race_time": "12:00"
+      "first_race_time": "12:00",
+      "last_race_time": "18:45"
     }
   },
   {

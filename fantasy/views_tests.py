@@ -31,6 +31,7 @@ def prepare_event(user, year, date_shift = 0):
         name = index,
         date = timezone.localtime().date() + timedelta(days = index - date_shift),
         first_race_time = '12:30' if index != 4 else None,
+        last_race_time = '18:45' if index != 4 else None,
     ) for index in range(0, 5)])
     
     event.fantasies.create(

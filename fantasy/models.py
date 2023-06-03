@@ -91,6 +91,7 @@ class Day(models.Model):
     name = models.CharField(max_length = 10)
     date = models.DateField(db_index = True)
     first_race_time = models.TimeField(null = True, db_index = True)
+    last_race_time = models.TimeField(null = True, db_index = True)
     
     advanced = models.BooleanField(default = False)
     
@@ -128,6 +129,19 @@ class Day(models.Model):
         return datetime.combine(
             self.date,
             self.first_race_time,
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+        )
+    
+    @cached_property
+    def last_race(self):
+        """The datetime for the last race of the day, or None if not racing day."""
+        
+        if not self.last_race_time:
+            return None
+        
+        return datetime.combine(
+            self.date,
+            self.last_race_time,
             tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
         )
     
