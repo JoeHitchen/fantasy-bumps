@@ -64,15 +64,20 @@ class Event(models.Model):
         """
         
         now = timezone.localtime()
-        day_shift = timedelta(1) if now.time() >= timings.MARKET_OPENS else timedelta(0)
-        date = now.date() + day_shift
         
         if hasattr(self, '_days'):
-            future_days = [day for day in self._days if day.date >= date]
-            return future_days[0] if future_days else self._days[-1]
+            not_past_days = [day for day in self._days if day.date >= now.date()]
+        else:
+            not_past_days = list(self.days.filter(date__gte = now.date()))
         
-        day = self.days.filter(date__gte = date).first()
-        return day if day else self.days.last()
+        if not not_past_days:
+            return self._days[-1] if hasattr(self, '_days') else self.days.last()
+        
+        current_day = not_past_days[0]
+        if len(not_past_days) > 1 and now >= current_day.last_race + timings.MARKET_DELAY:
+            return not_past_days[1]
+        
+        return current_day
     
     
     def num_crews(self, gender):

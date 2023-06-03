@@ -9,7 +9,7 @@ from django import template
 
 from .. import models
 from .. import patching
-from ..constants import Genders, timings
+from ..constants import Genders
 from . import fantasy_tags as tags
 
 
@@ -854,7 +854,8 @@ class Test__Event_Box(TestCase):
         self.assertInHTML('Entry incomplete', html)
     
     
-    def test__crew_ready_button__crew_not_ready_day_two(self):
+    @patching.localtime_time(time(18, 30), timedelta(minutes = -1))
+    def test__crew_ready_button__crew_not_ready_day_two(self, timezone_mock):
         """Renders a danger message & button that directs the user to the correct market page.
         
         Test is possibly fragile and time-dependent, due to changing market status.
@@ -865,9 +866,7 @@ class Test__Event_Box(TestCase):
         event.mens_crew_ready = True
         event.womens_crew_ready = False
         
-        date_shift = timezone.localtime().date() - event.first_day.date
-        if timezone.localtime().time() <= timings.MARKET_OPENS:
-            date_shift -= timedelta(days = 1)
+        date_shift = timezone.localtime().date() - event.first_day.date - timedelta(1)
         event.days.update(date = db.F('date') + date_shift)
         
         html = self.crew_ready_button(event, Genders.WOMEN)
