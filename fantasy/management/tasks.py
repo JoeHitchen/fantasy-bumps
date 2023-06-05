@@ -82,7 +82,7 @@ def schedule_live_bumps_updates(event):
             defaults = {
                 'name': 'Live Bumps // {} {}'.format(event, gender.label),
                 'interval': every_minute,
-                'expires': event.last_racing_day.first_race + timedelta(hours = 12),
+                'expires': event.last_racing_day.last_race + timedelta(hours = 6),
             },
         )
 

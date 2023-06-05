@@ -36,11 +36,13 @@ class Test__Market_Status_Box(TestCase):
             name = 'Status 1',
             date = timezone.localtime().date(),
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
         self.next_day = self.event.days.create(
             name = 'Status 2',
             date = timezone.localtime().date() + timedelta(2),  # Ensure market never opens today
             first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
         )
     
     
@@ -218,6 +220,7 @@ class Test__Market_Status_Box(TestCase):
         
         # Alter test setup
         self.day.first_race_time = None
+        self.day.last_race_time = None
         self.day.save()
         self.next_day.delete()
         
@@ -750,11 +753,13 @@ class Test__Event_Box(TestCase):
             name = 'Day One',
             date = timezone.now().date(),
             first_race_time = time(12, 00),
+            last_race_time = time(hour = 18, minute = 30),
         )
         event.days.create(
             name = 'Day Two',
             date = timezone.now().date() + timedelta(1),
             first_race_time = time(12, 00),
+            last_race_time = time(hour = 18, minute = 30),
         )
         event.days.create(name = 'Finish', date = timezone.now().date() + timedelta(2))
     

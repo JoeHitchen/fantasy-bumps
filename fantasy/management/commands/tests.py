@@ -31,7 +31,7 @@ def prepare_event(series: Series, start_date: date) -> models.Event:
         year = start_date.year,
         tag = f'{series.label.lower()}{start_date.year}',
     )
-    create_days(event, start_date, time(12, 00))
+    create_days(event, start_date, time(12, 00), time(18, 30))
     return event
 
 
