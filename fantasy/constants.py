@@ -1,4 +1,5 @@
 from datetime import time, timedelta
+import math as maths
 import enum
 
 from django.db import models
@@ -27,10 +28,23 @@ class Genders(models.TextChoices):
 
 
 class timings:
-    MARKET_OPENS = time(20, 00)
     MARKET_INITIAL = time(20, 00)
     MARKET_DELAY = timedelta(hours = 1)
-    GAME_ADVANCE = time(19, 45)  # Only used in Rules page
+    ADVANCE_DELAY = timedelta(minutes = 50)
+    
+    @classmethod
+    def market_delay_string(cls):
+        return '{} minutes'.format(maths.floor(cls.MARKET_DELAY.total_seconds() / 60))
+    
+    @classmethod
+    def advance_delay_string(cls):
+        return '{} minutes'.format(maths.floor(cls.ADVANCE_DELAY.total_seconds() / 60))
+    
+    
+    @classmethod
+    def advance_delay_to_market_delay_string(cls):
+        time_difference = cls.MARKET_DELAY - cls.ADVANCE_DELAY
+        return '{} minutes'.format(maths.floor(time_difference.total_seconds() / 60))
 
 
 class money:

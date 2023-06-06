@@ -74,7 +74,7 @@
   <h5>F1. Do your subs!</h5>
   <div class="rule-text">
     As with all good rowing events, you must finalise who is competing before getting on the water.
-    The markets will close 30 minutes before the first race each day and crew lists will then be locked in until {{ timings.MARKET_OPENS|time:"g:iA"|lower }} when the markets re-open for the next day's racing.
+    The markets will close 30 minutes before the first race each day and crew lists will then be locked in until {{ timings.market_delay_string }} after the last race when the markets re-open for the next day's racing.
     It is your responsibility to make sure any changes are completed by this deadline and your purchased crews are a true and accurate reflection of the crew you are entering.
   </div>
 
@@ -107,7 +107,7 @@
   <h5>F4. Fantasy Bumps isn't fair</h5>
   <div class="rule-text">
     Bumps isn't fair and neither is Fantasy Bumps.
-    Payouts will be determined using the results as they stand at {{ timings.GAME_ADVANCE|time:"g:iA"|lower }}<sup>*</sup> to allow markets to re-open at {{ timings.MARKET_OPENS|time:"g:iA"|lower }} and <em>will not be updated</em> if late-running appeals result in changes.
+    Payouts will be determined using the results as they stand at {{ timings.advance_delay_string }}<sup>*</sup> after the last race to allow markets to re-open {{ timings.advance_delay_to_market_delay_string }} later and <em>will not be updated</em> if late-running appeals result in changes.
     However, these late changes will be implicitly included in the results the following day, and the savvy speculator is welcome to use this to supercharge their next day's line-up.
     <br/>
     <small><sup>*</sup> Fantasy Bumps uses <a href="https://bumps.live/" target="_blank">Live Bumps</a> as the sole source of results.</small>
