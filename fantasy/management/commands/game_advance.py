@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db import models as db, transaction
+from django.db import models as db
 from django.utils import timezone
 from django.core.mail import mail_admins
 from typing_extensions import Unpack, NotRequired
@@ -12,9 +12,9 @@ from typing_extensions import Unpack, NotRequired
 from integrations import types as integrations
 
 from ... import models
-from ... import game_tools as tools
 from ...constants import Locations, Series
-from . import utils, parsers
+from ..game_advance import advance_core
+from . import parsers
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_advance')
@@ -50,32 +50,6 @@ class Command(BaseCommand):
     
     
     @staticmethod
-    def advance_core(
-        day: models.Day,
-        source_function: integrations.PositionFcn,
-        override_hold: bool = False,
-    ) -> None:
-        """The sensitive core of the game advance routine."""
-        
-        reject_for_hold_args = {'event__market_held_closed': False} if not override_hold else {}
-        
-        with transaction.atomic():
-            transaction_day = (
-                models.Day.objects
-                .select_for_update()
-                .filter(**reject_for_hold_args)
-                .get(id = day.id, advanced = False)
-            )
-            
-            utils.load_crew_rankings(source_function, transaction_day.next)
-            tools.roll_over_purchases(transaction_day)
-            tools.evaluate_all_investments(transaction_day)
-            
-            transaction_day.advanced = True
-            transaction_day.save()
-    
-    
-    @staticmethod
     def perform_game_advance(
         source_function: integrations.PositionFcn,
         event: models.Event,
@@ -103,7 +77,7 @@ class Command(BaseCommand):
         
         # Update records
         try:
-            Command.advance_core(old_day, source_function, override_hold)
+            advance_core(old_day, source_function, override_hold)
             
         except models.Day.DoesNotExist:
             logger.info(f'{old_day} of {event} has already been advanced')

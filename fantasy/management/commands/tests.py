@@ -12,8 +12,7 @@ from integrations import live_bumps, anu_html, camfm, ourcs
 from core.tests import exists
 
 from ... import models
-from ...constants import Locations, Series, Clubs, Genders, money
-from ...game_tools import evaluate_all_investments
+from ...constants import Locations, Series, Clubs, Genders
 from ..actions import create_days
 from .game_start import Command as GameStart
 from .game_advance import Command as GameAdvance
@@ -445,111 +444,7 @@ class Test__Game_Advance(TestCase):
             )
     
     
-    def test__core__success(self) -> None:
-        """Loads positions, rolls over purchases, and awards payouts."""
-        
-        GameAdvance.advance_core(self.day, roll_over_positions)
-        
-        self.day.refresh_from_db()
-        self.assertTrue(self.day.advanced)
-        self.assertEqual(self.day.next.ranking.count(), 18)
-        self.assertEqual(self.day.next.purchases.count(), 18)
-        
-        self.entry.refresh_from_db()
-        self.assertNotEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
-        self.assertNotEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
-        self.assertNotEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
-        self.assertNotEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
-    
-    
-    def test__core__already_advanced(self) -> None:
-        """The advance is rejected with an error if the day has already been advanced."""
-        
-        self.day.advanced = True
-        self.day.save()
-        
-        with self.assertRaises(models.Day.DoesNotExist):
-            GameAdvance.advance_core(self.day, roll_over_positions)
-        
-        self.day.refresh_from_db()
-        self.assertTrue(self.day.advanced)
-        self.assertEqual(self.day.next.ranking.count(), 0)
-        self.assertEqual(self.day.next.purchases.count(), 0)
-        
-        self.entry.refresh_from_db()
-        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
-    
-    
-    def test__core__market_hold(self) -> None:
-        """The advance is rejected with an error if the markets are held closed."""
-        
-        self.day.event.market_held_closed = True
-        self.day.event.save()
-        
-        with self.assertRaises(models.Day.DoesNotExist):
-            GameAdvance.advance_core(self.day, roll_over_positions)
-        
-        self.day.refresh_from_db()
-        self.assertFalse(self.day.advanced)
-        self.assertEqual(self.day.next.ranking.count(), 0)
-        self.assertEqual(self.day.next.purchases.count(), 0)
-        
-        self.entry.refresh_from_db()
-        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
-    
-    
-    def test__core__market_hold_override(self) -> None:
-        """The market hold rejection can be overriden if desired."""
-        
-        self.day.event.market_held_closed = True
-        self.day.event.save()
-        
-        GameAdvance.advance_core(self.day, roll_over_positions, override_hold = True)
-        
-        self.day.refresh_from_db()
-        self.assertTrue(self.day.advanced)
-        self.assertEqual(self.day.next.ranking.count(), 18)
-        self.assertEqual(self.day.next.purchases.count(), 18)
-        
-        self.entry.refresh_from_db()
-        self.assertNotEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
-        self.assertNotEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
-        self.assertNotEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
-        self.assertNotEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
-    
-    
-    @patch('fantasy.game_tools.evaluate_all_investments')
-    def test__core__error_rollback(self, evaluate_mock: Mock) -> None:
-        """All changes should be rolled back if an error occurs."""
-        
-        def evaluate_then_error(day: models.Day) -> None:
-            evaluate_all_investments(day)
-            raise Exception('Rollback Test')
-        
-        evaluate_mock.side_effect = evaluate_then_error
-        
-        with self.assertRaises(Exception):
-            GameAdvance.advance_core(self.day, roll_over_positions)
-        
-        self.day.refresh_from_db()
-        self.assertFalse(self.day.advanced)
-        self.assertEqual(self.day.next.ranking.count(), 0)
-        self.assertEqual(self.day.next.purchases.count(), 0)
-        
-        self.entry.refresh_from_db()
-        self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.mens_balance, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.womens_budget, money.INITIAL_BALANCE)
-        self.assertEqual(self.entry.womens_balance, money.INITIAL_BALANCE)
-    
-    
-    @patch.object(GameAdvance, 'advance_core')
+    @patch('fantasy.management.commands.game_advance.advance_core')
     def test__perform__success(self, core_mock: Mock) -> None:
         """No special actions are performed upon success."""
         
@@ -561,26 +456,28 @@ class Test__Game_Advance(TestCase):
         self.assertEqual(len(mail.outbox), 0)
     
     
-    @patch.object(GameAdvance, 'advance_core')
+    @patch('fantasy.management.commands.game_advance.advance_core')
     def test__perform__unknown_core_error(self, core_mock: Mock) -> None:
         """Markets are held closed and an e-mail sent upon unknown core error."""
         
         core_mock.side_effect = ValueError('Unknown Error')
         
         GameAdvance.perform_game_advance(roll_over_positions, self.event)
+        core_mock.assert_called_once()
 
         self.event.refresh_from_db()
         self.assertTrue(self.event.market_held_closed)
         self.assertEqual(len(mail.outbox), 1)
     
     
-    @patch.object(GameAdvance, 'advance_core')
+    @patch('fantasy.management.commands.game_advance.advance_core')
     def test__perform__core_rejection(self, core_mock: Mock) -> None:
         """No special actions are if the advance is rejected."""
         
         core_mock.side_effect = models.Day.DoesNotExist
         
         GameAdvance.perform_game_advance(roll_over_positions, self.event)
+        core_mock.assert_called_once()
 
         self.event.refresh_from_db()
         self.assertFalse(self.event.market_held_closed)
