@@ -268,6 +268,9 @@ class Crew(models.Model):
     )
     rank = models.PositiveSmallIntegerField()
     
+    posn_old: list['Position']  # List due to pre-fetch
+    posn_new: list['Position']  # List due to pre-fetch
+    
     def __str__(self):
         return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
     

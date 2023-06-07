@@ -664,3 +664,58 @@ class Test__EvaluateInvestments(TestCase):
         with self.assertNumQueries(9):
             game_advance.evaluate_investments(fresh_day)
 
+
+class Test__PayoutMatrix(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']
+    
+    day: models.Day
+    
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.day = exists(models.Day.objects.first())
+    
+    @patch(
+        'fantasy.utils.payout_by_day_gender_positions',
+        autospec = True,
+        side_effect = lambda w, x, y, z: (w, x, y, z),
+    )
+    def test__matrix__individual_calls(self, payouts_mock: Mock) -> None:
+        """Checks that the matrix is constructed from payout calls for individual crews.
+        
+        N.B. This test using a non-type-compliant hack to ensure the correct construction of the
+        payout matrix.
+        """
+        
+        matrix = game_advance.create_payout_matrix(self.day)
+        
+        crews = models.Crew.objects.filter(positions__day = self.day)
+        for crew in crews:
+            with self.subTest(crew = str(crew)):
+                
+                delta_crabs = matrix[crew]
+                self.assertEqual(delta_crabs[0], self.day)  # type: ignore
+                self.assertEqual(delta_crabs[1], crew.gender)  # type: ignore
+                self.assertEqual(
+                    delta_crabs[2],  # type: ignore
+                    self.day.ranking.get(crew = crew).rank,
+                )
+                self.assertEqual(
+                    delta_crabs[3],  # type: ignore
+                    self.day.next.ranking.get(crew = crew).rank,
+                )
+    
+    
+    @tag('query-count')
+    def test__matrix__query_count(self) -> None:
+        """Expect:
+            (1) SELECT next day of event (can be cached)
+            (1) SELECT crews with positions on day
+            (1) SELECT positions for crews on day
+            (1) SELECT positions for crews on the next day
+        """
+        
+        fresh_day = models.Day.objects.select_related().get(pk = self.day.pk)
+        
+        with self.assertNumQueries(4):
+            game_advance.create_payout_matrix(fresh_day)
+

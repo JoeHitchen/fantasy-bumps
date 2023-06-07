@@ -1,3 +1,4 @@
+from typing import TypedDict
 import logging
 
 from django.db import models as db, transaction
@@ -12,6 +13,11 @@ from .commands import utils as mgmt_utils
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_advance')
+
+
+class CrewPayout(TypedDict):
+    value_change: int
+    payout: int
 
 
 def perform_advance(
@@ -153,7 +159,7 @@ def evaluate_investments(day: models.Day) -> None:
     
     
     # Preparation
-    payout_matrix = utils.create_payout_matrix(day)
+    payout_matrix = create_payout_matrix(day)
     all_seats = list(models.Seat.objects.all())
     
     # Main routine
@@ -179,4 +185,41 @@ def evaluate_investments(day: models.Day) -> None:
             'womens_balance',
         ],
     )
+
+
+def create_payout_matrix(day: models.Day) -> dict[models.Crew, CrewPayout]:
+    """Calculates the value change and payout for every crew racing on the day provided.
+    
+    Optimised when:
+        select_related called when retrieving day
+        day.next has been set
+    """
+    
+    # Retrieve crews racing
+    crews = (
+        models.Crew.objects
+        .filter(positions__day = day)
+        .prefetch_related(
+            db.Prefetch(
+                'positions',
+                models.Position.objects.filter(day = day),
+                to_attr='posn_old',
+            ),
+            db.Prefetch(
+                'positions',
+                models.Position.objects.filter(day = day.next),
+                to_attr='posn_new',
+            ),
+        )
+    )
+    
+    # Generate payout matrix
+    return {
+        crew: utils.payout_by_day_gender_positions(
+            day,
+            crew.gender,
+            crew.posn_old[0].rank,
+            crew.posn_new[0].rank,
+        ) for crew in crews
+    }
 
