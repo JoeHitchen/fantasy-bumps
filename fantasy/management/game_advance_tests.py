@@ -2,7 +2,6 @@ from unittest.mock import patch, Mock
 
 from django.test import TestCase, tag
 from django.contrib.auth import models as auth
-from django.utils import timezone
 from django.core import mail
 
 from integrations.types import PositionMap
@@ -23,13 +22,34 @@ def roll_over_positions(series: str, year: int, day_number: int) -> PositionMap:
 
 
 class Test__PerformAdvance(TestCase):
-    fixtures = ['dev_event', 'dev_days']
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
     
     event: models.Event
+    day: models.Day
+    entry: models.GameEntry
     
     @classmethod
     def setUpTestData(cls) -> None:
+        
         cls.event = models.Event.objects.get(tag = 'devgame')
+        cls.day = cls.event.first_day
+        crew_men = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN, rank = 1)
+        crew_women = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
+        
+        team = models.Team.objects.get(user__username = 'DevTeam')
+        cls.entry = team.entries.create(event = cls.day.event)
+        
+        for seat in models.Seat.objects.all():
+            team.purchases.create(
+                day = cls.day,
+                seat = seat,
+                crew = crew_men,
+            )
+            team.purchases.create(
+                day = cls.day,
+                seat = seat,
+                crew = crew_women,
+            )
     
     
     @patch('fantasy.management.game_advance.advance_core')
@@ -70,39 +90,6 @@ class Test__PerformAdvance(TestCase):
         self.event.refresh_from_db()
         self.assertFalse(self.event.market_held_closed)
         self.assertEqual(len(mail.outbox), 0)
-
-
-class Test__AdvanceCore(TestCase):
-    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
-    
-    event: models.Event
-    day: models.Day
-    entry: models.GameEntry
-    
-    today = timezone.now().date()
-    
-    @classmethod
-    def setUpTestData(cls) -> None:
-        
-        cls.event = models.Event.objects.get(tag = 'devgame')
-        cls.day = cls.event.first_day
-        crew_men = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN, rank = 1)
-        crew_women = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
-        
-        team = models.Team.objects.get(user__username = 'DevTeam')
-        cls.entry = team.entries.create(event = cls.day.event)
-        
-        for seat in models.Seat.objects.all():
-            team.purchases.create(
-                day = cls.day,
-                seat = seat,
-                crew = crew_men,
-            )
-            team.purchases.create(
-                day = cls.day,
-                seat = seat,
-                crew = crew_women,
-            )
     
     
     def test__core__success(self) -> None:
