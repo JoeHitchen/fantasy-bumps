@@ -1,4 +1,5 @@
 from collections import Counter
+from typing import TypedDict
 from functools import lru_cache
 from math import log
 
@@ -9,12 +10,17 @@ from . import models
 from . import errors
 
 
+class Payout(TypedDict):
+    value_change: int
+    payout: int
+
+
 def ordered_events():
     """Lists events in reverse chronological order."""
     return models.Event.objects.annotate(last_day = Max('days__date')).order_by('-last_day')
 
 
-def has_all_seats(purchases, expected_seats):
+def has_all_seats(purchases: list['models.Purchase'], expected_seats: list['models.Seat']) -> bool:
     """Checks that a set of purchase objects has every seat filled exactly once."""
     
     seat_count = Counter(purchase.seat_id for purchase in purchases)
@@ -89,7 +95,7 @@ def payout_by_day_gender_positions(day, gender, old_position, new_position):
     return {'value_change': crew_value_new - crew_value_old, 'payout': payout}
 
 
-def create_payout_matrix(day):
+def create_payout_matrix(day: 'models.Day') -> dict['models.Crew': Payout]:
     """Calculates the value change and payout for every crew racing on the day provided.
     
     Optimised when:

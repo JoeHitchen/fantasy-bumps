@@ -340,6 +340,9 @@ class Team(models.Model):
     
     user = models.OneToOneField('auth.User', models.CASCADE)
     
+    mens_crew: list['Purchase']
+    womens_crew: list['Purchase']
+    
     def __str__(self):
         return self.user.username
     
