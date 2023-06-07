@@ -2,6 +2,7 @@ from unittest.mock import patch, Mock
 
 from django.test import TestCase
 from django.utils import timezone
+from django.core import mail
 
 from integrations.types import PositionMap
 from core.tests import exists
@@ -19,6 +20,56 @@ def roll_over_positions(series: str, year: int, day_number: int) -> PositionMap:
         position.crew.as_tuple(): (position.rank, True)
         for position in positions
     }
+
+
+class Test__PerformAdvance(TestCase):
+    fixtures = ['dev_event', 'dev_days']
+    
+    event: models.Event
+    
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.event = models.Event.objects.get(tag = 'devgame')
+    
+    
+    @patch('fantasy.management.game_advance.advance_core')
+    def test__perform__success(self, core_mock: Mock) -> None:
+        """No special actions are performed upon success."""
+        
+        game_advance.perform_advance(roll_over_positions, self.event)
+        core_mock.assert_called_once()
+        
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 0)
+    
+    
+    @patch('fantasy.management.game_advance.advance_core')
+    def test__perform__unknown_core_error(self, core_mock: Mock) -> None:
+        """Markets are held closed and an e-mail sent upon unknown core error."""
+        
+        core_mock.side_effect = ValueError('Unknown Error')
+        
+        game_advance.perform_advance(roll_over_positions, self.event)
+        core_mock.assert_called_once()
+
+        self.event.refresh_from_db()
+        self.assertTrue(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 1)
+    
+    
+    @patch('fantasy.management.game_advance.advance_core')
+    def test__perform__core_rejection(self, core_mock: Mock) -> None:
+        """No special actions are if the advance is rejected."""
+        
+        core_mock.side_effect = models.Day.DoesNotExist
+        
+        game_advance.perform_advance(roll_over_positions, self.event)
+        core_mock.assert_called_once()
+
+        self.event.refresh_from_db()
+        self.assertFalse(self.event.market_held_closed)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class Test__AdvanceCore(TestCase):

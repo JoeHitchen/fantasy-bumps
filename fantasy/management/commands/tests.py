@@ -5,7 +5,6 @@ import logging
 
 from django.test import TestCase
 from django.utils import timezone
-from django.core import mail
 
 from integrations.types import PositionMap
 from integrations import live_bumps, anu_html, camfm, ourcs
@@ -414,77 +413,9 @@ class Test__Game_Start(TestCase):
 class Test__Game_Advance(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
     
-    event: models.Event
-    day: models.Day
-    entry: models.GameEntry
-    
     today = timezone.now().date()
     
-    @classmethod
-    def setUpTestData(cls) -> None:
-        
-        cls.event = models.Event.objects.get(tag = 'devgame')
-        cls.day = cls.event.first_day
-        crew_men = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN, rank = 1)
-        crew_women = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
-        
-        team = models.Team.objects.get(user__username = 'DevTeam')
-        cls.entry = team.entries.create(event = cls.day.event)
-        
-        for seat in models.Seat.objects.all():
-            team.purchases.create(
-                day = cls.day,
-                seat = seat,
-                crew = crew_men,
-            )
-            team.purchases.create(
-                day = cls.day,
-                seat = seat,
-                crew = crew_women,
-            )
-    
-    
-    @patch('fantasy.management.commands.game_advance.advance_core')
-    def test__perform__success(self, core_mock: Mock) -> None:
-        """No special actions are performed upon success."""
-        
-        GameAdvance.perform_game_advance(roll_over_positions, self.event)
-        core_mock.assert_called_once()
-        
-        self.event.refresh_from_db()
-        self.assertFalse(self.event.market_held_closed)
-        self.assertEqual(len(mail.outbox), 0)
-    
-    
-    @patch('fantasy.management.commands.game_advance.advance_core')
-    def test__perform__unknown_core_error(self, core_mock: Mock) -> None:
-        """Markets are held closed and an e-mail sent upon unknown core error."""
-        
-        core_mock.side_effect = ValueError('Unknown Error')
-        
-        GameAdvance.perform_game_advance(roll_over_positions, self.event)
-        core_mock.assert_called_once()
-
-        self.event.refresh_from_db()
-        self.assertTrue(self.event.market_held_closed)
-        self.assertEqual(len(mail.outbox), 1)
-    
-    
-    @patch('fantasy.management.commands.game_advance.advance_core')
-    def test__perform__core_rejection(self, core_mock: Mock) -> None:
-        """No special actions are if the advance is rejected."""
-        
-        core_mock.side_effect = models.Day.DoesNotExist
-        
-        GameAdvance.perform_game_advance(roll_over_positions, self.event)
-        core_mock.assert_called_once()
-
-        self.event.refresh_from_db()
-        self.assertFalse(self.event.market_held_closed)
-        self.assertEqual(len(mail.outbox), 0)
-    
-    
-    @patch.object(GameAdvance, 'perform_game_advance')
+    @patch('fantasy.management.commands.game_advance.perform_advance')
     def test__handle__oxford_default_source(self, perform_mock: Mock) -> None:
         """Live Bumps is the default source used for Oxford events."""
         
@@ -494,7 +425,7 @@ class Test__Game_Advance(TestCase):
         perform_mock.assert_called_once_with(live_bumps.get_positions, event, False)
     
     
-    @patch.object(GameAdvance, 'perform_game_advance')
+    @patch('fantasy.management.commands.game_advance.perform_advance')
     def test__handle__oxford_specified_source(self, perform_mock: Mock) -> None:
         """Alternative sources can be used for Oxford events."""
         
@@ -504,7 +435,7 @@ class Test__Game_Advance(TestCase):
         perform_mock.assert_called_once_with(anu_html.get_positions, event, False)
     
     
-    @patch.object(GameAdvance, 'perform_game_advance')
+    @patch('fantasy.management.commands.game_advance.perform_advance')
     def test__handle__cambridge_default_source(self, perform_mock: Mock) -> None:
         """CamFM is the default source used for Cambridge events."""
         
@@ -514,7 +445,7 @@ class Test__Game_Advance(TestCase):
         perform_mock.assert_called_once_with(camfm.get_positions, event, False)
     
     
-    @patch.object(GameAdvance, 'perform_game_advance')
+    @patch('fantasy.management.commands.game_advance.perform_advance')
     def test__handle__demo_default_source(self, perform_mock: Mock) -> None:
         """An internal method is the default source used for Demo events."""
         
@@ -524,7 +455,7 @@ class Test__Game_Advance(TestCase):
         perform_mock.assert_called_once_with(parsers._demo_positions, event, False)
     
     
-    @patch.object(GameAdvance, 'perform_game_advance')
+    @patch('fantasy.management.commands.game_advance.perform_advance')
     def test__handle__two_events(self, perform_mock: Mock) -> None:
         """Two events can be updated simultaneously."""
         
@@ -537,7 +468,7 @@ class Test__Game_Advance(TestCase):
         perform_mock.assert_any_call(camfm.get_positions, lents, False)
     
     
-    @patch.object(GameAdvance, 'perform_game_advance')
+    @patch('fantasy.management.commands.game_advance.perform_advance')
     def test__handle__held_closed(self, perform_mock: Mock) -> None:
         """Events held closed are excluded from advancement."""
         
@@ -551,7 +482,7 @@ class Test__Game_Advance(TestCase):
         # ^ Does not call Torpids
     
     
-    @patch.object(GameAdvance, 'perform_game_advance')
+    @patch('fantasy.management.commands.game_advance.perform_advance')
     def test__handle__held_closed_override(self, perform_mock: Mock) -> None:
         """The market hold status can be ignored on demand."""
         
