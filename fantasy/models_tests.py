@@ -16,6 +16,8 @@ from . import utils
 class Test__Event(TestCase):
     fixtures = ['dev_event']
     
+    ROLLOVER_TIME = time(19, 45)
+    
     @classmethod
     def setUpTestData(cls):
         
@@ -130,9 +132,9 @@ class Test__Event(TestCase):
             self.event.last_racing_day
     
     
-    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
     def test__active_day__before_rollover__standard(self, timezone_mock):
-        """Before 8pm, returns first day from today onwards."""
+        """Before rollover, returns first day from today onwards."""
         
         self.assertEqual(
             self.event.active_day,
@@ -140,9 +142,9 @@ class Test__Event(TestCase):
         )
     
     
-    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
     def test__active_day__before_rollover__prefetched(self, timezone_mock):
-        """Before 8pm, returns first day from today onwards using as prefetched set of days."""
+        """Before rollover, returns first day from today onwards from the prefetched days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
         self.assertEqual(
@@ -152,10 +154,10 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
     def test__active_day__before_rollover__query_count(self, timezone_mock):
         """Expect:
-            (1) SELECT first day today onwards
+            (1) SELECT all days from today onwards
         """
         
         with self.assertNumQueries(1):
@@ -163,7 +165,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.localtime_time(timings.MARKET_OPENS, timedelta(minutes = -1))
+    @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
     def test__active_day__before_rollover__prefetched_query_count(self, timezone_mock):
         """Expect:
             No queries
@@ -174,9 +176,9 @@ class Test__Event(TestCase):
             self.event.active_day
     
     
-    @patching.localtime_time(timings.MARKET_OPENS)
+    @patching.localtime_time(ROLLOVER_TIME)
     def test__active_day__after_rollover__standard(self, timezone_mock):
-        """After 8pm, returns first day from tomorrow onwards."""
+        """After rollover, returns first day from tomorrow onwards."""
         
         self.assertEqual(
             self.event.active_day,
@@ -184,9 +186,9 @@ class Test__Event(TestCase):
         )
     
     
-    @patching.localtime_time(timings.MARKET_OPENS)
+    @patching.localtime_time(ROLLOVER_TIME)
     def test__active_day__after_rollover__prefetched(self, timezone_mock):
-        """After 8pm, returns first day from tomorrow onwards from a prefetched set of days."""
+        """After rollover, returns first day from tomorrow onwards from the prefetched days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
         self.assertEqual(
@@ -196,10 +198,10 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.localtime_time(timings.MARKET_OPENS)
+    @patching.localtime_time(ROLLOVER_TIME)
     def test__active_day__after_rollover__query_count(self, timezone_mock):
         """Expect:
-            (1) SELECT first day tomorrow onwards
+            (1) SELECT all days from today onwards
         """
         
         with self.assertNumQueries(1):
@@ -207,7 +209,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    @patching.localtime_time(timings.MARKET_OPENS)
+    @patching.localtime_time(ROLLOVER_TIME)
     def test__active_day__after_rollover__prefetched_query_count(self, timezone_mock):
         """Expect:
             No queries
@@ -949,7 +951,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
     
@@ -964,7 +966,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
         self.assertEqual(day.market_opens.tzname(), 'BST')
     
     
@@ -985,7 +987,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), prev.date)
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), time.fromisoformat('18:45:00'))
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
     
@@ -1006,7 +1008,7 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertEqual(day.market_opens.date(), prev.date)
-        self.assertEqual(day.market_opens.time(), timings.MARKET_OPENS)
+        self.assertEqual(day.market_opens.time(), time.fromisoformat('18:45:00'))
         self.assertEqual(day.market_opens.tzname(), 'BST')
     
     
