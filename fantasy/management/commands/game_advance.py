@@ -85,8 +85,8 @@ class Command(BaseCommand):
                 event.days.update(date = db.F('date') - timedelta(1))
             
             perform_advance(
-                series_source_map[Series(event.series)]['function'],
                 event,
+                series_source_map[Series(event.series)]['function'],
                 override_hold,
             )
             logger.info(f'Advanced {event}')

@@ -422,7 +422,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.TORPIDS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(live_bumps.get_positions, event, False)
+        perform_mock.assert_called_once_with(event, live_bumps.get_positions, False)
     
     
     @patch('fantasy.management.commands.game_advance.perform_advance')
@@ -432,7 +432,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.TORPIDS, self.today)
         
         GameAdvance().handle(oxf_source = 'anu-html')
-        perform_mock.assert_called_once_with(anu_html.get_positions, event, False)
+        perform_mock.assert_called_once_with(event, anu_html.get_positions, False)
     
     
     @patch('fantasy.management.commands.game_advance.perform_advance')
@@ -442,7 +442,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.LENTS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(camfm.get_positions, event, False)
+        perform_mock.assert_called_once_with(event, camfm.get_positions, False)
     
     
     @patch('fantasy.management.commands.game_advance.perform_advance')
@@ -452,7 +452,7 @@ class Test__Game_Advance(TestCase):
         event = prepare_event(Series.DEMO, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(parsers._demo_positions, event, False)
+        perform_mock.assert_called_once_with(event, parsers._demo_positions, False)
     
     
     @patch('fantasy.management.commands.game_advance.perform_advance')
@@ -464,8 +464,8 @@ class Test__Game_Advance(TestCase):
         
         GameAdvance().handle()
         self.assertEqual(perform_mock.call_count, 2)
-        perform_mock.assert_any_call(live_bumps.get_positions, torpids, False)
-        perform_mock.assert_any_call(camfm.get_positions, lents, False)
+        perform_mock.assert_any_call(torpids, live_bumps.get_positions, False)
+        perform_mock.assert_any_call(lents, camfm.get_positions, False)
     
     
     @patch('fantasy.management.commands.game_advance.perform_advance')
@@ -478,7 +478,7 @@ class Test__Game_Advance(TestCase):
         lents = prepare_event(Series.LENTS, self.today)
         
         GameAdvance().handle()
-        perform_mock.assert_called_once_with(camfm.get_positions, lents, False)
+        perform_mock.assert_called_once_with(lents, camfm.get_positions, False)
         # ^ Does not call Torpids
     
     
@@ -493,8 +493,8 @@ class Test__Game_Advance(TestCase):
         
         GameAdvance().handle(override = True)
         self.assertEqual(perform_mock.call_count, 2)
-        perform_mock.assert_any_call(live_bumps.get_positions, torpids, True)
-        perform_mock.assert_any_call(camfm.get_positions, lents, True)
+        perform_mock.assert_any_call(torpids, live_bumps.get_positions, True)
+        perform_mock.assert_any_call(lents, camfm.get_positions, True)
 
 
 class Test__Renumbered_Crew(TestCase):

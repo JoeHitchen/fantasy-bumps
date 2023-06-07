@@ -15,8 +15,8 @@ logger = logging.getLogger('fantasy.game_advance')
 
 
 def perform_advance(
-    source_function: integrations.PositionFcn,
     event: models.Event,
+    source_function: integrations.PositionFcn,
     override_hold: bool = False,
 ) -> None:
     """Loads any new results and updates the game state accordingly."""

@@ -36,7 +36,7 @@ class Test__PerformAdvance(TestCase):
     def test__perform__success(self, core_mock: Mock) -> None:
         """No special actions are performed upon success."""
         
-        game_advance.perform_advance(roll_over_positions, self.event)
+        game_advance.perform_advance(self.event, roll_over_positions)
         core_mock.assert_called_once()
         
         self.event.refresh_from_db()
@@ -50,7 +50,7 @@ class Test__PerformAdvance(TestCase):
         
         core_mock.side_effect = ValueError('Unknown Error')
         
-        game_advance.perform_advance(roll_over_positions, self.event)
+        game_advance.perform_advance(self.event, roll_over_positions)
         core_mock.assert_called_once()
 
         self.event.refresh_from_db()
@@ -64,7 +64,7 @@ class Test__PerformAdvance(TestCase):
         
         core_mock.side_effect = models.Day.DoesNotExist
         
-        game_advance.perform_advance(roll_over_positions, self.event)
+        game_advance.perform_advance(self.event, roll_over_positions)
         core_mock.assert_called_once()
 
         self.event.refresh_from_db()
