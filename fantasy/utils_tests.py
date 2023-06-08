@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.test import TestCase, tag
 
 from .constants import Series, Genders, Clubs
@@ -314,36 +312,4 @@ class Test__Payouts(TestCase):
         
         with self.assertNumQueries(0):
             utils.payout_by_day_gender_positions(day, Genders.WOMEN, 5, 5)
-    
-    
-    @patch(
-        'fantasy.utils.payout_by_day_gender_positions',
-        autospec = True,
-        side_effect = lambda w, x, y, z: (w, x, y, z),
-    )
-    def test__matrix__individual_calls(self, payouts_mock):
-        """Checks that the matrix is constructed from payout calls for individual crews."""
-        
-        matrix = utils.create_payout_matrix(self.day)
-        for crew, delta_crabs in matrix.items():
-            with self.subTest(crew = str(crew)):
-                self.assertEqual(delta_crabs[0], self.day)
-                self.assertEqual(delta_crabs[1], crew.gender)
-                self.assertEqual(delta_crabs[2], self.day.ranking.get(crew = crew).rank)
-                self.assertEqual(delta_crabs[3], self.day.next.ranking.get(crew = crew).rank)
-    
-    
-    @tag('query-count')
-    def test__matrix__query_count(self):
-        """Expect:
-            (1) SELECT next day of event (can be cached)
-            (1) SELECT crews with positions on day
-            (1) SELECT positions for crews on day
-            (1) SELECT positions for crews on the next day
-        """
-        
-        fresh_day = models.Day.objects.select_related().get(pk = self.day.pk)
-        
-        with self.assertNumQueries(4):
-            utils.create_payout_matrix(fresh_day)
 

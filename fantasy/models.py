@@ -268,6 +268,9 @@ class Crew(models.Model):
     )
     rank = models.PositiveSmallIntegerField()
     
+    posn_old: list['Position']  # List due to pre-fetch
+    posn_new: list['Position']  # List due to pre-fetch
+    
     def __str__(self):
         return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
     
@@ -339,6 +342,9 @@ class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
     
     user = models.OneToOneField('auth.User', models.CASCADE)
+    
+    mens_crew: list['Purchase']
+    womens_crew: list['Purchase']
     
     def __str__(self):
         return self.user.username

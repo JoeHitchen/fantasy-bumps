@@ -2,7 +2,7 @@ from collections import Counter
 from functools import lru_cache
 from math import log
 
-from django.db.models import Prefetch, Max
+from django.db.models import Max
 
 from .constants import Genders, money
 from . import models
@@ -14,7 +14,7 @@ def ordered_events():
     return models.Event.objects.annotate(last_day = Max('days__date')).order_by('-last_day')
 
 
-def has_all_seats(purchases, expected_seats):
+def has_all_seats(purchases: list['models.Purchase'], expected_seats: list['models.Seat']) -> bool:
     """Checks that a set of purchase objects has every seat filled exactly once."""
     
     seat_count = Counter(purchase.seat_id for purchase in purchases)
@@ -72,8 +72,16 @@ def pricing_by_day_gender(bungline, day, gender):
     return pricing(bungline, day.event.num_crews(gender))
 
 
-def payout_by_day_gender_positions(day, gender, old_position, new_position):
-    """Calculates the value change and payout for a given day, gender, and pair of positions."""
+def payout_by_day_gender_positions(
+    day: 'models.Day',
+    gender: str,
+    old_position: int,
+    new_position: int,
+):
+    """Calculates the value change and payout for a given day, gender, and pair of positions.
+    
+    ToDo: Consider whether this function should accept Gender and Position instances.
+    """
     
     position_change = old_position - new_position  # Sign reversed - Lower position is better
     
@@ -87,41 +95,4 @@ def payout_by_day_gender_positions(day, gender, old_position, new_position):
         payout = round(payout)
     
     return {'value_change': crew_value_new - crew_value_old, 'payout': payout}
-
-
-def create_payout_matrix(day):
-    """Calculates the value change and payout for every crew racing on the day provided.
-    
-    Optimised when:
-        select_related called when retrieving day
-        day.next has been set
-    """
-    
-    # Retrieve crews racing
-    crews = (
-        models.Crew.objects
-        .filter(positions__day = day)
-        .prefetch_related(
-            Prefetch(
-                'positions',
-                models.Position.objects.filter(day = day),
-                to_attr='posn_old',
-            ),
-            Prefetch(
-                'positions',
-                models.Position.objects.filter(day = day.next),
-                to_attr='posn_new',
-            ),
-        )
-    )
-    
-    # Generate payout matrix
-    return {
-        crew: payout_by_day_gender_positions(
-            day,
-            crew.gender,
-            crew.posn_old[0].rank,
-            crew.posn_new[0].rank,
-        ) for crew in crews
-    }
 
