@@ -24,7 +24,7 @@ def perform_advance(
     event: models.Event,
     source_function: integrations.PositionFcn,
     override_hold: bool = False,
-) -> None:
+) -> bool:
     """Loads any new results and updates the game state accordingly."""
      
     # Get relevant days
@@ -36,18 +36,36 @@ def perform_advance(
         new_day = event.active_day
     else:
         logger.info(f'No new racing has occurred for {event}')  # Pre-event, no action required
-        return
+        return False
     
     
     # Check results required for new day
     if new_day.ranking.count():
         logger.info(f'Crew positions for the {new_day} of {event} are already loaded')
-        return
+        return False
     
     
     # Update records
     try:
-        advance_core(old_day, source_function, override_hold)
+        
+        reject_for_hold_args = {'event__market_held_closed': False} if not override_hold else {}
+        
+        with transaction.atomic():
+            transaction_day = (
+                models.Day.objects
+                .select_for_update()
+                .filter(**reject_for_hold_args)
+                .get(id = old_day.id, advanced = False)
+            )
+            
+            mgmt_utils.load_crew_rankings(source_function, transaction_day.next)
+            roll_over_purchases(transaction_day)
+            evaluate_investments(transaction_day)
+            
+            transaction_day.advanced = True
+            transaction_day.save()
+        
+        return True
         
     except models.Day.DoesNotExist:
         logger.info(f'{old_day} of {event} has already been advanced')
@@ -64,31 +82,8 @@ def perform_advance(
             + '\n\nThe markets are held closed. '
             + "Hopefully it's an easy fix..."
         ), fail_silently = True)
-
-
-@transaction.atomic
-def advance_core(
-    day: models.Day,
-    source_function: integrations.PositionFcn,
-    override_hold: bool = False,
-) -> None:
-    """The sensitive core of the game advance routine."""
     
-    reject_for_hold_args = {'event__market_held_closed': False} if not override_hold else {}
-    
-    transaction_day = (
-        models.Day.objects
-        .select_for_update()
-        .filter(**reject_for_hold_args)
-        .get(id = day.id, advanced = False)
-    )
-    
-    mgmt_utils.load_crew_rankings(source_function, transaction_day.next)
-    roll_over_purchases(transaction_day)
-    evaluate_investments(transaction_day)
-    
-    transaction_day.advanced = True
-    transaction_day.save()
+    return False
 
 
 def roll_over_purchases(day: models.Day) -> None:
