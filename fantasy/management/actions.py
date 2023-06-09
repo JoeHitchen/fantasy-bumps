@@ -43,6 +43,7 @@ def create_days(event: models.Event, start_date: date, main_race_time: time) -> 
         first_race_time = main_race_time,
     )
     weds.save()
+    assert weds.first_race  # MyPy purposes
     
     event.days.create(
         name = 'Thursday',
