@@ -8,14 +8,27 @@ from django.db.models import F
 
 from core.tasks import app
 from fantasy import models
-from fantasy.constants import Series, Genders, money
+from fantasy.constants import Series, Locations, Genders, money
+from fantasy.management.commands import parsers
 from fantasy.management.commands.update_live_bumps import Command as UpdateLiveBumps
 from integrations.live_bumps import WriteOutcome as LiveBumpsWriteOutcome
+
+from . import game_advance
 
 series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
 
 logger = logging.getLogger('fantasy.tasks')
+
+
+@app.task
+def perform_game_advance(series: str, year: int, source: str = '') -> None:
+    """A task wrapper for performing game advances for a given event."""
+    
+    game_advance.perform_advance(
+        models.Event.objects.get(series = series_reverser[series], year = year),
+        parsers.get_validated_position_source(Locations.OXFORD, source)['function'],
+    )
 
 
 def boost_crabs(
