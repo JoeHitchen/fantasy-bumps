@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import logging
 
@@ -10,6 +10,7 @@ from core.tasks import app
 from fantasy import models
 from fantasy.constants import Series, Genders, money
 from fantasy.management.commands.update_live_bumps import Command as UpdateLiveBumps
+from integrations.live_bumps import WriteOutcome as LiveBumpsWriteOutcome
 
 series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
@@ -17,13 +18,18 @@ gender_reverser = {gender.label.lower(): gender for gender in Genders}
 logger = logging.getLogger('fantasy.tasks')
 
 
-def boost_crabs(team, event, amounts, apply_at = timezone.now()):
+def boost_crabs(
+    team: models.Team,
+    event: models.Event,
+    amounts: tuple[int, int],
+    apply_at: datetime = timezone.now(),
+) -> None:
     """A wrapper for the boost crabs task to be applied at a certain time."""
     boost_crabs_task.apply_async((str(team), event.tag, amounts), eta = apply_at)
 
 
 @app.task
-def boost_crabs_task(team_name, event_tag, amounts):
+def boost_crabs_task(team_name: str, event_tag: str, amounts: tuple[int, int]) -> None:
     """Provides a crab boost to a given team for an event.
     
     *Assumes that the target team is on the starting budget.*
@@ -51,25 +57,23 @@ def boost_crabs_task(team_name, event_tag, amounts):
 
 
 @app.task
-def update_live_bumps(**kwargs):
+def update_live_bumps(series: str, year: int, gender: str) -> LiveBumpsWriteOutcome:
     """A light wrapper that calls the Update Live Bumps management command."""
     
     return UpdateLiveBumps().perform_update(
-        models.Event.objects.get(
-            series = series_reverser[kwargs['series']],
-            year = kwargs['year'],
-        ),
-        gender_reverser[kwargs['gender']],
+        models.Event.objects.get(series = series_reverser[series], year = year),
+        gender_reverser[gender],
     )
 
 
-def schedule_live_bumps_updates(event):
+def schedule_live_bumps_updates(event: models.Event) -> None:
     """Schedules a minutely update of Live Bumps until after the expected end of racing."""
     
     every_minute, _ = IntervalSchedule.objects.get_or_create(
         period = IntervalSchedule.MINUTES,
         every = 1,
     )
+    assert event.last_racing_day.first_race  # MyPy purposes
     
     for gender in Genders:
         PeriodicTask.objects.update_or_create(

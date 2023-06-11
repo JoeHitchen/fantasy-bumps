@@ -54,6 +54,7 @@ def create_days(
         last_race_time = last_race_time,
     )
     weds.save()
+    assert weds.first_race  # MyPy purposes
     
     event.days.create(
         name = 'Thursday',
