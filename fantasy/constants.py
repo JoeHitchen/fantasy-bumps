@@ -107,4 +107,5 @@ class Clubs(models.TextChoices):
     SIDN = ('sidn', 'Sidney Sussex')
     TRIH = ('trih', 'Trinity Hall')
     WOLC = ('wolc', 'Wolfson')
+    VETS = ('vets', 'Vets School')
 

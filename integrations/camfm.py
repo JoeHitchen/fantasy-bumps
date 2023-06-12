@@ -32,6 +32,7 @@ def _cambridge_club_parser(club_str: str) -> str:
         'st. e': 'sedc',
         'trini': 'trih',
         'wolfs': 'wolc',
+        'vet s': 'vets',
     }.get(club_str[0:5].lower(), club_str[0:4].lower())
 
 
