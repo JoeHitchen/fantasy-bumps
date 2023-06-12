@@ -3,6 +3,36 @@
 from django.db import migrations, models
 
 
+last_race_times_map = {
+    ('T', 2021): ['18:45', '18:45', '18:45', '18:45'],
+    ('T', 2022): ['17:00', '17:00', '17:00', '17:00'],
+    ('E', 2022): ['18:45', '18:45', '18:45', '17:45'],
+    ('M', 2022): ['19:45', '19:45', '19:45', '17:45'],
+    ('T', 2023): ['17:15', '17:15', '17:15', '17:15'],
+    ('L', 2023): ['16:40', '16:40', '16:40', '16:40', '16:40'],
+    ('E', 2023): ['18:45', '18:45', '18:45', '17:45'],
+    ('M', 2023): ['19:45', '19:45', '19:45', '17:45'],
+}
+
+def add_last_race_times(apps, schema_editor):
+    """Populatese the historical last race times."""
+    Event = apps.get_model('fantasy', 'Event')
+    
+    events = Event.objects.all()
+    for event in events:
+        
+        racing_days = event.days.filter(first_race_time__isnull = False)
+        last_race_times = last_race_times_map[(event.series, event.year)]
+        
+        for day, last_race_time in zip(racing_days, last_race_times):
+            day.last_race_time = last_race_time
+            day.save()
+
+
+def noop_reverser(apps, schema_editor):
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -15,4 +45,5 @@ class Migration(migrations.Migration):
             name='last_race_time',
             field=models.TimeField(db_index=True, null=True),
         ),
+        migrations.RunPython(add_last_race_times, noop_reverser),
     ]
