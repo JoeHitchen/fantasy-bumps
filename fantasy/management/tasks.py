@@ -2,20 +2,57 @@ from datetime import datetime, timedelta
 import json
 import logging
 
-from django_celery_beat.models import IntervalSchedule, PeriodicTask
+from django_celery_beat.models import IntervalSchedule, ClockedSchedule, PeriodicTask
 from django.utils import timezone
 from django.db.models import F
 
 from core.tasks import app
 from fantasy import models
-from fantasy.constants import Series, Genders, money
+from fantasy.constants import Series, Locations, Genders, money, timings
+from fantasy.management.commands import parsers
 from fantasy.management.commands.update_live_bumps import Command as UpdateLiveBumps
 from integrations.live_bumps import WriteOutcome as LiveBumpsWriteOutcome
+
+from . import game_advance
 
 series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
 
 logger = logging.getLogger('fantasy.tasks')
+
+
+def schedule_game_advances(event: models.Event) -> None:
+    """Schedules tasks for the game advance each day."""
+    
+    for day in event.days.all():
+        
+        if not day.is_racing_day:
+            continue
+        
+        advance_time = day.last_race + timings.ADVANCE_DELAY
+        schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time = advance_time)
+        PeriodicTask.objects.update_or_create(
+            name = 'Game Advance // {} {}'.format(event, day),
+            task = 'fantasy.management.tasks.perform_game_advance',
+            kwargs = json.dumps({
+                'series': event.get_series_display().lower(),
+                'year': event.year,
+            }),
+            defaults = {
+                'clocked': schedule,
+                'one_off': True,
+            },
+        )
+
+
+@app.task
+def perform_game_advance(series: str, year: int, source: str = '') -> None:
+    """A task wrapper for performing game advances for a given event."""
+    
+    game_advance.perform_advance(
+        models.Event.objects.get(series = series_reverser[series], year = year),
+        parsers.get_validated_position_source(Locations.OXFORD, source)['function'],
+    )
 
 
 def boost_crabs(
