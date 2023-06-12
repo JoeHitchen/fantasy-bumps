@@ -7,6 +7,10 @@ class IntervalSchedule():
     objects: _IntervalManager
 
 
+class ClockedSchedule():
+    objects: _ClockedManager
+
+
 class PeriodicTask():
     objects: _PeriodicManager
 
@@ -17,14 +21,31 @@ class _IntervalManager():
         ...
 
 
-class _PeriodicManager():
+class _ClockedManager():
     
-    def update_or_create(self, task: str, kwargs: str, defaults: _TaskSpec) -> None:
+    def get_or_create(self, clocked_time: bool) -> tuple[ClockedSchedule, bool]:
         ...
 
 
-class _TaskSpec(TypedDict):
+class _PeriodicManager():
+    
+    def update_or_create(
+        self,
+        task: str,
+        kwargs: str,
+        defaults: _TaskSpec1 | _TaskSpec2,
+        name: str = '',
+    ) -> None:
+        ...
+
+
+class _TaskSpec1(TypedDict):
     name: str
     interval: IntervalSchedule
     expires: datetime
+
+
+class _TaskSpec2(TypedDict):
+    clocked: ClockedSchedule
+    one_off: bool
 

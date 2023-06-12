@@ -52,8 +52,8 @@ class Test__EventCreation(TestCase):
         make_division(Genders.WOMEN, 4, time(13, 30), womens_ranking[4:8]),
         make_division(Genders.MEN, 3, time(11, 55), mens_ranking[4:7]),
         make_division(Genders.WOMEN, 5, time(12, 30), womens_ranking[8:13]),
-        make_division(Genders.MEN, 2, time(14, 00), mens_ranking[0:2]),
-        make_division(Genders.WOMEN, 4, time(14, 30), womens_ranking[0:4]),
+        make_division(Genders.MEN, 2, time(14, 30), mens_ranking[0:2]),
+        make_division(Genders.WOMEN, 4, time(14, 00), womens_ranking[0:4]),
     ]
     
     
@@ -71,6 +71,10 @@ class Test__EventCreation(TestCase):
         self.assertQuerySetEqual(
             event.days.values_list('first_race_time', flat = True),
             [time(11, 55), time(11, 55), time(11, 55), time(11, 55), None],
+        )
+        self.assertQuerySetEqual(
+            event.days.values_list('last_race_time', flat = True),
+            [time(14, 30), time(14, 30), time(14, 30), time(14, 30), None],
         )
         
         self.assertEqual(event.first_day.ranking.count(), 20)
@@ -96,6 +100,10 @@ class Test__EventCreation(TestCase):
         self.assertQuerySetEqual(
             event.days.values_list('first_race_time', flat = True),
             [time(11, 55), time(11, 55), time(11, 55), time(10, 55), None],
+        )
+        self.assertQuerySetEqual(
+            event.days.values_list('last_race_time', flat = True),
+            [time(14, 30), time(14, 30), time(14, 30), time(13, 30), None],
         )
         
         self.assertEqual(event.first_day.ranking.count(), 20)

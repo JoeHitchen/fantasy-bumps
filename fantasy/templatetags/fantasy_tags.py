@@ -353,7 +353,7 @@ def crew_status_box(event, gender, crew_valid, other_crew_valid):
             'text': 'Concluded ' if done else 'Ready' if valid else 'Not ready',
         }
     
-    event_done = not event.active_day.first_race
+    event_done = not event.active_day.is_racing_day
     other_gender = utils.reverse_gender(gender)
     
     return {
@@ -384,14 +384,14 @@ def crew_ready_button(event, gender):
         }[gender]
     
     except AttributeError:
-        action = 'to compete' if event.active_day.first_race else 'for your team'
+        action = 'to compete' if event.active_day.is_racing_day else 'for your team'
         return {
             'link': reverse('login'),
             'colour': 'primary',
             'text': f'Sign in {action}',
         }
     
-    if not event.active_day.first_race:
+    if not event.active_day.is_racing_day:
         styles = {'colour': 'primary', 'text': 'View final crew'}
     elif crew_ready:
         styles = {'colour': 'success', 'text': 'Ready to race'}

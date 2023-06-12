@@ -50,8 +50,8 @@ class Event(models.Model):
     @cached_property
     def last_racing_day(self) -> 'Day':
         if hasattr(self, '_days'):
-            return [day for day in self._days if day.first_race_time][-1]
-        return self.days.exclude(first_race_time = None).last()
+            return [day for day in self._days if day.is_racing_day][-1]
+        return self.days.exclude(first_race_time = None, last_race_time = None).last()
     
     
     @cached_property
@@ -64,15 +64,20 @@ class Event(models.Model):
         """
         
         now = timezone.localtime()
-        day_shift = timedelta(1) if now.time() >= timings.MARKET_OPENS else timedelta(0)
-        date = now.date() + day_shift
         
         if hasattr(self, '_days'):
-            future_days = [day for day in self._days if day.date >= date]
-            return future_days[0] if future_days else self._days[-1]
+            not_past_days = [day for day in self._days if day.date >= now.date()]
+        else:
+            not_past_days = list(self.days.filter(date__gte = now.date()))
         
-        day = self.days.filter(date__gte = date).first()
-        return day if day else self.days.last()
+        if not not_past_days:
+            return self._days[-1] if hasattr(self, '_days') else self.days.last()
+        
+        current_day = not_past_days[0]
+        if len(not_past_days) > 1 and now >= current_day.last_race + timings.MARKET_DELAY:
+            return not_past_days[1]
+        
+        return current_day
     
     
     def num_crews(self, gender):
@@ -91,6 +96,7 @@ class Day(models.Model):
     name = models.CharField(max_length = 10)
     date = models.DateField(db_index = True)
     first_race_time = models.TimeField(null = True, db_index = True)
+    last_race_time = models.TimeField(null = True, db_index = True)
     
     advanced = models.BooleanField(default = False)
     
@@ -119,6 +125,12 @@ class Day(models.Model):
     
     
     @cached_property
+    def is_racing_day(self):
+        """Indicates if racing occurs on this day."""
+        return self.first_race and self.last_race
+    
+    
+    @cached_property
     def first_race(self) -> datetime | None:
         """The datetime for the first race of the day, or None if not racing day."""
         
@@ -128,6 +140,19 @@ class Day(models.Model):
         return datetime.combine(
             self.date,
             self.first_race_time,
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+        )
+    
+    @cached_property
+    def last_race(self):
+        """The datetime for the last race of the day, or None if not racing day."""
+        
+        if not self.last_race_time:
+            return None
+        
+        return datetime.combine(
+            self.date,
+            self.last_race_time,
             tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
         )
     
@@ -170,15 +195,18 @@ class Day(models.Model):
     def market_opens(self):
         """Gives the time that markets open for trading, for racing days.
         
-        Markets always open at 8:00PM. On the first day, they open four days before racing. For
-        later days they open the day before racing."""
+        Before racing, the markets open at 8pm, three days before the first racing day, and
+        otherwise open one hour after the last race of the previous day."""
         
-        if not self.first_race:
-            return
+        if not self.is_racing_day:
+            return None
+        
+        if self.prev and self.prev.is_racing_day:
+            return self.prev.last_race + timings.MARKET_DELAY
         
         return datetime.combine(
-            self.prev.date if self.prev else self.date - timedelta(3),
-            timings.MARKET_OPENS,
+            self.date - timedelta(3),
+            timings.MARKET_INITIAL,
             tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
         )
     
@@ -186,13 +214,13 @@ class Day(models.Model):
     @cached_property
     def market_closes(self):
         """Markets always close half an hour before the first race, if one occurs."""
-        return self.first_race - timedelta(minutes = 30) if self.first_race else None
+        return self.first_race - timedelta(minutes = 30) if self.is_racing_day else None
     
     
     @cached_property
     def market_is_open(self):
         """Indicates whether the market is currently open for trading."""
-        if not self.first_race or self.event.market_held_closed:
+        if not self.is_racing_day or self.event.market_held_closed:
             return False
         return self.market_opens <= timezone.localtime() < self.market_closes
 
@@ -239,6 +267,9 @@ class Crew(models.Model):
         db_index = True,
     )
     rank = models.PositiveSmallIntegerField()
+    
+    posn_old: list['Position']  # List due to pre-fetch
+    posn_new: list['Position']  # List due to pre-fetch
     
     def __str__(self):
         return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
@@ -311,6 +342,9 @@ class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
     
     user = models.OneToOneField('auth.User', models.CASCADE)
+    
+    mens_crew: list['Purchase']
+    womens_crew: list['Purchase']
     
     def __str__(self):
         return self.user.username

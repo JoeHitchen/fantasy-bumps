@@ -13,6 +13,7 @@ from integrations import live_bumps
 from ...constants import Locations, Series as EventSeries
 from ... import models
 from ..actions import create_event
+from .. import tasks
 from . import utils, parsers
 
 logging.basicConfig(level = logging.INFO)
@@ -114,6 +115,8 @@ class Command(BaseCommand):
         utils.load_crew_lists(crew_list_source['function'], event)
         
         # Ancillary actions
+        tasks.schedule_game_advances(event)
+        
         if series_location == Locations.OXFORD and live_bumps.write_enabled:
             live_bumps.create_event(event.series, event.year, start_order)
         
