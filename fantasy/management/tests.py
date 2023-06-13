@@ -1,12 +1,19 @@
-from datetime import date, time
+from datetime import date, time, datetime, timedelta
+from unittest.mock import patch, Mock, call
 from typing import List
 
 from django.test import TestCase
+from django.db import models as db
+from django.utils import timezone
 
 from integrations.types import StartOrder, Division, Crew
 
-from ..constants import Series, Genders
+from ..constants import Series, Clubs, Genders
+from .. import models
 from . import actions
+
+
+PositionsMap = dict[models.Crew.Tuple, int]
 
 
 def make_division(gender: Genders, size: int, race_time: time, crews: List[Crew]) -> Division:
@@ -17,6 +24,18 @@ def make_division(gender: Genders, size: int, race_time: time, crews: List[Crew]
         'size': size,
         'crews': [(crew, True) for crew in crews],
         'finalised': True,
+    }
+
+
+def dummy_positions_by_gender(
+    series: str,
+    year: int,
+    gender: Genders,
+    day_number: int,
+) -> PositionsMap:
+    return {
+        (Clubs.HERT, gender, 1): day_number + 1,
+        (Clubs.LADY, gender, 1): day_number + 2,
     }
 
 
@@ -113,4 +132,200 @@ class Test__EventCreation(TestCase):
             {ranking.crew.as_tuple(): ranking.rank for ranking in event.first_day.ranking.all()},
             {**mens_positions, **womens_positions},
         )
+
+
+class Test__LiveBumps(TestCase):
+    
+    event: models.Event
+    dummy_positions_by_day: list[PositionsMap]
+    now: datetime
+    
+    @classmethod
+    def setUpTestData(cls) -> None:
+    
+        cls.now = timezone.localtime(timezone.now())
+        
+        cls.event = models.Event.objects.create(
+            series = Series.TORPIDS,
+            year = cls.now.year,
+            tag = f'{Series.TORPIDS.label.lower()}{cls.now.year}',
+        )
+        actions.create_days(cls.event, cls.now.date(), time(12, 00), time(18, 30))
+        
+        cls.dummy_positions_by_day = [dummy_positions_by_gender(
+            cls.event.series,
+            cls.event.year,
+            Genders.WOMEN,
+            day_number,
+        ) for day_number in range(1, 6)]
+    
+    
+    @patch('integrations.anu_dat.get_positions_by_gender')
+    def test__update__before_first_day(self, positions_mock: Mock) -> None:
+        """No action is taken before the first day."""
+        
+        self.event.days.update(date = db.F('date') + timedelta(1))
+        actions.update_live_bumps(self.event, Genders.WOMEN)
+        
+        positions_mock.assert_not_called()
+    
+    
+    @patch('integrations.live_bumps.write_positions')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
+    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
+    def test__update__first_day(
+        self,
+        positions_mock: Mock,
+        start_order_mock: Mock,
+        write_mock: Mock,
+    ) -> None:
+        """Positions are processed for the next day, current day, and all previous days."""
+        
+        actions.update_live_bumps(self.event, Genders.WOMEN)
+        
+        self.assertEqual(
+            positions_mock.call_args_list,
+            [
+                call(self.event.series, self.event.year, Genders.WOMEN, day_number)
+                for day_number in range(1, 3)
+            ],
+        )
+        start_order_mock.assert_called_once_with(
+            self.event.series,
+            self.event.year,
+            Genders.WOMEN,
+            1,
+        )
+        write_mock.assert_called_once_with(
+            self.event.series,
+            self.event.year,
+            self.dummy_positions_by_day[:2],
+        )
+    
+    
+    @patch('integrations.live_bumps.write_positions')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
+    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
+    def test__update__second_day(
+        self,
+        positions_mock: Mock,
+        start_order_mock: Mock,
+        write_mock: Mock,
+    ) -> None:
+        """Positions are processed for the next day, current day, and all previous days."""
+        
+        self.event.days.update(date = db.F('date') - timedelta(1))
+        actions.update_live_bumps(self.event, Genders.WOMEN)
+        
+        self.assertEqual(
+            positions_mock.call_args_list,
+            [
+                call(self.event.series, self.event.year, Genders.WOMEN, day_number)
+                for day_number in range(1, 4)
+            ],
+        )
+        start_order_mock.assert_called_once_with(
+            self.event.series,
+            self.event.year,
+            Genders.WOMEN,
+            2,
+        )
+        write_mock.assert_called_once_with(
+            self.event.series,
+            self.event.year,
+            self.dummy_positions_by_day[:3],
+        )
+    
+    
+    @patch('integrations.live_bumps.write_positions')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
+    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
+    def test__update__final_day(
+        self,
+        positions_mock: Mock,
+        start_order_mock: Mock,
+        write_mock: Mock,
+    ) -> None:
+        """Positions are processed for the next day, current day, and all previous days."""
+        
+        self.event.days.update(date = db.F('date') - timedelta(3))
+        actions.update_live_bumps(self.event, Genders.WOMEN)
+        
+        self.assertEqual(
+            positions_mock.call_args_list,
+            [
+                call(self.event.series, self.event.year, Genders.WOMEN, day_number)
+                for day_number in range(1, 6)
+            ],
+        )
+        start_order_mock.assert_called_once_with(
+            self.event.series,
+            self.event.year,
+            Genders.WOMEN,
+            4,
+        )
+        write_mock.assert_called_once_with(
+            self.event.series,
+            self.event.year,
+            self.dummy_positions_by_day,
+        )
+    
+    
+    @patch('integrations.live_bumps.write_positions')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
+    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
+    def test__update__after_event(
+        self,
+        positions_mock: Mock,
+        start_order_mock: Mock,
+        write_mock: Mock,
+    ) -> None:
+        """Positions are processed for the whole event after it has finished."""
+        
+        self.event.days.update(date = db.F('date') - timedelta(4))
+        actions.update_live_bumps(self.event, Genders.WOMEN)
+        
+        self.assertEqual(
+            positions_mock.call_args_list,
+            [
+                call(self.event.series, self.event.year, Genders.WOMEN, day_number)
+                for day_number in range(1, 6)
+            ],
+        )
+        start_order_mock.assert_not_called()
+        write_mock.assert_called_once_with(
+            self.event.series,
+            self.event.year,
+            self.dummy_positions_by_day,
+        )
+    
+    
+    @patch('integrations.live_bumps.write_positions')
+    @patch('integrations.anu_dat.get_start_order_by_gender')
+    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
+    def test__update__racetime_filter(
+        self,
+        positions_mock: Mock,
+        start_order_mock: Mock,
+        write_mock: Mock,
+    ) -> None:
+        """Crews that have not raced on the current day are masked from the Live Bumps update."""
+        
+        start_order_mock.return_value = [
+            {
+                'race_time': (self.now - timedelta(minutes = 2)).time(),
+                'crews': [((Clubs.HERT, Genders.WOMEN, 1), None)],
+            },
+            {
+                'race_time': (self.now + timedelta(minutes = 2)).time(),
+                'crews': [((Clubs.LADY, Genders.WOMEN, 1), None)],
+            },
+        ]
+        
+        self.event.days.update(date = db.F('date') - timedelta(1))
+        actions.update_live_bumps(self.event, Genders.WOMEN)
+        
+        expected_positions = self.dummy_positions_by_day[:3]
+        expected_positions[-1].pop((Clubs.LADY, Genders.WOMEN, 1))
+        write_mock.assert_called_once_with(self.event.series, self.event.year, expected_positions)
 

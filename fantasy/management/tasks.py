@@ -10,10 +10,9 @@ from core.tasks import app
 from fantasy import models
 from fantasy.constants import Series, Locations, Genders, money, timings
 from fantasy.management.commands import parsers
-from fantasy.management.commands.update_live_bumps import Command as UpdateLiveBumps
 from integrations.live_bumps import WriteOutcome as LiveBumpsWriteOutcome
 
-from . import game_advance
+from . import game_advance, actions
 
 series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
@@ -97,7 +96,7 @@ def boost_crabs_task(team_name: str, event_tag: str, amounts: tuple[int, int]) -
 def update_live_bumps(series: str, year: int, gender: str) -> LiveBumpsWriteOutcome:
     """A light wrapper that calls the Update Live Bumps management command."""
     
-    return UpdateLiveBumps().perform_update(
+    return actions.update_live_bumps(
         models.Event.objects.get(series = series_reverser[series], year = year),
         gender_reverser[gender],
     )
