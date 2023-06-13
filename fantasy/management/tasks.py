@@ -10,10 +10,9 @@ from core.tasks import app
 from fantasy import models
 from fantasy.constants import Series, Locations, Genders, money, timings
 from fantasy.management.commands import parsers
-from fantasy.management.commands.update_live_bumps import Command as UpdateLiveBumps
 from integrations.live_bumps import WriteOutcome as LiveBumpsWriteOutcome
 
-from . import game_advance
+from . import game_advance, actions
 
 series_reverser = {series.label.lower(): series for series in Series}
 gender_reverser = {gender.label.lower(): gender for gender in Genders}
@@ -93,19 +92,10 @@ def boost_crabs_task(team_name: str, event_tag: str, amounts: tuple[int, int]) -
     logger.info(f'Boost of {team_name} for {event_tag} ' + ('successful' if outcome else 'failed'))
 
 
-@app.task
-def update_live_bumps(series: str, year: int, gender: str) -> LiveBumpsWriteOutcome:
-    """A light wrapper that calls the Update Live Bumps management command."""
-    
-    return UpdateLiveBumps().perform_update(
-        models.Event.objects.get(series = series_reverser[series], year = year),
-        gender_reverser[gender],
-    )
-
-
 def schedule_live_bumps_updates(event: models.Event) -> None:
-    """Schedules a minutely update of Live Bumps until after the expected end of racing."""
+    """Schedules a minutely update of Live Bumps and a task to disable updates after racing."""
     
+    # Create regular update tasks
     every_minute, _ = IntervalSchedule.objects.get_or_create(
         period = IntervalSchedule.MINUTES,
         every = 1,
@@ -123,7 +113,36 @@ def schedule_live_bumps_updates(event: models.Event) -> None:
             defaults = {
                 'name': 'Live Bumps // {} {}'.format(event, gender.label),
                 'interval': every_minute,
-                'expires': event.last_racing_day.last_race + timedelta(hours = 6),
             },
         )
+    
+    # Create one-off task to disable regular update task
+    disable_time = event.last_racing_day.last_race + timedelta(hours = 6)
+    schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time = disable_time)
+    PeriodicTask.objects.update_or_create(
+        name = 'Live Bumps Disable // {}'.format(event),
+        task = 'fantasy.management.tasks.disable_live_bumps_updates',
+        kwargs = '{}',
+        defaults = {
+            'clocked': schedule,
+            'one_off': True,
+        },
+    )
+
+
+@app.task
+def update_live_bumps(series: str, year: int, gender: str) -> LiveBumpsWriteOutcome:
+    """A light wrapper that calls the Update Live Bumps management command."""
+    
+    return actions.update_live_bumps(
+        models.Event.objects.get(series = series_reverser[series], year = year),
+        gender_reverser[gender],
+    )
+
+
+@app.task
+def disable_live_bumps_updates() -> None:
+    """Disables the Live Bumps update tasks pipelines."""
+    
+    PeriodicTask.objects.filter(name = update_live_bumps.__name__).update(enabled = False)
 

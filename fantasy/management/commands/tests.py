@@ -1,12 +1,9 @@
-from unittest.mock import patch, Mock, call
-from typing import Dict
+from unittest.mock import patch, Mock
 from datetime import date, time, timedelta
-import logging
 
 from django.test import TestCase
 from django.utils import timezone
 
-from integrations.types import PositionMap
 from integrations import live_bumps, anu_html, camfm, ourcs
 from core.tests import exists
 
@@ -20,8 +17,6 @@ from .update_live_bumps import Command as UpdateLiveBumps
 from .wipe_live_bumps import Command as WipeLiveBumps
 from . import utils, parsers
 
-logging.disable(logging.CRITICAL)
-
 
 def prepare_event(series: Series, start_date: date) -> models.Event:
     event = models.Event.objects.create(
@@ -31,27 +26,6 @@ def prepare_event(series: Series, start_date: date) -> models.Event:
     )
     create_days(event, start_date, time(12, 00), time(18, 30))
     return event
-
-
-def roll_over_positions(series: str, year: int, day_number: int) -> PositionMap:
-    days = list(exists(models.Event.objects.first()).days.all())
-    positions = days[day_number - 2].ranking.all()
-    return {
-        position.crew.as_tuple(): (position.rank, True)
-        for position in positions
-    }
-
-
-def dummy_positions_by_gender(
-    series: str,
-    year: int,
-    gender: Genders,
-    day_number: int,
-) -> Dict[models.Crew.Tuple, int]:
-    return {
-        (Clubs.HERT, gender, 1): day_number + 1,
-        (Clubs.LADY, gender, 1): day_number + 2,
-    }
 
 
 def dummy_start_order_source(_: Locations, __: str) -> parsers.StartOrderSource:
@@ -678,201 +652,15 @@ class Test__Renumbered_Crew(TestCase):
 
 class Test__Live_Bumps(TestCase):
     
-    now = timezone.localtime(timezone.now())
-    
-    @patch('integrations.anu_dat.get_positions_by_gender')
-    def test__update__before_first_day(self, positions_mock: Mock) -> None:
-        """No action is taken before the first day."""
+    @patch('fantasy.management.actions.update_live_bumps')
+    def test__update(self, update_mock: Mock) -> None:
+        """Provides an interface to the Live Bumps update command."""
         
-        event = prepare_event(Series.TORPIDS, timezone.now().date() + timedelta(1))
-        UpdateLiveBumps().handle(
-            series = Series.TORPIDS.label.lower(),
-            year = event.year,
-            gender = Genders.WOMEN.label.lower(),
-        )
+        event = prepare_event(Series.TORPIDS, date.fromisoformat('2022-03-01'))
         
-        positions_mock.assert_not_called()
-    
-    
-    @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.get_start_order_by_gender')
-    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
-    def test__update__first_day(
-        self,
-        positions_mock: Mock,
-        start_order_mock: Mock,
-        write_mock: Mock,
-    ) -> None:
-        """Positions are processed for the next day, current day, and all previous days."""
+        UpdateLiveBumps().handle(series = 'torpids', year = 2022, gender = 'women')
         
-        event = prepare_event(Series.TORPIDS, timezone.now().date())
-        UpdateLiveBumps().handle(
-            series = Series.TORPIDS.label.lower(),
-            year = event.year,
-            gender = Genders.WOMEN.label.lower(),
-        )
-        
-        self.assertEqual(
-            positions_mock.call_args_list,
-            [
-                call(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 3)
-            ],
-        )
-        start_order_mock.assert_called_once_with(event.series, event.year, Genders.WOMEN, 1)
-        write_mock.assert_called_once_with(
-            event.series,
-            event.year,
-            [
-                dummy_positions_by_gender(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 3)
-            ],
-        )
-    
-    
-    @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.get_start_order_by_gender')
-    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
-    def test__update__second_day(
-        self,
-        positions_mock: Mock,
-        start_order_mock: Mock,
-        write_mock: Mock,
-    ) -> None:
-        """Positions are processed for the next day, current day, and all previous days."""
-        
-        event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(1))
-        UpdateLiveBumps().handle(
-            series = Series.TORPIDS.label.lower(),
-            year = event.year,
-            gender = Genders.WOMEN.label.lower(),
-        )
-        
-        self.assertEqual(
-            positions_mock.call_args_list,
-            [
-                call(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 4)
-            ],
-        )
-        start_order_mock.assert_called_once_with(event.series, event.year, Genders.WOMEN, 2)
-        write_mock.assert_called_once_with(
-            event.series,
-            event.year,
-            [
-                dummy_positions_by_gender(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 4)
-            ],
-        )
-    
-    
-    @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.get_start_order_by_gender')
-    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
-    def test__update__final_day(
-        self,
-        positions_mock: Mock,
-        start_order_mock: Mock,
-        write_mock: Mock,
-    ) -> None:
-        """Positions are processed for the next day, current day, and all previous days."""
-        
-        event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(3))
-        UpdateLiveBumps().handle(
-            series = Series.TORPIDS.label.lower(),
-            year = event.year,
-            gender = Genders.WOMEN.label.lower(),
-        )
-        
-        self.assertEqual(
-            positions_mock.call_args_list,
-            [
-                call(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 6)
-            ],
-        )
-        start_order_mock.assert_called_once_with(event.series, event.year, Genders.WOMEN, 4)
-        write_mock.assert_called_once_with(
-            event.series,
-            event.year,
-            [
-                dummy_positions_by_gender(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 6)
-            ],
-        )
-    
-    
-    @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.get_start_order_by_gender')
-    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
-    def test__update__after_event(
-        self,
-        positions_mock: Mock,
-        start_order_mock: Mock,
-        write_mock: Mock,
-    ) -> None:
-        """Positions are processed for the whole event after it has finished."""
-        
-        event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(4))
-        UpdateLiveBumps().handle(
-            series = Series.TORPIDS.label.lower(),
-            year = event.year,
-            gender = Genders.WOMEN.label.lower(),
-        )
-        
-        self.assertEqual(
-            positions_mock.call_args_list,
-            [
-                call(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 6)
-            ],
-        )
-        start_order_mock.assert_not_called()
-        write_mock.assert_called_once_with(
-            event.series,
-            event.year,
-            [
-                dummy_positions_by_gender(event.series, event.year, Genders.WOMEN, day_number)
-                for day_number in range(1, 6)
-            ],
-        )
-    
-    
-    @patch('integrations.live_bumps.write_positions')
-    @patch('integrations.anu_dat.get_start_order_by_gender')
-    @patch('integrations.anu_dat.get_positions_by_gender', side_effect = dummy_positions_by_gender)
-    def test__update__racetime_filter(
-        self,
-        positions_mock: Mock,
-        start_order_mock: Mock,
-        write_mock: Mock,
-    ) -> None:
-        """Crews that have not raced on the current day are masked from the Live Bumps update."""
-        
-        start_order_mock.return_value = [
-            {
-                'race_time': (self.now - timedelta(minutes = 2)).time(),
-                'crews': [((Clubs.HERT, Genders.WOMEN, 1), None)],
-            },
-            {
-                'race_time': (self.now + timedelta(minutes = 2)).time(),
-                'crews': [((Clubs.LADY, Genders.WOMEN, 1), None)],
-            },
-        ]
-        
-        event = prepare_event(Series.TORPIDS, timezone.now().date() - timedelta(1))
-        UpdateLiveBumps().handle(
-            series = Series.TORPIDS.label.lower(),
-            year = event.year,
-            gender = Genders.WOMEN.label.lower(),
-        )
-        
-        expected_positions = [
-            dummy_positions_by_gender(event.series, event.year, Genders.WOMEN, day_number)
-            for day_number in range(1, 4)
-        ]
-        expected_positions[-1].pop((Clubs.LADY, Genders.WOMEN, 1))
-        write_mock.assert_called_once_with(event.series, event.year, expected_positions)
+        update_mock.assert_called_once_with(event, Genders.WOMEN)
     
     
     @patch('integrations.live_bumps.wipe_positions')

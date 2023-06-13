@@ -1,11 +1,16 @@
 from datetime import date, time, timedelta
+import logging
+
+from django.utils import timezone
 
 from integrations.types import StartOrder
-from integrations import magic
+from integrations import magic, anu_dat, live_bumps
 
 from ..constants import Series, Genders
 from .. import models
 from .commands.utils import create_crew_tuple_map
+
+logging.basicConfig(level = logging.INFO)
 
 
 def create_event(
@@ -101,4 +106,45 @@ def create_gendered_crew_positions(event: models.Event, divisions: StartOrder) -
         for rank, crew in enumerate(flattened_crews, start = 1)
     ])
 
+
+def update_live_bumps(event: models.Event, gender: Genders) -> live_bumps.WriteOutcome:
+    """Loads crew positions from Anu's data files and pushes them to Live Bumps."""
+    
+    logger = logging.getLogger('fantasy.live_pipeline')
+    logger.info('Updating Live Bumps for {} ({})'.format(event, gender.label))
+    
+    now = timezone.localtime(timezone.now())
+    active_days = list(event.days.filter(date__lte = now + timedelta(1)))
+    if len(active_days) < 2:
+        return (0, 0, 0)
+    
+    # Load positions
+    positions_by_day = []
+    for day_number, day in enumerate(active_days, 1):
+        positions_by_day.append(anu_dat.get_positions_by_gender(
+            event.series,
+            event.year,
+            gender,
+            day_number,
+        ))
+    
+    # Prune unraced crews
+    if active_days[-1].date > now.date():
+        
+        start_order = anu_dat.get_start_order_by_gender(
+            event.series,
+            event.year,
+            gender,
+            len(active_days) - 1,
+        )
+        unraced_crews = [
+            crew for division in start_order for crew, _ in division['crews']
+            if division['race_time'] >= now.time()
+        ]
+        for crew in unraced_crews:
+            del positions_by_day[-1][crew]
+    
+    output = live_bumps.write_positions(event.series, event.year, positions_by_day)
+    logger.info('Updated Live Bumps for {} ({})'.format(event, gender.label))
+    return output
 
