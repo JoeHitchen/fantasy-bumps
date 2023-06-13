@@ -1,5 +1,4 @@
 from typing import TypedDict
-from datetime import datetime
 
 
 class IntervalSchedule():
@@ -29,6 +28,12 @@ class _ClockedManager():
 
 class _PeriodicManager():
     
+    def filter(self, name: str) -> _PeriodicManager:
+        ...
+    
+    def update(self, enabled: bool) -> None:
+        ...
+    
     def update_or_create(
         self,
         task: str,
@@ -42,7 +47,6 @@ class _PeriodicManager():
 class _TaskSpec1(TypedDict):
     name: str
     interval: IntervalSchedule
-    expires: datetime
 
 
 class _TaskSpec2(TypedDict):
