@@ -119,6 +119,7 @@ class Command(BaseCommand):
         
         if series_location == Locations.OXFORD and live_bumps.write_enabled:
             live_bumps.create_event(event.series, event.year, start_order)
+            tasks.schedule_live_bumps_updates(event)
         
         logger.info('Created a new game for {} {}, starting on {}'.format(
             series.label,
