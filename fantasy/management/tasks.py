@@ -31,7 +31,7 @@ def schedule_game_advances(event: models.Event) -> None:
         advance_time = day.last_race + timings.ADVANCE_DELAY
         schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time = advance_time)
         PeriodicTask.objects.update_or_create(
-            name = 'Game Advance // {} {}'.format(event, day),
+            name = '{} // Game Advance ({})'.format(event, day),
             task = 'fantasy.management.tasks.perform_game_advance',
             kwargs = json.dumps({
                 'series': event.get_series_display().lower(),
@@ -111,7 +111,7 @@ def schedule_live_bumps_updates(event: models.Event) -> None:
                 'gender': gender.label.lower(),
             }),
             defaults = {
-                'name': 'Live Bumps // {} {}'.format(event, gender.label),
+                'name': '{} // Live Bumps ({})'.format(event, gender.label),
                 'interval': every_minute,
             },
         )
@@ -120,7 +120,7 @@ def schedule_live_bumps_updates(event: models.Event) -> None:
     disable_time = event.last_racing_day.last_race + timedelta(hours = 6)
     schedule, _ = ClockedSchedule.objects.get_or_create(clocked_time = disable_time)
     PeriodicTask.objects.update_or_create(
-        name = 'Live Bumps Disable // {}'.format(event),
+        name = '{} // Live Bumps (Disable)'.format(event),
         task = 'fantasy.management.tasks.disable_live_bumps_updates',
         kwargs = '{}',
         defaults = {
