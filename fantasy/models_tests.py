@@ -1131,6 +1131,50 @@ class Test__Day__Market_Status(TestCase):
         )
         
         self.assertFalse(day.market_is_open)
+    
+    
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
+    def test__market_is_open__previous_day_not_advanced(self, closes_mock, opens_mock):
+        """Previous days which have not advanced will hold the market closed."""
+        
+        self.event.days.create(
+            name = 'Markets',
+            date = timezone.localtime().date() - timedelta(1),
+            first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
+            advanced = False,
+        )
+        day = self.event.days.create(
+            name = 'Markets',
+            date = timezone.localtime().date(),
+            first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
+        )
+        
+        self.assertFalse(day.market_is_open)
+    
+    
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
+    def test__market_is_open__previous_day_advanced(self, closes_mock, opens_mock):
+        """Previous days which have advanced do not hold the markets closed."""
+        
+        self.event.days.create(
+            name = 'Markets',
+            date = timezone.localtime().date() - timedelta(1),
+            first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
+            advanced = True,
+        )
+        day = self.event.days.create(
+            name = 'Markets',
+            date = timezone.localtime().date(),
+            first_race_time = time(hour = 12),
+            last_race_time = time(hour = 18, minute = 30),
+        )
+        
+        self.assertTrue(day.market_is_open)
 
 
 

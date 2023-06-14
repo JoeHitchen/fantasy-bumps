@@ -252,6 +252,31 @@ class Test__Market_Status_Box(TestCase):
             props['message'],
             'The market is being held closed for technical reasons.',
         )
+    
+    
+    @patching.market_opens(timezone.localtime() - timedelta(minutes = 5))
+    @patching.market_closes(timezone.localtime() + timedelta(minutes = 5))
+    def test__previous_no_advance(self, closes_mock, opens_mock):
+        """Returns a non-dismissable danger alert."""
+        
+        # Alter test setup
+        self.day.event.days.create(
+            name = 'Previous',
+            date = self.day.date - timedelta(1),
+            first_race_time = self.day.first_race_time,
+            last_race_time = self.day.last_race_time,
+            advanced = False,
+        )
+        
+        # Call and test method
+        props = tags.market_status_box(self.day)
+        
+        self.assertEqual(props['style'], 'danger')
+        self.assertFalse(props['dismissable'])
+        self.assertEqual(
+            props['message'],
+            'The market is being held closed for technical reasons.',
+        )
 
 
 

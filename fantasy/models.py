@@ -222,6 +222,8 @@ class Day(models.Model):
         """Indicates whether the market is currently open for trading."""
         if not self.is_racing_day or self.event.market_held_closed:
             return False
+        if self.prev and not self.prev.advanced:
+            return False
         return self.market_opens <= timezone.localtime() < self.market_closes
 
 

@@ -46,7 +46,7 @@ def market_status_box(day, allow_dismiss = True):
     
     
     # Held closed
-    if day.event.market_held_closed:
+    if day.event.market_held_closed or (day.prev and not day.prev.advanced):
         return {
             'style': 'danger',
             'dismissable': False,
