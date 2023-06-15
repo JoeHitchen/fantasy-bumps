@@ -74,7 +74,7 @@ def perform_advance(
         logger.info(f'{old_day} of {event} has already been advanced')
         
     except Exception as err:
-        logger.error(f'An error occurred advancing {old_day} of {event}\n >> {err}')
+        logger.exception(f'An error occurred advancing {old_day} of {event}\n >> {err}')
         
         event.market_held_closed = True
         event.save()
