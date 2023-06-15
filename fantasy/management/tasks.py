@@ -8,10 +8,10 @@ from django.db.models import F
 
 from core.tasks import app
 from fantasy import models
-from fantasy.constants import Series, Locations, Genders, money, timings
-from fantasy.management.commands import parsers
+from fantasy.constants import Series, Genders, money, timings
 from integrations.live_bumps import WriteOutcome as LiveBumpsWriteOutcome
 
+from .commands import parsers
 from . import game_advance, actions
 
 series_reverser = {series.label.lower(): series for series in Series}
@@ -48,9 +48,12 @@ def schedule_game_advances(event: models.Event) -> None:
 def perform_game_advance(series: str, year: int, source: str = '') -> None:
     """A task wrapper for performing game advances for a given event."""
     
+    series_obj = series_reverser[series]
+    location = parsers.series_location_map[series_obj]
+    
     game_advance.perform_advance(
-        models.Event.objects.get(series = series_reverser[series], year = year),
-        parsers.get_validated_position_source(Locations.OXFORD, source)['function'],
+        models.Event.objects.get(series = series_obj, year = year),
+        parsers.get_validated_position_source(location, source)['function'],
     )
 
 
