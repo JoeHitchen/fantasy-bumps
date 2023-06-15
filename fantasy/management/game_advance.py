@@ -65,6 +65,9 @@ def perform_advance(
             transaction_day.advanced = True
             transaction_day.save()
         
+            event.market_held_closed = False
+            event.save()
+        
         return True
         
     except models.Day.DoesNotExist:

@@ -153,7 +153,7 @@ class Test__PerformAdvance(TestCase):
         self.assertGameDidAdvance()
         
         self.event.refresh_from_db()
-        self.assertTrue(self.event.market_held_closed)
+        self.assertFalse(self.event.market_held_closed)  # Hold removed on override success
         self.assertEqual(len(mail.outbox), 0)
     
     
