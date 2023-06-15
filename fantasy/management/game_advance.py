@@ -65,13 +65,16 @@ def perform_advance(
             transaction_day.advanced = True
             transaction_day.save()
         
+            event.market_held_closed = False
+            event.save()
+        
         return True
         
     except models.Day.DoesNotExist:
         logger.info(f'{old_day} of {event} has already been advanced')
         
     except Exception as err:
-        logger.error(f'An error occurred advancing {old_day} of {event}\n >> {err}')
+        logger.exception(f'An error occurred advancing {old_day} of {event}\n >> {err}')
         
         event.market_held_closed = True
         event.save()
