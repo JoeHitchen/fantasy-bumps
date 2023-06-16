@@ -20,6 +20,9 @@ from .utils import pricing
 if TYPE_CHECKING:
     from django_stubs_ext import WithAnnotations
     
+    class BunglineAnnotation(TypedDict):
+        bungline: int
+    
     class FinancialAnnotation(TypedDict):
         total_budget: int
         total_balance: int
@@ -27,9 +30,11 @@ if TYPE_CHECKING:
         mens_crew_value: int
         womens_crew_value: int
     
+    StartOrderPosition = WithAnnotations['Position', BunglineAnnotation]
     FinancialGameEntry = WithAnnotations['GameEntry', FinancialAnnotation]
     
 else:
+    StartOrderPosition = 'Position'
     FinancialGameEntry = 'GameEntry'
 
 
@@ -209,7 +214,7 @@ class Day(models.Model):
         return divisions
     
     
-    def start_order(self, gender):
+    def start_order(self, gender: Genders) -> list[models.QuerySet[StartOrderPosition]]:
         """Builds the day and gender's start order from the start order of each division."""
         return [division.start_order() for division in self.divisions(gender)]
     
@@ -265,7 +270,7 @@ class Division:
     bottom_bungline: int
     
     
-    def start_order(self):
+    def start_order(self) -> models.QuerySet[StartOrderPosition]:
         """Generates start order and bungline numbers (excluding sandwich boat)."""
         
         return self.day.ranking.filter(
