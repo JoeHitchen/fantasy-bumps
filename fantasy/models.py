@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import TypedDict, TYPE_CHECKING
+from dataclasses import dataclass
 from functools import lru_cache
 import zoneinfo
 
@@ -253,24 +254,15 @@ class Day(models.Model):
 
 
 
+@dataclass
 class Division:
     """Temporary objects for storing division information and start orders."""
     
-    def __init__(
-        self,
-        day: Day,
-        gender: Genders,
-        number: int,
-        top_bungline: int,
-        bottom_bungline: int,
-    ) -> None:
-        """Sets provided arguments as properties."""
-        
-        self.day = day
-        self.gender = gender
-        self.number = number
-        self.top_bungline = top_bungline
-        self.bottom_bungline = bottom_bungline
+    day: Day
+    gender: Genders
+    number: int
+    top_bungline: int
+    bottom_bungline: int
     
     
     def start_order(self):
