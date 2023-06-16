@@ -1662,28 +1662,28 @@ class Test__GameEntry(TestCase):
     def test__query__extend_financials__total_budget(self) -> None:
         """Totals the gendered budgets."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.total_budget, 701 + 713)
     
     
     def test__query__extend_financials__mens_crew(self) -> None:
         """Calculates the value of men's crews."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.mens_crew_value, 701 - 110)
     
     
     def test__query__extend_financials__womens_crew(self) -> None:
         """Calculates the value of women's crews."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.womens_crew_value, 713 - 103)
     
     
     def test__query__extend_financials__total_crew(self) -> None:
         """Calculates the value of both crews."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.total_crew_value, 701 + 713 - 103 - 110)
     
     

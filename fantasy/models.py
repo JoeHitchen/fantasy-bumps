@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import TypedDict, TYPE_CHECKING
 from functools import lru_cache
 import zoneinfo
 
@@ -13,6 +14,22 @@ from core.tests import exists
 
 from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
 from .utils import pricing
+
+
+if TYPE_CHECKING:
+    from django_stubs_ext import WithAnnotations
+    
+    class FinancialAnnotation(TypedDict):
+        total_budget: int
+        total_balance: int
+        total_crew_value: int
+        mens_crew_value: int
+        womens_crew_value: int
+    
+    FinancialGameEntry = WithAnnotations['GameEntry', FinancialAnnotation]
+    
+else:
+    FinancialGameEntry = 'GameEntry'
 
 
 class Event(models.Model):
@@ -386,10 +403,10 @@ def create_team(instance: auth.User, created: bool, raw: bool, **_: dict[None, N
 
 
 
-class GameEntryQuerySet(models.QuerySet):
+class GameEntryQuerySet(models.QuerySet[FinancialGameEntry]):
     """Additional queryset methods related to finances and scores."""
     
-    def extend_financials(self):
+    def extend_financials(self) -> 'GameEntryQuerySet':
         """Add crew values and non-gendered totals to the queried data."""
         return self.annotate(
             mens_crew_value = models.F('mens_budget') - models.F('mens_balance'),
@@ -399,7 +416,7 @@ class GameEntryQuerySet(models.QuerySet):
             total_crew_value = models.F('mens_crew_value') + models.F('womens_crew_value'),
         )
     
-    def rank_by(self, gender = GENDERS_OVERALL):
+    def rank_by(self, gender: str = GENDERS_OVERALL) -> 'GameEntryQuerySet':
         """Retrieve team ranking for the gender provided.
         
         Requires .extend_financials() to have been called.
