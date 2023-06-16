@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.core.mail import mail_admins
 
 from integrations import types as integrations
+from core.tests import exists
 
 from ..constants import Genders
 from .. import models, utils
@@ -28,9 +29,9 @@ def perform_advance(
     """Loads any new results and updates the game state accordingly."""
      
     # Get relevant days
-    if event.active_day.is_racing_day and timezone.now() >= event.active_day.first_race:
+    if event.active_day.first_race and timezone.now() >= event.active_day.first_race:
         old_day = event.active_day  # Racing underway for active day
-        new_day = event.active_day.next
+        new_day = exists(event.active_day.next)
     elif event.active_day.prev:
         old_day = event.active_day.prev  # No active racing but a previous day exists
         new_day = event.active_day
@@ -58,7 +59,7 @@ def perform_advance(
                 .get(id = old_day.id, advanced = False)
             )
             
-            mgmt_utils.load_crew_rankings(source_function, transaction_day.next)
+            mgmt_utils.load_crew_rankings(source_function, exists(transaction_day.next))
             roll_over_purchases(transaction_day)
             evaluate_investments(transaction_day)
             

@@ -55,7 +55,7 @@ def _pricing_gradient(num_crews):
 
 
 @lru_cache(maxsize = 2000)
-def pricing(bungline, num_crews):
+def pricing(bungline, num_crews) -> int:
     """Iteratively calculates the price of a crew on a given bungline for a given event size."""
     
     if bungline == 1:

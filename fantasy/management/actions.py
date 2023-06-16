@@ -59,7 +59,7 @@ def create_days(
         last_race_time = last_race_time,
     )
     weds.save()
-    assert weds.first_race  # MyPy purposes
+    assert weds.first_race and weds.last_race  # MyPy purposes
     
     event.days.create(
         name = 'Thursday',
@@ -94,7 +94,11 @@ def create_days(
 def create_gendered_crew_positions(event: models.Event, divisions: StartOrder) -> None:
     """Greates crew positions for one gender's start order."""
     
-    flattened_crews = [crew[0] for division in divisions for crew in division['crews']]
+    flattened_crews = [
+        models.Crew.make_tuple(*crew)
+        for division in divisions
+        for crew, _ in division['crews']
+    ]
     crew_map = create_crew_tuple_map(flattened_crews)
     
     models.Position.objects.bulk_create([

@@ -499,7 +499,7 @@ class Test__Renumbered_Crew(TestCase):
         
         cls.target_crew = exists(models.Crew.objects.filter(club = Clubs.HERT).first())
         cls.source_crew_rank = cls.target_crew.rank + 1
-        cls.source_crew_tpl = (
+        cls.source_crew_tpl = models.Crew.make_tuple(
             cls.target_crew.club,
             cls.target_crew.gender,
             cls.source_crew_rank,

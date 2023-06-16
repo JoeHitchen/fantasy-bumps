@@ -5,10 +5,10 @@ from integrations import types
 from ... import models
 
 
-CrewTupleMap = Dict[models.Crew.Tuple, models.Crew.Tuple]
+CrewTupleMap = Dict[models.Crew.Tuple, models.Crew]
 
 
-def create_crew_tuple_map(crews_for_map: Iterable[models.Crew.Tuple]) -> CrewTupleMap:
+def create_crew_tuple_map(crews_for_map: Iterable[types.Crew]) -> CrewTupleMap:
     """Creates a mapping from crew tuples to crew objects for a given set of crews."""
     
     crews_in_db = [crew.as_tuple() for crew in models.Crew.objects.all()]
