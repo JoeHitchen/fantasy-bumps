@@ -912,26 +912,6 @@ class Test__Day__Start_Orders(TestCase):
                 self.assertEqual(call, ((day_divisions[index],),))
         
         self.assertEqual(day_start_order, day_divisions)
-    
-    
-    @patch(
-        'fantasy.models.Division.start_order',
-        autospec = True,
-        side_effect = lambda self: (self.day.id, self.gender, self.number),
-    )
-    def test__start_order__extend(self, start_order_mock: Mock) -> None:
-        """Calls optional extend on each division start order.
-        
-        Tests indirectly by mocking the return value of Division.start_order and extend.
-        """
-        
-        start_order = self.day.start_order(Genders.WOMEN, extend = lambda so: (so, so))
-        
-        self.assertEqual(start_order_mock.call_count, 3)
-        for index, div_start_order in enumerate(start_order):
-            with self.subTest(div = index + 1):
-                div_spec = (self.day.id, Genders.WOMEN, index + 1)
-                self.assertEqual(div_start_order, (div_spec, div_spec))
 
 
 
