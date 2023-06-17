@@ -1,10 +1,12 @@
 from datetime import datetime, date, time, timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.test import TestCase, tag
 from django.utils import timezone
 from django.db import IntegrityError, models as db
 from django.contrib.auth import models as auth
+
+from core.tests import exists
 
 from .constants import Genders, GENDERS_OVERALL, timings, money, Clubs
 from . import models
@@ -16,12 +18,18 @@ from . import utils
 class Test__Event(TestCase):
     fixtures = ['dev_event']
     
+    event: models.Event
+    yesterday: models.Day
+    today: models.Day
+    tomorrow: models.Day
+    future: models.Day
+    
     ROLLOVER_TIME = time(19, 45)
     
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         
-        cls.event = models.Event.objects.first()
+        cls.event = exists(models.Event.objects.first())
         
         # Prepare days
         cls.yesterday = cls.event.days.create(
@@ -50,7 +58,7 @@ class Test__Event(TestCase):
         )  # Saved per-test due to isolation conflict
     
     
-    def setUp(self):
+    def setUp(self) -> None:
         
         # Save future days for delete-safe test isolation
         self.tomorrow.save()
@@ -61,18 +69,18 @@ class Test__Event(TestCase):
         del self.event.active_day
     
     
-    def test__string(self):
+    def test__string(self) -> None:
         """Returns an event's name as its string representation."""
         
         self.assertEqual(str(self.event), 'Demo 2019')
     
     
-    def test__first_day__standard(self):
+    def test__first_day__standard(self) -> None:
         """Returns the first day associated with the event."""
         self.assertEqual(self.event.first_day, self.yesterday)
     
     
-    def test__first_day__prefetched(self):
+    def test__first_day__prefetched(self) -> None:
         """Returns the first day associated with the event from a prefetched set of days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -80,7 +88,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    def test__first_day__query_count(self):
+    def test__first_day__query_count(self) -> None:
         """Expect:
             (1) SELECT first day
         """
@@ -89,7 +97,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    def test__first_day__prefetched_query_count(self):
+    def test__first_day__prefetched_query_count(self) -> None:
         """Expect:
             No queries
         """
@@ -99,12 +107,12 @@ class Test__Event(TestCase):
             self.event.first_day
     
     
-    def test__last_racing_day__standard(self):
+    def test__last_racing_day__standard(self) -> None:
         """Returns the last day of racing for the event."""
         self.assertEqual(self.event.last_racing_day, self.tomorrow)  # Future does not have races
     
     
-    def test__last_racing_day__prefetched(self):
+    def test__last_racing_day__prefetched(self) -> None:
         """Returns the last day of racing for the event from a prefetched set of days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -112,7 +120,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    def test__last_racing_day__query_count(self):
+    def test__last_racing_day__query_count(self) -> None:
         """Expect:
             (1) SELECT last day with a race time
         """
@@ -122,7 +130,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    def test__last_racing_day__prefetched_query_count(self):
+    def test__last_racing_day__prefetched_query_count(self) -> None:
         """Expect:
             No queries
         """
@@ -133,7 +141,7 @@ class Test__Event(TestCase):
     
     
     @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
-    def test__active_day__before_rollover__standard(self, timezone_mock):
+    def test__active_day__before_rollover__standard(self, _: Mock) -> None:
         """Before rollover, returns first day from today onwards."""
         
         self.assertEqual(
@@ -143,7 +151,7 @@ class Test__Event(TestCase):
     
     
     @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
-    def test__active_day__before_rollover__prefetched(self, timezone_mock):
+    def test__active_day__before_rollover__prefetched(self, _: Mock) -> None:
         """Before rollover, returns first day from today onwards from the prefetched days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -155,7 +163,7 @@ class Test__Event(TestCase):
     
     @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
-    def test__active_day__before_rollover__query_count(self, timezone_mock):
+    def test__active_day__before_rollover__query_count(self, _: Mock) -> None:
         """Expect:
             (1) SELECT all days from today onwards
         """
@@ -166,7 +174,7 @@ class Test__Event(TestCase):
     
     @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
-    def test__active_day__before_rollover__prefetched_query_count(self, timezone_mock):
+    def test__active_day__before_rollover__prefetched_query_count(self, _: Mock) -> None:
         """Expect:
             No queries
         """
@@ -177,7 +185,7 @@ class Test__Event(TestCase):
     
     
     @patching.localtime_time(ROLLOVER_TIME)
-    def test__active_day__after_rollover__standard(self, timezone_mock):
+    def test__active_day__after_rollover__standard(self, _: Mock) -> None:
         """After rollover, returns first day from tomorrow onwards."""
         
         self.assertEqual(
@@ -187,7 +195,7 @@ class Test__Event(TestCase):
     
     
     @patching.localtime_time(ROLLOVER_TIME)
-    def test__active_day__after_rollover__prefetched(self, timezone_mock):
+    def test__active_day__after_rollover__prefetched(self, _: Mock) -> None:
         """After rollover, returns first day from tomorrow onwards from the prefetched days."""
         db.prefetch_related_objects([self.event], db.Prefetch('days', to_attr = '_days'))
         
@@ -199,7 +207,7 @@ class Test__Event(TestCase):
     
     @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME)
-    def test__active_day__after_rollover__query_count(self, timezone_mock):
+    def test__active_day__after_rollover__query_count(self, _: Mock) -> None:
         """Expect:
             (1) SELECT all days from today onwards
         """
@@ -210,7 +218,7 @@ class Test__Event(TestCase):
     
     @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME)
-    def test__active_day__after_rollover__prefetched_query_count(self, timezone_mock):
+    def test__active_day__after_rollover__prefetched_query_count(self, _: Mock) -> None:
         """Expect:
             No queries
         """
@@ -220,7 +228,7 @@ class Test__Event(TestCase):
             self.event.active_day
     
     
-    def test__active_day__after_event__standard(self):
+    def test__active_day__after_event__standard(self) -> None:
         """Returns last day of the event, if all have passed."""
         
         models.Day.objects.update(date = db.F('date') - timedelta(5))
@@ -231,7 +239,7 @@ class Test__Event(TestCase):
         )
     
     
-    def test__active_day__after_event__prefetched(self):
+    def test__active_day__after_event__prefetched(self) -> None:
         """Returns last day of the event from a prefetched set of days, if all have passed."""
         
         models.Day.objects.update(date = db.F('date') - timedelta(5))
@@ -244,7 +252,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    def test__active_day__after_event__query_count(self):
+    def test__active_day__after_event__query_count(self) -> None:
         """Expect:
             (1) SELECT any days after today/tomorrow (depending on time)
             (1) SELECT the last day of the event
@@ -257,7 +265,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    def test__active_day__after_event__prefetched_query_count(self):
+    def test__active_day__after_event__prefetched_query_count(self) -> None:
         """Returns last day of the event from a prefetched set of days, if all have passed."""
         
         models.Day.objects.update(date = db.F('date') - timedelta(5))
@@ -267,7 +275,7 @@ class Test__Event(TestCase):
             self.event.active_day
     
     
-    def test__num_crews__mens(self):
+    def test__num_crews__mens(self) -> None:
         """Adds up all the men's division sizes."""
         
         self.event.mens_division_sizes = [8, 9, 10, 11, 12, 13, 14]
@@ -275,7 +283,7 @@ class Test__Event(TestCase):
         self.assertEqual(self.event.num_crews(Genders.MEN), 77)
     
     
-    def test__num_crews__womens(self):
+    def test__num_crews__womens(self) -> None:
         """Adds up all the women's division sizes."""
         
         self.event.womens_division_sizes = [9, 10, 11, 12, 13]
@@ -284,7 +292,7 @@ class Test__Event(TestCase):
     
     
     @tag('query-count')
-    def test__num_crews__query_count(self):
+    def test__num_crews__query_count(self) -> None:
         """NONE EXPECTED (but an important part of the crew valuation chain)"""
         
         with self.assertNumQueries(0):
@@ -296,13 +304,16 @@ class Test__Event(TestCase):
 class Test__Day__Core(TestCase):
     fixtures = ['dev_event']
     
+    event: models.Event
+    today: date
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.event = exists(models.Event.objects.first())
         cls.today = timezone.localtime().date()
     
     
-    def test__string(self):
+    def test__string(self) -> None:
         """Returns a day's name as it's string representation."""
         
         day = self.event.days.create(
@@ -315,7 +326,7 @@ class Test__Day__Core(TestCase):
         self.assertEqual(day_str, day.name)
     
     
-    def test__next__past_only__standard(self):
+    def test__next__past_only__standard(self) -> None:
         """Returns None if there are no days in the future."""
         
         self.event.days.create(
@@ -335,7 +346,7 @@ class Test__Day__Core(TestCase):
         self.assertIsNone(curr.next)
     
     
-    def test__next__past_only__prefetched(self):
+    def test__next__past_only__prefetched(self) -> None:
         """Returns None if there are no days in the future, using a prefetched set of days."""
         
         self.event.days.create(
@@ -357,7 +368,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__next__past_only__query_count(self):
+    def test__next__past_only__query_count(self) -> None:
         """Expect:
             (1) SELECT the next day in the event
         """
@@ -381,7 +392,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__next__past_only__prefetched_query_count(self):
+    def test__next__past_only__prefetched_query_count(self) -> None:
         """Expect:
             No queries
         """
@@ -405,7 +416,7 @@ class Test__Day__Core(TestCase):
             curr.next
     
     
-    def test__next__future__standard(self):
+    def test__next__future__standard(self) -> None:
         """Returns the next day in the series if there are days in the future."""
         
         curr = self.event.days.create(
@@ -432,7 +443,7 @@ class Test__Day__Core(TestCase):
         self.assertEqual(curr.next, future_1)
     
     
-    def test__next__future__prefetched(self):
+    def test__next__future__prefetched(self) -> None:
         """Returns the next day if there are days in the future, from a prefetched set of days."""
         
         curr = self.event.days.create(
@@ -461,7 +472,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__next__future__query_count(self):
+    def test__next__future__query_count(self) -> None:
         """Expect:
             (1) SELECT the next day in the event
         """
@@ -492,7 +503,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__next__future__prefetched_query_count(self):
+    def test__next__future__prefetched_query_count(self) -> None:
         """Expect:
             No queries
         """
@@ -523,7 +534,7 @@ class Test__Day__Core(TestCase):
             curr.next
     
     
-    def test__prev__past__standard(self):
+    def test__prev__past__standard(self) -> None:
         """Returns the previous day in the series if there are days in the past."""
         
         self.event.days.create(
@@ -550,7 +561,7 @@ class Test__Day__Core(TestCase):
         self.assertEqual(curr.prev, prev_1)
     
     
-    def test__prev__past__prefetched(self):
+    def test__prev__past__prefetched(self) -> None:
         """Returns the previous day if there are days in the past from a prefetched set of days."""
         
         self.event.days.create(
@@ -579,7 +590,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__prev__past__query_count(self):
+    def test__prev__past__query_count(self) -> None:
         """Expect:
             (1) SELECT the previous day in the event
         """
@@ -610,7 +621,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__prev__past__prefetched_query_count(self):
+    def test__prev__past__prefetched_query_count(self) -> None:
         """Expect:
             No queries
         """
@@ -641,7 +652,7 @@ class Test__Day__Core(TestCase):
             curr.prev
     
     
-    def test__prev__future_only__standard(self):
+    def test__prev__future_only__standard(self) -> None:
         """Returns None if there are no days in the past."""
         
         curr = self.event.days.create(
@@ -661,7 +672,7 @@ class Test__Day__Core(TestCase):
         self.assertIsNone(curr.prev)
     
     
-    def test__prev__future_only__prefetched(self):
+    def test__prev__future_only__prefetched(self) -> None:
         """Returns None if there are no days in the past."""
         
         curr = self.event.days.create(
@@ -683,7 +694,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__prev__future_only__query_count(self):
+    def test__prev__future_only__query_count(self) -> None:
         """Expect:
             (1) SELECT the previous day in the event
         """
@@ -707,7 +718,7 @@ class Test__Day__Core(TestCase):
     
     
     @tag('query-count')
-    def test__prev__future_only__prefetched_query_count(self):
+    def test__prev__future_only__prefetched_query_count(self) -> None:
         """Expect:
             No queries
         """
@@ -731,7 +742,7 @@ class Test__Day__Core(TestCase):
             curr.prev
     
     
-    def test__first_race__winter(self):
+    def test__first_race__winter(self) -> None:
         """Constructs a datetime object from the date, first race time, and system timezone."""
         
         race_date = date.fromisoformat('2021-01-05')
@@ -742,13 +753,14 @@ class Test__Day__Core(TestCase):
             last_race_time = time(hour = 18, minute = 30),
         ).first_race
         
+        assert first_race  # Needed for MyPy
         self.assertIsInstance(first_race, datetime)
         self.assertEqual(first_race.date(), race_date)
         self.assertEqual(first_race.time(), race_time)
         self.assertEqual(first_race.tzname(), 'GMT')
     
     
-    def test__first_race__summer(self):
+    def test__first_race__summer(self) -> None:
         """Constructs a datetime object from the date, first race time, and system timezone."""
         
         race_date = date.fromisoformat('2021-07-05')
@@ -759,13 +771,14 @@ class Test__Day__Core(TestCase):
             last_race_time = time(hour = 18, minute = 30),
         ).first_race
         
+        assert first_race  # Needed for MyPy
         self.assertIsInstance(first_race, datetime)
         self.assertEqual(first_race.date(), race_date)
         self.assertEqual(first_race.time(), race_time)
         self.assertEqual(first_race.tzname(), 'BST')
     
     
-    def test__last_race__winter(self):
+    def test__last_race__winter(self) -> None:
         """Constructs a datetime object from the date, last race time, and system timezone."""
         
         race_date = date.fromisoformat('2021-01-05')
@@ -776,13 +789,14 @@ class Test__Day__Core(TestCase):
             last_race_time = race_time,
         ).last_race
         
+        assert last_race  # Needed for MyPy
         self.assertIsInstance(last_race, datetime)
         self.assertEqual(last_race.date(), race_date)
         self.assertEqual(last_race.time(), race_time)
         self.assertEqual(last_race.tzname(), 'GMT')
     
     
-    def test__last_race__summer(self):
+    def test__last_race__summer(self) -> None:
         """Constructs a datetime object from the date, last race time, and system timezone."""
         
         race_date = date.fromisoformat('2021-07-05')
@@ -793,6 +807,7 @@ class Test__Day__Core(TestCase):
             last_race_time = race_time,
         ).last_race
         
+        assert last_race  # Needed for MyPy
         self.assertIsInstance(last_race, datetime)
         self.assertEqual(last_race.date(), race_date)
         self.assertEqual(last_race.time(), race_time)
@@ -804,18 +819,21 @@ class Test__Day__Core(TestCase):
 class Test__Day__Start_Orders(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1']
     
+    event: models.Event
+    day: models.Day
+    
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         
-        cls.event = models.Event.objects.first()
+        cls.event = exists(models.Event.objects.first())
         cls.event.mens_division_sizes = [2, 3]
         cls.event.womens_division_sizes = [2, 2, 3]
         cls.event.save()
         
-        cls.day = cls.event.days.first()
+        cls.day = exists(cls.event.days.first())
     
     
-    def test__divisions__mens(self):
+    def test__divisions__mens(self) -> None:
         """Has the division structure as described by the event."""
         
         # Get divisions
@@ -833,7 +851,7 @@ class Test__Day__Start_Orders(TestCase):
         self.assertEqual(div2.bottom_bungline, 5)
     
     
-    def test__divisions__womens(self):
+    def test__divisions__womens(self) -> None:
         """Has the division structure as described by the event."""
         
         # Get divisions
@@ -856,21 +874,21 @@ class Test__Day__Start_Orders(TestCase):
     
     
     @patch.object(models.Day, 'divisions', autospec = True)
-    def test__start_order__mens(self, day_divisions_mock):
+    def test__start_order__mens(self, divisions_mock: Mock) -> None:
         """Passes the gender argument onto the divisions method."""
         
         # Get start orders
         self.day.start_order(Genders.MEN)
-        self.day.divisions.assert_called_once_with(Genders.MEN)
+        divisions_mock.assert_called_once_with(Genders.MEN)
     
     
     @patch.object(models.Day, 'divisions', autospec = True)
-    def test__start_order__womens(self, day_divisions_mock):
+    def test__start_order__womens(self, divisions_mock: Mock) -> None:
         """Passes the gender argument onto the divisions method."""
         
         # Get start orders
         self.day.start_order(Genders.WOMEN)
-        self.day.divisions.assert_called_once_with(Genders.WOMEN)
+        divisions_mock.assert_called_once_with(Genders.WOMEN)
     
     
     @patch(
@@ -878,7 +896,7 @@ class Test__Day__Start_Orders(TestCase):
         autospec = True,
         side_effect = lambda self: self,
     )
-    def test__start_order__behaviour(self, start_order_mock):
+    def test__start_order__behaviour(self, start_order_mock: Mock) -> None:
         """Iteratively calls `start_order` on each division.
         
         A mocked Division.start_order returns the division instance it is called on.
@@ -894,26 +912,6 @@ class Test__Day__Start_Orders(TestCase):
                 self.assertEqual(call, ((day_divisions[index],),))
         
         self.assertEqual(day_start_order, day_divisions)
-    
-    
-    @patch(
-        'fantasy.models.Division.start_order',
-        autospec = True,
-        side_effect = lambda self: (self.day.id, self.gender, self.number),
-    )
-    def test__start_order__extend(self, start_order_mock):
-        """Calls optional extend on each division start order.
-        
-        Tests indirectly by mocking the return value of Division.start_order and extend.
-        """
-        
-        start_order = self.day.start_order(Genders.WOMEN, extend = lambda so: (so, so))
-        
-        self.assertEqual(start_order_mock.call_count, 3)
-        for index, div_start_order in enumerate(start_order):
-            with self.subTest(div = index + 1):
-                div_spec = (self.day.id, Genders.WOMEN, index + 1)
-                self.assertEqual(div_start_order, (div_spec, div_spec))
 
 
 
@@ -921,12 +919,14 @@ class Test__Day__Start_Orders(TestCase):
 class Test__Day__Market_Status(TestCase):
     fixtures = ['dev_event']
     
+    event: models.Event
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.event = exists(models.Event.objects.first())
     
     
-    def test__market_opens__non_race_day(self):
+    def test__market_opens__non_race_day(self) -> None:
         """Market opening time is undefined if no racing is scheduled."""
         
         race_date = date.fromisoformat('2021-07-05')
@@ -940,7 +940,7 @@ class Test__Day__Market_Status(TestCase):
         self.assertIsNone(day.market_opens)
     
     
-    def test__market_opens__first_race_day__winter(self):
+    def test__market_opens__first_race_day__winter(self) -> None:
         """The first day's markets opening is three days prior."""
         
         day = self.event.days.create(
@@ -950,12 +950,13 @@ class Test__Day__Market_Status(TestCase):
             last_race_time = time.fromisoformat('18:30:00'),
         )
         
+        assert day.market_opens
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
         self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
     
-    def test__market_opens__first_race_day__summer(self):
+    def test__market_opens__first_race_day__summer(self) -> None:
         """The first day's markets opening is three days prior."""
         
         day = self.event.days.create(
@@ -965,12 +966,13 @@ class Test__Day__Market_Status(TestCase):
             last_race_time = time.fromisoformat('18:30:00'),
         )
         
+        assert day.market_opens
         self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
         self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
         self.assertEqual(day.market_opens.tzname(), 'BST')
     
     
-    def test__market_opens__later_race_day__winter(self):
+    def test__market_opens__later_race_day__winter(self) -> None:
         """Later day markets open after racing the previous day."""
         
         day = self.event.days.create(
@@ -986,12 +988,13 @@ class Test__Day__Market_Status(TestCase):
             last_race_time = time.fromisoformat('17:45:00'),
         )
         
+        assert day.market_opens
         self.assertEqual(day.market_opens.date(), prev.date)
         self.assertEqual(day.market_opens.time(), time.fromisoformat('18:45:00'))
         self.assertEqual(day.market_opens.tzname(), 'GMT')
     
     
-    def test__market_opens__later_race_day__summer(self):
+    def test__market_opens__later_race_day__summer(self) -> None:
         """Later day markets open after racing the previous day."""
         
         day = self.event.days.create(
@@ -1007,12 +1010,13 @@ class Test__Day__Market_Status(TestCase):
             last_race_time = time.fromisoformat('17:45:00'),
         )
         
+        assert day.market_opens
         self.assertEqual(day.market_opens.date(), prev.date)
         self.assertEqual(day.market_opens.time(), time.fromisoformat('18:45:00'))
         self.assertEqual(day.market_opens.tzname(), 'BST')
     
     
-    def test__market_closes__without_race(self):
+    def test__market_closes__without_race(self) -> None:
         """Market closing time is undefined if no racing is scheduled."""
         
         day = self.event.days.create(
@@ -1025,7 +1029,7 @@ class Test__Day__Market_Status(TestCase):
         self.assertIsNone(day.market_closes)
     
     
-    def test__market_closes__with_winter_race(self):
+    def test__market_closes__with_winter_race(self) -> None:
         """Markets close half an hour before the first race."""
         
         day = self.event.days.create(
@@ -1035,12 +1039,13 @@ class Test__Day__Market_Status(TestCase):
             last_race_time = time.fromisoformat('18:30:00'),
         )
         
+        assert day.market_closes
         self.assertEqual(day.market_closes.date(), day.date)
         self.assertEqual(day.market_closes.time().isoformat(), '11:30:00')
         self.assertEqual(day.market_closes.tzname(), 'GMT')
     
     
-    def test__market_closes__with_summer_race(self):
+    def test__market_closes__with_summer_race(self) -> None:
         """Markets close half an hour before the first race."""
         
         day = self.event.days.create(
@@ -1050,6 +1055,7 @@ class Test__Day__Market_Status(TestCase):
             last_race_time = time.fromisoformat('18:30:00'),
         )
         
+        assert day.market_closes
         self.assertEqual(day.market_closes.date(), day.date)
         self.assertEqual(day.market_closes.time().isoformat(), '11:30:00')
         self.assertEqual(day.market_closes.tzname(), 'BST')
@@ -1057,7 +1063,7 @@ class Test__Day__Market_Status(TestCase):
     
     @patching.market_opens(timezone.localtime() + timedelta(minutes = 5))
     @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
-    def test__market_is_open__before_open(self, closes_mock, opens_mock):
+    def test__market_is_open__before_open(self, _: Mock, __: Mock) -> None:
         """Returns False if before opening time."""
         
         day = self.event.days.create(
@@ -1072,7 +1078,7 @@ class Test__Day__Market_Status(TestCase):
     
     @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
     @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
-    def test__market_is_open__between(self, closes_mock, opens_mock):
+    def test__market_is_open__between(self, _: Mock, __: Mock) -> None:
         """Returns True if between opening time and closing time."""
         
         day = self.event.days.create(
@@ -1087,7 +1093,7 @@ class Test__Day__Market_Status(TestCase):
     
     @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
     @patching.market_closes(timezone.localtime() - timedelta(minutes = 5))
-    def test__market_is_open__after_close(self, closes_mock, opens_mock):
+    def test__market_is_open__after_close(self, _: Mock, __: Mock) -> None:
         """Returns False if after closing time."""
         
         day = self.event.days.create(
@@ -1102,22 +1108,7 @@ class Test__Day__Market_Status(TestCase):
     
     @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
     @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
-    def test__market_is_open__non_racing_day(self, closes_mock, opens_mock):
-        """Returns False if it is not a racing day."""
-        
-        day = self.event.days.create(
-            name = 'Markets',
-            date = timezone.localtime().date(),
-            first_race_time = None,
-            last_race_time = None,
-        )
-        
-        self.assertFalse(day.market_is_open)
-    
-    
-    @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
-    @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
-    def test__market_is_open__held_closed(self, closes_mock, opens_mock):
+    def test__market_is_open__held_closed(self, _: Mock, __: Mock) -> None:
         """Returns False if the event has markets held closed."""
         
         self.event.market_held_closed = True
@@ -1135,7 +1126,7 @@ class Test__Day__Market_Status(TestCase):
     
     @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
     @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
-    def test__market_is_open__previous_day_not_advanced(self, closes_mock, opens_mock):
+    def test__market_is_open__previous_day_not_advanced(self, _: Mock, __: Mock) -> None:
         """Previous days which have not advanced will hold the market closed."""
         
         self.event.days.create(
@@ -1157,7 +1148,7 @@ class Test__Day__Market_Status(TestCase):
     
     @patching.market_opens(timezone.localtime() - timedelta(minutes = 10))
     @patching.market_closes(timezone.localtime() + timedelta(minutes = 10))
-    def test__market_is_open__previous_day_advanced(self, closes_mock, opens_mock):
+    def test__market_is_open__previous_day_advanced(self, _: Mock, __: Mock) -> None:
         """Previous days which have advanced do not hold the markets closed."""
         
         self.event.days.create(
@@ -1182,11 +1173,13 @@ class Test__Day__Market_Status(TestCase):
 class Test__Division(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1']
     
-    @classmethod
-    def setUpTestData(cls):
-        cls.day = models.Day.objects.first()
+    day: models.Day
     
-    def test__start_order__full(self):
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.day = exists(models.Day.objects.first())
+    
+    def test__start_order__full(self) -> None:
         """Generates a list of crews for the division with bungline numbers."""
         
         # Generate start order
@@ -1211,7 +1204,7 @@ class Test__Division(TestCase):
                 self.assertTrue(position.rank <= 8)
     
     
-    def test__start_order__partial(self):
+    def test__start_order__partial(self) -> None:
         """Safely excludes missing bunglines from the returned data."""
         
         # Leave position 7 (Bungline 5) empty
@@ -1237,9 +1230,15 @@ class Test__Division(TestCase):
 class Test__Crew(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews']
     
+    day1: models.Day
+    crew_top: models.Crew
+    crew_middle: models.Crew
+    crew_bottom: models.Crew
+    crew_unranked: models.Crew
+    
     @classmethod
-    def setUpTestData(cls):
-        event = models.Event.objects.first()
+    def setUpTestData(cls) -> None:
+        event = exists(models.Event.objects.first())
         event.womens_division_sizes = [3]
         
         days = event.days.all()
@@ -1258,11 +1257,11 @@ class Test__Crew(TestCase):
         
         cls.crew_unranked = crews[3]
         
-        crew_mens = models.Crew.objects.filter(gender = Genders.MEN).first()
+        crew_mens = exists(models.Crew.objects.filter(gender = Genders.MEN).first())
         crew_mens.positions.create(day = cls.day1, rank = 4)  # Added to ensure gender isolation
     
     
-    def test__string__womens_first(self):
+    def test__string__womens_first(self) -> None:
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
@@ -1273,7 +1272,7 @@ class Test__Crew(TestCase):
         self.assertEqual(str(crew), 'New College W1')
     
     
-    def test__string__mens_first(self):
+    def test__string__mens_first(self) -> None:
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
@@ -1284,7 +1283,7 @@ class Test__Crew(TestCase):
         self.assertEqual(str(crew), 'New College M1')
     
     
-    def test__string__lower_boat(self):
+    def test__string__lower_boat(self) -> None:
         """Displays a crew's club, gender, and rank."""
         
         crew = models.Crew(
@@ -1295,7 +1294,7 @@ class Test__Crew(TestCase):
         self.assertEqual(str(crew), 'New College W2')
     
     
-    def test__tuple__womens_first(self):
+    def test__tuple__womens_first(self) -> None:
         """Contains a crew's club, gender, and rank."""
         
         crew = models.Crew(
@@ -1304,9 +1303,14 @@ class Test__Crew(TestCase):
             rank = 1,
         )
         self.assertEqual(crew.as_tuple(), (Clubs.NEWC, Genders.WOMEN, 1))
+        
+        self.assertEqual(
+            models.Crew.make_tuple(Clubs.NEWC.value, Genders.MEN, 1),
+            (Clubs.NEWC, Genders.MEN, 1),
+        )
     
     
-    def test__tuple__mens_first(self):
+    def test__tuple__mens_first(self) -> None:
         """Contains a crew's club, gender, and rank."""
         
         crew = models.Crew(
@@ -1315,9 +1319,14 @@ class Test__Crew(TestCase):
             rank = 1,
         )
         self.assertEqual(crew.as_tuple(), (Clubs.NEWC, Genders.MEN, 1))
+        
+        self.assertEqual(
+            models.Crew.make_tuple(Clubs.NEWC.value, Genders.WOMEN, 1),
+            (Clubs.NEWC, Genders.WOMEN, 1),
+        )
     
     
-    def test__tuple__lower_boat(self):
+    def test__tuple__lower_boat(self) -> None:
         """Contains a crew's club, gender, and rank."""
         
         crew = models.Crew(
@@ -1326,30 +1335,35 @@ class Test__Crew(TestCase):
             rank = 2,
         )
         self.assertEqual(crew.as_tuple(), (Clubs.NEWC, Genders.WOMEN, 2))
+        
+        self.assertEqual(
+            models.Crew.make_tuple(Clubs.NEWC.value, Genders.WOMEN, 2),
+            (Clubs.NEWC, Genders.WOMEN, 2),
+        )
     
     
-    def test__value__no_ranking(self):
+    def test__value__no_ranking(self) -> None:
         """Returns zero if the crew has no position for that day."""
         self.assertEqual(self.crew_unranked.value(self.day1), 0)
     
     
-    def test__value__top_crew(self):
+    def test__value__top_crew(self) -> None:
         """Returns the maximum price."""
         self.assertEqual(self.crew_top.value(self.day1), money.PRICE_MAX)
     
     
-    def test__value__bottom_crew(self):
+    def test__value__bottom_crew(self) -> None:
         """Returns the minimum price."""
         self.assertEqual(self.crew_bottom.value(self.day1), money.PRICE_MIN)
     
     
-    def test__value__middle_crew(self):
+    def test__value__middle_crew(self) -> None:
         """Returns the price from the pricing algorithm."""
         self.assertEqual(self.crew_middle.value(self.day1), utils.pricing(2, 3))
     
     
     @tag('query-count')
-    def test__value__query_count(self):
+    def test__value__query_count(self) -> None:
         """Expect:
             (1) SELECT crew's position
         """
@@ -1363,14 +1377,17 @@ class Test__Crew(TestCase):
 class Test__Position(TestCase):
     fixtures = ['dev_event', 'dev_days']
     
+    day: models.Day
+    crew: models.Crew
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.day = models.Day.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.day = exists(models.Day.objects.first())
         cls.crew = models.Crew(club = Clubs.HERT, gender = Genders.WOMEN, rank = 1)
         cls.crew.save()
     
     
-    def test__unique_pair(self):
+    def test__unique_pair(self) -> None:
         """Raises a DB IntegrityError if a duplicate day/crew pairing created."""
         
         self.day.ranking.create(crew = self.crew, rank = 1)
@@ -1382,7 +1399,7 @@ class Test__Position(TestCase):
 
 class Test__Seat(TestCase):
     
-    def test__short__empty(self):
+    def test__short__empty(self) -> None:
         """Raises expected error when Seat.name empty."""
         
         seat = models.Seat(name = '')
@@ -1391,21 +1408,21 @@ class Test__Seat(TestCase):
             seat.short
     
     
-    def test__short__one_char(self):
+    def test__short__one_char(self) -> None:
         """Gives first character of Seat.name."""
         
         seat = models.Seat(name = 'S')
         self.assertEqual(seat.short, 'S')
     
     
-    def test__short__multi_char(self):
+    def test__short__multi_char(self) -> None:
         """Gives first character of Seat.name."""
         
         seat = models.Seat(name = 'Seat')
         self.assertEqual(seat.short, 'S')
     
     
-    def test__string(self):
+    def test__string(self) -> None:
         """Returns a seat's name as it's string representation."""
         
         seat = models.Seat(name = 'Name')
@@ -1416,14 +1433,18 @@ class Test__Seat(TestCase):
 class Test__Athlete(TestCase):
     fixtures = ['dev_event', 'dev_crews', 'seats']
     
+    event: models.Event
+    crew: models.Crew
+    seat: models.Seat
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
-        cls.crew = models.Crew.objects.first()
-        cls.seat = models.Seat.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.event = exists(models.Event.objects.first())
+        cls.crew = exists(models.Crew.objects.first())
+        cls.seat = exists(models.Seat.objects.first())
     
     
-    def test__string(self):
+    def test__string(self) -> None:
         """Returns a athlete's name as their string representation."""
         
         athlete = models.Athlete(name = 'Test Athlete')
@@ -1431,7 +1452,7 @@ class Test__Athlete(TestCase):
         self.assertEqual(athlete_str, athlete.name)
     
     
-    def test__unique_pair(self):
+    def test__unique_pair(self) -> None:
         """Raises a DB IntegrityError if a duplicate event/crew/seat pairing created."""
         
         self.event.crew_lists.create(crew = self.crew, seat = self.seat, name = 'Test Athlete')
@@ -1449,23 +1470,28 @@ class Test__Athlete(TestCase):
 class Test__Team(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     
+    team: models.Team
+    day: models.Day
+    crew: models.Crew
+    bow: models.Seat
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.day = exists(models.Day.objects.first())
         
         cls.crew = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.WOMEN, rank = 1)
         cls.bow = models.Seat.objects.get(name = 'Bow')
         
     
-    def test__auto_create(self):
+    def test__auto_create(self) -> None:
         """Is auto created every time a User instance is created."""
         
         user = auth.User.objects.create_user('A User', '', '')
         self.assertTrue(hasattr(user, 'team'))
     
     
-    def test__string(self):
+    def test__string(self) -> None:
         """Returns the related username as it's string representation."""
         
         user = auth.User.objects.create_user('A User', '', '')
@@ -1474,14 +1500,14 @@ class Test__Team(TestCase):
         self.assertEqual(str(team), 'A User')
     
     
-    def test__get_crew__empty_crew(self):
+    def test__get_crew__empty_crew(self) -> None:
         """Returns an empty crew list if no rowers have been purchased."""
         
         crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertEqual(crew.count(), 0)
     
     
-    def test__get_crew__other_team(self):
+    def test__get_crew__other_team(self) -> None:
         """Does not include rowers purchased by another team."""
         
         other_team = auth.User.objects.create_user('Other').team
@@ -1496,10 +1522,10 @@ class Test__Team(TestCase):
         self.assertEqual(crew.count(), 0)
     
     
-    def test__get_crew__other_day(self):
+    def test__get_crew__other_day(self) -> None:
         """Does not include rowers purchased on another day."""
         
-        other_day = models.Day.objects.last()
+        other_day = exists(models.Day.objects.last())
         self.assertNotEqual(other_day, self.day)
         
         self.team.purchases.create(
@@ -1512,7 +1538,7 @@ class Test__Team(TestCase):
         self.assertEqual(crew.count(), 0)
     
     
-    def test__get_crew__wrong_gender(self):
+    def test__get_crew__wrong_gender(self) -> None:
         """Does not include purchases of the wrong gender."""
         
         self.team.purchases.create(
@@ -1525,7 +1551,7 @@ class Test__Team(TestCase):
         self.assertEqual(crew.count(), 0)
     
     
-    def test__get_crew__partial_team(self):
+    def test__get_crew__partial_team(self) -> None:
         """Returns any purchases matching the criteria."""
         
         self.team.purchases.create(
@@ -1538,7 +1564,7 @@ class Test__Team(TestCase):
         self.assertEqual(crew.count(), 1)
     
     
-    def test__get_crew__full_team(self):
+    def test__get_crew__full_team(self) -> None:
         """Returns any purchases matching the criteria."""
         
         for seat in models.Seat.objects.all():
@@ -1557,9 +1583,19 @@ class Test__Team(TestCase):
 class Test__GameEntry(TestCase):
     fixtures = ['dev_event']
     
+    event: models.Event
+    team_1: models.Team
+    team_2: models.Team
+    team_3: models.Team
+    team_4: models.Team
+    game_entry_1: models.GameEntry
+    game_entry_2: models.GameEntry
+    game_entry_3: models.GameEntry
+    game_entry_4: models.GameEntry
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.event = exists(models.Event.objects.first())
         
         cls.team_1 = auth.User.objects.create_user('One', '', '').team
         cls.team_2 = auth.User.objects.create_user('Two', '', '').team
@@ -1596,42 +1632,42 @@ class Test__GameEntry(TestCase):
         )
     
     
-    def test__unique_group(self):
+    def test__unique_group(self) -> None:
         """Raises a DB IntegrityError if a duplicate team/event group created."""
         
         with self.assertRaises(IntegrityError):
             self.event.fantasies.create(team = self.team_1)  # Already exists
     
     
-    def test__query__extend_financials__total_budget(self):
+    def test__query__extend_financials__total_budget(self) -> None:
         """Totals the gendered budgets."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.total_budget, 701 + 713)
     
     
-    def test__query__extend_financials__mens_crew(self):
+    def test__query__extend_financials__mens_crew(self) -> None:
         """Calculates the value of men's crews."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.mens_crew_value, 701 - 110)
     
     
-    def test__query__extend_financials__womens_crew(self):
+    def test__query__extend_financials__womens_crew(self) -> None:
         """Calculates the value of women's crews."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.womens_crew_value, 713 - 103)
     
     
-    def test__query__extend_financials__total_crew(self):
+    def test__query__extend_financials__total_crew(self) -> None:
         """Calculates the value of both crews."""
         
-        entry = models.GameEntry.objects.extend_financials().first()
+        entry = exists(models.GameEntry.objects.extend_financials().first())
         self.assertEqual(entry.total_crew_value, 701 + 713 - 103 - 110)
     
     
-    def test__query__rank_by__total(self):
+    def test__query__rank_by__total(self) -> None:
         """Ranks teams by the total budget."""
         
         self.assertEqual(
@@ -1640,7 +1676,7 @@ class Test__GameEntry(TestCase):
         )
     
     
-    def test__query__rank_by__mens(self):
+    def test__query__rank_by__mens(self) -> None:
         """Ranks teams by the men's budget."""
         
         self.assertEqual(
@@ -1649,7 +1685,7 @@ class Test__GameEntry(TestCase):
         )
     
     
-    def test__query__rank_by__womens(self):
+    def test__query__rank_by__womens(self) -> None:
         """Ranks teams by the women's budget."""
         
         self.assertEqual(
@@ -1663,20 +1699,20 @@ class Test__GameEntry(TestCase):
 class Test__Purchase(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
     
-    def test__athlete_delete(self):
+    def test__athlete_delete(self) -> None:
         """Athlete references should be nulled if the athlete is deleted.
         
         This is important for not dropping purchases when honouring an athlete deletion request.
         """
         
         # Create athlete
-        day = models.Day.objects.select_related('event').first()
-        crew = models.Crew.objects.first()
-        seat = models.Seat.objects.first()
+        day = exists(models.Day.objects.select_related('event').first())
+        crew = exists(models.Crew.objects.first())
+        seat = exists(models.Seat.objects.first())
         athlete = crew.crew_lists.create(event = day.event, seat = seat, name = 'Deletion')
         
         # Create purchase
-        team = models.Team.objects.first()
+        team = exists(models.Team.objects.first())
         purchase = team.purchases.create(day = day, crew = crew, seat = seat, athlete = athlete)
         
         # Delete athlete

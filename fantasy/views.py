@@ -237,7 +237,10 @@ class MarketView(EventBase):
         context['seats'] = seats
         
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
-        context['start_order'] = self.day.start_order(gender, extend = self.add_purchase_count)
+        context['start_order'] = [
+            self.add_purchase_count(division_start_order)
+            for division_start_order in self.day.start_order(gender)
+        ]
         
         user = self.request.user
         if user.is_authenticated:

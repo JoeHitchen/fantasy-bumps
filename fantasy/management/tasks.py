@@ -25,7 +25,7 @@ def schedule_game_advances(event: models.Event) -> None:
     
     for day in event.days.all():
         
-        if not day.is_racing_day:
+        if not day.is_racing_day or not day.last_race:  # Redundancy for MyPy purposes
             continue
         
         advance_time = day.last_race + timings.ADVANCE_DELAY
@@ -103,7 +103,7 @@ def schedule_live_bumps_updates(event: models.Event) -> None:
         period = IntervalSchedule.MINUTES,
         every = 1,
     )
-    assert event.last_racing_day.first_race  # MyPy purposes
+    assert event.last_racing_day.first_race and event.last_racing_day.last_race  # MyPy purposes
     
     for gender in Genders:
         PeriodicTask.objects.update_or_create(

@@ -103,7 +103,11 @@ class Command(BaseCommand):
         if not models.Position.objects.filter(day__event = event, crew = target_crew).count():
             raise models.Position.DoesNotExist('This crew is not entered into this event.')
         
-        source_crew_tpl = (target_crew.club, target_crew.gender, kwargs['old_rank'])
+        source_crew_tpl = models.Crew.make_tuple(
+            target_crew.club,
+            target_crew.gender,
+            kwargs['old_rank'],
+        )
         logger.info('Correcting crew list for {} as their original {}{}'.format(
             target_crew,
             target_crew.gender,

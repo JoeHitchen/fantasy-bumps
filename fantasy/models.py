@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
+from typing import TypedDict, TYPE_CHECKING
+from dataclasses import dataclass
 from functools import lru_cache
-from typing import Tuple
 import zoneinfo
 
 from django.db import models
@@ -10,9 +11,31 @@ from django.utils.functional import cached_property
 from django.dispatch import receiver
 
 from core.settings import TIME_ZONE
+from core.tests import exists
 
 from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
 from .utils import pricing
+
+
+if TYPE_CHECKING:
+    from django_stubs_ext import WithAnnotations
+    
+    class BunglineAnnotation(TypedDict):
+        bungline: int
+    
+    class FinancialAnnotation(TypedDict):
+        total_budget: int
+        total_balance: int
+        total_crew_value: int
+        mens_crew_value: int
+        womens_crew_value: int
+    
+    StartOrderPosition = WithAnnotations['Position', BunglineAnnotation]
+    FinancialGameEntry = WithAnnotations['GameEntry', FinancialAnnotation]
+    
+else:
+    StartOrderPosition = 'Position'
+    FinancialGameEntry = 'GameEntry'
 
 
 class Event(models.Model):
@@ -31,11 +54,13 @@ class Event(models.Model):
     
     market_held_closed = models.BooleanField(default = False)
     
-    def __str__(self):
+    _days: list['Day']
+    
+    def __str__(self) -> str:
         series_long = {
-            Series.EIGHTS: 'Summer Eights',
-            Series.LENTS: 'Lent Bumps',
-            Series.MAYS: 'May Bumps',
+            Series.EIGHTS.value: 'Summer Eights',
+            Series.LENTS.value: 'Lent Bumps',
+            Series.MAYS.value: 'May Bumps',
         }.get(self.series, self.get_series_display())
         return '{} {}'.format(series_long, self.year)
     
@@ -44,18 +69,18 @@ class Event(models.Model):
     def first_day(self) -> 'Day':
         if hasattr(self, '_days'):
             return self._days[0]
-        return self.days.first()
+        return exists(self.days.first())
     
     
     @cached_property
     def last_racing_day(self) -> 'Day':
         if hasattr(self, '_days'):
             return [day for day in self._days if day.is_racing_day][-1]
-        return self.days.exclude(first_race_time = None, last_race_time = None).last()
+        return exists(self.days.exclude(first_race_time = None, last_race_time = None).last())
     
     
     @cached_property
-    def active_day(self):
+    def active_day(self) -> 'Day':
         """The active/most currently relevant day of the event.
         
         Before markets open -> The first day from today onwards.
@@ -71,21 +96,24 @@ class Event(models.Model):
             not_past_days = list(self.days.filter(date__gte = now.date()))
         
         if not not_past_days:
-            return self._days[-1] if hasattr(self, '_days') else self.days.last()
+            return self._days[-1] if hasattr(self, '_days') else exists(self.days.last())
         
         current_day = not_past_days[0]
-        if len(not_past_days) > 1 and now >= current_day.last_race + timings.MARKET_DELAY:
+        if (current_day.last_race and now >= current_day.last_race + timings.MARKET_DELAY
+                and len(not_past_days) > 1):
             return not_past_days[1]
         
         return current_day
     
     
-    def num_crews(self, gender):
+    def num_crews(self, gender: Genders) -> int:
         """The number of crews of the given gender competing in the event."""
-        return {
+        
+        num_crews_map: dict[Genders, int] = {
             Genders.MEN: sum(self.mens_division_sizes),
             Genders.WOMEN: sum(self.womens_division_sizes),
-        }[gender]
+        }
+        return num_crews_map[gender]
 
 
 
@@ -103,11 +131,11 @@ class Day(models.Model):
     class Meta:
         ordering = ['event', 'date']
     
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
     
     @cached_property
-    def next(self):
+    def next(self) -> 'Day | None':
         """The next day of the event."""
         if hasattr(self.event, '_days'):
             future_days = [day for day in self.event._days if day.date > self.date]
@@ -116,7 +144,7 @@ class Day(models.Model):
     
     
     @cached_property
-    def prev(self):
+    def prev(self) -> 'Day | None':
         """The previous day of the event."""
         if hasattr(self.event, '_days'):
             past_days = [day for day in self.event._days if day.date < self.date]
@@ -125,9 +153,9 @@ class Day(models.Model):
     
     
     @cached_property
-    def is_racing_day(self):
+    def is_racing_day(self) -> bool:
         """Indicates if racing occurs on this day."""
-        return self.first_race and self.last_race
+        return bool(self.first_race and self.last_race)
     
     
     @cached_property
@@ -144,7 +172,7 @@ class Day(models.Model):
         )
     
     @cached_property
-    def last_race(self):
+    def last_race(self) -> datetime | None:
         """The datetime for the last race of the day, or None if not racing day."""
         
         if not self.last_race_time:
@@ -158,7 +186,7 @@ class Day(models.Model):
     
     
     @lru_cache(maxsize=2)
-    def divisions(self, gender):
+    def divisions(self, gender: Genders) -> list['Division']:
         """Generates the division structure for the day."""
         
         # Get correct division sizes
@@ -186,13 +214,13 @@ class Day(models.Model):
         return divisions
     
     
-    def start_order(self, gender, extend = lambda so: so):
+    def start_order(self, gender: Genders) -> list[models.QuerySet[StartOrderPosition]]:
         """Builds the day and gender's start order from the start order of each division."""
-        return [extend(division.start_order()) for division in self.divisions(gender)]
+        return [division.start_order() for division in self.divisions(gender)]
     
     
     @cached_property
-    def market_opens(self):
+    def market_opens(self) -> datetime | None:
         """Gives the time that markets open for trading, for racing days.
         
         Before racing, the markets open at 8pm, three days before the first racing day, and
@@ -201,7 +229,7 @@ class Day(models.Model):
         if not self.is_racing_day:
             return None
         
-        if self.prev and self.prev.is_racing_day:
+        if self.prev and self.prev.last_race:
             return self.prev.last_race + timings.MARKET_DELAY
         
         return datetime.combine(
@@ -212,36 +240,37 @@ class Day(models.Model):
     
     
     @cached_property
-    def market_closes(self):
+    def market_closes(self) -> datetime | None:
         """Markets always close half an hour before the first race, if one occurs."""
-        return self.first_race - timedelta(minutes = 30) if self.is_racing_day else None
+        return self.first_race - timedelta(minutes = 30) if self.first_race else None
     
     
     @cached_property
-    def market_is_open(self):
+    def market_is_open(self) -> bool:
         """Indicates whether the market is currently open for trading."""
-        if not self.is_racing_day or self.event.market_held_closed:
+        
+        if not self.market_opens or not self.market_closes or self.event.market_held_closed:
             return False
+        
         if self.prev and not self.prev.advanced:
             return False
+        
         return self.market_opens <= timezone.localtime() < self.market_closes
 
 
 
+@dataclass
 class Division:
     """Temporary objects for storing division information and start orders."""
     
-    def __init__(self, day, gender, number, top_bungline, bottom_bungline):
-        """Sets provided arguments as properties."""
-        
-        self.day = day
-        self.gender = gender
-        self.number = number
-        self.top_bungline = top_bungline
-        self.bottom_bungline = bottom_bungline
+    day: Day
+    gender: Genders
+    number: int
+    top_bungline: int
+    bottom_bungline: int
     
     
-    def start_order(self):
+    def start_order(self) -> models.QuerySet[StartOrderPosition]:
         """Generates start order and bungline numbers (excluding sandwich boat)."""
         
         return self.day.ranking.filter(
@@ -256,7 +285,7 @@ class Division:
 
 class Crew(models.Model):
     """Describes a crew (e.g. New College W1)"""
-    Tuple = Tuple[Clubs, Genders, int]
+    Tuple = tuple[Clubs, Genders, int]
     
     club = models.CharField(
         max_length = 4,
@@ -273,22 +302,27 @@ class Crew(models.Model):
     posn_old: list['Position']  # List due to pre-fetch
     posn_new: list['Position']  # List due to pre-fetch
     
-    def __str__(self):
+    def __str__(self) -> str:
         return '{} {}{}'.format(self.get_club_display(), self.gender, self.rank)
+    
+    
+    @staticmethod
+    def make_tuple(club: str, gender: str, rank: int) -> 'Crew.Tuple':
+        return (Clubs(club), Genders(gender), rank)
     
     
     def as_tuple(self) -> 'Crew.Tuple':
         """Describes the crew in the tuple-form needed for parser interaction."""
-        return (self.club, self.gender, self.rank)
+        return self.make_tuple(self.club, self.gender, self.rank)
     
     
-    def value(self, day) -> int:
+    def value(self, day: Day) -> int:
         """The price of the crew for a given day."""
         
         try:
             return pricing(
                 self.positions.get(day = day).rank,
-                day.event.num_crews(self.gender),
+                day.event.num_crews(Genders(self.gender)),
             )
         except Position.DoesNotExist:
             return 0
@@ -315,10 +349,10 @@ class Seat(models.Model):
     cox = models.BooleanField()
     
     @property
-    def short(self):
+    def short(self) -> str:
         return self.name[0]
     
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -335,7 +369,7 @@ class Athlete(models.Model):
         ordering = ['event', 'crew', 'seat']
         unique_together = ['event', 'crew', 'seat']
     
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -348,7 +382,7 @@ class Team(models.Model):
     mens_crew: list['Purchase']
     womens_crew: list['Purchase']
     
-    def __str__(self):
+    def __str__(self) -> str:
         return self.user.username
     
     
@@ -358,16 +392,18 @@ class Team(models.Model):
 
 
 @receiver(models.signals.post_save, sender = auth.User)
-def create_team(sender, instance, created, **kwargs):
-    if created and not kwargs['raw']:
+def create_team(instance: auth.User, created: bool, raw: bool, **_: dict[None, None]) -> None:
+    """Creates a linked team for every user."""
+    
+    if created and not raw:
         Team.objects.create(user = instance)
 
 
 
-class GameEntryQuerySet(models.QuerySet):
+class GameEntryQuerySet(models.QuerySet[FinancialGameEntry]):
     """Additional queryset methods related to finances and scores."""
     
-    def extend_financials(self):
+    def extend_financials(self) -> 'GameEntryQuerySet':
         """Add crew values and non-gendered totals to the queried data."""
         return self.annotate(
             mens_crew_value = models.F('mens_budget') - models.F('mens_balance'),
@@ -377,7 +413,7 @@ class GameEntryQuerySet(models.QuerySet):
             total_crew_value = models.F('mens_crew_value') + models.F('womens_crew_value'),
         )
     
-    def rank_by(self, gender = GENDERS_OVERALL):
+    def rank_by(self, gender: str = GENDERS_OVERALL) -> 'GameEntryQuerySet':
         """Retrieve team ranking for the gender provided.
         
         Requires .extend_financials() to have been called.

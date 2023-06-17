@@ -1,4 +1,5 @@
 from typing import TypedDict
+from datetime import datetime
 
 
 class IntervalSchedule():
@@ -22,7 +23,7 @@ class _IntervalManager():
 
 class _ClockedManager():
     
-    def get_or_create(self, clocked_time: bool) -> tuple[ClockedSchedule, bool]:
+    def get_or_create(self, clocked_time: datetime) -> tuple[ClockedSchedule, bool]:
         ...
 
 

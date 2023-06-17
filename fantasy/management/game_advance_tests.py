@@ -67,8 +67,10 @@ class Test__PerformAdvance(TestCase):
         
         self.day.refresh_from_db()
         self.assertTrue(self.day.advanced)
-        self.assertEqual(self.day.next.ranking.count(), 18)
-        self.assertEqual(self.day.next.purchases.count(), 18)
+        
+        next_day = exists(self.day.next)
+        self.assertEqual(next_day.ranking.count(), 18)
+        self.assertEqual(next_day.purchases.count(), 18)
         
         self.entry.refresh_from_db()
         self.assertNotEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
@@ -82,8 +84,10 @@ class Test__PerformAdvance(TestCase):
         
         self.day.refresh_from_db()
         self.assertEqual(self.day.advanced, advanced_flag)
-        self.assertEqual(self.day.next.ranking.count(), 0)
-        self.assertEqual(self.day.next.purchases.count(), 0)
+        
+        next_day = exists(self.day.next)
+        self.assertEqual(next_day.ranking.count(), 0)
+        self.assertEqual(next_day.purchases.count(), 0)
         
         self.entry.refresh_from_db()
         self.assertEqual(self.entry.mens_budget, money.INITIAL_BALANCE)
@@ -207,7 +211,7 @@ class Test__PurchaseRollover(TestCase):
         
         self.assertEqual(
             list(self.day.purchases.values('team', 'crew', 'seat', 'athlete')),
-            list(self.day.next.purchases.values('team', 'crew', 'seat', 'athlete')),
+            list(exists(self.day.next).purchases.values('team', 'crew', 'seat', 'athlete')),
         )
     
     
@@ -236,7 +240,7 @@ class Test__PurchaseRollover(TestCase):
         
         self.assertEqual(
             list(self.day.purchases.values('team', 'crew', 'seat', 'athlete')),
-            list(self.day.next.purchases.values('team', 'crew', 'seat', 'athlete')),
+            list(exists(self.day.next).purchases.values('team', 'crew', 'seat', 'athlete')),
         )
     
     
@@ -669,7 +673,7 @@ class Test__PayoutMatrix(TestCase):
                 )
                 self.assertEqual(
                     delta_crabs[3],  # type: ignore
-                    self.day.next.ranking.get(crew = crew).rank,
+                    exists(self.day.next).ranking.get(crew = crew).rank,
                 )
     
     
