@@ -1,4 +1,5 @@
 import re
+from typing import TYPE_CHECKING
 
 from django import forms
 from django.contrib.auth import models as auth
@@ -6,24 +7,35 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 
 
-username_blacklist_regexes = [
-    ['blacklisttest', None],
-    ['hitchen', 'The admin requests that you do not feature them in your team name.'],
-    [
+if TYPE_CHECKING:
+    ProfileCreateFormBase = UserCreationForm[auth.User]
+    ProfileEditFormBase = forms.ModelForm[auth.User]
+else:
+    ProfileCreateFormBase = UserCreationForm
+    ProfileEditFormBase = forms.ModelForm
+
+
+username_blacklist_regexes: list[tuple[str, str]] = [
+    ('blacklisttest', ''),
+    ('hitchen', 'The admin requests that you do not feature them in your team name.'),
+    (
         'hitchin',
         'The admin requests that you do not feature them in your team name.'
         + ' Also you spelt it wrong.',
-    ],
-    ['quarrell', 'This team name is not allowed to prevent violations of rule F0.'],
-    ['rq', 'This team name is not allowed to prevent violations of rule F0.'],
+    ),
+    ('quarrell', 'This team name is not allowed to prevent violations of rule F0.'),
+    ('rq', 'This team name is not allowed to prevent violations of rule F0.'),
 ]
 
 
-class UserCreationWithEmailForm(UserCreationForm):
+class UserCreationWithEmailForm(ProfileCreateFormBase):
     email = forms.EmailField(required = False)
     
-    def clean_username(self):
+    def clean_username(self) -> str:
         username = self.cleaned_data['username']
+        
+        if not isinstance(username, str):
+            raise ValidationError('Username must be a string')
         
         if not re.match('^[a-z0-9]+$', username, re.IGNORECASE):
             raise ValidationError('Usernames can only contain letters and numbers.')
@@ -38,10 +50,10 @@ class UserCreationWithEmailForm(UserCreationForm):
         return username
     
     
-    def save(self):
+    def save(self, commit: bool = False) -> auth.User:
         """Adds an optional e-mail address to the new user."""
         
-        user = super().save(commit = False)
+        user = super().save(commit = commit)
         if 'email' in self.cleaned_data:
             user.email = self.cleaned_data['email']
         
@@ -50,14 +62,11 @@ class UserCreationWithEmailForm(UserCreationForm):
 
 
 
-class UserProfileForm(forms.ModelForm):
+class UserProfileForm(ProfileEditFormBase):
     """A user-update form with an optional e-mail field."""
     
     class Meta:
         model = auth.User
         fields = ('email',)
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['email'].required = False
 
