@@ -2,8 +2,10 @@
 
 from django.db import migrations, models
 from django.utils import timezone
+from django.apps.registry import Apps
+from django.db.backends.base.schema import BaseDatabaseSchemaEditor as SchemaEditor
 
-def flag_past_day_advanced(apps, schema_editor):
+def flag_past_day_advanced(apps: Apps, schema_editor: SchemaEditor) -> None:
     (
         apps.get_model('fantasy', 'Day').objects
         .filter(date__lt = timezone.now().date(), first_race_time__isnull = False)
@@ -11,7 +13,7 @@ def flag_past_day_advanced(apps, schema_editor):
     )
 
 
-def noop(apps, schema_editor):
+def noop(apps: Apps, schema_editor: SchemaEditor) -> None:
     pass
 
 

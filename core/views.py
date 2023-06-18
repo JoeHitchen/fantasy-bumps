@@ -1,13 +1,29 @@
+from typing import Any, TYPE_CHECKING
+
 from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, models as auth
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import models as db
 from django.urls import reverse_lazy
 
 from . import forms
 
 
-class UserCreationView(SuccessMessageMixin, CreateView):
+if TYPE_CHECKING:
+    from django.http import HttpResponse
+    from django.forms.forms import BaseForm
+    
+    ProfileCreateView = CreateView[auth.User, forms.UserCreationWithEmailForm]
+    ProfileUpdateView = UpdateView[auth.User, forms.UserProfileForm]
+    ProfileQuerySet = db.QuerySet[auth.User]
+else:
+    ProfileCreateView = CreateView
+    ProfileUpdateView = UpdateView
+    ProfileQuerySet = db.QuerySet
+
+
+class UserCreationView(SuccessMessageMixin, ProfileCreateView):
     """Renders and processes a user creation form."""
     
     # View settings
@@ -15,10 +31,10 @@ class UserCreationView(SuccessMessageMixin, CreateView):
     template_name = 'registration/signup.html'
     success_url = reverse_lazy('index')
     
-    def get_success_message(self, data):
+    def get_success_message(self, cleaned_data: dict[str, str]) -> str:
         return 'Welcome {} - Your account has been created.'.format(self.object)
     
-    def form_valid(self, form):
+    def form_valid(self, form: 'BaseForm') -> 'HttpResponse':
         """Creates and signs in the new user."""
         
         redirect = super().form_valid(form)
@@ -31,7 +47,7 @@ class UserCreationView(SuccessMessageMixin, CreateView):
 
 
 
-class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, ProfileUpdateView):
     """Renders and processes a user update form."""
     
     # View settings
@@ -41,6 +57,6 @@ class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_url = reverse_lazy('profile')
     success_message = 'Profile updated'
     
-    def get_object(self, *args, **kwargs):
+    def get_object(self, queryset: ProfileQuerySet | None = None) -> Any:
         return self.request.user
 

@@ -10,11 +10,11 @@ from core.settings import TIME_ZONE
 from . import models
 
 _Params = ParamSpec('_Params')
-_RetType = TypeVar('RetType_')
+_RetType = TypeVar('_RetType')
 _OriginalFunc = Callable[_Params, _RetType]
 _DecoratedFunc = Callable[Concatenate[Mock, _Params], _RetType]
 
-Patch = Callable[[_OriginalFunc], _DecoratedFunc]
+Patch = Callable[[_OriginalFunc], _DecoratedFunc]  # type: ignore  # This use-case is too complex
 
 
 def localtime_time(time: time, shift: timedelta = timedelta(0)) -> Patch:

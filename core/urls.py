@@ -12,7 +12,7 @@ urlpatterns = [
     path('accounts/profile/', views.UserProfileView.as_view(), name = 'profile'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('fantasy.urls')),
-    path('', lambda req: None, name = 'index'),  # Alias, handled by app
+    path('', lambda req: None, name = 'index'),  # type: ignore # Root URL alias, handled by app
 ]
 
 if settings.DEBUG:
