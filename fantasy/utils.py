@@ -1,5 +1,6 @@
 from collections import Counter
 from functools import lru_cache
+from typing import Iterable
 from math import log
 
 from django.db.models import Max
@@ -14,7 +15,10 @@ def ordered_events():
     return models.Event.objects.annotate(last_day = Max('days__date')).order_by('-last_day')
 
 
-def has_all_seats(purchases: list['models.Purchase'], expected_seats: list['models.Seat']) -> bool:
+def has_all_seats(
+    purchases: Iterable['models.Purchase'],
+    expected_seats: Iterable['models.Seat'],
+) -> bool:
     """Checks that a set of purchase objects has every seat filled exactly once."""
     
     seat_count = Counter(purchase.seat_id for purchase in purchases)
