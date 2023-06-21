@@ -66,7 +66,7 @@ class Test__Index(TestCase):
     def check_event_augmentation(self, event, with_user):
         self.assertTrue(hasattr(event, 'user_fantasy'))
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
-        self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
+        self.assertEqual(hasattr(event, 'womens_crew_ready'), with_user)
     
     
     def test__without_login(self):
