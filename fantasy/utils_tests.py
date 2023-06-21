@@ -1,4 +1,7 @@
 from django.test import TestCase, tag
+from django.db import models as db
+
+from core.tests import exists
 
 from .constants import Series, Genders, Clubs
 from . import models
@@ -8,7 +11,7 @@ from . import errors
 
 class Test__Ordered_Events(TestCase):
     
-    def test__ordered_events(self):
+    def test__ordered_events(self) -> None:
         
         division_structure = {
             'mens_division_sizes': [12, 12, 12, 12, 12, 13],
@@ -39,23 +42,29 @@ class Test__Ordered_Events(TestCase):
 class Test__Has_All_Seats(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
     
+    team: models.Team
+    day: models.Day
+    crew: models.Crew
+    all_seats: db.QuerySet[models.Seat]
+    
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.day = exists(models.Day.objects.first())
         cls.crew = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.MEN, rank = 1)
         
         cls.all_seats = models.Seat.objects.all()
     
     
-    def test__empty_crew(self):
+    def test__empty_crew(self) -> None:
         """Returns false if there are no seats filled."""
         
         value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
         self.assertFalse(value)
     
     
-    def test__all_seats(self):
+    def test__all_seats(self) -> None:
         """Returns true if all seats are present exactly once."""
         
         for seat in models.Seat.objects.all():
@@ -65,19 +74,19 @@ class Test__Has_All_Seats(TestCase):
         self.assertTrue(value)
     
     
-    def test__all_seats_as_list(self):
+    def test__all_seats_as_list(self) -> None:
         """Returns true if all seats are present exactly once."""
         
         for seat in models.Seat.objects.all():
             self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
-        purchase_list = list(models.Purchase.objects.all())
-        seat_list = list(self.all_seats)
+        purchase_list = models.Purchase.objects.all()
+        seat_list = self.all_seats
         value = utils.has_all_seats(purchase_list, seat_list)
         self.assertTrue(value)
     
     
-    def subtest__missing_seat(self, missing_seat):
+    def subtest__missing_seat(self, missing_seat: str) -> None:
         """Returns false if a specific seat is missing."""
         
         for seat in models.Seat.objects.exclude(name__iexact = missing_seat):
@@ -86,88 +95,88 @@ class Test__Has_All_Seats(TestCase):
         value = utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
         self.assertFalse(value)
     
-    def test__missing_seat__bow(self):
+    def test__missing_seat__bow(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('bow')
     
-    def test__missing_seat__2(self):
+    def test__missing_seat__2(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('2')
     
-    def test__missing_seat__3(self):
+    def test__missing_seat__3(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('3')
     
-    def test__missing_seat__4(self):
+    def test__missing_seat__4(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('4')
     
-    def test__missing_seat__5(self):
+    def test__missing_seat__5(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('5')
     
-    def test__missing_seat__6(self):
+    def test__missing_seat__6(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('6')
     
-    def test__missing_seat__7(self):
+    def test__missing_seat__7(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('7')
     
-    def test__missing_seat__stroke(self):
+    def test__missing_seat__stroke(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('stroke')
     
-    def test__missing_seat__cox(self):
+    def test__missing_seat__cox(self) -> None:
         """Returns false if a specific seat is missing."""
         self.subtest__missing_seat('cox')
     
     
-    def subtest__extra_seat(self, extra_seat):
+    def subtest__extra_seat(self, extra_seat_str: str) -> None:
         """Raises ValueError if any seat present twice."""
         
         for seat in models.Seat.objects.all():
             self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
         
-        extra_seat = models.Seat.objects.get(name__iexact = extra_seat)
+        extra_seat = models.Seat.objects.get(name__iexact = extra_seat_str)
         self.team.purchases.create(day = self.day, crew = self.crew, seat = extra_seat)
         
         with self.assertRaises(errors.DuplicateSeatError):
             utils.has_all_seats(models.Purchase.objects.all(), self.all_seats)
     
-    def test__extra_seat__bow(self):
+    def test__extra_seat__bow(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('bow')
     
-    def test__extra_seat__2(self):
+    def test__extra_seat__2(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('2')
     
-    def test__extra_seat__3(self):
+    def test__extra_seat__3(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('3')
     
-    def test__extra_seat__4(self):
+    def test__extra_seat__4(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('4')
     
-    def test__extra_seat__5(self):
+    def test__extra_seat__5(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('5')
     
-    def test__extra_seat__6(self):
+    def test__extra_seat__6(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('6')
     
-    def test__extra_seat__7(self):
+    def test__extra_seat__7(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('7')
     
-    def test__extra_seat__stroke(self):
+    def test__extra_seat__stroke(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('stroke')
     
-    def test__extra_seat__cox(self):
+    def test__extra_seat__cox(self) -> None:
         """Raises ValueError if any seat present twice."""
         self.subtest__extra_seat('cox')
 
@@ -175,11 +184,11 @@ class Test__Has_All_Seats(TestCase):
 
 class Test__Reverse_Gender(TestCase):
     
-    def test__men_to_women(self):
+    def test__men_to_women(self) -> None:
         """Returns opposite gender."""
         self.assertEqual(utils.reverse_gender(Genders.MEN), Genders.WOMEN)
     
-    def test__women_to_men(self):
+    def test__women_to_men(self) -> None:
         """Returns opposite gender."""
         self.assertEqual(utils.reverse_gender(Genders.WOMEN), Genders.MEN)
 
@@ -188,7 +197,7 @@ class Test__Reverse_Gender(TestCase):
 @tag('game-core')
 class Test__Pricing(TestCase):
     
-    def test__bungline_2(self):
+    def test__bungline_2(self) -> None:
         """Ensures a sensible price is given for bungline 2.
         
         The price gap between bungline 1 and bungline 2 should be equal-to or greater than that of
@@ -211,19 +220,22 @@ class Test__Pricing(TestCase):
 class Test__Payouts(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']
     
+    day: models.Day
+    
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.day = models.Day.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.day = exists(models.Day.objects.first())
     
     
-    def test__individual__row_over(self):
+    def test__individual__row_over(self) -> None:
         """No change in value but a small payout."""
         
         old_ranking = 5
         new_ranking = 5
         
-        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
-        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN)
         value_change = new_price - old_price
         
         delta_crabs = utils.payout_by_day_gender_positions(
@@ -238,14 +250,14 @@ class Test__Payouts(TestCase):
         self.assertEqual(delta_crabs['payout'], round(0.07 * old_price))
     
     
-    def test__individual__headship(self):
+    def test__individual__headship(self) -> None:
         """Headship row overs get a larger payout than a standard row over."""
         
         old_ranking = 1
         new_ranking = 1
         
-        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
-        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN)
         value_change = new_price - old_price
         
         delta_crabs = utils.payout_by_day_gender_positions(
@@ -260,14 +272,14 @@ class Test__Payouts(TestCase):
         self.assertEqual(delta_crabs['payout'], round(0.175 * old_price))
     
     
-    def test__individual__bump_up(self):
+    def test__individual__bump_up(self) -> None:
         """An increase in value and a larger payout."""
         
         old_ranking = 5
         new_ranking = 4
         
-        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
-        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN)
         value_change = new_price - old_price
         
         delta_crabs = utils.payout_by_day_gender_positions(
@@ -282,14 +294,14 @@ class Test__Payouts(TestCase):
         self.assertEqual(delta_crabs['payout'], round(0.21 * old_price))
     
     
-    def test__individual__bump_down(self):
+    def test__individual__bump_down(self) -> None:
         """A decrease in value and no payout."""
         
         old_ranking = 5
         new_ranking = 6
         
-        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN.value)
-        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN.value)
+        old_price = utils.pricing_by_day_gender(old_ranking, self.day, Genders.WOMEN)
+        new_price = utils.pricing_by_day_gender(new_ranking, self.day, Genders.WOMEN)
         value_change = new_price - old_price
         
         delta_crabs = utils.payout_by_day_gender_positions(
@@ -305,10 +317,10 @@ class Test__Payouts(TestCase):
     
     
     @tag('query-count')
-    def test__individual__query_count(self):
+    def test__individual__query_count(self) -> None:
         """Expect no queries if Day has Event pre-selected."""
         
-        day = models.Day.objects.select_related('event').first()
+        day = exists(models.Day.objects.select_related('event').first())
         
         with self.assertNumQueries(0):
             utils.payout_by_day_gender_positions(day, Genders.WOMEN, 5, 5)
