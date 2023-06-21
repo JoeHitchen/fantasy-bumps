@@ -1,12 +1,14 @@
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from datetime import date, timedelta
+from typing import Callable, Any, TYPE_CHECKING
 
-from django.test import TestCase, tag
+from django.test import TestCase, tag, Client
+from django.db import models as db
 from django.utils import timezone
 from django.contrib.auth import models as auth
 from django.urls import reverse
 
-from core.tests import MessagesTestMixin
+from core.tests import MessagesTestMixin, exists
 
 from .constants import Series, Genders, GENDERS_OVERALL, money
 from . import models
@@ -15,7 +17,26 @@ from . import transactions
 from . import patching
 
 
-def prepare_event(user, year, date_shift = 0):
+if TYPE_CHECKING:
+    from django.test.client import _MonkeyPatchedWSGIResponse as TestHttpResponse
+    from django.test.utils import ContextList
+    
+    Context = dict[str, Any] | ContextList
+    StartOrder = list[db.QuerySet[models.StartOrderPosition]]
+
+
+class AbstractTestCase:
+    
+    subTest: Callable  # type: ignore
+    assertEqual: Callable  # type: ignore
+    assertTrue: Callable  # type: ignore
+    assertFalse: Callable  # type: ignore
+    assertQuerySetEqual: Callable  # type: ignore
+    assertTemplateUsed: Callable  # type: ignore
+    assertNumQueries: Callable  # type: ignore
+
+
+def prepare_event(user: auth.User, year: int, date_shift: int = 0) -> models.Event:
     """An internal method for creating multiple events."""
     
     event = models.Event.objects.create(
@@ -50,7 +71,7 @@ class Test__Index(TestCase):
 
     url = reverse('fantasy:index')
     
-    def setUp(self):
+    def setUp(self) -> None:
         
         self.user = auth.User.objects.get(username = 'DevTeam')
         
@@ -63,13 +84,13 @@ class Test__Index(TestCase):
         prepare_event(self.user, 2017, 6)
     
     
-    def check_event_augmentation(self, event, with_user):
+    def check_event_augmentation(self, event: models.Event, with_user: bool) -> None:
         self.assertTrue(hasattr(event, 'user_fantasy'))
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
     
     
-    def test__without_login(self):
+    def test__without_login(self) -> None:
         """Returns a 200 success with augmented recent and past events."""
         
         response = self.client.get(self.url)
@@ -84,7 +105,7 @@ class Test__Index(TestCase):
                 self.check_event_augmentation(event, with_user = False)
     
     
-    def test__with_login(self):
+    def test__with_login(self) -> None:
         """Returns a 200 success with augmented recent and past events."""
     
         self.client.login(username = 'DevTeam', password = 'password')
@@ -101,7 +122,7 @@ class Test__Index(TestCase):
     
     
     @tag('query-count')
-    def test__query_count__without_login(self):
+    def test__query_count__without_login(self) -> None:
         """Expect:
             (1) SELECT recent events
             (1) SELECT event days prefetch
@@ -114,7 +135,7 @@ class Test__Index(TestCase):
     
     
     @tag('query-count')
-    def test__query_count__with_login(self):
+    def test__query_count__with_login(self) -> None:
         """Expect:
             (1) SELECT recent events
             (3) SELECT session, user & team
@@ -133,8 +154,13 @@ class Test__Index(TestCase):
 class Test__GuideRules(TestCase):
     fixtures = ['dev_team']
     
+    user: auth.User
+    recent_events: list[models.Event]
+    past_events: list[models.Event]
+    
+    
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         cls.user = auth.User.objects.get(username = 'DevTeam')
         
         cls.recent_events = [
@@ -146,7 +172,7 @@ class Test__GuideRules(TestCase):
         prepare_event(cls.user, 2017, 6)
     
     
-    def test__render(self):
+    def test__render(self) -> None:
         """Renders the guide & rules page."""
         
         response = self.client.get(reverse('fantasy:rules'))
@@ -158,7 +184,7 @@ class Test__GuideRules(TestCase):
     
     
     @tag('query-count')
-    def test__query_count(self):
+    def test__query_count(self) -> None:
         """Expect:
             (1) SELECT recent events
         """
@@ -173,28 +199,33 @@ class Test__EventsList(TestCase):
 
     url = reverse('fantasy:events')
     
-    def setUp(self):
+    user: auth.User
+    recent_events: list[models.Event]
+    past_events: list[models.Event]
+    
+    
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.user = auth.User.objects.get(username = 'DevTeam')
         
-        self.user = auth.User.objects.get(username = 'DevTeam')
-        
-        self.recent_events = [
-            prepare_event(self.user, 2021, -2),
-            prepare_event(self.user, 2020, 0),
-            prepare_event(self.user, 2019, 2),
+        cls.recent_events = [
+            prepare_event(cls.user, 2021, -2),
+            prepare_event(cls.user, 2020, 0),
+            prepare_event(cls.user, 2019, 2),
         ]
-        self.past_events = [
-            prepare_event(self.user, 2018, 4),
-            prepare_event(self.user, 2017, 6),
+        cls.past_events = [
+            prepare_event(cls.user, 2018, 4),
+            prepare_event(cls.user, 2017, 6),
         ]
     
     
-    def check_event_augmentation(self, event, with_user):
+    def check_event_augmentation(self, event: models.Event, with_user: bool) -> None:
         self.assertTrue(hasattr(event, 'user_fantasy'))
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
     
     
-    def test__without_login(self):
+    def test__without_login(self) -> None:
         """Returns a 200 success with augmented recent and past events."""
         
         response = self.client.get(self.url)
@@ -214,7 +245,7 @@ class Test__EventsList(TestCase):
                 self.check_event_augmentation(event, with_user = False)
     
     
-    def test__with_login(self):
+    def test__with_login(self) -> None:
         """Returns a 200 success with augmented recent and past events."""
     
         self.client.login(username = 'DevTeam', password = 'password')
@@ -236,7 +267,7 @@ class Test__EventsList(TestCase):
     
     
     @tag('query-count')
-    def test__query_count__without_login(self):
+    def test__query_count__without_login(self) -> None:
         """Expect:
             (1) SELECT recent events
             (1) SELECT historical events
@@ -250,7 +281,7 @@ class Test__EventsList(TestCase):
     
     
     @tag('query-count')
-    def test__query_count__with_login(self):
+    def test__query_count__with_login(self) -> None:
         """Expect:
             (1) SELECT recent events
             (3) SELECT session, user & team
@@ -267,7 +298,7 @@ class Test__EventsList(TestCase):
 
 
 
-class GamePageBase():
+class GamePageBase(AbstractTestCase):
     fixtures = [
         'dev_event',
         'dev_days',
@@ -279,18 +310,37 @@ class GamePageBase():
         'dev_team',
     ]
     
+    url: str
+    url_name: str
+    template: str
+    
+    event: models.Event
+    day: models.Day
+    prev_day: models.Day
+    recent_events: list[models.Event]
+    
+    user: auth.User
+    team: models.Team
+    
+    crew_mens: models.Crew
+    crew_womens: models.Crew
+    
+    client: Client
+    
+    
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         
-        cls.event = models.Event.objects.first()
-        cls.team = models.Team.objects.first()
-        cls.user = auth.User.objects.first()
-        cls.day = cls.event.active_day
+        cls.event = exists(models.Event.objects.first())
+        cls.team = exists(models.Team.objects.first())
+        cls.user = exists(auth.User.objects.first())
+        cls.day = exists(cls.event.active_day)
+        cls.prev_day = exists(cls.day.prev)
         
         cls.url = reverse(cls.url_name, kwargs = {'event_tag': cls.event.tag})
         
-        cls.crew_mens = models.Crew.objects.filter(gender = Genders.MEN).first()
-        cls.crew_womens = models.Crew.objects.filter(gender = Genders.WOMEN).first()
+        cls.crew_mens = exists(models.Crew.objects.filter(gender = Genders.MEN).first())
+        cls.crew_womens = exists(models.Crew.objects.filter(gender = Genders.WOMEN).first())
         
         day_shift = (date.today() - cls.day.date).days
         cls.recent_events = [
@@ -302,7 +352,7 @@ class GamePageBase():
         prepare_event(cls.user, 2017, day_shift + 16)
     
     
-    def test__generic__unknown_event(self):
+    def test__generic__unknown_event(self) -> None:
         """Returns a 404 response if the event tag is not recognised."""
         
         response = self.client.get(reverse(
@@ -312,7 +362,7 @@ class GamePageBase():
         self.assertEqual(response.status_code, 404)
     
     
-    def test__generic__without_user(self):
+    def test__generic__without_user(self) -> None:
         """Returns a 200 success, with the event and day in the context but no team."""
         
         response = self.client.get(self.url)
@@ -327,12 +377,12 @@ class GamePageBase():
         
         self.extra_context_without_user(response.context)
     
-    def extra_context_without_user(self, context):
+    def extra_context_without_user(self, context: 'Context') -> None:
         """Extra context tests for without_user base test."""
         pass
     
     
-    def test__generic__with_user(self):
+    def test__generic__with_user(self) -> None:
         """Returns a 200 success, with the event, day, and team in the context."""
         
         self.client.login(username='DevTeam', password='password')
@@ -348,7 +398,7 @@ class GamePageBase():
         
         self.extra_context_with_user(response.context)
     
-    def extra_context_with_user(self, context):
+    def extra_context_with_user(self, context: 'Context') -> None:
         """Extra context tests for with_user base test."""
         pass
 
@@ -360,8 +410,16 @@ class Test__Event(GamePageBase, TestCase):
     url_name = 'fantasy:event'
     template = 'fantasy/event.html'
     
+    team: models.Team
+    team2: models.Team
+    seat_bow: models.Seat
+    seat_two: models.Seat
+    seat_thr: models.Seat
+    seat_cox: models.Seat
+    
+    
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         super().setUpTestData()
         
         cls.team.entries.create(event = cls.event)
@@ -374,7 +432,7 @@ class Test__Event(GamePageBase, TestCase):
         cls.seat_cox = models.Seat.objects.get(name = 'Cox')
     
     
-    def get_crew(self, gender, position):
+    def get_crew(self, gender: Genders, position: int) -> models.Crew:
         """Helper function for retrieving crew by gender and position."""
         return models.Crew.objects.get(
             gender = gender,
@@ -383,7 +441,7 @@ class Test__Event(GamePageBase, TestCase):
         )
     
     
-    def test__leaderboard(self):
+    def test__leaderboard(self) -> None:
         """Lists the best fantasies, by total score."""
         
         # Create teams
@@ -404,7 +462,7 @@ class Test__Event(GamePageBase, TestCase):
         self.assertEqual(list(response.context['fantasies']), fantasies[::-1][:5])
     
     
-    def test__popularity__men(self):
+    def test__popularity__men(self) -> None:
         """Orders crews according to number of purchases and position on the river."""
         
         # Get crews
@@ -426,7 +484,7 @@ class Test__Event(GamePageBase, TestCase):
         
         # Create distraction purchases
         self.team2.purchases.create(day = self.day, crew = self.crew_womens, seat = self.seat_bow)
-        self.team2.purchases.create(day = self.day.prev, crew = crew_bl5, seat = self.seat_bow)
+        self.team2.purchases.create(day = self.prev_day, crew = crew_bl5, seat = self.seat_bow)
         
         # Create expectation
         expected = [
@@ -447,7 +505,7 @@ class Test__Event(GamePageBase, TestCase):
                 self.assertEqual(crew.popularity, expected[index][2])
     
     
-    def test__popularity__women(self):
+    def test__popularity__women(self) -> None:
         """Orders crews according to number of purchases and position on the river."""
         
         # Get crews
@@ -469,7 +527,7 @@ class Test__Event(GamePageBase, TestCase):
         
         # Create distraction purchases
         self.team2.purchases.create(day = self.day, crew = self.crew_mens, seat = self.seat_bow)
-        self.team2.purchases.create(day = self.day.prev, crew = crew_bl5, seat = self.seat_bow)
+        self.team2.purchases.create(day = self.prev_day, crew = crew_bl5, seat = self.seat_bow)
         
         # Create expectation
         expected = [
@@ -497,12 +555,12 @@ class Test__EventRules(GamePageBase, TestCase):
     url_name = 'fantasy:rules'
     template = 'fantasy/rules.html'
     
-    def extra_context_without_user(self, context):
+    def extra_context_without_user(self, context: 'Context') -> None:
         """Extra context tests for without_user base test."""
         self.assertEqual(context['money'], money)
     
     
-    def extra_context_with_user(self, context):
+    def extra_context_with_user(self, context: 'Context') -> None:
         """Extra context tests for with_user base test."""
         self.assertEqual(context['money'], money)
 
@@ -511,15 +569,17 @@ class Test__EventRules(GamePageBase, TestCase):
 class MarketPageBase(GamePageBase):
     
     # Test group settings
+    gender: Genders
     template = 'fantasy/market.html'
     
+    
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         super().setUpTestData()
         cls.team.entries.create(event = cls.event)
     
     
-    def assertStartOrdersEqual(self, received, expected):
+    def assertStartOrdersEqual(self, received: 'StartOrder', expected: 'StartOrder') -> None:
         """A helper method to compare if two start orders are equal."""
         
         self.assertEqual(len(received), len(expected))
@@ -529,7 +589,7 @@ class MarketPageBase(GamePageBase):
                 self.assertQuerySetEqual(received[index], expected[index])
     
     
-    def extra_context_without_user(self, context):
+    def extra_context_without_user(self, context: 'Context') -> None:
         """Extra context tests for without_user base test."""
         
         self.assertEqual(context['gender'], self.gender)
@@ -545,7 +605,7 @@ class MarketPageBase(GamePageBase):
         self.assertFalse(context['show_actions'])
     
     
-    def extra_context_with_user(self, context):
+    def extra_context_with_user(self, context: 'Context') -> None:
         """Extra context tests for with_user base test.
         
         Cannot test show_actions here, since it depends on market status.
@@ -564,7 +624,7 @@ class MarketPageBase(GamePageBase):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__market_open(self, market_closes_mock, markets_mock):
+    def test__market_open(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """'show_actions' reflects market status for logged in users.
         Does not test response or default context.
         """
@@ -576,7 +636,7 @@ class MarketPageBase(GamePageBase):
     
     
     @patching.market_is_open(False)
-    def test__market_closed(self, markets_mock):
+    def test__market_closed(self, markets_mock: Mock) -> None:
         """'show_actions' reflects market status for logged in users.
         Does not test response or default context.
         """
@@ -594,7 +654,8 @@ class Test__Market_Men(MarketPageBase, TestCase):
     url_name = 'fantasy:men'
     gender = Genders.MEN
     
-    def test__partial_crew(self):
+    
+    def test__partial_crew(self) -> None:
         """
         Returns the user's team, complete or otherwise.
         Does not test response or default context.
@@ -603,7 +664,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
         self.team.purchases.create(
             day = self.day,
             crew = self.crew_mens,
-            seat = models.Seat.objects.first(),
+            seat = exists(models.Seat.objects.first()),
         )
         
         crew = self.team.get_crew(self.day, Genders.MEN)
@@ -617,7 +678,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
     
     
-    def test__crew_valid(self):
+    def test__crew_valid(self) -> None:
         """
         Sets a flag if the user's team is valid.
         Does not test response or default context.
@@ -641,7 +702,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
     
     
-    def test__other_crew_valid(self):
+    def test__other_crew_valid(self) -> None:
         """
         Sets a flag if the user's other-gendered team is valid.
         Does not test response or default context.
@@ -665,7 +726,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
         self.assertTrue(response.context['other_crew_valid'])
     
     
-    def test__popularity(self):
+    def test__popularity(self) -> None:
         """`purchase_count` and `popularity` are added to start order query sets.
         Popularity is the average number of seats purchased per team, and both are per-day.
         
@@ -687,7 +748,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
         team2.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_two)
         team3.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_cox)
         
-        self.team.purchases.create(day = self.day.prev, crew = self.crew_mens, seat = seat_bow)
+        self.team.purchases.create(day = self.prev_day, crew = self.crew_mens, seat = seat_bow)
         # ^ Distraction, wrong day
         
         
@@ -706,7 +767,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count(self, market_closes_mock, markets_mock):
+    def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Expect:
             (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
             (2) Django Auth overheard - Session (1), User (1)
@@ -748,7 +809,8 @@ class Test__Market_Women(MarketPageBase, TestCase):
     url_name = 'fantasy:women'
     gender = Genders.WOMEN
     
-    def test__partial_crew(self):
+    
+    def test__partial_crew(self) -> None:
         """
         Returns the user's team, complete or otherwise.
         Does not test response or default context.
@@ -757,7 +819,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
         self.team.purchases.create(
             day = self.day,
             crew = self.crew_womens,
-            seat = models.Seat.objects.first(),
+            seat = exists(models.Seat.objects.first()),
         )
         
         crew = self.team.get_crew(self.day, Genders.WOMEN)
@@ -771,7 +833,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
     
     
-    def test__crew_valid(self):
+    def test__crew_valid(self) -> None:
         """
         Sets a flag if the user's team is valid.
         Does not test response or default context.
@@ -795,7 +857,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
     
     
-    def test__other_crew_valid(self):
+    def test__other_crew_valid(self) -> None:
         """
         Sets a flag if the user's other-gendered team is valid.
         Does not test response or default context.
@@ -819,7 +881,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
         self.assertTrue(response.context['other_crew_valid'])
     
     
-    def test__popularity(self):
+    def test__popularity(self) -> None:
         """`purchase_count` and `popularity` are added to start order query sets.
         Popularity is the average number of seats purchased per team, and both are per-day.
         
@@ -841,7 +903,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
         team2.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_two)
         team3.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_cox)
         
-        self.team.purchases.create(day = self.day.prev, crew = self.crew_womens, seat = seat_bow)
+        self.team.purchases.create(day = self.prev_day, crew = self.crew_womens, seat = seat_bow)
         # ^ Distraction, wrong day
         
         
@@ -860,7 +922,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count(self, market_closes_mock, markets_mock):
+    def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Expect:
             (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
             (2) Django Auth overheard - Session (1), User (1)
@@ -901,8 +963,19 @@ class LeaderboardPageBase(GamePageBase):
     # Test group settings
     template = 'fantasy/leaderboard.html'
     
+    team_1: models.Team
+    team_2: models.Team
+    team_3: models.Team
+    game_entry_1: models.GameEntry
+    game_entry_2: models.GameEntry
+    game_entry_3: models.GameEntry
+    
+    ranking: Genders | str
+    get_ranked_fantasies: Callable[[], list[models.GameEntry]]
+    
+    
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         super().setUpTestData()
         
         cls.team_1 = auth.User.objects.create_user('One', '', '').team
@@ -931,7 +1004,7 @@ class LeaderboardPageBase(GamePageBase):
             womens_balance = 112,
         )
     
-    def extra_context_without_user(self, context):
+    def extra_context_without_user(self, context: 'Context') -> None:
         """Extra context tests for without_user base test."""
         
         self.assertEqual(context['genders'], Genders)
@@ -940,7 +1013,7 @@ class LeaderboardPageBase(GamePageBase):
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
     
     
-    def extra_context_with_user(self, context):
+    def extra_context_with_user(self, context: 'Context') -> None:
         """Extra context tests for with_user base test."""
         
         self.assertEqual(context['genders'], Genders)
@@ -950,7 +1023,7 @@ class LeaderboardPageBase(GamePageBase):
     
     
     @tag('query-count')
-    def test__query_count__without_login(self):
+    def test__query_count__without_login(self) -> None:
         """ Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
             (1) SELECT recent events
@@ -962,7 +1035,7 @@ class LeaderboardPageBase(GamePageBase):
     
     
     @tag('query-count')
-    def test__query_count__with_login(self):
+    def test__query_count__with_login(self) -> None:
         """ Expect:
             (4) Base queries
             (2) Django Auth overheard
@@ -983,7 +1056,7 @@ class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
     url_name = 'fantasy:leaderboard'
     ranking = GENDERS_OVERALL
     
-    def get_ranked_fantasies(self):
+    def get_ranked_fantasies(self) -> list[models.GameEntry]:
         return [self.game_entry_1, self.game_entry_3, self.game_entry_2]
 
 
@@ -994,7 +1067,7 @@ class Test__Leaderboard_Men(LeaderboardPageBase, TestCase):
     url_name = 'fantasy:leaderboard_men'
     ranking = Genders.MEN
     
-    def get_ranked_fantasies(self):
+    def get_ranked_fantasies(self) -> list[models.GameEntry]:
         return [self.game_entry_2, self.game_entry_1, self.game_entry_3]
 
 
@@ -1005,7 +1078,7 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
     url_name = 'fantasy:leaderboard_women'
     ranking = Genders.WOMEN
     
-    def get_ranked_fantasies(self):
+    def get_ranked_fantasies(self) -> list[models.GameEntry]:
         return [self.game_entry_1, self.game_entry_3, self.game_entry_2]
 
 
@@ -1021,12 +1094,20 @@ class Test__Team(TestCase):
     url_name = 'fantasy:team'
     template = 'fantasy/team.html'
     
+    url: str
+    event: models.Event
+    day: models.Day
+    
+    user_team: models.Team
+    view_team: models.Team
+    budgets: models.GameEntry
+    
     
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(cls) -> None:
         
-        cls.event = models.Event.objects.first()
-        cls.user_team = models.Team.objects.select_related().first()
+        cls.event = exists(models.Event.objects.first())
+        cls.user_team = exists(models.Team.objects.select_related().first())
         cls.day = cls.event.active_day
         
         cls.view_team = auth.User.objects.create_user('Target', '', '').team
@@ -1038,11 +1119,11 @@ class Test__Team(TestCase):
         )
     
     
-    def setUp(self):
+    def setUp(self) -> None:
         self.budgets = self.view_team.entries.get(event = self.event)
     
     
-    def test__unknown_event(self):
+    def test__unknown_event(self) -> None:
         """Returns a 404 response if the event tag is not recognised."""
         
         response = self.client.get(reverse(
@@ -1052,7 +1133,7 @@ class Test__Team(TestCase):
         self.assertEqual(response.status_code, 404)
     
     
-    def test__unknown_team(self):
+    def test__unknown_team(self) -> None:
         """Returns a 404 response if the team not recognised."""
         
         response = self.client.get(reverse(
@@ -1062,7 +1143,7 @@ class Test__Team(TestCase):
         self.assertEqual(response.status_code, 404)
     
     
-    def test__not_entered(self):
+    def test__not_entered(self) -> None:
         """Returns a 404 response if the team has no entry for the event."""
         
         self.budgets.delete()
@@ -1075,7 +1156,7 @@ class Test__Team(TestCase):
     
     
     @patching.team_get_crew
-    def test__without_login(self, get_crew_mock):
+    def test__without_login(self, get_crew_mock: Mock) -> None:
         """Generates a context containing the selected team, their financials, and their crews."""
         
         response = self.client.get(self.url)
@@ -1096,7 +1177,7 @@ class Test__Team(TestCase):
     
     
     @patching.team_get_crew
-    def test__with_login(self, get_crew_mock):
+    def test__with_login(self, get_crew_mock: Mock) -> None:
         """Does not replace the requested team with the viewer's own team."""
         
         self.client.login(username='DevTeam', password='password')
@@ -1118,7 +1199,7 @@ class Test__Team(TestCase):
     
     
     @tag('query-count')
-    def test__query_count(self):
+    def test__query_count(self) -> None:
         """ Expect:
             (3) SELECT event and active day
             (1) SELECT team to view
@@ -1142,36 +1223,44 @@ class Test__Buy(TestCase, MessagesTestMixin):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
     url = reverse('fantasy:buy')
     
+    womens_url: str
+    
+    day: models.Day
+    crew: models.Crew
+    team: models.Team
+    budgets: models.GameEntry
+    
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.select_related().first()
-        cls.crew = models.Crew.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.day = exists(models.Day.objects.select_related().first())
+        cls.crew = exists(models.Crew.objects.first())
         
         cls.budgets = cls.team.entries.create(event = cls.day.event)
         
         cls.womens_url = reverse('fantasy:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
-    def setUp(self):
+    def setUp(self) -> None:
         self.budgets = self.team.entries.get(event = self.day.event)
     
     
-    def test__deny_get(self):
+    def test__deny_get(self) -> None:
         """Rejects non-POST requests."""
         
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 405)
     
     
-    def test__no_login(self):
+    def test__no_login(self) -> None:
         """Redirects non-logged in users."""
         
         response = self.client.post(self.url)
         self.assertRedirects(response, reverse('login'))
     
     
-    def test__missing_day(self):
+    def test__missing_day(self) -> None:
         """Denies request - Redirects to fantasy root and raises error to user."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1184,7 +1273,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         ])
 
     
-    def test__unknown_day(self):
+    def test__unknown_day(self) -> None:
         """Denies request - Redirects to fantasy root and raises error to user."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1197,7 +1286,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         ])
     
     
-    def test__missing_crew(self):
+    def test__missing_crew(self) -> None:
         """Denies request - Redirects to fantasy root and raises error to user."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1210,7 +1299,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         ])
 
     
-    def test__unknown_crew(self):
+    def test__unknown_crew(self) -> None:
         """Denies request - Redirects to fantasy root and raises error to user."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1224,7 +1313,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(False)
-    def test__markets_not_open(self, markets_mock):
+    def test__markets_not_open(self, markets_mock: Mock) -> None:
         """Denies request if market not open for intended day.
         
         Redirects to relevant market page and raises warning to user.
@@ -1239,7 +1328,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__not_racing(self, market_closes_mock, markets_mock):
+    def test__not_racing(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Does not complete the sale.
         
         Redirects to relevant market page and raises warning to user.
@@ -1258,7 +1347,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__insufficient_funds(self, market_closes_mock, markets_mock):
+    def test__insufficient_funds(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Does not complete the sale.
         
         Redirects to relevant market page and raises warning to user.
@@ -1278,7 +1367,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__valid_womens(self, market_closes_mock, markets_mock):
+    def test__valid_womens(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the purchase.
         
         Redirects to relevant market page and raises success to user.
@@ -1293,13 +1382,13 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__valid_mens(self, market_closes_mock, markets_mock):
+    def test__valid_mens(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the purchase.
         
         Redirects to relevant market page and raises success to user.
         """
         
-        mens_crew = models.Crew.objects.filter(gender = Genders.MEN).first()
+        mens_crew = exists(models.Crew.objects.filter(gender = Genders.MEN).first())
         
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.post(self.url, {'day': self.day.id, 'crew': mens_crew.id})
@@ -1312,7 +1401,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__valid_cox(self, market_closes_mock, markets_mock):
+    def test__valid_cox(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the purchase.
         
         Redirects to relevant market page and raises success to user.
@@ -1330,7 +1419,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__with_athlete(self, market_closes_mock, markets_mock):
+    def test__with_athlete(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the purchase.
         
         Redirects to relevant market page and raises success to user.
@@ -1338,7 +1427,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
         
         self.crew.crew_lists.create(
             event = self.day.event,
-            seat = models.Seat.objects.first(),
+            seat = exists(models.Seat.objects.first()),
             name = 'Test Athlete',
         )
         
@@ -1353,7 +1442,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__all_seats_filled(self, market_closes_mock, markets_mock):
+    def test__all_seats_filled(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Does not complete the sale.
         
         Redirects to relevant market page and raises warning to user.
@@ -1371,7 +1460,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__budgets_missing(self, market_closes_mock, markets_mock):
+    def test__budgets_missing(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the purchase as normal, creating the missing budgets."""
         
         self.budgets.delete()
@@ -1386,7 +1475,7 @@ class Test__Buy(TestCase, MessagesTestMixin):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count__standard(self, market_closes_mock, markets_mock):
+    def test__query_count__standard(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """ Expect:
             (2) Django internals
             (1) SELECT day, event
@@ -1407,7 +1496,11 @@ class Test__Buy(TestCase, MessagesTestMixin):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count__without_budgets(self, market_closes_mock, markets_mock):
+    def test__query_count__without_budgets(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
         """ Expect:
             (14) Queried as standard
             (3) Extra action queries
@@ -1424,7 +1517,11 @@ class Test__Buy(TestCase, MessagesTestMixin):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count__with_athlete(self, market_closes_mock, markets_mock):
+    def test__query_count__with_athlete(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
         """ Expect:
             (14) Queried as standard
         """
@@ -1445,12 +1542,23 @@ class Test__Sell(TestCase, MessagesTestMixin):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'seats', 'dev_team']
     url = reverse('fantasy:sell')
     
+    womens_url: str
+    
+    day: models.Day
+    crew: models.Crew
+    seat: models.Seat
+    
+    team: models.Team
+    budgets: models.GameEntry
+    purchase: models.Purchase
+    
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.select_related().first()
-        cls.crew = models.Crew.objects.first()
-        cls.seat = models.Seat.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.day = exists(models.Day.objects.select_related().first())
+        cls.crew = exists(models.Crew.objects.first())
+        cls.seat = exists(models.Seat.objects.first())
         
         cls.budgets = cls.team.entries.create(
             event = cls.day.event,
@@ -1467,21 +1575,21 @@ class Test__Sell(TestCase, MessagesTestMixin):
         cls.womens_url = reverse('fantasy:women', kwargs = {'event_tag': cls.day.event.tag})
     
     
-    def test__deny_get(self):
+    def test__deny_get(self) -> None:
         """Rejects non-POST requests."""
         
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 405)
     
     
-    def test__no_login(self):
+    def test__no_login(self) -> None:
         """Redirects non-logged in users."""
         
         response = self.client.post(self.url)
         self.assertRedirects(response, reverse('login'))
     
     
-    def test__no_data(self):
+    def test__no_data(self) -> None:
         """Denies request if no purchase number is supplied.
         
         Redirects to fantasy root and raises error to user.
@@ -1495,7 +1603,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
         self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
     
-    def test__unknown_purchase(self):
+    def test__unknown_purchase(self) -> None:
         """Denies request if the purchase does not exist.
         
         Redirects to fantasy root and raises error to user.
@@ -1509,7 +1617,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
         self.assertMessages(response, [('error', 'You are not authorised to conduct this sale.')])
     
     
-    def test__other_team(self):
+    def test__other_team(self) -> None:
         """Denies request if the purchase does not belong to the user.
         
         Redirects to fantasy root and raises error to user.
@@ -1525,7 +1633,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(False)
-    def test__markets_not_open(self, markets_mock):
+    def test__markets_not_open(self, markets_mock: Mock) -> None:
         """Denies request if market not open for purchase's day.
         
         Redirects to relevant market page and raises warning to user.
@@ -1541,7 +1649,12 @@ class Test__Sell(TestCase, MessagesTestMixin):
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     @patch.object(transactions, 'sell')
-    def test__race_condition(self, transaction_mock, market_closes_mock, markets_mock):
+    def test__race_condition(
+        self,
+        transaction_mock: Mock,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
         """Does not complete the sale.
         
         Occurs when another thread deletes the purchase after it has been retrieved.
@@ -1559,7 +1672,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__missing_budgets(self, market_closes_mock, markets_mock):
+    def test__missing_budgets(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Does not complete the sale.
         
         Redirects to relevant market page and raises error to user.
@@ -1578,7 +1691,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__valid_womens(self, market_closes_mock, markets_mock):
+    def test__valid_womens(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the sale.
         
         Redirects to relevant market page and raises success to user.
@@ -1593,13 +1706,13 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__valid_mens(self, market_closes_mock, markets_mock):
+    def test__valid_mens(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the sale.
         
         Redirects to relevant market page and raises success to user.
         """
         
-        mens_crew = models.Crew.objects.filter(gender = Genders.MEN).first()
+        mens_crew = exists(models.Crew.objects.filter(gender = Genders.MEN).first())
         purchase_men = self.team.purchases.create(
             day = self.day,
             seat = self.seat,
@@ -1617,7 +1730,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__valid_cox(self, market_closes_mock, markets_mock):
+    def test__valid_cox(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the sale.
         
         Redirects to relevant market page and raises success to user.
@@ -1640,7 +1753,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__with_athlete(self, market_closes_mock, markets_mock):
+    def test__with_athlete(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Completes the sale.
         
         Redirects to relevant market page and raises success to user.
@@ -1666,7 +1779,7 @@ class Test__Sell(TestCase, MessagesTestMixin):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count(self, market_closes_mock, markets_mock):
+    def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """ Expect:
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
@@ -1687,12 +1800,33 @@ class Test__Switch(TestCase, MessagesTestMixin):
     url_name = 'fantasy:switch'
     template = 'fantasy/switch.html'
     
+    url: str
+    market_page: str
+    
+    event: models.Event
+    day: models.Day
+    crew: models.Crew
+    
+    seat_bow: models.Seat
+    seat_two: models.Seat
+    seat_thr: models.Seat
+    seat_cox: models.Seat
+    
+    ath_bow: models.Athlete
+    ath_two: models.Athlete
+    ath_thr: models.Athlete
+    ath_cox: models.Athlete
+    
+    team: models.Team
+    purchase: models.Purchase
+    
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.team = models.Team.objects.first()
-        cls.day = models.Day.objects.select_related().first()
-        cls.event = cls.day.event
-        cls.crew = models.Crew.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.day = exists(models.Day.objects.select_related().first())
+        cls.event = exists(cls.day.event)
+        cls.crew = exists(models.Crew.objects.first())
         
         cls.seat_bow = models.Seat.objects.get(name = 'Bow')
         cls.seat_two = models.Seat.objects.get(name = '2')
@@ -1734,12 +1868,15 @@ class Test__Switch(TestCase, MessagesTestMixin):
         )
     
     
-    def setUp(self):
-        self.general_methods = [('GET', self.client.get), ('POST', self.client.post)]
+    def setUp(self) -> None:
+        self.general_methods: list[tuple[str, Callable[[str], 'TestHttpResponse']]] = [
+            ('GET', self.client.get),
+            ('POST', self.client.post),
+        ]
         self.purchase.refresh_from_db()
     
     
-    def test__general__no_login(self):
+    def test__general__no_login(self) -> None:
         """Redirects non-logged in users."""
         
         # Call both GET and POST
@@ -1750,7 +1887,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
                 self.assertRedirects(response, reverse('login'))
     
     
-    def test__general__unknown_purchases(self):
+    def test__general__unknown_purchases(self) -> None:
         """Raises a 404 if the purchase is not recognised."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1764,7 +1901,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
                 self.assertEqual(response.status_code, 404)
     
     
-    def test__general__purchases_for_other_team(self):
+    def test__general__purchases_for_other_team(self) -> None:
         """Raises a 404 if the purchase does not belong to the user's team."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1782,7 +1919,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     
     @patching.market_is_open(False)
-    def test__general__market_closed(self, markets_mock):
+    def test__general__market_closed(self, markets_mock: Mock) -> None:
         """Switching a cox purchase is not allowed, and redirects to the market page."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1804,7 +1941,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__general__switching_coxes(self, market_closes_mock, markets_mock):
+    def test__general__switching_coxes(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Switching a cox purchase is not allowed, and redirects to the market page."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1824,7 +1961,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__get(self, market_closes_mock, markets_mock):
+    def test__get(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Provides the frontend with:
             * The main purchase
             * A list of rowers in the target crew (excluding the cox)
@@ -1870,7 +2007,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__post__no_data(self, market_closes_mock, markets_mock):
+    def test__post__no_data(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Does not change the athlete or seat on the purchase."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1885,12 +2022,12 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__athlete__not_in_crew(self, market_closes_mock, markets_mock):
+    def test__athlete__not_in_crew(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Cannot switch to an athlete not in the crew."""
         
         self.client.login(username = 'DevTeam', password = 'password')
         
-        second_crew = models.Crew.objects.last()
+        second_crew = exists(models.Crew.objects.last())
         self.assertNotEqual(second_crew, self.crew)
         ath_other = second_crew.crew_lists.create(
             event = self.event,
@@ -1910,7 +2047,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__athlete__cox(self, market_closes_mock, markets_mock):
+    def test__athlete__cox(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Cannot switch to the cox."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1927,7 +2064,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__athlete__set(self, market_closes_mock, markets_mock):
+    def test__athlete__set(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Adds an athlete to the purchase."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1949,7 +2086,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__athlete__unset(self, market_closes_mock, markets_mock):
+    def test__athlete__unset(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Removes the athlete from the purchase."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1967,7 +2104,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__athlete__switch(self, market_closes_mock, markets_mock):
+    def test__athlete__switch(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Switches the athlete on the purchase."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -1986,7 +2123,11 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__athlete__already_purchased(self, market_closes_mock, markets_mock):
+    def test__athlete__already_purchased(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
         """Cannot switch to a named athlete already purchased."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2010,7 +2151,11 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__athlete__allow_double_unnamed(self, market_closes_mock, markets_mock):
+    def test__athlete__allow_double_unnamed(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
         """Can have multiple unnamed athletes."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2030,7 +2175,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__seat__unknown(self, market_closes_mock, markets_mock):
+    def test__seat__unknown(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Cannot switch an unknown seat."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2046,7 +2191,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__seat__cox(self, market_closes_mock, markets_mock):
+    def test__seat__cox(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Cannot switch to the coxing seat."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2062,7 +2207,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__seat__unchanged(self, market_closes_mock, markets_mock):
+    def test__seat__unchanged(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Performs no action if switching to current seat."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2076,7 +2221,11 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__seat__unoccupied(self, market_closes_mock, markets_mock):
+    def test__seat__unoccupied(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
         """Moves athlete into empty seat."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2094,7 +2243,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__seat__occupied(self, market_closes_mock, markets_mock):
+    def test__seat__occupied(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Switches places with athlete in target seat."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2128,7 +2277,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count__get(self, market_closes_mock, markets_mock):
+    def test__query_count__get(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """ Expect:
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
@@ -2149,7 +2298,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
     @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count__post(self, market_closes_mock, markets_mock):
+    def test__query_count__post(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """ Expect:
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
@@ -2184,12 +2333,14 @@ class Test__Market_Hold(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_team']
     url = reverse('fantasy:market-hold')
     
+    event: models.Event
+    
     @classmethod
-    def setUpTestData(cls):
-        cls.event = models.Event.objects.first()
+    def setUpTestData(cls) -> None:
+        cls.event = exists(models.Event.objects.first())
     
     
-    def test__deny_get(self):
+    def test__deny_get(self) -> None:
         """Rejects non-POST requests."""
         
         response = self.client.get(self.url)
@@ -2199,7 +2350,7 @@ class Test__Market_Hold(TestCase):
         self.assertFalse(self.event.market_held_closed)
     
     
-    def test__no_login(self):
+    def test__no_login(self) -> None:
         """Redirects non-logged in users."""
         
         response = self.client.post(self.url)
@@ -2209,7 +2360,7 @@ class Test__Market_Hold(TestCase):
         self.assertFalse(self.event.market_held_closed)
     
     
-    def test__not_superuser(self):
+    def test__not_superuser(self) -> None:
         """Redirects non-superusers."""
         
         self.client.login(username = 'DevTeam', password = 'password')
@@ -2221,7 +2372,7 @@ class Test__Market_Hold(TestCase):
         self.assertFalse(self.event.market_held_closed)
     
     
-    def test__no_event(self):
+    def test__no_event(self) -> None:
         """Raises a 404 if the event is not known."""
         
         user = auth.User.objects.get(username = 'DevTeam')
@@ -2237,7 +2388,7 @@ class Test__Market_Hold(TestCase):
         self.assertFalse(self.event.market_held_closed)
     
     
-    def test__no_toggle_status(self):
+    def test__no_toggle_status(self) -> None:
         """Markets stay open if no previous toggle status is specified."""
         
         user = auth.User.objects.get(username = 'DevTeam')
@@ -2253,7 +2404,7 @@ class Test__Market_Hold(TestCase):
         self.assertFalse(self.event.market_held_closed)
     
     
-    def test__close_market(self):
+    def test__close_market(self) -> None:
         """Toggles the `market_held_closed` flag."""
         
         user = auth.User.objects.get(username = 'DevTeam')
@@ -2269,7 +2420,7 @@ class Test__Market_Hold(TestCase):
         self.assertTrue(self.event.market_held_closed)
     
     
-    def test__reopen_market(self):
+    def test__reopen_market(self) -> None:
         """Toggles the `market_held_closed` flag."""
         
         user = auth.User.objects.get(username = 'DevTeam')
