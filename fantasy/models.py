@@ -456,4 +456,6 @@ class Purchase(models.Model):
     crew = models.ForeignKey(Crew, models.PROTECT, related_name = 'purchases')
     seat = models.ForeignKey(Seat, models.PROTECT)
     athlete = models.ForeignKey(Athlete, models.SET_NULL, related_name = 'purchases', null = True)
+    
+    price: int
 

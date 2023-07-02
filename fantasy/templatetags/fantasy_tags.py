@@ -1,13 +1,16 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django import template
+from django.db import models as db
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import format_html, mark_safe
+from django.utils.html import format_html
+from django.contrib.auth import models as auth
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from ..constants import Genders, money
-from .. import utils
+from .. import models, utils
+from . import fantasy_tags_types as types
 
 register = template.Library()
 
@@ -20,22 +23,25 @@ register = template.Library()
     </button>{% endif %}
   </div>
 '''))
-def market_status_box(day, allow_dismiss = True):
+def market_status_box(day: models.Day, allow_dismiss: bool = True) -> types.MarketStatus:
     """Creates the properties for an alert box that describes the market status."""
     
     # Preparation
     now = timezone.localtime()
     
-    def datetime_string(datetime):
+    def datetime_string(datetime: datetime) -> str:
         """Generates a partially humanised datetime."""
+        
         day_string = naturalday(datetime, 'l')
+        assert day_string  # Needed for MyPy
+        
         if day_string[0:2] != 'to':
             day_string = 'on ' + day_string
         return '{:%H:%M} {}'.format(datetime, day_string)
     
     
     # While market open
-    if day.market_is_open:
+    if day.market_is_open and day.market_closes:  # Duplication needed for MyPy
         return {
             'style': 'warning' if day.market_closes - now <= timedelta(hours = 6) else 'info',
             'dismissable': allow_dismiss,
@@ -77,19 +83,19 @@ def market_status_box(day, allow_dismiss = True):
 
 
 @register.filter
-def avatar(text, club = None):
+def avatar(text: str | int, club: str | None = None) -> str:
     classes = 'avatar' + (' club-' + club if club else '')
     return format_html('<span class="{1} flex-shrink-0">{0}</span>', text, classes)
 
 
 @register.filter
-def currency(amount):
+def currency(amount: int) -> str:
     return format_html('{}&nbsp;🦀', amount)
 
 
 @register.filter
-def popularity_indicator(popularity):
-    return mark_safe('<span class="popularity">{:.2f}</span>'.format(popularity))
+def popularity_indicator(popularity: float) -> str:
+    return format_html('<span class="popularity">{:.2}</span>', popularity)
 
 
 @register.inclusion_tag(template.Template('''
@@ -99,19 +105,19 @@ def popularity_indicator(popularity):
       data-placement="top"
       title="Analysis for {{ analysis_crew }}"
       data-popularity="{{ popularity|floatformat:2 }}"
-      data-bump-up="{{ bump_up }}"
-      data-row-over="{{ row_over }}"
-      data-bumped-down="{{ bumped_down }}"
+      data-bump-up="{{ bump_up|stringformat:"+d" }}"
+      data-row-over="{{ row_over|stringformat:"+d" }}"
+      data-bumped-down="{{ bumped_down|stringformat:"+d" }}"
   >
     {{ popularity|floatformat:2 }}&nbsp;&nbsp;<span class="oi oi-graph"></span>
   </button>
 '''))
-def analysis_button(position):
+def analysis_button(position: types.PositionWithPopularity) -> types.AnalysisButton:
     
-    def delta_crabs_for_change(position_change):
+    def delta_crabs_for_change(position_change: int) -> int:
         delta_crabs = utils.payout_by_day_gender_positions(
             position.day,
-            position.crew.gender,
+            Genders(position.crew.gender),
             position.rank,
             position.rank - position_change,
         )
@@ -121,16 +127,16 @@ def analysis_button(position):
     row_over = delta_crabs_for_change(0)
     bumped_down = (
         delta_crabs_for_change(-1)
-        if not position.rank == position.day.event.num_crews(position.crew.gender)
+        if not position.rank == position.day.event.num_crews(Genders(position.crew.gender))
         else 0
     )
     
     return {
         'analysis_crew': position.crew,
         'popularity': position.popularity,
-        'bump_up': '{:+d}'.format(bump_up),
-        'row_over': '{:+d}'.format(row_over),
-        'bumped_down': '{:+d}'.format(bumped_down),
+        'bump_up': bump_up,
+        'row_over': row_over,
+        'bumped_down': bumped_down,
     }
 
 
@@ -145,7 +151,11 @@ def analysis_button(position):
     <span>{{ fantasy.total_budget }}</span>
   </a>
 '''))
-def mini_leaderboard_row(rank, fantasy, event):
+def mini_leaderboard_row(
+    rank: int,
+    fantasy: models.FinancialGameEntry,
+    event: models.Event,
+) -> types.MiniLeaderboardRow:
     style_matrix = {1: 'first', 2: 'second', 3: 'third'}
     return {
         'fantasy': fantasy,
@@ -163,7 +173,7 @@ def mini_leaderboard_row(rank, fantasy, event):
     {{ crew.popularity|popularity_indicator }}
   </div>
 '''))
-def popularity_row(rank, crew):
+def popularity_row(rank: int, crew: types.CrewWithPopularity) -> types.PopularityRow:
     return {'rank': rank, 'crew': crew}
 
 
@@ -176,14 +186,14 @@ def popularity_row(rank, crew):
     Buy {{ crew_value|currency }}
   </button>
 '''))
-def buy_button(position, disabled = False):
+def buy_button(position: models.Position, disabled: bool = False) -> types.BuyButton:
     return {
         'day': position.day,
         'crew': position.crew,
         'crew_value': utils.pricing_by_day_gender(
             position.rank,
             position.day,
-            position.crew.gender,
+            Genders(position.crew.gender),
         ),
         'disabled': ' disabled' if disabled else '',
     }
@@ -195,7 +205,7 @@ def buy_button(position, disabled = False):
     Sell {{ crew_value|currency }}
   </button>
 '''))
-def sell_button(purchase):
+def sell_button(purchase: models.Purchase) -> types.SellButton:
     price = purchase.price if hasattr(purchase, 'price') else purchase.crew.value(purchase.day)
     return {'purchase': purchase, 'crew_value': price}
 
@@ -211,7 +221,7 @@ def sell_button(purchase):
     </a>
   {% endif %}
 '''))
-def switch_button(purchase):
+def switch_button(purchase: models.Purchase) -> types.SwitchButton:
     return {'purchase': purchase}
 
 
@@ -225,12 +235,12 @@ def switch_button(purchase):
     {% buy_button position disabled %}{% endif %}
   </div>
 '''))
-def market_row(position, balance, show_actions):
+def market_row(position: models.Position, balance: int, show_actions: bool) -> types.MarketRow:
     
     crew_value = utils.pricing_by_day_gender(
         position.rank,
         position.day,
-        position.crew.gender,
+        Genders(position.crew.gender),
     )
     
     disabled = show_actions and crew_value > balance
@@ -251,7 +261,13 @@ def market_row(position, balance, show_actions):
     {% for position in division %}{% market_row position balance show_actions %}{% endfor %}
   </div>
 '''))
-def market_division_box(division, gender, number, balance, show_actions):
+def market_division_box(
+    division: db.QuerySet[models.StartOrderPosition],
+    gender: Genders,
+    number: int,
+    balance: int,
+    show_actions: bool,
+) -> types.MarketDivision:
     return {
         'division': division,
         'gender': gender,
@@ -270,12 +286,8 @@ def market_division_box(division, gender, number, balance, show_actions):
     </div></div>
   </div>
 '''))
-def crew_list_header(finances):
-    return {
-        'budget': finances['budget'],
-        'crew_value': finances['crew_value'],
-        'balance': finances['balance'],
-    }
+def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
+    return finances
 
 
 @register.inclusion_tag(template.Template('''
@@ -294,7 +306,11 @@ def crew_list_header(finances):
     {% endif %}
   </div>
 '''))
-def crew_list_row(seat, purchase, show_actions):
+def crew_list_row(
+    seat: models.Seat,
+    purchase: models.Purchase,
+    show_actions: bool,
+) -> types.CrewListRow:
     return {
         'seat': seat,
         'purchase': purchase,
@@ -312,17 +328,22 @@ def crew_list_row(seat, purchase, show_actions):
     {% crew_list_row seat rower show_actions %}
   {% endfor %}
 '''))
-def crew_list_box(crew_list, seats, finances = None, show_actions = False):
+def crew_list_box(
+    crew_list: db.QuerySet[models.Purchase],
+    seats: db.QuerySet[models.Seat],
+    finances: types.GenderFinances | None = None,
+    show_actions: bool = False,
+) -> types.CrewListBox:
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
     ] for seat in seats}
     
-    crew_list = [(
+    merged_crew_list = [(
         seat,
         rowers[0] if rowers else None,
     ) for seat, rowers in seat_rowers.items()]
     
-    return {'crew_list': crew_list, 'finances': finances, 'show_actions': show_actions}
+    return {'crew_list': merged_crew_list, 'finances': finances, 'show_actions': show_actions}
 
 
 @register.inclusion_tag(template.Template('''
@@ -344,9 +365,14 @@ def crew_list_box(crew_list, seats, finances = None, show_actions = False):
       </tr></table>
     </div>
 '''))
-def crew_status_box(event, gender, crew_valid, other_crew_valid):
+def crew_status_box(
+    event: models.Event,
+    gender: Genders,
+    crew_valid: bool,
+    other_crew_valid: bool,
+) -> types.CrewStatusBox:
 
-    def styling(gender, valid, done):
+    def styling(gender: Genders, valid: bool, done: bool) -> types.CrewStatusStyling:
         return {
             'colour': 'primary' if done else 'success' if valid else 'danger',
             'crew': "{}'s crew".format(gender.label),
@@ -375,7 +401,7 @@ def crew_status_box(event, gender, crew_valid, other_crew_valid):
     <div class="ml-2"><small><span class="oi oi-chevron-right"></span></small></div>
   </a>
 '''))
-def crew_ready_button(event, gender):
+def crew_ready_button(event: types.AugmentedEvent, gender: Genders) -> types.CrewReadyButton:
     
     try:
         crew_ready = {
@@ -391,22 +417,18 @@ def crew_ready_button(event, gender):
             'text': f'Sign in {action}',
         }
     
-    if not event.active_day.is_racing_day:
-        styles = {'colour': 'primary', 'text': 'View final crew'}
-    elif crew_ready:
-        styles = {'colour': 'success', 'text': 'Ready to race'}
-    elif event.active_day == event.first_day:
-        styles = {'colour': 'danger', 'text': 'Entry incomplete'}
-    else:
-        styles = {'colour': 'danger', 'text': 'Subs required'}
+    link = reverse(f'fantasy:{gender.label}'.lower(), kwargs = {'event_tag': event.tag})
     
-    return {
-        'link': reverse(f'fantasy:{gender.label}'.lower(), kwargs = {'event_tag': event.tag}),
-        **styles,
-    }
+    if not event.active_day.is_racing_day:
+        return {'link': link, 'colour': 'primary', 'text': 'View final crew'}
+    elif crew_ready:
+        return {'link': link, 'colour': 'success', 'text': 'Ready to race'}
+    elif event.active_day == event.first_day:
+        return {'link': link, 'colour': 'danger', 'text': 'Entry incomplete'}
+    return {'link': link, 'colour': 'danger', 'text': 'Subs required'}
 
 
 @register.inclusion_tag('fantasy/event-box.html')
-def event_box(event, user):
+def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser) -> types.EventBox:
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
