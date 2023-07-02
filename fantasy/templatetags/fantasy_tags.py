@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.html import format_html, mark_safe
 from django.contrib.humanize.templatetags.humanize import naturalday
 
-from ..constants import Genders
+from ..constants import Genders, money
 from .. import utils
 
 register = template.Library()
@@ -408,5 +408,5 @@ def crew_ready_button(event, gender):
 
 @register.inclusion_tag('fantasy/event-box.html')
 def event_box(event, user):
-    return {'event': event, 'genders': Genders, 'user': user}
+    return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 

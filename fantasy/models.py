@@ -128,6 +128,9 @@ class Day(models.Model):
     
     advanced = models.BooleanField(default = False)
     
+    mens_crew: models.QuerySet['Purchase']  # Needed for view event augmentation typing
+    womens_crew: models.QuerySet['Purchase']  # Needed for view event augmentation typing
+    
     class Meta:
         ordering = ['event', 'date']
     

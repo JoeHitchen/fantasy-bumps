@@ -1,12 +1,16 @@
+from typing import TypedDict, Iterable, Any, TYPE_CHECKING
+
 from django.views.generic.detail import DetailView
-from django.views.generic.base import TemplateView
+from django.views.generic.base import ContextMixin, TemplateView
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import models as db
+from django.contrib.auth import models as auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
+from django.http import HttpRequest, HttpResponse, HttpResponseBase
 
 from .constants import Genders, GENDERS_OVERALL, money, timings
 from . import models
@@ -15,9 +19,43 @@ from . import transactions
 from . import errors
 
 
-class FantasyBaseMixin():
+ContextKwargs = dict[str, Any]
+ContextDict = dict[str, Any]
+
+
+class EventAugmentation(TypedDict):
+    user_fantasy: models.GameEntry
+    _user_fantasy: list[models.GameEntry]
+        
+    mens_crew_ready: bool
+    womens_crew_ready: bool
+
+
+class CrewPopularity(TypedDict):
+    purchase_count: int
+    popularity: float
+
+
+if TYPE_CHECKING:
+    from django_stubs_ext import WithAnnotations
     
-    def get_context_data(self, **kwargs):
+    EventDetailView = DetailView[models.Event]
+    AugmentedEvent = WithAnnotations[models.Event, EventAugmentation]
+    
+    CrewWithPopularity = WithAnnotations[models.Crew, CrewPopularity]
+    PositionWithPopularity = WithAnnotations[models.Position, CrewPopularity]
+
+else:
+    EventDetailView = DetailView
+    
+    CrewWithPopularity = models.Crew
+    PositionWithPopularity = models.Position
+
+
+
+class FantasyBaseMixin(ContextMixin):
+    
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         context['money'] = money
         context['timings'] = timings
@@ -31,18 +69,14 @@ class FantasyBaseMixin():
     
     
     @staticmethod
-    def augment_events_for_events_boxes(events, user):
+    def augment_events_for_events_boxes(
+        events: Iterable['AugmentedEvent'],
+        user: auth.User | auth.AnonymousUser,
+    ) -> None:
         """Prefetches data and sets additional event attributes for use with an event box."""
         
         # Add default financial and days prefetch
         seats = models.Seat.objects.all()
-        for event in events:
-            event.user_fantasy = {
-                'mens_budget': money.INITIAL_BALANCE,
-                'mens_crew_value': 0,
-                'womens_budget': money.INITIAL_BALANCE,
-                'womens_crew_value': 0,
-            }
         db.prefetch_related_objects(events, db.Prefetch('days', to_attr = '_days'))
         
         # Additional augmentation for logged in users
@@ -58,7 +92,7 @@ class FantasyBaseMixin():
                         .filter(team = user.team)
                         .extend_financials()
                     ),
-                    to_attr = '_user_financials',
+                    to_attr = '_user_fantasy',
                 ),
             )
             
@@ -86,8 +120,8 @@ class FantasyBaseMixin():
             
             # Add user-specific extra event information
             for event in events:
-                if event._user_financials:
-                    event.user_fantasy = event._user_financials[0]
+                if event._user_fantasy:
+                    event.user_fantasy = event._user_fantasy[0]
                 event.mens_crew_ready = utils.has_all_seats(event.active_day.mens_crew, seats)
                 event.womens_crew_ready = utils.has_all_seats(event.active_day.womens_crew, seats)
 
@@ -96,7 +130,7 @@ class FantasyBaseMixin():
 class IndexView(FantasyBaseMixin, TemplateView):
     template_name = 'fantasy/index.html'
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         
         # Load and augment events
@@ -115,7 +149,7 @@ class RulesView(FantasyBaseMixin, TemplateView):
 class EventsList(FantasyBaseMixin, TemplateView):
     template_name = 'fantasy/events.html'
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         
         # Load and augment events
@@ -133,7 +167,7 @@ class EventsList(FantasyBaseMixin, TemplateView):
 
 
 
-class EventBase(FantasyBaseMixin, DetailView):
+class EventBase(FantasyBaseMixin, EventDetailView):
     """A base view for event-specific pages."""
     
     # View settings
@@ -141,7 +175,7 @@ class EventBase(FantasyBaseMixin, DetailView):
     slug_url_kwarg = 'event_tag'
     slug_field = 'tag'
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         
         self.event = self.object  # Provide friendly name for retrived event.
@@ -162,7 +196,7 @@ class EventView(EventBase):
     # View settings
     template_name = 'fantasy/event.html'
     
-    def popular_crew_query(self, gender):
+    def popular_crew_query(self, gender: Genders) -> db.QuerySet[CrewWithPopularity]:
         """Creates a Crew queryset with purchase counts and popularity scores."""
         
         purchase_count = db.Count(
@@ -184,7 +218,7 @@ class EventView(EventBase):
         )[:5]
     
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         
         # Leaderboard data
@@ -210,7 +244,10 @@ class MarketView(EventBase):
     # View settings
     template_name = 'fantasy/market.html'
     
-    def add_purchase_count(self, start_order):
+    def add_purchase_count(
+        self,
+        start_order: db.QuerySet[models.Position],
+    ) -> db.QuerySet[PositionWithPopularity]:
         """Extends a purchase queryset with purchase counts and popularity scores."""
         
         purchase_count = db.Count(
@@ -228,7 +265,7 @@ class MarketView(EventBase):
         )
     
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         
         gender = self.kwargs['gender']
@@ -299,7 +336,7 @@ class LeaderboardView(EventBase):
     # View settings
     template_name = 'fantasy/leaderboard.html'
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         context['genders'] = Genders
         context['GENDERS_OVERALL'] = GENDERS_OVERALL
@@ -323,7 +360,7 @@ class TeamView(EventBase):
     # View settings
     template_name = 'fantasy/team.html'
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         
         finances = get_object_or_404(
@@ -344,7 +381,7 @@ class TeamView(EventBase):
 
 @require_POST
 @login_required(redirect_field_name = None)
-def buy(request):
+def buy(request: HttpRequest) -> HttpResponse:
     """Purchas a new athlete for the user's team, if they have sufficient funds.
     
     Inputs:
@@ -355,12 +392,13 @@ def buy(request):
     
     Requires 14 base queries. Adding a team budget increases this by three.
     """
+    assert isinstance(request.user, auth.User)  # Needed for MyPy
     
     # Process inputs
     try:
         team = request.user.team
         day = models.Day.objects.select_related().get(id = request.POST.get('day'))
-        crew = models.Crew.objects.get(id = request.POST.get('crew'))
+        crew = models.Crew.objects.get(id = request.POST.get('crew', -1))
     
     except ObjectDoesNotExist:
         messages.error(request, 'An error occurred processing the request data.')
@@ -426,7 +464,7 @@ def buy(request):
 
 @require_POST
 @login_required(redirect_field_name = None)
-def sell(request):
+def sell(request: HttpRequest) -> HttpResponse:
     """Sell a previously bought athlete, to release the cash and seat.
     
     Inputs:
@@ -436,6 +474,7 @@ def sell(request):
     
     Requires nine queries.
     """
+    assert isinstance(request.user, auth.User)  # Needed for MyPy
     
     # Process input data
     try:
@@ -483,7 +522,7 @@ def sell(request):
         if purchase.athlete:
             athlete_string = '{} ({})'.format(purchase.athlete, purchase.crew)
         else:
-            athlete_string = purchase.crew
+            athlete_string = str(purchase.crew)
         
         if purchase.seat.cox:
             seat_string = 'coxing seat'
@@ -511,7 +550,13 @@ class Switch(FantasyBaseMixin, TemplateView):
     template_name = 'fantasy/switch.html'
     
     @method_decorator(login_required(redirect_field_name = None))
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(
+        self,
+        request: HttpRequest,
+        *args: list[Any],
+        **kwargs: dict[str, Any],
+    ) -> HttpResponseBase:
+        assert isinstance(request.user, auth.User)  # Needed for MyPy
         
         # Look for purchase
         self.purchase = get_object_or_404(
@@ -536,7 +581,7 @@ class Switch(FantasyBaseMixin, TemplateView):
         return super().dispatch(request, *args, **kwargs)
     
     
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
         
         context['event'] = self.purchase.day.event
@@ -563,7 +608,7 @@ class Switch(FantasyBaseMixin, TemplateView):
         return context
     
     
-    def post(self, request, purchase_id):
+    def post(self, request: HttpRequest, purchase_id: int) -> HttpResponse:
         """Move a purchase between rowing seats and select named athlete.
         
         Inputs:
@@ -575,11 +620,11 @@ class Switch(FantasyBaseMixin, TemplateView):
         
         # Perform action
         try:
-            seat = models.Seat.objects.get(id = request.POST.get('seat'))
+            seat = models.Seat.objects.get(id = request.POST.get('seat', -1))
             if 'athlete' in request.POST:
                 athlete = (
                     models.Athlete.objects
-                    .filter(id = request.POST.get('athlete'))
+                    .filter(id = request.POST.get('athlete', -1))
                     .select_related('seat').first()
                 )
             else:
@@ -605,7 +650,7 @@ class Switch(FantasyBaseMixin, TemplateView):
             if updated_purchase.athlete:
                 crew_string = '{} ({})'.format(updated_purchase.athlete, updated_purchase.crew)
             else:
-                crew_string = updated_purchase.crew
+                crew_string = str(updated_purchase.crew)
             
             seat_string = updated_purchase.seat.name.lower()
             seat_string = seat_string + ('-' if len(seat_string) == 1 else ' ') + 'seat'
@@ -620,9 +665,14 @@ class Switch(FantasyBaseMixin, TemplateView):
         return self.market_redirect
 
 
+
+def is_superuser(user: auth.User | auth.AnonymousUser) -> bool:
+    return isinstance(user, auth.User) and user.is_superuser
+
+
 @require_POST
-@user_passes_test(lambda user: user.is_superuser, redirect_field_name = None)
-def market_hold(request):
+@user_passes_test(is_superuser, redirect_field_name = None)  # type: ignore  # Stubs is wrong
+def market_hold(request: HttpRequest) -> HttpResponse:
     """Toggles the `market_held_closed` flag for an event."""
     
     event = get_object_or_404(models.Event, tag = request.POST.get('event'))

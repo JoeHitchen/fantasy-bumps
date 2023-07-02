@@ -85,7 +85,7 @@ class Test__Index(TestCase):
     
     
     def check_event_augmentation(self, event: models.Event, with_user: bool) -> None:
-        self.assertTrue(hasattr(event, 'user_fantasy'))
+        self.assertEqual(hasattr(event, 'user_fantasy'), with_user)
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
     
@@ -220,7 +220,7 @@ class Test__EventsList(TestCase):
     
     
     def check_event_augmentation(self, event: models.Event, with_user: bool) -> None:
-        self.assertTrue(hasattr(event, 'user_fantasy'))
+        self.assertEqual(hasattr(event, 'user_fantasy'), with_user)
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
         self.assertEqual(hasattr(event, 'mens_crew_ready'), with_user)
     
