@@ -81,7 +81,7 @@
   
   <div class="col-lg order-lg-first">
     {% for division in start_order %}
-      {% market_division_box division gender forloop.counter finances.balance show_actions %}
+      {% market_division_box division gender forloop.counter finances.balance|default:0 show_actions %}
     {% endfor %}
   </div>
 </div>
