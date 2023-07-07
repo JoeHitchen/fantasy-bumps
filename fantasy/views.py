@@ -666,12 +666,12 @@ class Switch(FantasyBaseMixin, TemplateView):
 
 
 
-def is_superuser(user: auth.User | auth.AnonymousUser) -> bool:
+def is_superuser(user: auth.AbstractBaseUser | auth.AnonymousUser) -> bool:
     return isinstance(user, auth.User) and user.is_superuser
 
 
 @require_POST
-@user_passes_test(is_superuser, redirect_field_name = None)  # type: ignore  # Stubs is wrong
+@user_passes_test(is_superuser, redirect_field_name = None)
 def market_hold(request: HttpRequest) -> HttpResponse:
     """Toggles the `market_held_closed` flag for an event."""
     
