@@ -1,12 +1,12 @@
 import logging
 
-from gunicorn import glogging
+from gunicorn import config, glogging
 
 
 class GunicornLogger(glogging.Logger):
     """Custom logger for Gunicorn log messages."""
 
-    def setup(self, cfg):
+    def setup(self, cfg: config.Config) -> None:
         """Configure Gunicorn application logging configuration."""
         super().setup(cfg)
 
