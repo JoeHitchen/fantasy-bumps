@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import Optional, TypedDict
+from typing import TypedDict
 from argparse import ArgumentParser
 import logging
 
@@ -25,8 +25,8 @@ series_reverser = {series.label.lower(): series for series in EventSeries}
 
 class StartArgs(TypedDict):
     series: str
-    date: Optional[date]
-    year: Optional[int]
+    date: date | None
+    year: int | None
     source: NotRequired[str]
     crew_lists: NotRequired[str]
 

@@ -1,6 +1,5 @@
 from datetime import date, time, datetime, timedelta
 from unittest.mock import patch, Mock, call
-from typing import List
 
 from django.test import TestCase
 from django.db import models as db
@@ -16,7 +15,7 @@ from . import actions
 PositionsMap = dict[models.Crew.Tuple, int]
 
 
-def make_division(gender: Genders, size: int, race_time: time, crews: List[Crew]) -> Division:
+def make_division(gender: Genders, size: int, race_time: time, crews: list[Crew]) -> Division:
     return {
         'gender': gender,
         'number': 0,

@@ -1,4 +1,4 @@
-from typing import Optional, Callable, TypeVar, TYPE_CHECKING
+from typing import Callable, TypeVar, TYPE_CHECKING
 
 from django.test import TestCase
 from django.urls import reverse
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 Obj = TypeVar('Obj')
 
 
-def exists(obj: Optional[Obj]) -> Obj:
+def exists(obj: Obj | None) -> Obj:
     assert obj
     return obj
 

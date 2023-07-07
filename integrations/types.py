@@ -1,14 +1,14 @@
-from typing import List, Tuple, Dict, TypedDict, Callable
+from typing import TypedDict, Callable
 from datetime import time
 
-Crew = Tuple[str, str, int]
-CrewList = Dict[int, str]
-CrewListMap = Dict[Crew, CrewList]
+Crew = tuple[str, str, int]
+CrewList = dict[int, str]
+CrewListMap = dict[Crew, CrewList]
 CrewListFcn = Callable[[str, int], CrewListMap]
 
 PositionStatus = bool
-Position = Tuple[int, PositionStatus]
-PositionMap = Dict[Crew, Position]
+Position = tuple[int, PositionStatus]
+PositionMap = dict[Crew, Position]
 PositionFcn = Callable[[str, int, int], PositionMap]
 
 
@@ -17,10 +17,10 @@ class Division(TypedDict):
     number: int
     race_time: time
     size: int
-    crews: List[Tuple[Crew, PositionStatus]]  # Implicitly top bungline first
+    crews: list[tuple[Crew, PositionStatus]]  # Implicitly top bungline first
     finalised: bool
 
 
-StartOrder = List[Division]  # Implicitly first race first
+StartOrder = list[Division]  # Implicitly first race first
 StartOrderFcn = Callable[[str, int, int], StartOrder]
 

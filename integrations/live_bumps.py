@@ -1,5 +1,5 @@
 import html
-from typing import List, Tuple, Dict, TypedDict
+from typing import TypedDict
 import logging
 import traceback
 import os
@@ -31,10 +31,10 @@ class CrewMove(TypedDict):
 
 class CrewPosData(TypedDict):
     start: int
-    moves: List[CrewMove]
+    moves: list[CrewMove]
 
 
-ClubPosData = Dict[str, List[CrewPosData]]
+ClubPosData = dict[str, list[CrewPosData]]
 
 
 class CrewSeatData(TypedDict):
@@ -42,10 +42,10 @@ class CrewSeatData(TypedDict):
     name: str
 
 
-WriteOutcome = Tuple[int, int, int]
+WriteOutcome = tuple[int, int, int]
 
 
-def _moves_to_positions(crew_data: CrewPosData) -> List[Position]:
+def _moves_to_positions(crew_data: CrewPosData) -> list[Position]:
     """Converts a set of moves in the Live Bumps format to standardised positions."""
     
     positions = [(crew_data['start'], True)]
@@ -56,10 +56,10 @@ def _moves_to_positions(crew_data: CrewPosData) -> List[Position]:
     return positions
 
 
-def _positions_to_moves(positions: List[Position]) -> CrewPosData:
+def _positions_to_moves(positions: list[Position]) -> CrewPosData:
     """Converts a set of positions into the format needed for Live Bumps."""
     
-    moves: List[CrewMove] = []
+    moves: list[CrewMove] = []
     start = positions.pop(0)[0]
     for position in positions:
         previous_moves = sum([move['moves'] for move in moves])
@@ -71,14 +71,14 @@ def _positions_to_moves(positions: List[Position]) -> CrewPosData:
     return {'start': start, 'moves': moves}
 
 
-def _parse_crew_list(crew_data: List[CrewSeatData]) -> Dict[int, str]:
+def _parse_crew_list(crew_data: list[CrewSeatData]) -> dict[int, str]:
     return {
         seat_parser(person['pos']): html.unescape(person['name'])
         for person in crew_data
     }
 
 
-def get_all_positions(series: str, year: int) -> Dict[Crew, List[Position]]:
+def get_all_positions(series: str, year: int) -> dict[Crew, list[Position]]:
     
     # Load data
     response = requests.get(f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}.json')
@@ -181,13 +181,13 @@ def get_crew_lists(series: str, year: int) -> CrewListMap:
 def write_positions(
     series: str,
     year: int,
-    positions_by_day: List[PositionMap],
+    positions_by_day: list[PositionMap],
 ) -> WriteOutcome:
     """Updates Live Bumps with the rankings for all crews."""
     logger.info('Updating Live Bumps results for {} {}'.format(series_text_map[series], year))
     
     # Convert input positions
-    positions_by_crew: Dict[Crew, List[Position]] = {}
+    positions_by_crew: dict[Crew, list[Position]] = {}
     for day_positions in positions_by_day:
         for crew, position in day_positions.items():
             if crew not in positions_by_crew:
@@ -253,7 +253,7 @@ def wipe_positions(series: str, year: int) -> WriteOutcome:
 def _create_gendered_divisions_structure(
     start_order: StartOrder,
     gender: str,
-) -> List[LiveBumpsDivision]:
+) -> list[LiveBumpsDivision]:
     """Creates a list of the times and sizes of the divisions for a given gender."""
     
     return [{
@@ -262,14 +262,14 @@ def _create_gendered_divisions_structure(
     } for division in start_order[::-1] if division['gender'] == gender]
 
 
-def _create_start_order_structure(start_order: StartOrder) -> Dict[str, ClubPosData]:
+def _create_start_order_structure(start_order: StartOrder) -> dict[str, ClubPosData]:
     """Creates the structure for the initial crew positions."""
     
     # Convert start orders to positions
     positions_raw = start_order_to_positions(start_order)
     
     # Create required ranking data structure
-    ranking_data: Dict[str, Dict[str, List[Tuple[Crew, Position]]]] = {}
+    ranking_data: dict[str, dict[str, list[tuple[Crew, Position]]]] = {}
     for crew, ranking in positions_raw.items():
         
         club_code = boat_code_map[crew[0]]
@@ -282,7 +282,7 @@ def _create_start_order_structure(start_order: StartOrder) -> Dict[str, ClubPosD
         
         ranking_data[club_code][gender].append((crew, ranking))
     
-    ranking_out: Dict[str, ClubPosData] = {}
+    ranking_out: dict[str, ClubPosData] = {}
     for club_code, club_items in ranking_data.items():
         ranking_out[club_code] = {}
         for gender_code, gender_items in club_items.items():
