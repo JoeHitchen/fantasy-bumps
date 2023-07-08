@@ -1,11 +1,11 @@
-from typing import Dict, Iterable
+from typing import Iterable
 
 from integrations import types
 
 from ... import models
 
 
-CrewTupleMap = Dict[models.Crew.Tuple, models.Crew]
+CrewTupleMap = dict[models.Crew.Tuple, models.Crew]
 
 
 def create_crew_tuple_map(crews_for_map: Iterable[types.Crew]) -> CrewTupleMap:

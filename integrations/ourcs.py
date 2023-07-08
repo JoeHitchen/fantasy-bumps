@@ -1,6 +1,6 @@
 import re
 import html
-from typing import Tuple, cast
+from typing import cast
 import logging
 
 from bs4 import BeautifulSoup, Tag
@@ -13,7 +13,7 @@ from . import magic
 logger = logging.getLogger(__name__)
 
 
-def _parse_crew_box(box: Tag) -> Tuple[Crew, CrewList]:
+def _parse_crew_box(box: Tag) -> tuple[Crew, CrewList]:
     
     crew_header = cast(str, box.find('a').string)  # type: ignore
     club = club_parser(crew_header)

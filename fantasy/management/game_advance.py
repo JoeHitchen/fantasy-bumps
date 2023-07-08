@@ -153,7 +153,7 @@ def evaluate_investments(day: models.Day) -> None:
     
     # Preparation
     payout_matrix = create_payout_matrix(day)
-    all_seats = list(models.Seat.objects.all())
+    all_seats = models.Seat.objects.all()
     
     # Main routine
     entries = (

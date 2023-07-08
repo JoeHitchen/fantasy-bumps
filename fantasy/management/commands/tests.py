@@ -621,11 +621,7 @@ class Test__Renumbered_Crew(TestCase):
             self.source_crew_tpl,
         )
         
-        self.assertFalse(list((
-            self.target_crew.crew_lists
-            .filter(event = self.event)
-            .values_list('seat', 'name')
-        )))
+        self.assertFalse(self.target_crew.crew_lists.filter(event = self.event).count())
     
     
     def test__perform__new_athletes_added(self) -> None:
@@ -640,12 +636,8 @@ class Test__Renumbered_Crew(TestCase):
             self.source_crew_tpl,
         )
         
-        self.assertEqual(
-            list((
-                self.target_crew.crew_lists
-                .filter(event = self.event)
-                .values_list('seat', 'name')
-            )),
+        self.assertQuerySetEqual(
+            self.target_crew.crew_lists.filter(event = self.event).values_list('seat', 'name'),
             [(seat, name) for seat, name in self.crew_list.items() if seat < 10],
         )
 

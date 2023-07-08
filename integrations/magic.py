@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import Optional
 
 from .common import TORPIDS, EIGHTS, LENTS, MAYS, series_text_map
 
@@ -45,7 +44,7 @@ def ourcs_event_id(series: str, year: int) -> int:
         raise ValueError(f'No OURCs event mapped for {series_text_map.get(series)} {year}')
 
 
-def camfm_event_id(series: str, year: int) -> Optional[int]:
+def camfm_event_id(series: str, year: int) -> int | None:
     """Returns the CamFM event ID for historical events."""
     
     event_id = {

@@ -78,7 +78,7 @@ def get_optimal_crew(day: models.Day, gender: Genders, budget: int) -> Selection
             crew.value(day),
             payout['value_change'] + payout['payout'],
             [crew],
-        ) for crew, payout in list(matrix.items()) if crew.gender == gender
+        ) for crew, payout in matrix.items() if crew.gender == gender
     ]
     best_singles = filter_optimal_selections(single_seat)
     

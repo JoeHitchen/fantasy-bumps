@@ -292,7 +292,7 @@ class Test__EvaluateInvestments(TestCase):
     team: models.Team
     budgets: models.GameEntry
     seat: models.Seat
-    all_seats: list[models.Seat]
+    all_seats: db.QuerySet[models.Seat]
     
     
     @classmethod
@@ -320,7 +320,7 @@ class Test__EvaluateInvestments(TestCase):
         cls.budgets = cls.team.entries.create(event = cls.event)
         
         cls.seat = exists(models.Seat.objects.first())
-        cls.all_seats = list(models.Seat.objects.all())
+        cls.all_seats = models.Seat.objects.all()
     
     
     def test__bump_down__men_complete(self) -> None:

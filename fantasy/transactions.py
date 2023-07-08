@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.db import transaction
 from django.db.models import F
 from django.core.exceptions import MultipleObjectsReturned
@@ -13,7 +11,7 @@ def buy(
     day: models.Day,
     seat: models.Seat,
     crew: models.Crew,
-    athlete: Optional[models.Athlete] = None,
+    athlete: models.Athlete | None = None,
 ) -> None:
     """Transaction-wrapped buy action.
     
@@ -39,7 +37,7 @@ def _buy_body(
     day: models.Day,
     seat: models.Seat,
     crew: models.Crew,
-    athlete: Optional[models.Athlete] = None,
+    athlete: models.Athlete | None = None,
 ) -> None:
     """INTERNAL METHOD allowing non-transaction access to buy action for query counting."""
     
@@ -125,7 +123,7 @@ def _sell_body(purchase: models.Purchase) -> None:
 def switch(
     purchase: models.Purchase,
     seat: models.Seat,
-    athlete: Optional[models.Athlete],
+    athlete: models.Athlete | None,
 ) -> models.Purchase:
     """Transaction-wrapped switch action.
     
@@ -150,7 +148,7 @@ def switch(
 def _switch_body(
     purchase: models.Purchase,
     seat: models.Seat,
-    athlete: Optional[models.Athlete],
+    athlete: models.Athlete | None,
 ) -> models.Purchase:
     """INTERNAL METHOD allowing non-transaction access to switch action for query counting."""
     

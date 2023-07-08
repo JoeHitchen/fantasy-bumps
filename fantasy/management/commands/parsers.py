@@ -1,4 +1,4 @@
-from typing import List, Dict, TypedDict
+from typing import TypedDict
 import enum
 import logging
 
@@ -27,7 +27,7 @@ class Sources(enum.Enum):
         return self.value
 
 
-series_location_map: Dict[EventSeries, Locations] = {
+series_location_map: dict[EventSeries, Locations] = {
     EventSeries.DEMO: Locations.DEMO,
     EventSeries.TORPIDS: Locations.OXFORD,
     EventSeries.EIGHTS: Locations.OXFORD,
@@ -36,13 +36,13 @@ series_location_map: Dict[EventSeries, Locations] = {
 }
 
 
-location_event_sources_map: Dict[Locations, List[Sources]] = {
+location_event_sources_map: dict[Locations, list[Sources]] = {
     Locations.DEMO: [Sources.DEMO],
     Locations.OXFORD: [Sources.LIVE, Sources.ANU_HTML, Sources.ANU_DAT],
     Locations.CAMBRIDGE: [Sources.CAMFM],
 }
 
-location_crew_list_sources_map: Dict[Locations, List[Sources]] = {
+location_crew_list_sources_map: dict[Locations, list[Sources]] = {
     Locations.DEMO: [Sources.DEMO],
     Locations.OXFORD: [Sources.LIVE, Sources.OURCS],
     Locations.CAMBRIDGE: [Sources.NOOP],
@@ -85,7 +85,7 @@ def _noop_crew_lists(series: str, year: int) -> integrations.CrewListMap:
     return {}
 
 
-_start_order_source_function_map: Dict[Sources, integrations.StartOrderFcn] = {
+_start_order_source_function_map: dict[Sources, integrations.StartOrderFcn] = {
     Sources.DEMO: _demo_start_order,
     Sources.LIVE: live_bumps.get_start_order,
     Sources.ANU_HTML: anu_html.get_start_order,
@@ -93,7 +93,7 @@ _start_order_source_function_map: Dict[Sources, integrations.StartOrderFcn] = {
     Sources.CAMFM: camfm.get_start_order,
 }
 
-_position_source_function_map: Dict[Sources, integrations.PositionFcn] = {
+_position_source_function_map: dict[Sources, integrations.PositionFcn] = {
     Sources.DEMO: _demo_positions,
     Sources.LIVE: live_bumps.get_positions,
     Sources.ANU_HTML: anu_html.get_positions,
@@ -101,7 +101,7 @@ _position_source_function_map: Dict[Sources, integrations.PositionFcn] = {
     Sources.CAMFM: camfm.get_positions,
 }
 
-_crew_list_source_function_map: Dict[Sources, integrations.CrewListFcn] = {
+_crew_list_source_function_map: dict[Sources, integrations.CrewListFcn] = {
     Sources.DEMO: _demo_crew_lists,
     Sources.LIVE: live_bumps.get_crew_lists,
     Sources.OURCS: ourcs.get_crew_lists,

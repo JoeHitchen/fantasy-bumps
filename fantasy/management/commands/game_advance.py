@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Dict, TypedDict
+from typing import TypedDict
 from argparse import ArgumentParser
 import logging
 
@@ -56,12 +56,12 @@ class Command(BaseCommand):
         oxf_source = kwargs.get('oxf_source', '')
         override_hold = bool(kwargs.get('override', False))
         
-        location_source_map: Dict[Locations, parsers.PositionSource] = {
+        location_source_map: dict[Locations, parsers.PositionSource] = {
             Locations.OXFORD: parsers.get_validated_position_source(Locations.OXFORD, oxf_source),
             Locations.CAMBRIDGE: parsers.get_validated_position_source(Locations.CAMBRIDGE, ''),
             Locations.DEMO: parsers.get_validated_position_source(Locations.DEMO, ''),
         }
-        series_source_map: Dict[Series, parsers.PositionSource] = {
+        series_source_map: dict[Series, parsers.PositionSource] = {
             series: location_source_map[location]
             for series, location in parsers.series_location_map.items()
         }

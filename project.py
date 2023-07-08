@@ -12,9 +12,9 @@ commands = {
     'lint': ['flake8'],
 }
 
-command = args[0]
-command = commands.get(command, ['python manage.py {}'.format(command)])
-command = ' '.join([command[0], *(args[1:] if len(args) > 1 else command[1:])])
-status = os.system(command)
+command_raw = args[0]
+command_parts = commands.get(command_raw, ['python manage.py {}'.format(command_raw)])
+command_str = ' '.join([command_parts[0], *(args[1:] if len(args) > 1 else command_parts[1:])])
+status = os.system(command_str)
 
 raise SystemExit(bool(status))

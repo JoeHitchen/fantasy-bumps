@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import cast
 from datetime import time
 import logging
 import re
@@ -36,7 +36,7 @@ def _cambridge_club_parser(club_str: str) -> str:
     }.get(club_str[0:5].lower(), club_str[0:4].lower())
 
 
-def _get_crews_for_division(division_soup: Tag) -> List[Crew]:
+def _get_crews_for_division(division_soup: Tag) -> list[Crew]:
     
     start_div = division_soup.findChildren('div', {'class': 'division_boats_start'})[0]
     boat_divs = start_div.findChildren('div', {'class': 'boat_container'})
@@ -61,12 +61,12 @@ def _get_crews_for_division(division_soup: Tag) -> List[Crew]:
     return crews
 
 
-def _get_moves_from_results_url(results_url: str) -> List[int]:
+def _get_moves_from_results_url(results_url: str) -> list[int]:
     positions_strs = results_url.split('/')[-1].split('.')[0].split('_')[:-1]
     return [int(new) - old for new, old in zip(positions_strs, range(0, 18))]
 
 
-def _get_positions_for_gender(division_soups: List[Tag], day_number: int) -> PositionMap:
+def _get_positions_for_gender(division_soups: list[Tag], day_number: int) -> PositionMap:
     """Generates the crew-position map for one gender from a parsed set of divisions."""
     
     # Get starting positions map
