@@ -1670,8 +1670,8 @@ class Test__GameEntry(TestCase):
     def test__query__rank_by__total(self) -> None:
         """Ranks teams by the total budget."""
         
-        self.assertEqual(
-            list(self.event.fantasies.extend_financials().rank_by(GENDERS_OVERALL)),
+        self.assertQuerySetEqual(
+            self.event.fantasies.extend_financials().rank_by(GENDERS_OVERALL),
             [self.game_entry_1, self.game_entry_4, self.game_entry_3, self.game_entry_2],
         )
     
@@ -1679,8 +1679,8 @@ class Test__GameEntry(TestCase):
     def test__query__rank_by__mens(self) -> None:
         """Ranks teams by the men's budget."""
         
-        self.assertEqual(
-            list(self.event.fantasies.extend_financials().rank_by(Genders.MEN)),
+        self.assertQuerySetEqual(
+            self.event.fantasies.extend_financials().rank_by(Genders.MEN),
             [self.game_entry_2, self.game_entry_1, self.game_entry_4, self.game_entry_3],
         )
     
@@ -1688,8 +1688,8 @@ class Test__GameEntry(TestCase):
     def test__query__rank_by__womens(self) -> None:
         """Ranks teams by the women's budget."""
         
-        self.assertEqual(
-            list(self.event.fantasies.extend_financials().rank_by(Genders.WOMEN)),
+        self.assertQuerySetEqual(
+            self.event.fantasies.extend_financials().rank_by(Genders.WOMEN),
             [self.game_entry_1, self.game_entry_4, self.game_entry_3, self.game_entry_2],
         )
 
