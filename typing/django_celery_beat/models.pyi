@@ -16,25 +16,25 @@ class PeriodicTask():
 
 
 class _IntervalManager():
-    
+
     def get_or_create(self, period: str, every: int) -> tuple[IntervalSchedule, bool]:
         ...
 
 
 class _ClockedManager():
-    
+
     def get_or_create(self, clocked_time: datetime) -> tuple[ClockedSchedule, bool]:
         ...
 
 
 class _PeriodicManager():
-    
+
     def filter(self, name: str) -> _PeriodicManager:
         ...
-    
+
     def update(self, enabled: bool) -> None:
         ...
-    
+
     def update_or_create(
         self,
         task: str,

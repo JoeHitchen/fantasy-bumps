@@ -9,7 +9,7 @@ pipelines:
         script:
           - pip install -r requirements_linting.txt
           - python project.py lint
-    
+
     - step: &type
         name: Type
         caches:
@@ -17,7 +17,7 @@ pipelines:
         script:
           - pip install -r requirements_typing.txt
           - python project.py type
-    
+
     - step: &test
         name: Test
         caches:
@@ -41,7 +41,7 @@ pipelines:
             - docker save --output fantasy-bumps.docker joehitchen/fantasy-bumps
           artifacts:
             - fantasy-bumps.docker
-      
+  
       - step:
           name: Verify
           services:
@@ -49,7 +49,7 @@ pipelines:
           script:
             - docker load --input fantasy-bumps.docker
             - docker run --rm joehitchen/fantasy-bumps python project.py test
-      
+  
       - step:
           name: Publish
           deployment: Docker

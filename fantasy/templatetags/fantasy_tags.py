@@ -25,21 +25,21 @@ register = template.Library()
 '''))
 def market_status_box(day: models.Day, allow_dismiss: bool = True) -> types.MarketStatus:
     """Creates the properties for an alert box that describes the market status."""
-    
+
     # Preparation
     now = timezone.localtime()
-    
+
     def datetime_string(datetime: datetime) -> str:
         """Generates a partially humanised datetime."""
-        
+
         day_string = naturalday(datetime, 'l')
         assert day_string  # Needed for MyPy
-        
+
         if day_string[0:2] != 'to':
             day_string = 'on ' + day_string
         return '{:%H:%M} {}'.format(datetime, day_string)
-    
-    
+
+
     # While market open
     if day.market_is_open and day.market_closes:  # Duplication needed for MyPy
         return {
@@ -49,8 +49,8 @@ def market_status_box(day: models.Day, allow_dismiss: bool = True) -> types.Mark
                 datetime_string(day.market_closes),
             ),
         }
-    
-    
+
+
     # Held closed
     if day.event.market_held_closed or (day.prev and not day.prev.advanced):
         return {
@@ -58,7 +58,7 @@ def market_status_box(day: models.Day, allow_dismiss: bool = True) -> types.Mark
             'dismissable': False,
             'message': 'The market is being held closed for technical reasons.',
         }
-    
+
     # After racing
     if not day.next:
         return {
@@ -66,7 +66,7 @@ def market_status_box(day: models.Day, allow_dismiss: bool = True) -> types.Mark
             'dismissable': False,
             'message': 'This event has concluded.',
         }
-    
+
     # Market closed
     future_open = day.market_opens if day.market_opens and now < day.market_opens else None
     if (not future_open) and day.next and day.next.market_opens and day.next.market_opens >= now:
@@ -113,7 +113,7 @@ def popularity_indicator(popularity: float) -> str:
   </button>
 '''))
 def analysis_button(position: types.PositionWithPopularity) -> types.AnalysisButton:
-    
+
     def delta_crabs_for_change(position_change: int) -> int:
         delta_crabs = utils.payout_by_day_gender_positions(
             position.day,
@@ -122,7 +122,7 @@ def analysis_button(position: types.PositionWithPopularity) -> types.AnalysisBut
             position.rank - position_change,
         )
         return delta_crabs['value_change'] + delta_crabs['payout']
-    
+
     bump_up = delta_crabs_for_change(+1) if not position.rank == 1 else 0
     row_over = delta_crabs_for_change(0)
     bumped_down = (
@@ -130,7 +130,7 @@ def analysis_button(position: types.PositionWithPopularity) -> types.AnalysisBut
         if not position.rank == position.day.event.num_crews(Genders(position.crew.gender))
         else 0
     )
-    
+
     return {
         'analysis_crew': position.crew,
         'popularity': position.popularity,
@@ -236,15 +236,15 @@ def switch_button(purchase: models.Purchase) -> types.SwitchButton:
   </div>
 '''))
 def market_row(position: models.Position, balance: int, show_actions: bool) -> types.MarketRow:
-    
+
     crew_value = utils.pricing_by_day_gender(
         position.rank,
         position.day,
         Genders(position.crew.gender),
     )
-    
+
     disabled = show_actions and crew_value > balance
-    
+
     return {
         'position': position,
         'disabled': disabled,
@@ -337,12 +337,12 @@ def crew_list_box(
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
     ] for seat in seats}
-    
+
     merged_crew_list = [(
         seat,
         rowers[0] if rowers else None,
     ) for seat, rowers in seat_rowers.items()]
-    
+
     return {'crew_list': merged_crew_list, 'finances': finances, 'show_actions': show_actions}
 
 
@@ -378,10 +378,10 @@ def crew_status_box(
             'crew': "{}'s crew".format(gender.label),
             'text': 'Concluded ' if done else 'Ready' if valid else 'Not ready',
         }
-    
+
     event_done = not event.active_day.is_racing_day
     other_gender = utils.reverse_gender(gender)
-    
+
     return {
         'main': styling(gender, crew_valid, event_done),
         'other': styling(other_gender, other_crew_valid, event_done),
@@ -402,13 +402,13 @@ def crew_status_box(
   </a>
 '''))
 def crew_ready_button(event: types.AugmentedEvent, gender: Genders) -> types.CrewReadyButton:
-    
+
     try:
         crew_ready = {
             Genders.MEN: event.mens_crew_ready,
             Genders.WOMEN: event.womens_crew_ready,
         }[gender]
-    
+
     except AttributeError:
         action = 'to compete' if event.active_day.is_racing_day else 'for your team'
         return {
@@ -416,9 +416,9 @@ def crew_ready_button(event: types.AugmentedEvent, gender: Genders) -> types.Cre
             'colour': 'primary',
             'text': f'Sign in {action}',
         }
-    
+
     link = reverse(f'fantasy:{gender.label}'.lower(), kwargs = {'event_tag': event.tag})
-    
+
     if not event.active_day.is_racing_day:
         return {'link': link, 'colour': 'primary', 'text': 'View final crew'}
     elif crew_ready:

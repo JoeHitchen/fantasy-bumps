@@ -15,13 +15,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument('--dev-team', action = 'store_true', help = 'Load a development team')
-    
-    
+
+
     def handle(self, **kwargs: Unpack[InitArgs]) -> None:
-        
+
         call_command('migrate')
         call_command('loaddata', 'seats')
-        
+
         if kwargs['dev_team']:
             call_command('loaddata', 'dev_team')
 

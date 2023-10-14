@@ -21,11 +21,11 @@
       trigger: 'focus',
       content: function() {
         $('#analysis-popularity').html($(this).data('popularity'));
-        
+
         $('#analysis-bump-up').html($(this).data('bump-up'));
         $('#analysis-row-over').html($(this).data('row-over'));
         $('#analysis-bumped-down').html($(this).data('bumped-down'));
-        
+
         if ($(this).data('bump-up') === '+0') {
           $('#analysis-bump-up-row').hide();
           $('#analysis-row-over-row').addClass('analysis-top-row');
@@ -41,7 +41,7 @@
         } else {
           $('#analysis-bumped-down-row').show();
         }
-        
+
         return $('#analysis_wrapper').html();
       }
     });

@@ -20,11 +20,11 @@ def create_event(
     start_order: StartOrder,
 ) -> models.Event:
     """Creates an event. days, and starting positions for an event."""
-    
+
     ordered_divisions = sorted(start_order, key = lambda div: div['race_time'], reverse = True)
     mens_divisions = [div for div in ordered_divisions if div['gender'] == Genders.MEN]
     womens_divisions = [div for div in ordered_divisions if div['gender'] == Genders.WOMEN]
-    
+
     event = models.Event.objects.create(
         series = series,
         year = year,  # Can't use start_date.year to support historical events
@@ -50,7 +50,7 @@ def create_days(
     last_race_time: time,
 ) -> models.Day:
     """Creates days for a standard four-day bumps regatta."""
-    
+
     weds = models.Day(
         event = event,
         name = 'Wednesday',
@@ -60,21 +60,21 @@ def create_days(
     )
     weds.save()
     assert weds.first_race and weds.last_race  # MyPy purposes
-    
+
     event.days.create(
         name = 'Thursday',
         date = start_date + timedelta(1),
         first_race_time = first_race_time,
         last_race_time = last_race_time,
     )
-    
+
     event.days.create(
         name = 'Friday',
         date = start_date + timedelta(2),
         first_race_time = first_race_time,
         last_race_time = last_race_time,
     )
-    
+
     saturday_shift = magic.saturday_race_time_shift(Series(event.series))
     event.days.create(
         name = 'Saturday',
@@ -82,25 +82,25 @@ def create_days(
         first_race_time = (weds.first_race - saturday_shift).time(),
         last_race_time = (weds.last_race - saturday_shift).time(),
     )
-    
+
     event.days.create(
         name = 'Finish',
         date = start_date + timedelta(4),
     )
-    
+
     return weds
 
 
 def create_gendered_crew_positions(event: models.Event, divisions: StartOrder) -> None:
     """Greates crew positions for one gender's start order."""
-    
+
     flattened_crews = [
         models.Crew.make_tuple(*crew)
         for division in divisions
         for crew, _ in division['crews']
     ]
     crew_map = create_crew_tuple_map(flattened_crews)
-    
+
     models.Position.objects.bulk_create([
         models.Position(
             day = event.first_day,
@@ -113,15 +113,15 @@ def create_gendered_crew_positions(event: models.Event, divisions: StartOrder) -
 
 def update_live_bumps(event: models.Event, gender: Genders) -> live_bumps.WriteOutcome:
     """Loads crew positions from Anu's data files and pushes them to Live Bumps."""
-    
+
     logger = logging.getLogger('fantasy.live_pipeline')
     logger.info('Updating Live Bumps for {} ({})'.format(event, gender.label))
-    
+
     now = timezone.localtime(timezone.now())
     active_days = list(event.days.filter(date__lte = now + timedelta(1)))
     if len(active_days) < 2:
         return (0, 0, 0)
-    
+
     # Load positions
     positions_by_day = []
     for day_number, day in enumerate(active_days, 1):
@@ -131,10 +131,10 @@ def update_live_bumps(event: models.Event, gender: Genders) -> live_bumps.WriteO
             gender,
             day_number,
         ))
-    
+
     # Prune unraced crews
     if active_days[-1].date > now.date():
-        
+
         start_order = anu_dat.get_start_order_by_gender(
             event.series,
             event.year,
@@ -147,7 +147,7 @@ def update_live_bumps(event: models.Event, gender: Genders) -> live_bumps.WriteO
         ]
         for crew in unraced_crews:
             del positions_by_day[-1][crew]
-    
+
     output = live_bumps.write_positions(event.series, event.year, positions_by_day)
     logger.info('Updated Live Bumps for {} ({})'.format(event, gender.label))
     return output
