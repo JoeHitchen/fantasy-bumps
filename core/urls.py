@@ -2,6 +2,7 @@ import os
 
 from django.urls import path, include
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 from . import settings
 from . import views
@@ -11,6 +12,7 @@ urlpatterns = [
     path('accounts/signup/', views.UserCreationView.as_view(), name = 'signup'),
     path('accounts/profile/', views.UserProfileView.as_view(), name = 'profile'),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('robots.txt', TemplateView.as_view(template_name = 'core/robots.txt')),
     path('', include('fantasy.urls')),
     path('', lambda req: None, name = 'index'),  # type: ignore # Root URL alias, handled by app
 ]
