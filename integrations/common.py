@@ -17,13 +17,13 @@ gender_map = {MEN: 'Men', WOMEN: 'Women'}
 
 def roman_parser(numerals: str) -> int:
     """Maps roman numerals to integers."""
-    
+
     return {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}[numerals]
 
 
 def race_time_parser(div_header: str) -> time:
     """Extracts the division time from the division header data."""
-    
+
     time_match = re.search(r'(\d\d?)[:.](\d\d)', div_header)
     assert time_match
     hour = int(time_match.groups()[0])
@@ -94,51 +94,51 @@ boat_code_map = {
 
 def start_order_to_positions(start_order: StartOrder) -> PositionMap:
     """Converts a start order to a map of positions."""
-    
+
     ordered_divisions = sorted(start_order, key = lambda div: div['race_time'])
-    
+
     positions = {}
     for gender in [MEN, WOMEN]:
-        
+
         bungline = 0
         for division in ordered_divisions[::-1]:
-            
+
             if division['gender'] != gender:
                 continue
-            
+
             for crew, position_status in division['crews']:
                 bungline += 1
                 positions[crew] = (bungline, position_status)
-    
+
     return positions
 
 
 def add_crews_by_gender(start_order: StartOrder, positions: PositionMap, gender: str) -> None:
     """Populates a start order from a position map for the gender given."""
-    
+
     ordered_divisions = sorted(start_order, key = lambda div: div['race_time'])
-    
+
     position_order = [
         (crew, position)
         for crew, position in positions.items()
         if crew[1] == gender
     ]
     position_order.sort(key = lambda item: item[1])
-    
+
     for division in ordered_divisions[::-1]:
-        
+
         if not division['gender'] == gender:
             continue
-        
+
         division['crews'] = [
             (crew, position[1])
             for crew, position
             in position_order[:division['size']]
         ]
-        
+
         if len(position_order) < division['size']:
             division['size'] = len(position_order)
             return
-        
+
         position_order = position_order[division['size']:]
 

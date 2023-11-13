@@ -7,7 +7,7 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor as SchemaEdi
 
 def make_division_size_list(count: int, size: int) -> list[int]:
     """Makes a list of the divisions sizes based on the old structure fields."""
-    
+
     sizes = [size] * (count - 1)
     sizes.append(size + 1)
     return sizes
@@ -16,7 +16,7 @@ def make_division_size_list(count: int, size: int) -> list[int]:
 def migrate_divisions_forwards(apps: Apps, schema_editor: SchemaEditor) -> None:
     """Populates the new _division_sizes fields."""
     Event = apps.get_model('fantasy', 'Event')
-    
+
     events = Event.objects.all()
     for event in events:
         event.mens_division_sizes = make_division_size_list(
@@ -27,21 +27,21 @@ def migrate_divisions_forwards(apps: Apps, schema_editor: SchemaEditor) -> None:
             event.womens_divisions_count,
             event.womens_divisions_size,
         )
-    
+
     Event.objects.bulk_update(events, ['mens_division_sizes', 'womens_division_sizes'])
 
 
 def migrate_divisions_backwards(apps: Apps, schema_editor: SchemaEditor) -> None:
     """Attempts to fit the flexible divisions back into the more rigid format."""
     Event = apps.get_model('fantasy', 'Event')
-    
+
     events = Event.objects.all()
     for event in events:
         event.mens_divisions_count = len(event.mens_division_sizes)
         event.mens_divisions_size = event.mens_division_sizes[0]
         event.womens_divisions_count = len(event.womens_division_sizes)
         event.womens_divisions_size = event.womens_division_sizes[0]
-    
+
     Event.objects.bulk_update(events, [
         'mens_divisions_count',
         'mens_divisions_size',

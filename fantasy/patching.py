@@ -19,17 +19,17 @@ Patch = Callable[[_OriginalFunc], _DecoratedFunc]  # type: ignore  # This use-ca
 
 def localtime_time(time: time, shift: timedelta = timedelta(0)) -> Patch:
     """Replace the time component of the `timezone.localtime()` function with the time provided.
-    
+
     Cannot apply timedelta to time when called, since `time` + `timedelta` is not a permitted
     operation.
     """
-    
+
     localtime = datetime.combine(
         timezone.localtime().date(),
         time,
         tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
     ) + shift
-    
+
     return patch('django.utils.timezone.localtime', return_value = localtime)
 
 

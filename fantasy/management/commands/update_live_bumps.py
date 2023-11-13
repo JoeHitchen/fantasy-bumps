@@ -20,7 +20,7 @@ class UpdateArgs(TypedDict):
 
 class Command(BaseCommand):
     help = 'Updates the results on Live Bumps for one gender.'
-    
+
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             'series',
@@ -37,11 +37,11 @@ class Command(BaseCommand):
             choices = gender_reverser.keys(),
             help = 'The gender to update',
         )
-    
-    
+
+
     def handle(self, **kwargs: Unpack[UpdateArgs]) -> None:
         """A wrapper to parse the inputs for the main `perform_update` routine."""
-        
+
         event = models.Event.objects.get(
             series = series_reverser[kwargs['series']],
             year = kwargs['year'],

@@ -19,13 +19,13 @@ last_race_times_map = {
 def add_last_race_times(apps: Apps, schema_editor: SchemaEditor) -> None:
     """Populatese the historical last race times."""
     Event = apps.get_model('fantasy', 'Event')
-    
+
     events = Event.objects.all()
     for event in events:
-        
+
         racing_days = event.days.filter(first_race_time__isnull = False)
         last_race_times = last_race_times_map[(event.series, event.year)]
-        
+
         for day, last_race_time in zip(racing_days, last_race_times):
             day.last_race_time = last_race_time
             day.save()

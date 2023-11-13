@@ -25,7 +25,7 @@ def get_start_order_by_gender(
         year,
         day_number,
     ))
-    
+
     # Get raw data
     response = requests.get(BASE_URL + magic.anu_data_url_template(series, year).format(
         series_text_map[series].lower(),
@@ -36,26 +36,26 @@ def get_start_order_by_gender(
     ))
     if not response.ok:
         response.raise_for_status()
-    
+
     data = response.text.split('\n')
     data = [line for line in data if line.strip()]
-    
+
     # Parse header
     event = data.pop(0)  # noqa: 841
     num_div_match = re.search(r'(\d) div', data.pop(0))
     assert num_div_match
     number_of_divisions = int(num_div_match.groups()[0])
-    
+
     # Parse divisions in turn
     divisions = []
     for _i in range(number_of_divisions):
-        
+
         # Parses division rows
         div_header = data.pop(0)
         div_number_match = re.search('([IV]+)', div_header)
         div_size_match = re.search(r'(\d{1,2}) crews', div_header)
         assert div_number_match and div_size_match
-        
+
         division: Division = {
             'gender': gender,
             'number': roman_parser(div_number_match.groups()[0]),
@@ -64,33 +64,33 @@ def get_start_order_by_gender(
             'finalised': '?' not in div_header,
             'crews': [],
         }
-        
+
         # Parses crews and results
         for _j in range(division['size']):
             crew_str = data.pop(0).strip()
-            
+
             if crew_str[-1] in ['I', 'V']:
                 crew_match = re.search("([A-Za-z'. ]+) ([IV]+)", crew_str)
                 assert crew_match
-                
+
                 club_str = crew_match.groups()[0]
                 crew_rank = roman_parser(crew_match.groups()[1])
-            
+
             else:
                 crew_match = re.search("([A-Za-z'. ]+)", crew_str)
                 assert crew_match
-                
+
                 club_str = crew_match.groups()[0]
                 crew_rank = 1
-            
+
             division['crews'].append((
                 (club_parser(club_str.strip()), gender, crew_rank),
                 division['finalised'] and '?' not in crew_str,
             ))
-        
+
         divisions.append(division)
     divisions.sort(key = lambda div: div['race_time'])
-    
+
     logger.info("Retrieved {} {}'s divisions and {} crews for {} {} (day {}) from Anu .dat".format(
         len(divisions),
         gender_map[gender].lower(),
@@ -104,7 +104,7 @@ def get_start_order_by_gender(
 
 def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
     """Retrieves the day's start order from Anu's .dat files."""
-    
+
     return sorted([
         *get_start_order_by_gender(series, year, MEN, day_number),
         *get_start_order_by_gender(series, year, WOMEN, day_number),
@@ -113,12 +113,12 @@ def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
 
 def get_positions_by_gender(series: str, year: int, gender: str, day_number: int) -> PositionMap:
     """Generates a crew/position map for one gender from Anu's .dat files."""
-    
+
     return start_order_to_positions(get_start_order_by_gender(series, year, gender, day_number))
 
 
 def get_positions(series: str, year: int, day_number: int) -> PositionMap:
     """Generates a crew/position map from Anu's .dat files."""
-    
+
     return start_order_to_positions(get_start_order(series, year, day_number))
 

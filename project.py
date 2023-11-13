@@ -5,9 +5,9 @@ if not args:
     raise IndexError('Must supply at least one argument')
 
 commands = {
-    'test': ['python manage.py test --pattern=*tests.py', 'fantasy core'],
-    'test:ff': ['python manage.py test --pattern=*tests.py --fastfail', 'fantasy core'],
-    'test:external': ['python -m unittest', 'integrations.tests'],
+    'test': ['pytest', 'fantasy core'],
+    'test:ff': ['pytest -x', 'fantasy core'],
+    'test:external': ['pytest', 'integrations'],
     'type': ['mypy'],
     'lint': ['flake8'],
 }

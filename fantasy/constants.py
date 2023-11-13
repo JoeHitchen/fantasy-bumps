@@ -31,16 +31,16 @@ class timings:
     MARKET_INITIAL = time(20, 00)
     MARKET_DELAY = timedelta(hours = 1)
     ADVANCE_DELAY = timedelta(minutes = 50)
-    
+
     @classmethod
     def market_delay_string(cls) -> str:
         return '{} minutes'.format(maths.floor(cls.MARKET_DELAY.total_seconds() / 60))
-    
+
     @classmethod
     def advance_delay_string(cls) -> str:
         return '{} minutes'.format(maths.floor(cls.ADVANCE_DELAY.total_seconds() / 60))
-    
-    
+
+
     @classmethod
     def advance_delay_to_market_delay_string(cls) -> str:
         time_difference = cls.MARKET_DELAY - cls.ADVANCE_DELAY

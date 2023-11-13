@@ -120,7 +120,7 @@ class EventBox(TypedDict):
 
 if TYPE_CHECKING:
     from django_stubs_ext import WithAnnotations
-    
+
     PositionWithPopularity = WithAnnotations[models.Position, BunglinePopularity]
     CrewWithPopularity = WithAnnotations[models.Crew, BunglinePopularity]
     AugmentedEvent = WithAnnotations[models.Event, EventAugmentation]

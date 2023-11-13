@@ -22,7 +22,7 @@ class Sources(enum.Enum):
     OURCS = 'ourcs'
     CAMFM = 'camfm'
     NOOP = 'noop'
-    
+
     def __str__(self) -> str:
         return self.value
 
@@ -125,40 +125,40 @@ class CrewListSource(TypedDict):
 
 
 def get_validated_start_order_source(location: Locations, source_request: str) -> StartOrderSource:
-    
+
     valid_sources = location_event_sources_map[location]
-    
+
     try:
         source = Sources(source_request)
     except ValueError:
         source = valid_sources[0]
-    
+
     assert source in valid_sources, f'`{source_request}` invalid start order source for {location}'
     return {'source': source, 'function': _start_order_source_function_map[source]}
 
 
 def get_validated_position_source(location: Locations, source_request: str) -> PositionSource:
-    
+
     valid_sources = location_event_sources_map[location]
-    
+
     try:
         source = Sources(source_request)
     except ValueError:
         source = valid_sources[0]
-    
+
     assert source in valid_sources, f'`{source_request}` invalid event source for {location}'
     return {'source': source, 'function': _position_source_function_map[source]}
 
 
 def get_validated_crew_list_source(location: Locations, source_request: str) -> CrewListSource:
-    
+
     valid_sources = location_crew_list_sources_map[location]
-    
+
     try:
         source = Sources(source_request)
     except ValueError:
         source = valid_sources[0]
-    
+
     assert source in valid_sources, f'`{source_request}` invalid crew list source for {location}'
     return {'source': source, 'function': _crew_list_source_function_map[source]}
 

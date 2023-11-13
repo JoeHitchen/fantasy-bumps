@@ -18,7 +18,7 @@ class WipeArgs(TypedDict):
 
 class Command(BaseCommand):
     help = 'Wipes an event on Live Bumps.'
-    
+
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             'series',
@@ -30,8 +30,8 @@ class Command(BaseCommand):
             type = int,
             help = "The target event's year.",
         )
-    
-    
+
+
     def handle(self, **kwargs: Unpack[WipeArgs]) -> None:
         live_bumps.wipe_positions(series_reverser[kwargs['series']], kwargs['year'])
 

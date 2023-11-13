@@ -1,7 +1,7 @@
 
 class DuplicateSeatError(ValueError):
     """Raised if a crew list has a seat filled twice or that action is being attempted.
-    
+
     Cannot rely on table-level database constraints, due to lack of gender information in table.
     """
     message = 'Cannot fill a seat twice.'
@@ -9,7 +9,7 @@ class DuplicateSeatError(ValueError):
 
 class DuplicateAthleteError(ValueError):
     """Raised if a crew list has an athlete twice or that action is being attempted.
-    
+
     Cannot rely on table-level database constraints, due to lack of gender information in table.
     """
     message = 'Cannot use an athlete twice.'
