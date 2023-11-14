@@ -85,7 +85,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Task workers
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULTS')
+CELERY_BROKER_TRANSPORT_OPTIONS = json.loads(os.environ.get('CELERY_BROKER_OPTIONS', '{}'))
+
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_WORKER_LOG_FORMAT = '%(processName)-17s %(levelname)-8s %(message)s'
 
