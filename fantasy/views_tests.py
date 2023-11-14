@@ -2,7 +2,7 @@ from unittest.mock import patch, Mock
 from datetime import date, timedelta
 from typing import Callable, Any, TYPE_CHECKING
 
-from django.test import TestCase, tag, Client
+from django.test import TestCase, Client
 from django.db import models as db
 from django.utils import timezone
 from django.contrib.auth import models as auth
@@ -121,7 +121,6 @@ class Test__Index(TestCase):
                 self.check_event_augmentation(event, with_user = True)
 
 
-    @tag('query-count')
     def test__query_count__without_login(self) -> None:
         """Expect:
             (1) SELECT recent events
@@ -134,7 +133,6 @@ class Test__Index(TestCase):
             self.client.get(self.url)
 
 
-    @tag('query-count')
     def test__query_count__with_login(self) -> None:
         """Expect:
             (1) SELECT recent events
@@ -183,7 +181,6 @@ class Test__GuideRules(TestCase):
         self.assertEqual(response.context['money'], money)
 
 
-    @tag('query-count')
     def test__query_count(self) -> None:
         """Expect:
             (1) SELECT recent events
@@ -266,7 +263,6 @@ class Test__EventsList(TestCase):
                 self.check_event_augmentation(event, with_user = True)
 
 
-    @tag('query-count')
     def test__query_count__without_login(self) -> None:
         """Expect:
             (1) SELECT recent events
@@ -280,7 +276,6 @@ class Test__EventsList(TestCase):
             self.client.get(self.url)
 
 
-    @tag('query-count')
     def test__query_count__with_login(self) -> None:
         """Expect:
             (1) SELECT recent events
@@ -764,7 +759,6 @@ class Test__Market_Men(MarketPageBase, TestCase):
                     self.assertEqual(position.popularity, expect_crew['popularity'])
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
@@ -919,7 +913,6 @@ class Test__Market_Women(MarketPageBase, TestCase):
                     self.assertEqual(position.popularity, expect_crew['popularity'])
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
@@ -1022,7 +1015,6 @@ class LeaderboardPageBase(GamePageBase):
         self.assertEqual(list(context['fantasies']), self.get_ranked_fantasies())
 
 
-    @tag('query-count')
     def test__query_count__without_login(self) -> None:
         """ Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
@@ -1034,7 +1026,6 @@ class LeaderboardPageBase(GamePageBase):
             self.client.get(self.url)
 
 
-    @tag('query-count')
     def test__query_count__with_login(self) -> None:
         """ Expect:
             (4) Base queries
@@ -1198,7 +1189,6 @@ class Test__Team(TestCase):
         )
 
 
-    @tag('query-count')
     def test__query_count(self) -> None:
         """ Expect:
             (3) SELECT event and active day
@@ -1472,7 +1462,6 @@ class Test__Buy(TestCase, MessagesTestMixin):
         self.assertMessages(response, [('success', "Bought Oriel W1 as your women's bow seat.")])
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__standard(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
@@ -1493,7 +1482,6 @@ class Test__Buy(TestCase, MessagesTestMixin):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__without_budgets(
@@ -1514,7 +1502,6 @@ class Test__Buy(TestCase, MessagesTestMixin):
             self.client.post(self.url, {'day': self.day.id, 'crew': self.crew.id})
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__with_athlete(
@@ -1776,7 +1763,6 @@ class Test__Sell(TestCase, MessagesTestMixin):
         ])
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
@@ -2274,7 +2260,6 @@ class Test__Switch(TestCase, MessagesTestMixin):
         self.assertEqual(other_purchase.seat, self.seat_bow)
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__get(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
@@ -2295,7 +2280,6 @@ class Test__Switch(TestCase, MessagesTestMixin):
             self.client.get(self.url)
 
 
-    @tag('query-count')
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count__post(self, market_closes_mock: Mock, markets_mock: Mock) -> None:

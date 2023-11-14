@@ -1,7 +1,7 @@
 from datetime import datetime, date, time, timedelta
 from unittest.mock import Mock, patch
 
-from django.test import TestCase, tag
+from django.test import TestCase
 from django.utils import timezone
 from django.db import IntegrityError, models as db
 from django.contrib.auth import models as auth
@@ -14,7 +14,6 @@ from . import patching
 from . import utils
 
 
-@tag('events-core')
 class Test__Event(TestCase):
     fixtures = ['dev_event']
 
@@ -87,7 +86,6 @@ class Test__Event(TestCase):
         self.assertEqual(self.event.first_day, self.yesterday)
 
 
-    @tag('query-count')
     def test__first_day__query_count(self) -> None:
         """Expect:
             (1) SELECT first day
@@ -96,7 +94,6 @@ class Test__Event(TestCase):
             self.event.first_day
 
 
-    @tag('query-count')
     def test__first_day__prefetched_query_count(self) -> None:
         """Expect:
             No queries
@@ -119,7 +116,6 @@ class Test__Event(TestCase):
         self.assertEqual(self.event.last_racing_day, self.tomorrow)  # Future does not have races
 
 
-    @tag('query-count')
     def test__last_racing_day__query_count(self) -> None:
         """Expect:
             (1) SELECT last day with a race time
@@ -129,7 +125,6 @@ class Test__Event(TestCase):
             self.event.last_racing_day
 
 
-    @tag('query-count')
     def test__last_racing_day__prefetched_query_count(self) -> None:
         """Expect:
             No queries
@@ -161,7 +156,6 @@ class Test__Event(TestCase):
         )
 
 
-    @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
     def test__active_day__before_rollover__query_count(self, _: Mock) -> None:
         """Expect:
@@ -172,7 +166,6 @@ class Test__Event(TestCase):
             self.event.active_day
 
 
-    @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME, timedelta(minutes = -1))
     def test__active_day__before_rollover__prefetched_query_count(self, _: Mock) -> None:
         """Expect:
@@ -205,7 +198,6 @@ class Test__Event(TestCase):
         )
 
 
-    @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME)
     def test__active_day__after_rollover__query_count(self, _: Mock) -> None:
         """Expect:
@@ -216,7 +208,6 @@ class Test__Event(TestCase):
             self.event.active_day
 
 
-    @tag('query-count')
     @patching.localtime_time(ROLLOVER_TIME)
     def test__active_day__after_rollover__prefetched_query_count(self, _: Mock) -> None:
         """Expect:
@@ -251,7 +242,6 @@ class Test__Event(TestCase):
         )
 
 
-    @tag('query-count')
     def test__active_day__after_event__query_count(self) -> None:
         """Expect:
             (1) SELECT any days after today/tomorrow (depending on time)
@@ -264,7 +254,6 @@ class Test__Event(TestCase):
             self.event.active_day
 
 
-    @tag('query-count')
     def test__active_day__after_event__prefetched_query_count(self) -> None:
         """Returns last day of the event from a prefetched set of days, if all have passed."""
 
@@ -291,7 +280,6 @@ class Test__Event(TestCase):
         self.assertEqual(self.event.num_crews(Genders.WOMEN), 55)
 
 
-    @tag('query-count')
     def test__num_crews__query_count(self) -> None:
         """NONE EXPECTED (but an important part of the crew valuation chain)"""
 
@@ -300,7 +288,6 @@ class Test__Event(TestCase):
 
 
 
-@tag('events-core')
 class Test__Day__Core(TestCase):
     fixtures = ['dev_event']
 
@@ -367,7 +354,6 @@ class Test__Day__Core(TestCase):
         self.assertIsNone(curr.next)
 
 
-    @tag('query-count')
     def test__next__past_only__query_count(self) -> None:
         """Expect:
             (1) SELECT the next day in the event
@@ -391,7 +377,6 @@ class Test__Day__Core(TestCase):
             curr.next
 
 
-    @tag('query-count')
     def test__next__past_only__prefetched_query_count(self) -> None:
         """Expect:
             No queries
@@ -471,7 +456,6 @@ class Test__Day__Core(TestCase):
         self.assertEqual(curr.next, future_1)
 
 
-    @tag('query-count')
     def test__next__future__query_count(self) -> None:
         """Expect:
             (1) SELECT the next day in the event
@@ -502,7 +486,6 @@ class Test__Day__Core(TestCase):
             curr.next
 
 
-    @tag('query-count')
     def test__next__future__prefetched_query_count(self) -> None:
         """Expect:
             No queries
@@ -589,7 +572,6 @@ class Test__Day__Core(TestCase):
         self.assertEqual(curr.prev, prev_1)
 
 
-    @tag('query-count')
     def test__prev__past__query_count(self) -> None:
         """Expect:
             (1) SELECT the previous day in the event
@@ -620,7 +602,6 @@ class Test__Day__Core(TestCase):
             curr.prev
 
 
-    @tag('query-count')
     def test__prev__past__prefetched_query_count(self) -> None:
         """Expect:
             No queries
@@ -693,7 +674,6 @@ class Test__Day__Core(TestCase):
         self.assertIsNone(curr.prev)
 
 
-    @tag('query-count')
     def test__prev__future_only__query_count(self) -> None:
         """Expect:
             (1) SELECT the previous day in the event
@@ -717,7 +697,6 @@ class Test__Day__Core(TestCase):
             curr.prev
 
 
-    @tag('query-count')
     def test__prev__future_only__prefetched_query_count(self) -> None:
         """Expect:
             No queries
@@ -815,7 +794,6 @@ class Test__Day__Core(TestCase):
 
 
 
-@tag('events-core')
 class Test__Day__Start_Orders(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1']
 
@@ -915,7 +893,6 @@ class Test__Day__Start_Orders(TestCase):
 
 
 
-@tag('market-status')
 class Test__Day__Market_Status(TestCase):
     fixtures = ['dev_event']
 
@@ -1169,7 +1146,6 @@ class Test__Day__Market_Status(TestCase):
 
 
 
-@tag('events-core')
 class Test__Division(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1']
 
@@ -1226,7 +1202,6 @@ class Test__Division(TestCase):
 
 
 
-@tag('events-core')
 class Test__Crew(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews']
 
@@ -1362,7 +1337,6 @@ class Test__Crew(TestCase):
         self.assertEqual(self.crew_middle.value(self.day1), utils.pricing(2, 3))
 
 
-    @tag('query-count')
     def test__value__query_count(self) -> None:
         """Expect:
             (1) SELECT crew's position
@@ -1373,7 +1347,6 @@ class Test__Crew(TestCase):
 
 
 
-@tag('events-core')
 class Test__Position(TestCase):
     fixtures = ['dev_event', 'dev_days']
 
@@ -1466,7 +1439,6 @@ class Test__Athlete(TestCase):
 
 
 
-@tag('game-core')
 class Test__Team(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
 
@@ -1579,7 +1551,6 @@ class Test__Team(TestCase):
 
 
 
-@tag('game-core')
 class Test__GameEntry(TestCase):
     fixtures = ['dev_event']
 
@@ -1695,7 +1666,6 @@ class Test__GameEntry(TestCase):
 
 
 
-@tag('game-core')
 class Test__Purchase(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'seats', 'dev_team']
 
