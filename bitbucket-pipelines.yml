@@ -48,7 +48,7 @@ pipelines:
             - docker
           script:
             - docker load --input fantasy-bumps.docker
-            - docker run --rm joehitchen/fantasy-bumps python project.py test
+            - docker run --rm joehitchen/fantasy-bumps  sh -c "export PATH=\"\$HOME/.local/bin:\$PATH\" && pip install -r requirements_testing.txt && python project.py test"
   
       - step:
           name: Publish

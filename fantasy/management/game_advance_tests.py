@@ -2,7 +2,7 @@ from datetime import time
 from unittest.mock import patch, Mock
 import logging
 
-from django.test import TestCase, tag
+from django.test import TestCase
 from django.db import models as db
 from django.utils import timezone
 from django.contrib.auth import models as auth
@@ -244,7 +244,6 @@ class Test__PurchaseRollover(TestCase):
         )
 
 
-    @tag('query-count')
     def test__query_count(self) -> None:
         """Expect:
             (2) Access day.next  (Affected by .next caching, or fetching day with select_related)
@@ -611,7 +610,6 @@ class Test__EvaluateInvestments(TestCase):
         self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE)
 
 
-    @tag('query-count')
     def test__query_count(self) -> None:
         """ Expect:
             (1) SELECT entries
@@ -677,7 +675,6 @@ class Test__PayoutMatrix(TestCase):
                 )
 
 
-    @tag('query-count')
     def test__matrix__query_count(self) -> None:
         """Expect:
             (1) SELECT next day of event (can be cached)

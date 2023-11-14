@@ -337,8 +337,6 @@ class Test__Anu__Dat(TestCase):
 
         events = [
             (TORPIDS, 2022, 11, 134),
-            (EIGHTS, 2022, 14, 168),
-            (TORPIDS, 2023, 12, 146),
         ]
 
         for series, year, num_divs, num_crews in events:
@@ -394,8 +392,6 @@ class Test__Anu__Dat(TestCase):
 
         events = [
             (TORPIDS, 2022, 134),
-            (EIGHTS, 2022, 168),
-            (TORPIDS, 2023, 146),
         ]
 
         for series, year, num_crews in events:

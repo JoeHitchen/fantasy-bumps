@@ -3,7 +3,7 @@ from xml.etree import ElementTree as ET
 from typing import Iterable
 from unittest.mock import Mock
 
-from django.test import TestCase, tag
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.db import models as db
@@ -27,7 +27,6 @@ def parser(string: str) -> ET.Element:
 ''' + string)
 
 
-@tag('market-status')
 class Test__Market_Status_Box(TestCase):
     fixtures = ['dev_event']
 
@@ -287,7 +286,6 @@ class Test__Market_Status_Box(TestCase):
 
 
 
-@tag('frontend')
 class Test__Avatar(TestCase):
 
     def test__string(self) -> None:
@@ -318,7 +316,6 @@ class Test__Avatar(TestCase):
 
 
 
-@tag('frontend')
 class Test__Misc(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
 
@@ -469,7 +466,6 @@ class Test__Misc(TestCase):
 
 
 
-@tag('frontend')
 class Test__Crew_List(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
 
@@ -592,7 +588,6 @@ class Test__Crew_List(TestCase):
         self.assertInHTML('Sell ' + tags.currency(999), html)
 
 
-    @tag('query-count')
     def test__sell_button__query_count__standard(self) -> None:
         """Expect:
             (1) Purchased crew's position
@@ -603,7 +598,6 @@ class Test__Crew_List(TestCase):
             self.sell_button(self.purchase)
 
 
-    @tag('query-count')
     def test__sell_button__preset_price__query_count(self) -> None:
         """Expect:
             No queries
@@ -798,7 +792,6 @@ class Test__Crew_List(TestCase):
 
 
 
-@tag('frontend')
 class Test__Event_Box(TestCase):
     fixtures = ['dev_event']
 

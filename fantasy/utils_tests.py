@@ -1,4 +1,4 @@
-from django.test import TestCase, tag
+from django.test import TestCase
 from django.db import models as db
 
 from core.tests import exists
@@ -38,7 +38,6 @@ class Test__Ordered_Events(TestCase):
 
 
 
-@tag('game-core')
 class Test__Has_All_Seats(TestCase):
     fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
 
@@ -194,7 +193,6 @@ class Test__Reverse_Gender(TestCase):
 
 
 
-@tag('game-core')
 class Test__Pricing(TestCase):
 
     def test__bungline_2(self) -> None:
@@ -216,7 +214,6 @@ class Test__Pricing(TestCase):
 
 
 
-@tag('game-core')
 class Test__Payouts(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']
 
@@ -316,7 +313,6 @@ class Test__Payouts(TestCase):
         self.assertEqual(delta_crabs['payout'], 0)
 
 
-    @tag('query-count')
     def test__individual__query_count(self) -> None:
         """Expect no queries if Day has Event pre-selected."""
 

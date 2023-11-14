@@ -1,4 +1,4 @@
-from django.test import TestCase, tag
+from django.test import TestCase
 from django.contrib.auth import models as auth
 
 from core.tests import exists
@@ -217,7 +217,6 @@ class Test__Buy(TestCase):
         self.assertEqual(self.budgets.womens_balance, money.INITIAL_BALANCE - money.PRICE_MAX)
 
 
-    @tag('query-count')
     def test__query_count__standard(self) -> None:
         """ Expect:
             (1) SELECT budgets
@@ -246,7 +245,6 @@ class Test__Buy(TestCase):
             _buy_body(self.team, fresh_day, self.seat, self.crew, athlete)
 
 
-    @tag('query-count')
     def test__query_count__without_budgets(self) -> None:
         """ Expect:
             (5) Queried as standard
@@ -356,7 +354,6 @@ class Test__Sell(TestCase):
             self.purchase.refresh_from_db()
 
 
-    @tag('query-count')
     def test__query_count(self) -> None:
         """ Expect:
             (1) SELECT crew's position
@@ -562,7 +559,6 @@ class Test__Switch(TestCase):
         self.assertEqual(other_purchase.seat, self.seat_bow)
 
 
-    @tag('query-count')
     def test__query_count(self) -> None:
         """Expect:
             (1) SELECT and LOCK other purchases, and athletes
