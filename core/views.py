@@ -17,13 +17,15 @@ if TYPE_CHECKING:
     ProfileCreateView = CreateView[auth.User, forms.UserCreationWithEmailForm]
     ProfileUpdateView = UpdateView[auth.User, forms.UserProfileForm]
     ProfileQuerySet = db.QuerySet[auth.User]
+    FormSuccessMessageMixin = SuccessMessageMixin[BaseForm]
 else:
     ProfileCreateView = CreateView
     ProfileUpdateView = UpdateView
     ProfileQuerySet = db.QuerySet
+    FormSuccessMessageMixin = SuccessMessageMixin
 
 
-class UserCreationView(SuccessMessageMixin, ProfileCreateView):
+class UserCreationView(FormSuccessMessageMixin, ProfileCreateView):
     """Renders and processes a user creation form."""
 
     # View settings
@@ -47,7 +49,7 @@ class UserCreationView(SuccessMessageMixin, ProfileCreateView):
 
 
 
-class UserProfileView(LoginRequiredMixin, SuccessMessageMixin, ProfileUpdateView):
+class UserProfileView(LoginRequiredMixin, FormSuccessMessageMixin, ProfileUpdateView):
     """Renders and processes a user update form."""
 
     # View settings
