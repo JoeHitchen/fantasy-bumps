@@ -13,7 +13,7 @@ class DumpDBArgs(TypedDict):
 class Command(BaseCommand):
     help = 'Dumps all database tables used into a file, for backup purposes.'
 
-    suppressed_base_arguments = [
+    suppressed_base_arguments = {
         '--version',
         '-v',
         '--settings',
@@ -22,7 +22,7 @@ class Command(BaseCommand):
         '--no-color',
         '--force-color',
         '--skip-checks',
-    ]
+    }
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument(
