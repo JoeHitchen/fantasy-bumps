@@ -1981,13 +1981,13 @@ class Test__Switch(TestCase, MessagesTestMixin):
 
         self.assertQuerySetEqual(
             response.context['seats'],
-            models.Seat.objects.all(),
+            list(models.Seat.objects.all()),
             ordered = False,
         )
 
         self.assertQuerySetEqual(
             response.context['recent_events'],
-            models.Event.objects.all(),
+            list(models.Event.objects.all()),
         )
 
 
