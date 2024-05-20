@@ -72,7 +72,7 @@ def boat_code_parser(boat_code: str) -> str:
         'MAG': 'magd', 'MAN': 'mans', 'MER': 'mert', 'NEC': 'newc',
         'ORO': 'orie', 'OSG': 'osle', 'PMB': 'pemb', 'QCO': 'quee',
         'RPC': 'rege', 'SOM': 'some', 'SAC': 'sann', 'SAY': 'sant',
-        'SBH': 'sben', 'SCO': 'scat', 'SEH': 'sedm', 'SHI': 'shil',
+        'SBH': 'reub', 'SCO': 'scat', 'SEH': 'sedm', 'SHI': 'shil',
         'SHG': 'shug', 'SJO': 'sjoh', 'SPC': 'spet', 'TRO': 'trin',
         'UCO': 'univ', 'WAD': 'wadh', 'WOO': 'wolf', 'WRO': 'worc',
         'OSL': 'osle',
@@ -89,6 +89,7 @@ boat_code_map = {
     'sben': 'SBH', 'scat': 'SCO', 'sedm': 'SEH', 'shil': 'SHI',
     'shug': 'SHG', 'sjoh': 'SJO', 'spet': 'SPC', 'trin': 'TRO',
     'univ': 'UCO', 'wadh': 'WAD', 'wolf': 'WOO', 'worc': 'WRO',
+    'reub': 'SBH',
 }
 
 

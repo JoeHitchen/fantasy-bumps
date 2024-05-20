@@ -2,6 +2,7 @@ from datetime import date, time, timedelta
 import logging
 
 from django.utils import timezone
+from django.db import transaction
 
 from integrations.types import StartOrder
 from integrations import magic, anu_dat, live_bumps
@@ -13,6 +14,7 @@ from .commands.utils import create_crew_tuple_map
 logging.basicConfig(level = logging.INFO)
 
 
+@transaction.atomic()
 def create_event(
     series: Series,
     year: int,

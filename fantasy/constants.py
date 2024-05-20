@@ -75,6 +75,7 @@ class Clubs(models.TextChoices):
     PEMB = ('pemb', 'Pembroke')
     QUEE = ('quee', "Queen's")
     REGE = ('rege', "Regent's Park")
+    REUB = ('reub', 'Reuben')
     SOME = ('some', 'Somerville')
     SANN = ('sann', "St Anne's")
     SANT = ('sant', "St Antony's")

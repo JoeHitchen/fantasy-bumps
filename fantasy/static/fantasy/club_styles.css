@@ -113,6 +113,11 @@
   color: hotpink;
   border-color: hotpink;
 }
+.club-reub {
+  background-color: white;
+  color: green;
+  border-color: darkblue;
+}
 .club-some { /* Source: Wiki */
   background-color: red;
   color: black;
