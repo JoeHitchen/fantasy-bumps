@@ -18,7 +18,7 @@ def _parse_division(table: str) -> Division:
     rows = re.split('<tr>', str(table))
 
     division_match = re.search(
-        '<th colspan="2"> (?P<gender>Men|Women)\'s Div (?P<num>[IV]{1,3})',
+        "(?P<gender>Men|Women)'s Div (?P<num>[IV]{1,3})",
         rows[1],
     )
     assert division_match
