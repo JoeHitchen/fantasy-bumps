@@ -5,6 +5,7 @@ from django.db import models as db
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.contrib.auth import models as auth
 from django.contrib.humanize.templatetags.humanize import naturalday
 
@@ -95,7 +96,7 @@ def currency(amount: int) -> str:
 
 @register.filter
 def popularity_indicator(popularity: float) -> str:
-    return format_html('<span class="popularity">{:.2}</span>', popularity)
+    return mark_safe('<span class="popularity">{:.2}</span>'.format(popularity))
 
 
 @register.inclusion_tag(template.Template('''
