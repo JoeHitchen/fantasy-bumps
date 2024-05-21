@@ -284,10 +284,8 @@ def _create_start_order_structure(start_order: StartOrder) -> dict[str, ClubPosD
 
     ranking_out: dict[str, ClubPosData] = {}
     for club_code, club_items in ranking_data.items():
-        ranking_out[club_code] = {}
+        ranking_out[club_code] = {'men': [], 'women': []}
         for gender_code, gender_items in club_items.items():
-            ranking_out[club_code][gender_code] = []
-
             gender_items.sort(key = lambda crew: crew[0][2])
             for number, crew_data in enumerate(gender_items):
                 ranking_out[club_code][gender_code].append({
