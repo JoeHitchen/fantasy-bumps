@@ -28,7 +28,7 @@ class Genders(models.TextChoices):
 
 
 class timings:
-    MARKET_INITIAL = time(20, 00)
+    MARKET_INITIAL = time(16, 00)
     MARKET_DELAY = timedelta(hours = 1)
     ADVANCE_DELAY = timedelta(minutes = 50)
 
