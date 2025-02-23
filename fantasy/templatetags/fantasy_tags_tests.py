@@ -1,6 +1,6 @@
 from datetime import time, timedelta
 from xml.etree import ElementTree as ET
-from typing import Iterable
+from typing import Iterable, cast
 from unittest.mock import Mock
 
 from django.test import TestCase
@@ -333,7 +333,10 @@ class Test__Misc(TestCase):
         cls.seat = exists(models.Seat.objects.first())
 
         position_annotations = {'bungline': db.Value(1), 'popularity': db.Value(0.)}
-        cls.position = cls.crew.positions.annotate(**position_annotations).get(day = cls.day)
+        cls.position = cast(  # Auto-detection of annotation appears to be broken
+            types.PositionWithPopularity,
+            cls.crew.positions.annotate(**position_annotations).get(day = cls.day),
+        )
 
 
     @staticmethod
@@ -801,7 +804,10 @@ class Test__Event_Box(TestCase):
     def setUpTestData(cls) -> None:
 
         crews_ready = {'mens_crew_ready': db.Value(False), 'womens_crew_ready': db.Value(False)}
-        cls.event = exists(models.Event.objects.annotate(**crews_ready).first())
+        cls.event = cast(  # Auto-detection of annotation appears to be broken
+            types.AugmentedEvent,
+            exists(models.Event.objects.annotate(**crews_ready).first()),
+        )
         cls.event.days.create(
             name = 'Day One',
             date = timezone.now().date(),
