@@ -27,15 +27,17 @@ def get_start_order_by_gender(
     ))
 
     # Get raw data
-    response = requests.get(BASE_URL + magic.anu_data_url_template(series, year).format(
-        series_text_map[series].lower(),
-        series.lower(),
-        str(year)[2:4],
-        magic.anu_day_code(series, year, day_number),
-        gender.lower(),
-    ))
-    if not response.ok:
-        response.raise_for_status()
+    day_codes = magic.anu_day_code(series, year, day_number)
+    for day_code in day_codes:
+        response = requests.get(BASE_URL + magic.anu_data_url_template(series, year).format(
+            series_text_map[series].lower(),
+            series.lower(),
+            str(year)[2:4],
+            day_code,
+            gender.lower(),
+        ))
+        if not response.ok and day_code == day_codes[-1]:
+            response.raise_for_status()
 
     data = response.text.split('\n')
     data = [line for line in data if line.strip()]
