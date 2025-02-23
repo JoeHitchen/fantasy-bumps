@@ -4,6 +4,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.base import ContextMixin, TemplateView
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
+from django.utils.datastructures import MultiValueDictKeyError
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import models as db
 from django.contrib.auth import models as auth
@@ -397,10 +398,10 @@ def buy(request: HttpRequest) -> HttpResponse:
     # Process inputs
     try:
         team = request.user.team
-        day = models.Day.objects.select_related().get(id = request.POST.get('day'))
+        day = models.Day.objects.select_related().get(id = request.POST['day'])
         crew = models.Crew.objects.get(id = request.POST.get('crew', -1))
 
-    except ObjectDoesNotExist:
+    except (ObjectDoesNotExist, MultiValueDictKeyError):
         messages.error(request, 'An error occurred processing the request data.')
         return redirect('fantasy:index')
 
@@ -479,11 +480,11 @@ def sell(request: HttpRequest) -> HttpResponse:
     # Process input data
     try:
         purchase = models.Purchase.objects.select_related().get(
-            id = request.POST.get('purchase'),
+            id = request.POST['purchase'],
             team = request.user.team,
         )
 
-    except models.Purchase.DoesNotExist:
+    except (models.Purchase.DoesNotExist, MultiValueDictKeyError):
 
         # Try elegent redirect back to market page using additional form data
         messages.error(request, 'You are not authorised to conduct this sale.')
