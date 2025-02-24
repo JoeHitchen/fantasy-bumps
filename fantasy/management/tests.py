@@ -1,13 +1,15 @@
 from datetime import date, time, datetime, timedelta
 from unittest.mock import patch, Mock, call
+import zoneinfo
 
 from django.test import TestCase
 from django.db import models as db
 from django.utils import timezone
 
+from core.settings import TIME_ZONE
 from integrations.types import StartOrder, Division, Crew
 
-from ..constants import Series, Clubs, Genders
+from ..constants import Series, Clubs, Genders, timings
 from .. import models
 from . import actions
 
@@ -84,6 +86,13 @@ class Test__EventCreation(TestCase):
         self.assertEqual(event.year, 2023)
         self.assertEqual(event.mens_division_sizes, [2, 2, 3])
         self.assertEqual(event.womens_division_sizes, [4, 4, 5])
+        self.assertEqual(
+            event.initial_market_open, datetime.combine(
+                date(2023, 3, 19),
+                timings.MARKET_INITIAL,
+                tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+            ),
+        )
 
         self.assertEqual(event.days.count(), 5)
         self.assertQuerySetEqual(
@@ -113,6 +122,13 @@ class Test__EventCreation(TestCase):
         self.assertEqual(event.year, 2023)
         self.assertEqual(event.mens_division_sizes, [2, 2, 3])
         self.assertEqual(event.womens_division_sizes, [4, 4, 5])
+        self.assertEqual(
+            event.initial_market_open, datetime.combine(
+                date(2023, 3, 19),
+                timings.MARKET_INITIAL,
+                tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+            ),
+        )
 
         self.assertEqual(event.days.count(), 5)
         self.assertQuerySetEqual(
@@ -148,6 +164,7 @@ class Test__LiveBumps(TestCase):
             series = Series.TORPIDS,
             year = cls.now.year,
             tag = f'{Series.TORPIDS.label.lower()}{cls.now.year}',
+            initial_market_open = cls.now,
         )
         actions.create_days(cls.event, cls.now.date(), time(12, 00), time(18, 30))
 

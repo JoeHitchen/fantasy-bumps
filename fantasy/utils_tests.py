@@ -13,24 +13,25 @@ class Test__Ordered_Events(TestCase):
 
     def test__ordered_events(self) -> None:
 
-        division_structure = {
+        extra_fields = {
             'mens_division_sizes': [12, 12, 12, 12, 12, 13],
             'womens_division_sizes': [12, 12, 12, 12, 13],
+            'initial_market_open': '2019-02-24T20:00:00Z',
         }
 
-        t14 = models.Event(series = Series.TORPIDS, year = 2014, tag = 't14', **division_structure)
+        t14 = models.Event(series = Series.TORPIDS, year = 2014, tag = 't14', **extra_fields)
         t14.save()
         t14.days.create(date = '2014-02-28')
 
-        t15 = models.Event(series = Series.TORPIDS, year = 2015, tag = 't15', **division_structure)
+        t15 = models.Event(series = Series.TORPIDS, year = 2015, tag = 't15', **extra_fields)
         t15.save()
         t15.days.create(date = '2015-03-02')
 
-        t13 = models.Event(series = Series.TORPIDS, year = 2013, tag = 't13', **division_structure)
+        t13 = models.Event(series = Series.TORPIDS, year = 2013, tag = 't13', **extra_fields)
         t13.save()
         t13.days.create(date = '2013-02-27')
 
-        t12 = models.Event(series = Series.TORPIDS, year = 2012, tag = 't12', **division_structure)
+        t12 = models.Event(series = Series.TORPIDS, year = 2012, tag = 't12', **extra_fields)
         t12.save()
         t12.days.create(date = '2012-02-26')
 

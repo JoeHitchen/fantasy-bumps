@@ -53,6 +53,7 @@ class Event(models.Model):
     womens_division_sizes = models.JSONField(default = list)
 
     market_held_closed = models.BooleanField(default = False)
+    initial_market_open = models.DateTimeField()
 
     _days: list['Day']
 
