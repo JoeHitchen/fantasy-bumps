@@ -236,11 +236,7 @@ class Day(models.Model):
         if self.prev and self.prev.last_race:
             return self.prev.last_race + timings.MARKET_DELAY
 
-        return datetime.combine(
-            self.date - timedelta(3),
-            timings.MARKET_INITIAL,
-            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
-        )
+        return self.event.initial_market_open
 
 
     @cached_property
