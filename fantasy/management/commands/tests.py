@@ -1,14 +1,16 @@
 from unittest.mock import patch, Mock
-from datetime import date, time, timedelta
+from datetime import date, time, datetime, timedelta
+import zoneinfo
 
 from django.test import TestCase
 from django.utils import timezone
 
 from integrations import live_bumps, anu_html, camfm, ourcs
 from core.tests import exists
+from core.settings import TIME_ZONE
 
 from ... import models
-from ...constants import Locations, Series, Clubs, Genders
+from ...constants import Locations, Series, Clubs, Genders, timings
 from ..actions import create_days
 from .game_start import Command as GameStart
 from .game_advance import Command as GameAdvance
@@ -23,6 +25,11 @@ def prepare_event(series: Series, start_date: date) -> models.Event:
         series = series,
         year = start_date.year,
         tag = f'{series.label.lower()}{start_date.year}',
+        initial_market_open = datetime.combine(
+            start_date,
+            timings.MARKET_INITIAL,
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+        ),
     )
     create_days(event, start_date, time(12, 00), time(18, 30))
     return event

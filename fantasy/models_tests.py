@@ -1,14 +1,16 @@
 from datetime import datetime, date, time, timedelta
 from unittest.mock import Mock, patch
+import zoneinfo
 
 from django.test import TestCase
 from django.utils import timezone
 from django.db import IntegrityError, models as db
 from django.contrib.auth import models as auth
 
+from core.settings import TIME_ZONE
 from core.tests import exists
 
-from .constants import Genders, GENDERS_OVERALL, timings, money, Clubs
+from .constants import Genders, GENDERS_OVERALL, money, Clubs
 from . import models
 from . import patching
 from . import utils
@@ -918,7 +920,14 @@ class Test__Day__Market_Status(TestCase):
 
 
     def test__market_opens__first_race_day__winter(self) -> None:
-        """The first day's markets opening is three days prior."""
+        """The first day's markets opening is taken from the event property."""
+
+        self.event.initial_market_open = datetime.combine(
+            date.fromisoformat('2021-01-02'),
+            time.fromisoformat('20:00:00'),
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+        )
+        self.event.save()
 
         day = self.event.days.create(
             name = 'Main',
@@ -928,13 +937,18 @@ class Test__Day__Market_Status(TestCase):
         )
 
         assert day.market_opens
-        self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
-        self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
-        self.assertEqual(day.market_opens.tzname(), 'GMT')
+        self.assertEqual(day.market_opens, self.event.initial_market_open)
 
 
     def test__market_opens__first_race_day__summer(self) -> None:
-        """The first day's markets opening is three days prior."""
+        """The first day's markets opening is taken from the event property."""
+
+        self.event.initial_market_open = datetime.combine(
+            date.fromisoformat('2021-07-02'),
+            time.fromisoformat('20:00:00'),
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+        )
+        self.event.save()
 
         day = self.event.days.create(
             name = 'Main',
@@ -944,9 +958,7 @@ class Test__Day__Market_Status(TestCase):
         )
 
         assert day.market_opens
-        self.assertEqual(day.market_opens.date(), day.date - timedelta(3))
-        self.assertEqual(day.market_opens.time(), timings.MARKET_INITIAL)
-        self.assertEqual(day.market_opens.tzname(), 'BST')
+        self.assertEqual(day.market_opens, self.event.initial_market_open)
 
 
     def test__market_opens__later_race_day__winter(self) -> None:
