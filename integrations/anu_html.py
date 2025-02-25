@@ -74,7 +74,9 @@ def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
             str(year)[-2:],
             day_code,
         ))
-        if not response.ok and day_code == day_codes[-1]:
+        if response.ok:
+            break
+        if day_code == day_codes[-1]:
             response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'html.parser')

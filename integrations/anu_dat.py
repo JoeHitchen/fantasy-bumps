@@ -36,7 +36,9 @@ def get_start_order_by_gender(
             day_code,
             gender.lower(),
         ))
-        if not response.ok and day_code == day_codes[-1]:
+        if response.ok:
+            break
+        if day_code == day_codes[-1]:
             response.raise_for_status()
 
     data = response.text.split('\n')
