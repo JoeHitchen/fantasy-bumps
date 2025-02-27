@@ -11,13 +11,15 @@ Position = tuple[int, PositionStatus]
 PositionMap = dict[Crew, Position]
 PositionFcn = Callable[[str, int, int], PositionMap]
 
+CrewPosition = tuple[Crew, PositionStatus]
+
 
 class Division(TypedDict):
     gender: str
     number: int
     race_time: time
     size: int
-    crews: list[tuple[Crew, PositionStatus]]  # Implicitly top bungline first
+    crews: list[CrewPosition]  # Implicitly top bungline first
     finalised: bool
 
 
