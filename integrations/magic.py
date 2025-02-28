@@ -3,13 +3,13 @@ from datetime import datetime, timedelta
 from .common import TORPIDS, EIGHTS, LENTS, MAYS, series_text_map
 
 
-def anu_day_code(series: str, year: int, day_number: int) -> str:
+def anu_day_code(series: str, year: int, day_number: int) -> list[str]:
     """Provides the correct day code for loading data from Anu."""
 
     if (series, year) == (TORPIDS, 2021):
-        return ['tue', 'wed', 'thu', 'fri', 'end'][day_number - 1]
+        return [['tue'], ['wed'], ['thu'], ['fri'], ['end']][day_number - 1]
 
-    return ['wed', 'thu', 'fri', 'sat', 'end'][day_number - 1]
+    return [['wed', 'sta'], ['thu'], ['fri'], ['sat'], ['end']][day_number - 1]
 
 
 def anu_data_url_template(series: str, year: int) -> str:
@@ -39,6 +39,7 @@ def ourcs_event_id(series: str, year: int) -> int:
             (TORPIDS, 2023): 239,
             (EIGHTS, 2023): 241,
             (EIGHTS, 2024): 253,
+            (TORPIDS, 2025): 262,
         }[(series, year)]
 
     except KeyError:

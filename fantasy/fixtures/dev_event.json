@@ -7,7 +7,8 @@
       "year": "2019",
       "tag": "devgame",
       "mens_division_sizes": [4, 5],
-      "womens_division_sizes": [4, 5]
+      "womens_division_sizes": [4, 5],
+      "initial_market_open": "2019-02-24T20:00:00Z"
     }
   }
 ]

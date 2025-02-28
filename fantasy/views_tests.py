@@ -45,6 +45,7 @@ def prepare_event(user: auth.User, year: int, date_shift: int = 0) -> models.Eve
         tag = 'eights{}'.format(year),
         mens_division_sizes = [13, 13, 13, 13, 13, 13, 14],
         womens_division_sizes = [13, 13, 13, 13, 13, 14],
+        initial_market_open = '2019-02-24T20:00:00Z',
     )
 
     models.Day.objects.bulk_create([models.Day(

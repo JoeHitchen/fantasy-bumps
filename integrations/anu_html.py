@@ -66,14 +66,18 @@ def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
 
 
     # Load page into parser
-    response = requests.get(BASE_URL + '{}/{}{}{}.html'.format(
-        series_text.lower(),
-        series.lower(),
-        str(year)[-2:],
-        magic.anu_day_code(series, year, day_number),
-    ))
-    if not response.ok:
-        response.raise_for_status()
+    day_codes = magic.anu_day_code(series, year, day_number)
+    for day_code in day_codes:
+        response = requests.get(BASE_URL + '{}/{}{}{}.html'.format(
+            series_text.lower(),
+            series.lower(),
+            str(year)[-2:],
+            day_code,
+        ))
+        if response.ok:
+            break
+        if day_code == day_codes[-1]:
+            response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'html.parser')
 

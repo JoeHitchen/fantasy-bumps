@@ -1,13 +1,15 @@
-from datetime import date, time, timedelta
+from datetime import date, time, datetime, timedelta
+import zoneinfo
 import logging
 
 from django.utils import timezone
 from django.db import transaction
 
+from core.settings import TIME_ZONE
 from integrations.types import StartOrder
 from integrations import magic, anu_dat, live_bumps
 
-from ..constants import Series, Genders
+from ..constants import Series, Genders, timings
 from .. import models
 from .commands.utils import create_crew_tuple_map
 
@@ -33,6 +35,11 @@ def create_event(
         tag = f'{series.label.lower()}{year}',
         mens_division_sizes = [div['size'] for div in mens_divisions],
         womens_division_sizes = [div['size'] for div in womens_divisions],
+        initial_market_open = datetime.combine(
+            start_date - timedelta(3),  # Sunday before racing
+            timings.MARKET_INITIAL,
+            tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
+        ),
     )
     create_days(
         event,
