@@ -433,3 +433,12 @@ def crew_ready_button(event: types.AugmentedEvent, gender: Genders) -> types.Cre
 def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser) -> types.EventBox:
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
+
+@register.filter
+def display_trophies(team: models.Team) -> str:
+    trophy_string = ''
+    if team.oxford_veteran:
+        trophy_string += '<span data-toggle="tooltip" title="Oxford Veteran">🔷</span>'
+    if team.cambridge_veteran:
+        trophy_string += '<span data-toggle="tooltip" title="Cambridge Veteran">🔹</span>'
+    return mark_safe(trophy_string)
