@@ -379,6 +379,9 @@ class Team(models.Model):
 
     user = models.OneToOneField('auth.User', models.CASCADE)
 
+    oxford_veteran = models.BooleanField(default = False)
+    cambridge_veteran = models.BooleanField(default = False)
+
     mens_crew: list['Purchase']
     womens_crew: list['Purchase']
 

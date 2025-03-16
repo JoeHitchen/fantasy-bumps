@@ -61,7 +61,7 @@
         {% for fantasy in fantasies %}<tr {% if fantasy.team == team %}class="table-info"{% endif %}>
           <td>{{ forloop.counter }}</td>
           <td class="text-left">
-            <div class="team-name d-none d-md-block">{{ fantasy.team }}</div>
+            <div class="team-name d-none d-md-block">{{ fantasy.team }} {{ fantasy.team|display_trophies }}</div>
             <div class="narrow-column d-block d-md-none" data-toggle="tooltip" data-placement="bottom" title="{{ fantasy.team }}">{{ fantasy.team }}</div>
           </td>
           <td>
