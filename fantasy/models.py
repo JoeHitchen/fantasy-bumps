@@ -459,3 +459,24 @@ class Purchase(models.Model):
 
     price: int
 
+
+class Trophy(models.Model):
+    """Describes accolades won in previous events."""
+
+    class Types(models.TextChoices):
+        GOLDEN_SWAN = '01-GOLDEN', 'Golden Swan'
+        SILVER_SWAN = '02-SILVER', 'Silver Swan'
+        BRONZE_SWAN = '03-BRONZE', 'Bronze Swan'
+        GOLDEN_COB = '04-G-COB', 'Golden Cob'
+        GOLDEN_PEN = '05-G-PEN', 'Golden Pen'
+
+    team = models.ForeignKey(Team, models.CASCADE, related_name = 'trophies')
+    event = models.ForeignKey(Event, models.CASCADE, related_name = 'trophies')
+    type = models.CharField(max_length = 9)
+
+    class Meta:
+        ordering = ['type', '-event']
+
+    def __str__(self) -> str:
+        return f'{self.Types(self.type).label} ({self.event})'
+

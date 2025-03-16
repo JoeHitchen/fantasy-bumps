@@ -1704,3 +1704,18 @@ class Test__Purchase(TestCase):
         purchase.refresh_from_db()
         self.assertIsNone(purchase.athlete)
 
+
+class Test__Trophy(TestCase):
+    fixtures = ['dev_event', 'dev_team']
+
+    def test__string(self) -> None:
+        """Returns the trophy type and event."""
+
+        trophy = models.Trophy(
+            event = exists(models.Event.objects.first()),
+            team = exists(models.Team.objects.first()),
+            type = models.Trophy.Types.GOLDEN_SWAN,
+        )
+
+        self.assertEqual(str(trophy), 'Golden Swan (Demo 2019)')
+
