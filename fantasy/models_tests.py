@@ -10,7 +10,7 @@ from django.contrib.auth import models as auth
 from core.settings import TIME_ZONE
 from core.tests import exists
 
-from .constants import Genders, GENDERS_OVERALL, money, Clubs
+from .constants import Series, Genders, GENDERS_OVERALL, money, Clubs
 from . import models
 from . import patching
 from . import utils
@@ -1560,6 +1560,67 @@ class Test__Team(TestCase):
 
         crew = self.team.get_crew(self.day, Genders.WOMEN)
         self.assertEqual(crew.count(), 9)
+
+
+class Test__Team__Trophies(TestCase):
+    fixtures = ['dev_event', 'dev_team']
+
+    team: models.Team
+    event_1: models.Event
+    event_2: models.Event
+    event_3: models.Event
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.event_1 = models.Event.objects.create(
+            series = Series.DEMO,
+            year = 2023,
+            tag = 'demo2023',
+            initial_market_open = '2023-02-25T18:00:00Z',
+        )
+        cls.event_2 = models.Event.objects.create(
+            series = Series.DEMO,
+            year = 2024,
+            tag = 'demo2024',
+            initial_market_open = '2024-02-25T18:00:00Z',
+        )
+        cls.event_3 = models.Event.objects.create(
+            series = Series.DEMO,
+            year = 2025,
+            tag = 'demo2025',
+            initial_market_open = '2025-02-25T18:00:00Z',
+        )
+
+
+    def test__no_trophies(self) -> None:
+        """An empty list should be returned if the player has not won any trophies."""
+
+        self.assertEqual(self.team.get_leaderboard_trophies(), [])
+
+
+    def test__one_per_event(self) -> None:
+        """Only the most prestigious trophy from each event is shown."""
+
+        trophy_1 = self.team.trophies.create(
+            event = self.event_1,
+            type = models.Trophy.Types.GOLDEN_SWAN,  # Out-ranks Golden Cob this event
+        )
+        self.team.trophies.create(event = self.event_1, type = models.Trophy.Types.GOLDEN_COB)
+
+        trophy_2 = self.team.trophies.create(
+            event = self.event_2,
+            type = models.Trophy.Types.BRONZE_SWAN,  # Out-ranks Golden Pen this event
+        )
+        self.team.trophies.create(event = self.event_2, type = models.Trophy.Types.GOLDEN_PEN)
+
+        self.team.trophies.create(event = self.event_3, type = models.Trophy.Types.GOLDEN_PEN)
+        trophy_3 = self.team.trophies.create(
+            event = self.event_3,
+            type = models.Trophy.Types.SILVER_SWAN,  # Out-ranks Golden Pen from this event
+        )
+
+        self.assertEqual(self.team.get_leaderboard_trophies(), [trophy_1, trophy_3, trophy_2])
 
 
 

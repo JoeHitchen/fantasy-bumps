@@ -394,6 +394,19 @@ class Team(models.Model):
         return self.purchases.filter(day = day, crew__gender = gender)
 
 
+    def get_leaderboard_trophies(self) -> list['Trophy']:
+        """Displays the most prestigious trophy from each event, or a single top-five/ten award."""
+
+        event_trophies = {}
+        display_trophies = []
+        for trophy in self.trophies.all():
+            if trophy.event not in event_trophies:
+                event_trophies[trophy.event] = trophy
+                display_trophies.append(trophy)
+
+        return display_trophies
+
+
 @receiver(models.signals.post_save, sender = auth.User)
 def create_team(instance: auth.User, created: bool, raw: bool, **_: dict[None, None]) -> None:
     """Creates a linked team for every user."""
