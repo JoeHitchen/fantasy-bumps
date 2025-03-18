@@ -434,11 +434,29 @@ def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser)
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
 
+trophy_icons: dict[str, str] = {
+    models.Trophy.Types.GOLDEN_SWAN: '🥇',
+    models.Trophy.Types.SILVER_SWAN: '🥈',
+    models.Trophy.Types.BRONZE_SWAN: '🥉',
+    models.Trophy.Types.GOLDEN_COB: '♂️',
+    models.Trophy.Types.GOLDEN_PEN: '♀️',
+}
+
+
 @register.filter
 def display_trophies(team: models.Team) -> str:
+
     trophy_string = ''
+
+    for trophy in team.get_leaderboard_trophies():
+        trophy_string += '<span data-toggle="tooltip" title="{}">{}</span>'.format(
+            trophy,
+            trophy_icons[trophy.type],
+        )
+
     if team.oxford_veteran:
         trophy_string += '<span data-toggle="tooltip" title="Oxford Veteran">🔷</span>'
     if team.cambridge_veteran:
         trophy_string += '<span data-toggle="tooltip" title="Cambridge Veteran">🔹</span>'
+
     return mark_safe(trophy_string)

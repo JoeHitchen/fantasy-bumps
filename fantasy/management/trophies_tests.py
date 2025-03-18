@@ -9,7 +9,7 @@ from core.tests import exists
 from ..constants import Series, Genders
 from .. import models
 from .actions import create_event
-from .trophies import assign_new_veterans
+from .trophies import assign_new_veterans, award_trophies
 
 
 mens_ranking = [
@@ -175,4 +175,72 @@ class Test__VeteranStatus(TestCase):
         other_team_2.refresh_from_db()
         self.assertTrue(other_team_2.oxford_veteran)
         self.assertFalse(other_team_2.cambridge_veteran)
+
+
+class Test__EventTrophies(TestCase):
+    fixtures = ['dev_event', 'dev_days']
+
+    event: models.Event
+    teams: list[models.GameEntry]
+
+    def compare_trophies(
+            self,
+            team: models.GameEntry,
+            trophies: list[models.Trophy.Types],
+    ) -> None:
+        self.assertEqual(list(team.team.trophies.values_list('type', flat = True)), trophies)
+
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.event = models.Event.objects.get(tag = 'devgame')
+
+        cls.teams = []
+        for i in range(0, 6):
+            team = auth.User.objects.create_user(f'Player {i + 1}').team
+
+            budgets = 1500 - 10 * i
+            cls.teams.append(cls.event.fantasies.create(
+                team = team,
+                mens_budget = budgets,
+                womens_budget = budgets,
+            ))
+
+
+    def test__simple_ordering(self) -> None:
+        """The prizes are awarded in the order of budgets."""
+
+        award_trophies(self.event)
+
+        self.compare_trophies(self.teams[0], [
+            models.Trophy.Types.GOLDEN_SWAN,
+            models.Trophy.Types.GOLDEN_COB,
+            models.Trophy.Types.GOLDEN_PEN,
+        ])
+        self.compare_trophies(self.teams[1], [models.Trophy.Types.SILVER_SWAN])
+        self.compare_trophies(self.teams[2], [models.Trophy.Types.BRONZE_SWAN])
+        self.compare_trophies(self.teams[3], [])
+        self.compare_trophies(self.teams[4], [])
+        self.compare_trophies(self.teams[5], [])
+
+
+    def test__mixed_up_ordering(self) -> None:
+        """The Golden Cob & Golden Pen do not always go to the overall winner."""
+
+        self.teams[4].womens_budget = 1510
+        self.teams[4].save()
+        self.teams[5].mens_budget = 1535
+        self.teams[5].save()
+
+        award_trophies(self.event)
+
+        self.compare_trophies(self.teams[0], [models.Trophy.Types.GOLDEN_SWAN])
+        self.compare_trophies(self.teams[1], [models.Trophy.Types.BRONZE_SWAN])
+        self.compare_trophies(self.teams[2], [])
+        self.compare_trophies(self.teams[3], [])
+        self.compare_trophies(self.teams[4], [models.Trophy.Types.GOLDEN_PEN])
+        self.compare_trophies(self.teams[5], [
+            models.Trophy.Types.SILVER_SWAN,
+            models.Trophy.Types.GOLDEN_COB,
+        ])
 

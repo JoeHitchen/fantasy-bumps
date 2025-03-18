@@ -1,7 +1,56 @@
 from django.db import models as db
 
-from ..constants import Series
+from ..constants import GENDERS_OVERALL, Genders, Series
 from .. import models
+
+
+def award_trophies(event: models.Event) -> None:
+    """Awards the trophies for an event."""
+
+    rankings = (
+        event.fantasies
+        .select_related('team', 'team__user')
+        .extend_financials()
+        .rank_by(GENDERS_OVERALL)
+    )[0:10]
+
+    rankings[0].team.trophies.create(
+        event = event,
+        type = models.Trophy.Types.GOLDEN_SWAN,
+    )
+
+    mens_winner = (
+        event.fantasies
+        .select_related('team', 'team__user')
+        .extend_financials()
+        .rank_by(Genders.MEN)
+    ).first()
+    if mens_winner:
+        mens_winner.team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.GOLDEN_COB,
+        )
+
+    womens_winner = (
+        event.fantasies
+        .select_related('team', 'team__user')
+        .extend_financials()
+        .rank_by(Genders.WOMEN)
+    ).first()
+    if womens_winner:
+        womens_winner.team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.GOLDEN_PEN,
+        )
+
+    rankings[1].team.trophies.create(
+        event = event,
+        type = models.Trophy.Types.SILVER_SWAN,
+    )
+    rankings[2].team.trophies.create(
+        event = event,
+        type = models.Trophy.Types.BRONZE_SWAN,
+    )
 
 
 def assign_new_veterans(event: models.Event) -> int:

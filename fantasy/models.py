@@ -394,6 +394,19 @@ class Team(models.Model):
         return self.purchases.filter(day = day, crew__gender = gender)
 
 
+    def get_leaderboard_trophies(self) -> list['Trophy']:
+        """Displays the most prestigious trophy from each event, or a single top-five/ten award."""
+
+        event_trophies = {}
+        display_trophies = []
+        for trophy in self.trophies.all():
+            if trophy.event not in event_trophies:
+                event_trophies[trophy.event] = trophy
+                display_trophies.append(trophy)
+
+        return display_trophies
+
+
 @receiver(models.signals.post_save, sender = auth.User)
 def create_team(instance: auth.User, created: bool, raw: bool, **_: dict[None, None]) -> None:
     """Creates a linked team for every user."""
@@ -458,4 +471,25 @@ class Purchase(models.Model):
     athlete = models.ForeignKey(Athlete, models.SET_NULL, related_name = 'purchases', null = True)
 
     price: int
+
+
+class Trophy(models.Model):
+    """Describes accolades won in previous events."""
+
+    class Types(models.TextChoices):
+        GOLDEN_SWAN = '01-GOLDEN', 'Golden Swan'
+        SILVER_SWAN = '02-SILVER', 'Silver Swan'
+        BRONZE_SWAN = '03-BRONZE', 'Bronze Swan'
+        GOLDEN_COB = '04-G-COB', 'Golden Cob'
+        GOLDEN_PEN = '05-G-PEN', 'Golden Pen'
+
+    team = models.ForeignKey(Team, models.CASCADE, related_name = 'trophies')
+    event = models.ForeignKey(Event, models.CASCADE, related_name = 'trophies')
+    type = models.CharField(max_length = 9)
+
+    class Meta:
+        ordering = ['type', '-event']
+
+    def __str__(self) -> str:
+        return f'{self.Types(self.type).label} ({self.event})'
 

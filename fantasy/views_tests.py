@@ -1021,9 +1021,10 @@ class LeaderboardPageBase(GamePageBase):
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
             (1) SELECT recent events
             (1) Get rankings
+            (1) Prefetch trophies
         """
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             self.client.get(self.url)
 
 
@@ -1033,11 +1034,12 @@ class LeaderboardPageBase(GamePageBase):
             (2) Django Auth overheard
             (1) SELECT recent events
             (1) Get user's team
+            (1) Prefetch trophies
         """
 
         self.client.login(username='DevTeam', password='password')
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.get(self.url)
 
 
