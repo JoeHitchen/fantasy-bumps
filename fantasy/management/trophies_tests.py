@@ -181,14 +181,19 @@ class Test__EventTrophies(TestCase):
     fixtures = ['dev_event', 'dev_days']
 
     event: models.Event
-    teams: list[models.GameEntry]
+    teams: list[models.Team]
 
     def compare_trophies(
             self,
-            team: models.GameEntry,
+            team: models.Team,
+            top_five_finisher: bool,
+            top_ten_finisher: bool,
             trophies: list[models.Trophy.Types],
     ) -> None:
-        self.assertEqual(list(team.team.trophies.values_list('type', flat = True)), trophies)
+        team.refresh_from_db()
+        self.assertEqual(team.top_five_finisher, top_five_finisher)
+        self.assertEqual(team.top_ten_finisher, top_ten_finisher)
+        self.assertEqual(list(team.trophies.values_list('type', flat = True)), trophies)
 
 
     @classmethod
@@ -196,15 +201,15 @@ class Test__EventTrophies(TestCase):
         cls.event = models.Event.objects.get(tag = 'devgame')
 
         cls.teams = []
-        for i in range(0, 6):
-            team = auth.User.objects.create_user(f'Player {i + 1}').team
-
+        for i in range(0, 13):
             budgets = 1500 - 10 * i
-            cls.teams.append(cls.event.fantasies.create(
+            team = auth.User.objects.create_user(f'Player {i + 1}').team
+            cls.event.fantasies.create(
                 team = team,
                 mens_budget = budgets,
                 womens_budget = budgets,
-            ))
+            )
+            cls.teams.append(team)
 
 
     def test__simple_ordering(self) -> None:
@@ -212,35 +217,51 @@ class Test__EventTrophies(TestCase):
 
         award_trophies(self.event)
 
-        self.compare_trophies(self.teams[0], [
+        self.compare_trophies(self.teams[0], True, True, [
             models.Trophy.Types.GOLDEN_SWAN,
             models.Trophy.Types.GOLDEN_COB,
             models.Trophy.Types.GOLDEN_PEN,
         ])
-        self.compare_trophies(self.teams[1], [models.Trophy.Types.SILVER_SWAN])
-        self.compare_trophies(self.teams[2], [models.Trophy.Types.BRONZE_SWAN])
-        self.compare_trophies(self.teams[3], [])
-        self.compare_trophies(self.teams[4], [])
-        self.compare_trophies(self.teams[5], [])
+        self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.SILVER_SWAN])
+        self.compare_trophies(self.teams[2], True, True, [models.Trophy.Types.BRONZE_SWAN])
+        self.compare_trophies(self.teams[3], True, True, [])
+        self.compare_trophies(self.teams[4], True, True, [])
+        self.compare_trophies(self.teams[5], False, True, [])
+        self.compare_trophies(self.teams[6], False, True, [])
+        self.compare_trophies(self.teams[7], False, True, [])
+        self.compare_trophies(self.teams[8], False, True, [])
+        self.compare_trophies(self.teams[9], False, True, [])
+        self.compare_trophies(self.teams[10], False, False, [])
+        self.compare_trophies(self.teams[11], False, False, [])
+        self.compare_trophies(self.teams[12], False, False, [])
 
 
     def test__mixed_up_ordering(self) -> None:
         """The Golden Cob & Golden Pen do not always go to the overall winner."""
 
-        self.teams[4].womens_budget = 1510
-        self.teams[4].save()
-        self.teams[5].mens_budget = 1535
-        self.teams[5].save()
+        team_seven_entry = self.teams[6].entries.get(event = self.event)
+        team_seven_entry.womens_budget = 1510
+        team_seven_entry.save()
+        team_twelve_entry = self.teams[11].entries.get(event = self.event)
+        team_twelve_entry.mens_budget = 1595
+        team_twelve_entry.save()
 
         award_trophies(self.event)
 
-        self.compare_trophies(self.teams[0], [models.Trophy.Types.GOLDEN_SWAN])
-        self.compare_trophies(self.teams[1], [models.Trophy.Types.BRONZE_SWAN])
-        self.compare_trophies(self.teams[2], [])
-        self.compare_trophies(self.teams[3], [])
-        self.compare_trophies(self.teams[4], [models.Trophy.Types.GOLDEN_PEN])
-        self.compare_trophies(self.teams[5], [
+        self.compare_trophies(self.teams[0], True, True, [models.Trophy.Types.GOLDEN_SWAN])
+        self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.BRONZE_SWAN])
+        self.compare_trophies(self.teams[2], True, True, [])
+        self.compare_trophies(self.teams[3], False, True, [])
+        self.compare_trophies(self.teams[4], False, True, [])
+        self.compare_trophies(self.teams[5], False, True, [])
+        self.compare_trophies(self.teams[6], True, True, [models.Trophy.Types.GOLDEN_PEN])
+        self.compare_trophies(self.teams[7], False, True, [])
+        self.compare_trophies(self.teams[8], False, True, [])
+        self.compare_trophies(self.teams[9], False, False, [])
+        self.compare_trophies(self.teams[10], False, False, [])
+        self.compare_trophies(self.teams[11], True, True, [
             models.Trophy.Types.SILVER_SWAN,
             models.Trophy.Types.GOLDEN_COB,
         ])
+        self.compare_trophies(self.teams[12], False, False, [])
 

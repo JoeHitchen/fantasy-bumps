@@ -454,6 +454,12 @@ def display_trophies(team: models.Team) -> str:
             trophy_icons[trophy.type],
         )
 
+    if not team.get_leaderboard_trophies():
+        if team.top_five_finisher:
+            trophy_string += '<span data-toggle="tooltip" title="Top Five Finisher">5️⃣</span>'
+        elif team.top_ten_finisher:
+            trophy_string += '<span data-toggle="tooltip" title="Top Ten Finisher">🔟</span>'
+
     if team.oxford_veteran:
         trophy_string += '<span data-toggle="tooltip" title="Oxford Veteran">🔷</span>'
     if team.cambridge_veteran:

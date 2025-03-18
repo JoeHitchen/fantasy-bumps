@@ -379,6 +379,8 @@ class Team(models.Model):
 
     user = models.OneToOneField('auth.User', models.CASCADE)
 
+    top_five_finisher = models.BooleanField(default = False)
+    top_ten_finisher = models.BooleanField(default = False)
     oxford_veteran = models.BooleanField(default = False)
     cambridge_veteran = models.BooleanField(default = False)
 

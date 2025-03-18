@@ -12,7 +12,7 @@ def award_trophies(event: models.Event) -> None:
         .select_related('team', 'team__user')
         .extend_financials()
         .rank_by(GENDERS_OVERALL)
-    )[0:10]
+    )
 
     rankings[0].team.trophies.create(
         event = event,
@@ -50,6 +50,17 @@ def award_trophies(event: models.Event) -> None:
     rankings[2].team.trophies.create(
         event = event,
         type = models.Trophy.Types.BRONZE_SWAN,
+    )
+
+    teams_to_update = []
+    for rank, ranking in enumerate(rankings[0:10], start = 1):
+        ranking.team.top_five_finisher = rank <= 5
+        ranking.team.top_ten_finisher = True
+        teams_to_update.append(ranking.team)
+
+    models.Team.objects.bulk_update(
+        teams_to_update,
+        ['top_five_finisher', 'top_ten_finisher'],
     )
 
 
