@@ -265,3 +265,11 @@ class Test__EventTrophies(TestCase):
         ])
         self.compare_trophies(self.teams[12], False, False, [])
 
+
+    def test__no_entries(self) -> None:
+        """The routine should not crash if there are no entries."""
+
+        self.event.fantasies.all().delete()
+
+        award_trophies(self.event)
+

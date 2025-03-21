@@ -1,5 +1,6 @@
 from datetime import time
 from unittest.mock import patch, Mock
+from datetime import timedelta
 import logging
 
 from django.test import TestCase
@@ -11,7 +12,7 @@ from django.core import mail
 from integrations.types import PositionMap
 from core.tests import exists
 
-from ..constants import Clubs, Genders, money
+from ..constants import Series, Clubs, Genders, money
 from .. import models
 from . import game_advance
 
@@ -38,9 +39,14 @@ class Test__PerformAdvance(TestCase):
     def setUpTestData(cls) -> None:
 
         cls.event = models.Event.objects.get(tag = 'devgame')
+        cls.event.series = Series.TORPIDS
+        cls.event.save()
 
         date_shift = timezone.localtime().date() - cls.event.first_day.date
         cls.event.days.update(date = db.F('date') + date_shift, first_race_time = time(00, 00))
+        last_day = exists(cls.event.days.last())
+        last_day.first_race_time = None
+        last_day.save()
         cls.day = cls.event.first_day  # Should now always be today with first race in the past
 
         crew_men = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN, rank = 1)
@@ -179,6 +185,54 @@ class Test__PerformAdvance(TestCase):
         self.event.refresh_from_db()
         self.assertTrue(self.event.market_held_closed)
         self.assertEqual(len(mail.outbox), 1)
+
+
+    @patch('fantasy.management.trophies.assign_new_veterans')
+    @patch('fantasy.management.trophies.award_trophies')
+    def test__trophies__last_day(self, trophies_mock: Mock, veterans_mock: Mock) -> None:
+        """On the last day, the game advance additionally awards trophies."""
+
+        self.event.days.update(date = db.F('date') - timedelta(1))
+
+        success = game_advance.perform_advance(self.event, roll_over_positions)
+
+        self.assertTrue(success)
+
+        trophies_mock.assert_called_once_with(self.event)
+        veterans_mock.assert_called_once_with(self.event)
+        self.assertEqual(len(mail.outbox), 0)
+
+
+    @patch('fantasy.management.trophies.assign_new_veterans')
+    @patch('fantasy.management.trophies.award_trophies')
+    def test__trophies__last_day_error(self, trophies_mock: Mock, veterans_mock: Mock) -> None:
+        """A message should be sent if there is an error awarding trophies."""
+
+        self.event.days.update(date = db.F('date') - timedelta(1))
+        veterans_mock.side_effect = Exception('An unknown error occurred')
+
+        success = game_advance.perform_advance(self.event, roll_over_positions)
+
+        self.assertTrue(success)
+
+        trophies_mock.assert_called_once_with(self.event)
+        veterans_mock.assert_called_once_with(self.event)
+        self.assertEqual(len(mail.outbox), 1)
+
+
+    @patch('fantasy.management.trophies.assign_new_veterans')
+    @patch('fantasy.management.trophies.award_trophies')
+    def test__trophies__earlier_day(self, trophies_mock: Mock, veterans_mock: Mock) -> None:
+        """On earlier days, the game advance should not awards trophies."""
+
+        success = game_advance.perform_advance(self.event, roll_over_positions)
+
+        self.assertTrue(success)
+
+        trophies_mock.assert_not_called()
+        veterans_mock.assert_not_called()
+        self.assertEqual(len(mail.outbox), 0)
+
 
 
 class Test__PurchaseRollover(TestCase):

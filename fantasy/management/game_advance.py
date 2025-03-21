@@ -10,6 +10,7 @@ from core.tests import exists
 from ..constants import Genders
 from .. import models, utils
 from .commands import utils as mgmt_utils
+from . import trophies
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_advance')
@@ -63,10 +64,9 @@ def perform_advance(
             event.market_held_closed = False
             event.save()
 
-        return True
-
     except models.Day.DoesNotExist:
         logger.info(f'{old_day} of {event} has already been advanced')
+        return False
 
     except Exception as err:
         logger.exception(f'An error occurred advancing {old_day} of {event}\n >> {err}')
@@ -80,8 +80,24 @@ def perform_advance(
             + '\n\nThe markets are held closed. '
             + "Hopefully it's an easy fix..."
         ), fail_silently = True)
+        return False
 
-    return False
+
+    if old_day == event.last_racing_day:
+        logger.info(f'Awarding trophies for {event}')
+        try:
+            with transaction.atomic():
+                trophies.award_trophies(event)
+                trophies.assign_new_veterans(event)
+        except Exception as err:
+            logger.exception(f'An error occurred awarding trophies for {event}\n >> {err}')
+            mail_admins(f'Trophy Awarding Failed - {event}', (
+                f'An unknown error occurred when awarding trophies for {event}.'
+                + f'\n\n >> {err}'
+                + "Hopefully it's an easy fix..."
+            ), fail_silently = True)
+
+    return True
 
 
 def roll_over_purchases(day: models.Day) -> None:

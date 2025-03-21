@@ -13,11 +13,13 @@ def award_trophies(event: models.Event) -> None:
         .extend_financials()
         .rank_by(GENDERS_OVERALL)
     )
+    total_entries = rankings.count()
 
-    rankings[0].team.trophies.create(
-        event = event,
-        type = models.Trophy.Types.GOLDEN_SWAN,
-    )
+    if total_entries > 0:
+        rankings[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.GOLDEN_SWAN,
+        )
 
     mens_winner = (
         event.fantasies
@@ -43,14 +45,16 @@ def award_trophies(event: models.Event) -> None:
             type = models.Trophy.Types.GOLDEN_PEN,
         )
 
-    rankings[1].team.trophies.create(
-        event = event,
-        type = models.Trophy.Types.SILVER_SWAN,
-    )
-    rankings[2].team.trophies.create(
-        event = event,
-        type = models.Trophy.Types.BRONZE_SWAN,
-    )
+    if total_entries > 1:
+        rankings[1].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.SILVER_SWAN,
+        )
+    if total_entries > 2:
+        rankings[2].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.BRONZE_SWAN,
+        )
 
     teams_to_update = []
     for rank, ranking in enumerate(rankings[0:10], start = 1):
