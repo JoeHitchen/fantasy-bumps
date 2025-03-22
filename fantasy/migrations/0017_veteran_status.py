@@ -5,7 +5,7 @@ from django.apps.registry import Apps
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor as SchemaEditor
 
 from fantasy.constants import Series
-from fantasy.management.trophies import assign_new_veterans
+from fantasy.management.trophies import identify_new_veterans
 
 
 def add_veteran_status(apps: Apps, schema_editor: SchemaEditor) -> None:
@@ -15,11 +15,11 @@ def add_veteran_status(apps: Apps, schema_editor: SchemaEditor) -> None:
 
     latest_oxford_event = Event.objects.filter(series__in = [Series.TORPIDS, Series.EIGHTS]).last()
     if latest_oxford_event:
-        assign_new_veterans(latest_oxford_event)
+        identify_new_veterans(latest_oxford_event)
 
     latest_cambridge_event = Event.objects.filter(series__in = [Series.MAYS, Series.LENTS]).last()
     if latest_cambridge_event:
-        assign_new_veterans(latest_cambridge_event)
+        identify_new_veterans(latest_cambridge_event)
 
 
 class Migration(migrations.Migration):

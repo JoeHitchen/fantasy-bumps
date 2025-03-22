@@ -4,7 +4,7 @@ from ..constants import GENDERS_OVERALL, Genders, Series
 from .. import models
 
 
-def award_trophies(event: models.Event) -> None:
+def award_event_trophies(event: models.Event) -> None:
     """Awards the trophies for an event."""
 
     rankings = (
@@ -19,6 +19,16 @@ def award_trophies(event: models.Event) -> None:
         rankings[0].team.trophies.create(
             event = event,
             type = models.Trophy.Types.GOLDEN_SWAN,
+        )
+    if total_entries > 1:
+        rankings[1].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.SILVER_SWAN,
+        )
+    if total_entries > 2:
+        rankings[2].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.BRONZE_SWAN,
         )
 
     mens_winner = (
@@ -45,17 +55,6 @@ def award_trophies(event: models.Event) -> None:
             type = models.Trophy.Types.GOLDEN_PEN,
         )
 
-    if total_entries > 1:
-        rankings[1].team.trophies.create(
-            event = event,
-            type = models.Trophy.Types.SILVER_SWAN,
-        )
-    if total_entries > 2:
-        rankings[2].team.trophies.create(
-            event = event,
-            type = models.Trophy.Types.BRONZE_SWAN,
-        )
-
     teams_to_update = []
     for rank, ranking in enumerate(rankings[0:10], start = 1):
         ranking.team.top_five_finisher = rank <= 5
@@ -68,8 +67,8 @@ def award_trophies(event: models.Event) -> None:
     )
 
 
-def assign_new_veterans(event: models.Event) -> int:
-    """Assigns the new veterans for an event and returns the number of new veterans."""
+def identify_new_veterans(event: models.Event) -> int:
+    """Identifies the new veterans after an event and returns how many new veterans there are."""
 
     oxford_series = [Series.TORPIDS, Series.EIGHTS]
     cambridge_series = [Series.MAYS, Series.LENTS]

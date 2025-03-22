@@ -9,7 +9,7 @@ from core.tests import exists
 from ..constants import Series, Genders
 from .. import models
 from .actions import create_event
-from .trophies import assign_new_veterans, award_trophies
+from .trophies import identify_new_veterans, award_event_trophies
 
 
 mens_ranking = [
@@ -85,7 +85,7 @@ class Test__VeteranStatus(TestCase):
     def test__assign_veterans__all_new_veterans(self) -> None:
         """Players who have entered enough events are granted veteran status."""
 
-        new_veterans = assign_new_veterans(self.event)
+        new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 1)
 
         self.team.refresh_from_db()
@@ -99,7 +99,7 @@ class Test__VeteranStatus(TestCase):
         self.team.oxford_veteran = True
         self.team.save()
 
-        new_veterans = assign_new_veterans(self.event)
+        new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 0)
 
         self.team.refresh_from_db()
@@ -112,7 +112,7 @@ class Test__VeteranStatus(TestCase):
 
         exists(self.team.entries.last()).delete()
 
-        new_veterans = assign_new_veterans(self.event)
+        new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 0)
 
         self.team.refresh_from_db()
@@ -127,7 +127,7 @@ class Test__VeteranStatus(TestCase):
         event.series = Series.MAYS
         event.save()
 
-        new_veterans = assign_new_veterans(self.event)
+        new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 0)
 
         self.team.refresh_from_db()
@@ -144,7 +144,7 @@ class Test__VeteranStatus(TestCase):
 
         self.event.refresh_from_db()
 
-        new_veterans = assign_new_veterans(self.event)
+        new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 1)
 
         self.team.refresh_from_db()
@@ -161,7 +161,7 @@ class Test__VeteranStatus(TestCase):
             event.fantasies.create(team = other_team_1)
             event.fantasies.create(team = other_team_2)
 
-        new_veterans = assign_new_veterans(self.event)
+        new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 3)
 
         self.team.refresh_from_db()
@@ -215,7 +215,7 @@ class Test__EventTrophies(TestCase):
     def test__simple_ordering(self) -> None:
         """The prizes are awarded in the order of budgets."""
 
-        award_trophies(self.event)
+        award_event_trophies(self.event)
 
         self.compare_trophies(self.teams[0], True, True, [
             models.Trophy.Types.GOLDEN_SWAN,
@@ -246,7 +246,7 @@ class Test__EventTrophies(TestCase):
         team_twelve_entry.mens_budget = 1595
         team_twelve_entry.save()
 
-        award_trophies(self.event)
+        award_event_trophies(self.event)
 
         self.compare_trophies(self.teams[0], True, True, [models.Trophy.Types.GOLDEN_SWAN])
         self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.BRONZE_SWAN])
@@ -271,5 +271,5 @@ class Test__EventTrophies(TestCase):
 
         self.event.fantasies.all().delete()
 
-        award_trophies(self.event)
+        award_event_trophies(self.event)
 

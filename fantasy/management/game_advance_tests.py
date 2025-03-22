@@ -187,8 +187,8 @@ class Test__PerformAdvance(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
 
-    @patch('fantasy.management.trophies.assign_new_veterans')
-    @patch('fantasy.management.trophies.award_trophies')
+    @patch('fantasy.management.trophies.identify_new_veterans')
+    @patch('fantasy.management.trophies.award_event_trophies')
     def test__trophies__last_day(self, trophies_mock: Mock, veterans_mock: Mock) -> None:
         """On the last day, the game advance additionally awards trophies."""
 
@@ -203,8 +203,8 @@ class Test__PerformAdvance(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
 
-    @patch('fantasy.management.trophies.assign_new_veterans')
-    @patch('fantasy.management.trophies.award_trophies')
+    @patch('fantasy.management.trophies.identify_new_veterans')
+    @patch('fantasy.management.trophies.award_event_trophies')
     def test__trophies__last_day_error(self, trophies_mock: Mock, veterans_mock: Mock) -> None:
         """A message should be sent if there is an error awarding trophies."""
 
@@ -220,8 +220,8 @@ class Test__PerformAdvance(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
 
-    @patch('fantasy.management.trophies.assign_new_veterans')
-    @patch('fantasy.management.trophies.award_trophies')
+    @patch('fantasy.management.trophies.identify_new_veterans')
+    @patch('fantasy.management.trophies.award_event_trophies')
     def test__trophies__earlier_day(self, trophies_mock: Mock, veterans_mock: Mock) -> None:
         """On earlier days, the game advance should not awards trophies."""
 

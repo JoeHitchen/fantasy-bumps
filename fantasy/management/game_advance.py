@@ -87,8 +87,8 @@ def perform_advance(
         logger.info(f'Awarding trophies for {event}')
         try:
             with transaction.atomic():
-                trophies.award_trophies(event)
-                trophies.assign_new_veterans(event)
+                trophies.award_event_trophies(event)
+                trophies.identify_new_veterans(event)
         except Exception as err:
             logger.exception(f'An error occurred awarding trophies for {event}\n >> {err}')
             mail_admins(f'Trophy Awarding Failed - {event}', (
