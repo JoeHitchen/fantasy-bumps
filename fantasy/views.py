@@ -349,6 +349,7 @@ class LeaderboardView(EventBase):
             .select_related('team', 'team__user')
             .extend_financials()
             .rank_by(ranking)
+            .prefetch_related('team__trophies')
         )
 
         return context
