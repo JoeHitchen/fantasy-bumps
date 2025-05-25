@@ -490,6 +490,7 @@ class Trophy(models.Model):
         GOLDEN_CYGNET = '06-G-CYG', 'Golden Cygnet'
         STEADY_SWAN = '07-STEADY', 'Steady Swan'
         UGLY_DUCKLING = '08-UGLY', 'Ugly Duckling'
+        JESTER_SWAN = '09-JESTER', 'Jester Swan'
 
     team = models.ForeignKey(Team, models.CASCADE, related_name = 'trophies')
     event = models.ForeignKey(Event, models.CASCADE, related_name = 'trophies')

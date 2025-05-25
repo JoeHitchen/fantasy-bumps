@@ -435,28 +435,29 @@ def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser)
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
 
-trophy_styles: dict[str, tuple[str, bool]] = {
-    models.Trophy.Types.GOLDEN_SWAN: ('gold', True),
-    models.Trophy.Types.SILVER_SWAN: ('silver', True),
-    models.Trophy.Types.BRONZE_SWAN: ('bronze', True),
-    models.Trophy.Types.GOLDEN_COB: ('cob', True),
-    models.Trophy.Types.GOLDEN_PEN: ('pen', True),
-    models.Trophy.Types.GOLDEN_CYGNET: ('gold', False),
-    models.Trophy.Types.STEADY_SWAN: ('silver', False),
-    models.Trophy.Types.UGLY_DUCKLING: ('ugly', False),
-    'Top Five': ('other', True),
-    'Top Ten': ('other', False),
-    'Oxford': ('oxford', False),
-    'Cambridge': ('cambridge', False),
+trophy_styles: dict[str, tuple[str, bool, bool]] = {
+    models.Trophy.Types.GOLDEN_SWAN: ('gold', True, False),
+    models.Trophy.Types.SILVER_SWAN: ('silver', True, False),
+    models.Trophy.Types.BRONZE_SWAN: ('bronze', True, False),
+    models.Trophy.Types.GOLDEN_COB: ('cob', True, False),
+    models.Trophy.Types.GOLDEN_PEN: ('pen', True, False),
+    models.Trophy.Types.GOLDEN_CYGNET: ('gold', False, False),
+    models.Trophy.Types.STEADY_SWAN: ('silver', False, True),
+    models.Trophy.Types.UGLY_DUCKLING: ('ugly', False, False),
+    models.Trophy.Types.JESTER_SWAN: ('jester', False, True),
+    'Top Five': ('other', True, False),
+    'Top Ten': ('other', False, False),
+    'Oxford': ('oxford', False, False),
+    'Cambridge': ('cambridge', False, False),
 }
 
 
 def swan_image(trophy_type: str, tooltip: str, bottom_tooltip: bool) -> str:
 
-    file_tag, is_large = trophy_styles[trophy_type]
+    file_tag, is_large, is_reversed = trophy_styles[trophy_type]
 
     style_classes = ['swan-trophy', 'swan-trophy-large' if is_large else 'swan-trophy-small']
-    if trophy_type == models.Trophy.Types.STEADY_SWAN:
+    if is_reversed:
         style_classes.append('swan-trophy-reversed')
 
     return '<img src="{}" class="{}" data-toggle="tooltip" data-placement="{}" title="{}" />'.format(  # noqa: E501
