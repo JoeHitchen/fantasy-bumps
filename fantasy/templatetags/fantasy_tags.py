@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.contrib.auth import models as auth
+from django.templatetags.static import static
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from ..constants import Genders, money
@@ -434,35 +435,56 @@ def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser)
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
 
-trophy_icons: dict[str, str] = {
-    models.Trophy.Types.GOLDEN_SWAN: '🥇',
-    models.Trophy.Types.SILVER_SWAN: '🥈',
-    models.Trophy.Types.BRONZE_SWAN: '🥉',
-    models.Trophy.Types.GOLDEN_COB: '♂️',
-    models.Trophy.Types.GOLDEN_PEN: '♀️',
+trophy_styles: dict[str, tuple[str, bool, bool]] = {
+    models.Trophy.Types.GOLDEN_SWAN: ('gold', True, False),
+    models.Trophy.Types.SILVER_SWAN: ('silver', True, False),
+    models.Trophy.Types.BRONZE_SWAN: ('bronze', True, False),
+    models.Trophy.Types.GOLDEN_COB: ('cob', True, False),
+    models.Trophy.Types.GOLDEN_PEN: ('pen', True, False),
+    models.Trophy.Types.GOLDEN_CYGNET: ('gold', False, False),
+    models.Trophy.Types.STEADY_SWAN: ('silver', False, True),
+    models.Trophy.Types.UGLY_DUCKLING: ('ugly', False, False),
+    models.Trophy.Types.JESTER_SWAN: ('jester', False, True),
+    'Top Five': ('other', True, False),
+    'Top Ten': ('other', False, False),
+    'Oxford': ('oxford', False, False),
+    'Cambridge': ('cambridge', False, False),
 }
 
 
+def swan_image(trophy_type: str, tooltip: str, bottom_tooltip: bool) -> str:
+
+    file_tag, is_large, is_reversed = trophy_styles[trophy_type]
+
+    style_classes = ['swan-trophy', 'swan-trophy-large' if is_large else 'swan-trophy-small']
+    if is_reversed:
+        style_classes.append('swan-trophy-reversed')
+
+    return '<img src="{}" class="{}" data-toggle="tooltip" data-placement="{}" title="{}" />'.format(  # noqa: E501
+        static('fantasy/swan-{}.svg'.format(file_tag)),
+        ' '.join(style_classes),
+        'bottom' if bottom_tooltip else 'top',
+        tooltip,
+    )
+
+
 @register.filter
-def display_trophies(team: models.Team) -> str:
+def display_trophies(team: models.Team, bottom_tooltip: bool = False) -> str:
 
     trophy_string = ''
 
     for trophy in team.get_leaderboard_trophies():
-        trophy_string += '<span data-toggle="tooltip" title="{}">{}</span>'.format(
-            trophy,
-            trophy_icons[trophy.type],
-        )
+        trophy_string += swan_image(trophy.type, str(trophy), bottom_tooltip)
 
     if not team.get_leaderboard_trophies():
         if team.top_five_finisher:
-            trophy_string += '<span data-toggle="tooltip" title="Top Five Finisher">5️⃣</span>'
+            trophy_string += swan_image('Top Five', 'Top Five Finisher', bottom_tooltip)
         elif team.top_ten_finisher:
-            trophy_string += '<span data-toggle="tooltip" title="Top Ten Finisher">🔟</span>'
+            trophy_string += swan_image('Top Ten', 'Top Ten Finisher', bottom_tooltip)
 
     if team.oxford_veteran:
-        trophy_string += '<span data-toggle="tooltip" title="Oxford Veteran">🔷</span>'
+        trophy_string += swan_image('Oxford', 'Oxford Veteran', bottom_tooltip)
     if team.cambridge_veteran:
-        trophy_string += '<span data-toggle="tooltip" title="Cambridge Veteran">🔹</span>'
+        trophy_string += swan_image('Cambridge', 'Cambridge Veteran', bottom_tooltip)
 
     return mark_safe(trophy_string)

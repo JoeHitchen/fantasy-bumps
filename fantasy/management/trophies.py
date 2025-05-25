@@ -9,6 +9,7 @@ def award_event_trophies(event: models.Event) -> None:
 
     rankings = (
         event.fantasies
+        .filter(valid_entry = True)
         .select_related('team', 'team__user')
         .extend_financials()
         .rank_by(GENDERS_OVERALL)
@@ -19,6 +20,10 @@ def award_event_trophies(event: models.Event) -> None:
         rankings[0].team.trophies.create(
             event = event,
             type = models.Trophy.Types.GOLDEN_SWAN,
+        )
+        rankings.reverse()[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.UGLY_DUCKLING,
         )
     if total_entries > 1:
         rankings[1].team.trophies.create(
@@ -53,6 +58,22 @@ def award_event_trophies(event: models.Event) -> None:
         womens_winner.team.trophies.create(
             event = event,
             type = models.Trophy.Types.GOLDEN_PEN,
+        )
+
+    cygnet_rankings = rankings.annotate(
+        previous_entries = db.Count('id', filter = db.Q(team__entries__event_id__lt = event.id)),
+    ).filter(previous_entries = 0)
+    if cygnet_rankings.count() > 0:
+        cygnet_rankings[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.GOLDEN_CYGNET,
+        )
+
+    steady_swan_rankings = rankings.filter(has_subs = False)
+    if steady_swan_rankings.count() > 0:
+        steady_swan_rankings[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.STEADY_SWAN,
         )
 
     teams_to_update = []
