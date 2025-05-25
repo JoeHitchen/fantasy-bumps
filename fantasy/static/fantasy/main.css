@@ -92,3 +92,16 @@
   width: 1.5em;
   vertical-align: middle;
 }
+
+.swan-trophy {
+  transform: scaleX(-1);
+  padding-left: 0.25rem;
+}
+.swan-trophy-small {
+  margin-top: -0.25rem;
+  height: 1.4rem;
+}
+.swan-trophy-large {
+  margin-top: -0.4rem;
+  height: 1.75rem;
+}
