@@ -40,6 +40,7 @@ def ourcs_event_id(series: str, year: int) -> int:
             (EIGHTS, 2023): 241,
             (EIGHTS, 2024): 253,
             (TORPIDS, 2025): 262,
+            (EIGHTS, 2025): 264,
         }[(series, year)]
 
     except KeyError:
