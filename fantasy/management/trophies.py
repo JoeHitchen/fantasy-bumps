@@ -21,10 +21,6 @@ def award_event_trophies(event: models.Event) -> None:
             event = event,
             type = models.Trophy.Types.GOLDEN_SWAN,
         )
-        rankings.reverse()[0].team.trophies.create(
-            event = event,
-            type = models.Trophy.Types.UGLY_DUCKLING,
-        )
     if total_entries > 1:
         rankings[1].team.trophies.create(
             event = event,
@@ -74,6 +70,12 @@ def award_event_trophies(event: models.Event) -> None:
         steady_swan_rankings[0].team.trophies.create(
             event = event,
             type = models.Trophy.Types.STEADY_SWAN,
+        )
+
+    if total_entries > 0:
+        rankings.reverse()[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.UGLY_DUCKLING,
         )
 
     teams_to_update = []
