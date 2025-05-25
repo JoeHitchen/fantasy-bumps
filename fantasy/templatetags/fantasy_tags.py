@@ -442,6 +442,7 @@ trophy_styles: dict[str, tuple[str, bool]] = {
     models.Trophy.Types.GOLDEN_COB: ('cob', True),
     models.Trophy.Types.GOLDEN_PEN: ('pen', True),
     models.Trophy.Types.GOLDEN_CYGNET: ('gold', False),
+    models.Trophy.Types.STEADY_SWAN: ('silver', False),
     'Top Five': ('other', True),
     'Top Ten': ('other', False),
     'Oxford': ('oxford', False),
@@ -452,9 +453,14 @@ trophy_styles: dict[str, tuple[str, bool]] = {
 def swan_image(trophy_type: str, tooltip: str, bottom_tooltip: bool) -> str:
 
     file_tag, is_large = trophy_styles[trophy_type]
+
+    style_classes = ['swan-trophy', 'swan-trophy-large' if is_large else 'swan-trophy-small']
+    if trophy_type == models.Trophy.Types.STEADY_SWAN:
+        style_classes.append('swan-trophy-reversed')
+
     return '<img src="{}" class="{}" data-toggle="tooltip" data-placement="{}" title="{}" />'.format(  # noqa: E501
         static('fantasy/swan-{}.svg'.format(file_tag)),
-        ' '.join(['swan-trophy', 'swan-trophy-large' if is_large else 'swan-trophy-small']),
+        ' '.join(style_classes),
         'bottom' if bottom_tooltip else 'top',
         tooltip,
     )

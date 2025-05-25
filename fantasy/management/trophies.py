@@ -64,6 +64,13 @@ def award_event_trophies(event: models.Event) -> None:
             type = models.Trophy.Types.GOLDEN_CYGNET,
         )
 
+    steady_swan_rankings = rankings.filter(has_subs = False)
+    if steady_swan_rankings.count() > 0:
+        steady_swan_rankings[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.STEADY_SWAN,
+        )
+
     teams_to_update = []
     for rank, ranking in enumerate(rankings[0:10], start = 1):
         ranking.team.top_five_finisher = rank <= 5

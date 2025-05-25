@@ -1,3 +1,4 @@
+from typing import Iterable
 import logging
 
 from django.db import models as db, transaction
@@ -14,6 +15,9 @@ from . import trophies
 
 logging.basicConfig(level = logging.INFO)
 logger = logging.getLogger('fantasy.game_advance')
+
+
+SeatTuple = tuple[models.Crew, models.Seat, models.Athlete | None]
 
 
 def perform_advance(
@@ -81,6 +85,20 @@ def perform_advance(
             + "Hopefully it's an easy fix..."
         ), fail_silently = True)
         return False
+
+
+    if old_day != event.first_day:
+        logger.info(f'Updating subs usage for {event}')
+        try:
+            with transaction.atomic():
+                update_subs_usage(new_day)
+        except Exception as err:
+            logger.exception(f'An error occurred updating subs usage for {event}\n >> {err}')
+            mail_admins(f'Subs Usage Update Failed - {event}', (
+                f'An unknown error occurred when updating subs usage for {event}.'
+                + f'\n\n >> {err}'
+                + "Hopefully it's an easy fix..."
+            ), fail_silently = True)
 
 
     if old_day == event.last_racing_day:
@@ -231,4 +249,26 @@ def create_payout_matrix(day: models.Day) -> dict[models.Crew, utils.Payout]:
             crew.posn_new[0].rank,
         ) for crew in crews
     }
+
+
+def update_subs_usage(day: models.Day) -> None:
+    """Updates the subs usage for all entries."""
+    assert day.prev
+
+    for entry in models.GameEntry.objects.filter(event = day.event, has_subs = False):
+        if crew_used_subs(entry, day, Genders.MEN) or crew_used_subs(entry, day, Genders.WOMEN):
+            entry.has_subs = True
+            entry.save()
+
+
+def crew_used_subs(entry: models.GameEntry, day: models.Day, gender: Genders) -> bool:
+    """Indicates that the crew list does not match the previous day's crew list."""
+    assert day.prev
+
+    def crew_tuples(crew: Iterable[models.Purchase]) -> list[SeatTuple]:
+        return [(purchase.crew, purchase.seat, purchase.athlete) for purchase in crew]
+
+    crew_yesterday = entry.team.get_crew(day.prev, gender)
+    crew_today = entry.team.get_crew(day, gender)
+    return crew_tuples(crew_yesterday) != crew_tuples(crew_today)
 

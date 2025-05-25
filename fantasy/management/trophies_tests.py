@@ -222,6 +222,7 @@ class Test__EventTrophies(TestCase):
             models.Trophy.Types.GOLDEN_COB,
             models.Trophy.Types.GOLDEN_PEN,
             models.Trophy.Types.GOLDEN_CYGNET,
+            models.Trophy.Types.STEADY_SWAN,
         ])
         self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.SILVER_SWAN])
         self.compare_trophies(self.teams[2], True, True, [models.Trophy.Types.BRONZE_SWAN])
@@ -252,6 +253,7 @@ class Test__EventTrophies(TestCase):
         self.compare_trophies(self.teams[0], True, True, [
             models.Trophy.Types.GOLDEN_SWAN,
             models.Trophy.Types.GOLDEN_CYGNET,
+            models.Trophy.Types.STEADY_SWAN,
         ])
         self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.BRONZE_SWAN])
         self.compare_trophies(self.teams[2], True, True, [])
@@ -295,6 +297,7 @@ class Test__EventTrophies(TestCase):
             models.Trophy.Types.GOLDEN_SWAN,
             models.Trophy.Types.GOLDEN_COB,
             models.Trophy.Types.GOLDEN_PEN,
+            models.Trophy.Types.STEADY_SWAN,
         ])
         self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.SILVER_SWAN])
         self.compare_trophies(self.teams[2], True, True, [models.Trophy.Types.BRONZE_SWAN])
@@ -303,6 +306,36 @@ class Test__EventTrophies(TestCase):
         self.compare_trophies(self.teams[5], False, True, [])
         self.compare_trophies(self.teams[6], False, True, [models.Trophy.Types.GOLDEN_CYGNET])
         self.compare_trophies(self.teams[7], False, True, [])
+        self.compare_trophies(self.teams[8], False, True, [])
+        self.compare_trophies(self.teams[9], False, True, [])
+        self.compare_trophies(self.teams[10], False, False, [])
+        self.compare_trophies(self.teams[11], False, False, [])
+        self.compare_trophies(self.teams[12], False, False, [])
+
+
+    def test__steady_swan(self) -> None:
+        """The Steady Swan is awarded to the highest ranked player with no subs."""
+
+        for team in self.teams[0:7]:
+            entry = team.entries.get(event = self.event)
+            entry.has_subs = True
+            entry.save()
+
+        award_event_trophies(self.event)
+
+        self.compare_trophies(self.teams[0], True, True, [
+            models.Trophy.Types.GOLDEN_SWAN,
+            models.Trophy.Types.GOLDEN_COB,
+            models.Trophy.Types.GOLDEN_PEN,
+            models.Trophy.Types.GOLDEN_CYGNET,
+        ])
+        self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.SILVER_SWAN])
+        self.compare_trophies(self.teams[2], True, True, [models.Trophy.Types.BRONZE_SWAN])
+        self.compare_trophies(self.teams[3], True, True, [])
+        self.compare_trophies(self.teams[4], True, True, [])
+        self.compare_trophies(self.teams[5], False, True, [])
+        self.compare_trophies(self.teams[6], False, True, [])
+        self.compare_trophies(self.teams[7], False, True, [models.Trophy.Types.STEADY_SWAN])
         self.compare_trophies(self.teams[8], False, True, [])
         self.compare_trophies(self.teams[9], False, True, [])
         self.compare_trophies(self.teams[10], False, False, [])

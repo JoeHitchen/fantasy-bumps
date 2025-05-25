@@ -105,3 +105,8 @@
   margin-top: -0.4rem;
   height: 1.75rem;
 }
+.swan-trophy-reversed {
+  transform: scaleX(1);
+  margin-left: -0.25rem;
+  margin-right: 0.25rem;
+}
