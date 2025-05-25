@@ -435,6 +435,9 @@ def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser)
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
 
+
+small_trophy_types = ['Top Ten', 'Oxford', 'Cambridge']
+
 trophy_file_tags: dict[str, str] = {
     models.Trophy.Types.GOLDEN_SWAN: 'gold',
     models.Trophy.Types.SILVER_SWAN: 'silver',
@@ -446,7 +449,6 @@ trophy_file_tags: dict[str, str] = {
     'Top Five': 'other',
     'Top Ten': 'other',
 }
-small_trophy_types = ['Oxford', 'Cambridge']
 
 
 def swan_image(trophy_type: str, tooltip: str, bottom_tooltip: bool) -> str:
