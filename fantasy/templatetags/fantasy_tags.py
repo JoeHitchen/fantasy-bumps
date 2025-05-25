@@ -441,6 +441,7 @@ trophy_styles: dict[str, tuple[str, bool]] = {
     models.Trophy.Types.BRONZE_SWAN: ('bronze', True),
     models.Trophy.Types.GOLDEN_COB: ('cob', True),
     models.Trophy.Types.GOLDEN_PEN: ('pen', True),
+    models.Trophy.Types.GOLDEN_CYGNET: ('gold', False),
     'Top Five': ('other', True),
     'Top Ten': ('other', False),
     'Oxford': ('oxford', False),

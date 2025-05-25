@@ -55,6 +55,15 @@ def award_event_trophies(event: models.Event) -> None:
             type = models.Trophy.Types.GOLDEN_PEN,
         )
 
+    cygnet_rankings = rankings.annotate(
+        previous_entries = db.Count('id', filter = db.Q(team__entries__event_id__lt = event.id)),
+    ).filter(previous_entries = 0)
+    if cygnet_rankings.count() > 0:
+        cygnet_rankings[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.GOLDEN_CYGNET,
+        )
+
     teams_to_update = []
     for rank, ranking in enumerate(rankings[0:10], start = 1):
         ranking.team.top_five_finisher = rank <= 5

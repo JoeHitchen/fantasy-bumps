@@ -484,10 +484,11 @@ class Trophy(models.Model):
         BRONZE_SWAN = '03-BRONZE', 'Bronze Swan'
         GOLDEN_COB = '04-G-COB', 'Golden Cob'
         GOLDEN_PEN = '05-G-PEN', 'Golden Pen'
+        GOLDEN_CYGNET = '06-G-CYG', 'Golden Cygnet'
 
     team = models.ForeignKey(Team, models.CASCADE, related_name = 'trophies')
     event = models.ForeignKey(Event, models.CASCADE, related_name = 'trophies')
-    type = models.CharField(max_length = 9)
+    type = models.CharField(max_length = 9, choices = Types.choices)
 
     class Meta:
         ordering = ['type', '-event']
