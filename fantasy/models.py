@@ -456,6 +456,7 @@ class GameEntry(models.Model):
     mens_balance = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
     womens_balance = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
 
+    valid_entry = models.BooleanField(null = True, default = None)
     has_subs = models.BooleanField(default = False)
 
     objects = GameEntryQuerySet.as_manager()
@@ -488,6 +489,7 @@ class Trophy(models.Model):
         GOLDEN_PEN = '05-G-PEN', 'Golden Pen'
         GOLDEN_CYGNET = '06-G-CYG', 'Golden Cygnet'
         STEADY_SWAN = '07-STEADY', 'Steady Swan'
+        UGLY_DUCKLING = '08-UGLY', 'Ugly Duckling'
 
     team = models.ForeignKey(Team, models.CASCADE, related_name = 'trophies')
     event = models.ForeignKey(Event, models.CASCADE, related_name = 'trophies')

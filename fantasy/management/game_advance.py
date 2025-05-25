@@ -87,6 +87,19 @@ def perform_advance(
         return False
 
 
+    logger.info(f'Updating crew validity for {event}')
+    try:
+        with transaction.atomic():
+            update_entry_validity(old_day)
+    except Exception as err:
+        logger.exception(f'An error occurred updating crew validity for {event}\n >> {err}')
+        mail_admins(f'Crew Validity Update Failed - {event}', (
+            f'An unknown error occurred when updating crew validity for {event}.'
+            + f'\n\n >> {err}'
+            + "Hopefully it's an easy fix..."
+        ), fail_silently = True)
+
+
     if old_day != event.first_day:
         logger.info(f'Updating subs usage for {event}')
         try:
@@ -249,6 +262,21 @@ def create_payout_matrix(day: models.Day) -> dict[models.Crew, utils.Payout]:
             crew.posn_new[0].rank,
         ) for crew in crews
     }
+
+
+def update_entry_validity(day: models.Day) -> None:
+    """Updates the validity of all entries."""
+
+    all_seats = models.Seat.objects.all()
+
+    for entry in models.GameEntry.objects.filter(event = day.event, valid_entry = None):
+        mens_crew = entry.team.get_crew(day, Genders.MEN)
+        womens_crew = entry.team.get_crew(day, Genders.WOMEN)
+        if mens_crew or womens_crew:
+            mens_valid = utils.has_all_seats(mens_crew, all_seats)
+            womens_valid = utils.has_all_seats(womens_crew, all_seats)
+            entry.valid_entry = mens_valid and womens_valid
+            entry.save()
 
 
 def update_subs_usage(day: models.Day) -> None:

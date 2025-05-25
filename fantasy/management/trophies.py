@@ -9,6 +9,7 @@ def award_event_trophies(event: models.Event) -> None:
 
     rankings = (
         event.fantasies
+        .filter(valid_entry = True)
         .select_related('team', 'team__user')
         .extend_financials()
         .rank_by(GENDERS_OVERALL)
@@ -19,6 +20,10 @@ def award_event_trophies(event: models.Event) -> None:
         rankings[0].team.trophies.create(
             event = event,
             type = models.Trophy.Types.GOLDEN_SWAN,
+        )
+        rankings.reverse()[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.UGLY_DUCKLING,
         )
     if total_entries > 1:
         rankings[1].team.trophies.create(

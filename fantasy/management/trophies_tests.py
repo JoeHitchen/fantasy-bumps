@@ -208,6 +208,7 @@ class Test__EventTrophies(TestCase):
                 team = team,
                 mens_budget = budgets,
                 womens_budget = budgets,
+                valid_entry = True,
             )
             cls.teams.append(team)
 
@@ -235,7 +236,7 @@ class Test__EventTrophies(TestCase):
         self.compare_trophies(self.teams[9], False, True, [])
         self.compare_trophies(self.teams[10], False, False, [])
         self.compare_trophies(self.teams[11], False, False, [])
-        self.compare_trophies(self.teams[12], False, False, [])
+        self.compare_trophies(self.teams[12], False, False, [models.Trophy.Types.UGLY_DUCKLING])
 
 
     def test__mixed_up_ordering(self) -> None:
@@ -269,7 +270,7 @@ class Test__EventTrophies(TestCase):
             models.Trophy.Types.SILVER_SWAN,
             models.Trophy.Types.GOLDEN_COB,
         ])
-        self.compare_trophies(self.teams[12], False, False, [])
+        self.compare_trophies(self.teams[12], False, False, [models.Trophy.Types.UGLY_DUCKLING])
 
 
     def test__golden_cygnet(self) -> None:
@@ -287,6 +288,7 @@ class Test__EventTrophies(TestCase):
                 team = team,
                 mens_budget = budgets,
                 womens_budget = budgets,
+                valid_entry = True,
             )
         for team in self.teams[6:]:
             team.entries.get(event = self.event).delete()
@@ -310,7 +312,7 @@ class Test__EventTrophies(TestCase):
         self.compare_trophies(self.teams[9], False, True, [])
         self.compare_trophies(self.teams[10], False, False, [])
         self.compare_trophies(self.teams[11], False, False, [])
-        self.compare_trophies(self.teams[12], False, False, [])
+        self.compare_trophies(self.teams[12], False, False, [models.Trophy.Types.UGLY_DUCKLING])
 
 
     def test__steady_swan(self) -> None:
@@ -338,6 +340,37 @@ class Test__EventTrophies(TestCase):
         self.compare_trophies(self.teams[7], False, True, [models.Trophy.Types.STEADY_SWAN])
         self.compare_trophies(self.teams[8], False, True, [])
         self.compare_trophies(self.teams[9], False, True, [])
+        self.compare_trophies(self.teams[10], False, False, [])
+        self.compare_trophies(self.teams[11], False, False, [])
+        self.compare_trophies(self.teams[12], False, False, [models.Trophy.Types.UGLY_DUCKLING])
+
+
+    def test__ugly_duckling(self) -> None:
+        """The Ugly Duckling is awarded to the lowest ranked player with a valid entry."""
+
+        for team in self.teams[8:]:
+            entry = team.entries.get(event = self.event)
+            entry.valid_entry = False
+            entry.save()
+
+        award_event_trophies(self.event)
+
+        self.compare_trophies(self.teams[0], True, True, [
+            models.Trophy.Types.GOLDEN_SWAN,
+            models.Trophy.Types.GOLDEN_COB,
+            models.Trophy.Types.GOLDEN_PEN,
+            models.Trophy.Types.GOLDEN_CYGNET,
+            models.Trophy.Types.STEADY_SWAN,
+        ])
+        self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.SILVER_SWAN])
+        self.compare_trophies(self.teams[2], True, True, [models.Trophy.Types.BRONZE_SWAN])
+        self.compare_trophies(self.teams[3], True, True, [])
+        self.compare_trophies(self.teams[4], True, True, [])
+        self.compare_trophies(self.teams[5], False, True, [])
+        self.compare_trophies(self.teams[6], False, True, [])
+        self.compare_trophies(self.teams[7], False, True, [models.Trophy.Types.UGLY_DUCKLING])
+        self.compare_trophies(self.teams[8], False, False, [])  # Top-Five/Top-Ten not awarded
+        self.compare_trophies(self.teams[9], False, False, [])  # to invalid entries
         self.compare_trophies(self.teams[10], False, False, [])
         self.compare_trophies(self.teams[11], False, False, [])
         self.compare_trophies(self.teams[12], False, False, [])

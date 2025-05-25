@@ -743,6 +743,120 @@ class Test__PayoutMatrix(TestCase):
             game_advance.create_payout_matrix(fresh_day)
 
 
+class Test__EntryValidity(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_team', 'seats']
+
+    day: models.Day
+    team: models.Team
+    entry: models.GameEntry
+    crew_men: models.Crew
+    crew_women: models.Crew
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.day = exists(models.Day.objects.first())
+
+        cls.team = exists(models.Team.objects.first())
+        cls.entry = cls.team.entries.create(event = cls.day.event)
+
+        cls.crew_men = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.MEN, rank = 1)
+        cls.crew_women = models.Crew.objects.get(
+            club = Clubs.HERT,
+            gender = Genders.WOMEN,
+            rank = 1,
+        )
+
+        for seat in models.Seat.objects.all():
+            cls.team.purchases.create(day = cls.day, seat = seat, crew = cls.crew_men)
+            cls.team.purchases.create(day = cls.day, seat = seat, crew = cls.crew_women)
+
+
+    def test__missing_entry(self) -> None:
+        """The entry is not judged if it is missing all seats."""
+
+        self.team.purchases.all().delete()
+
+        game_advance.update_entry_validity(self.day)
+
+        self.entry.refresh_from_db()
+        self.assertIsNone(self.entry.valid_entry)
+
+
+    def test__valid_entry(self) -> None:
+        """The entry is valid if both crews have all seats."""
+
+        game_advance.update_entry_validity(self.day)
+
+        self.entry.refresh_from_db()
+        self.assertTrue(self.entry.valid_entry)
+
+
+    def test__invalid_entry__mens_crew_missing_seat(self) -> None:
+        """The entry is invalid if the mens's crew is missing a seat."""
+
+        self.team.purchases.filter(
+            day = self.day,
+            crew__gender = Genders.MEN,
+            seat__name = '4',
+        ).delete()
+
+        game_advance.update_entry_validity(self.day)
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.valid_entry, False)  # Testing explicitly for boolean False
+
+
+    def test__invalid_entry__womens_crew_missing_seat(self) -> None:
+        """The entry is invalid if the womens's crew is missing a seat."""
+
+        self.team.purchases.filter(
+            day = self.day,
+            crew__gender = Genders.WOMEN,
+            seat__name = '6',
+        ).delete()
+
+        game_advance.update_entry_validity(self.day)
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.valid_entry, False)  # Testing explicitly for boolean False
+
+
+    def test__invalid_to_valid(self) -> None:
+        """A previously invalid entry cannot later become valid."""
+
+        self.entry.valid_entry = False
+        self.entry.save()
+
+        game_advance.update_entry_validity(self.day)
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.valid_entry, False)  # Testing explicitly for boolean False
+
+
+    def test__invalid_entry__valid_to_invalid(self) -> None:
+        """A previously valid entry cannot later become invalid."""
+
+        self.entry.valid_entry = True
+        self.entry.save()
+
+        self.team.purchases.filter(
+            day = self.day,
+            crew__gender = Genders.MEN,
+            seat__name = '4',
+        ).delete()
+
+        self.team.purchases.filter(
+            day = self.day,
+            crew__gender = Genders.WOMEN,
+            seat__name = '4',
+        ).delete()
+
+        game_advance.update_entry_validity(self.day)
+
+        self.entry.refresh_from_db()
+        self.assertTrue(self.entry.valid_entry)
+
+
 class Test__SubsUsage(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_team', 'seats']
 
