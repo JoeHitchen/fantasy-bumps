@@ -435,31 +435,25 @@ def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser)
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
 
-
-small_trophy_types = ['Top Ten', 'Oxford', 'Cambridge']
-
-trophy_file_tags: dict[str, str] = {
-    models.Trophy.Types.GOLDEN_SWAN: 'gold',
-    models.Trophy.Types.SILVER_SWAN: 'silver',
-    models.Trophy.Types.BRONZE_SWAN: 'bronze',
-    models.Trophy.Types.GOLDEN_COB: 'cob',
-    models.Trophy.Types.GOLDEN_PEN: 'pen',
-    'Oxford': 'oxford',
-    'Cambridge': 'cambridge',
-    'Top Five': 'other',
-    'Top Ten': 'other',
+trophy_styles: dict[str, tuple[str, bool]] = {
+    models.Trophy.Types.GOLDEN_SWAN: ('gold', True),
+    models.Trophy.Types.SILVER_SWAN: ('silver', True),
+    models.Trophy.Types.BRONZE_SWAN: ('bronze', True),
+    models.Trophy.Types.GOLDEN_COB: ('cob', True),
+    models.Trophy.Types.GOLDEN_PEN: ('pen', True),
+    'Top Five': ('other', True),
+    'Top Ten': ('other', False),
+    'Oxford': ('oxford', False),
+    'Cambridge': ('cambridge', False),
 }
 
 
 def swan_image(trophy_type: str, tooltip: str, bottom_tooltip: bool) -> str:
 
-    classes = ['swan-trophy']
-    size_class = 'swan-trophy-small' if trophy_type in small_trophy_types else 'swan-trophy-large'
-    classes.append(size_class)
-
+    file_tag, is_large = trophy_styles[trophy_type]
     return '<img src="{}" class="{}" data-toggle="tooltip" data-placement="{}" title="{}" />'.format(  # noqa: E501
-        static('fantasy/swan-{}.svg'.format(trophy_file_tags[trophy_type])),
-        ' '.join(classes),
+        static('fantasy/swan-{}.svg'.format(file_tag)),
+        ' '.join(['swan-trophy', 'swan-trophy-large' if is_large else 'swan-trophy-small']),
         'bottom' if bottom_tooltip else 'top',
         tooltip,
     )
