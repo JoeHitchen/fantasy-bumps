@@ -77,7 +77,7 @@ class Test__VeteranStatus(TestCase):
                 start_date = date(year, 5, 25),
                 start_order = start_order,
             )
-            event.fantasies.create(team = cls.team)
+            event.fantasies.create(team = cls.team, valid_entry = True)
 
         cls.event = exists(models.Event.objects.last())
 
@@ -111,6 +111,21 @@ class Test__VeteranStatus(TestCase):
         """Players who do not have enough entries are not granted veteran status."""
 
         exists(self.team.entries.last()).delete()
+
+        new_veterans = identify_new_veterans(self.event)
+        self.assertEqual(new_veterans, 0)
+
+        self.team.refresh_from_db()
+        self.assertFalse(self.team.oxford_veteran)
+        self.assertFalse(self.team.cambridge_veteran)
+
+
+    def test__assign_veterans__not_enough_valid_entries(self) -> None:
+        """Entries must be marked a valid to be counted."""
+
+        entry = exists(self.team.entries.last())
+        entry.valid_entry = False
+        entry.save()
 
         new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 0)
@@ -158,8 +173,8 @@ class Test__VeteranStatus(TestCase):
         other_team_1 = auth.User.objects.create_user(username = 'Other Team 1').team
         other_team_2 = auth.User.objects.create_user(username = 'Other Team 2').team
         for event in models.Event.objects.all():
-            event.fantasies.create(team = other_team_1)
-            event.fantasies.create(team = other_team_2)
+            event.fantasies.create(team = other_team_1, valid_entry = True)
+            event.fantasies.create(team = other_team_2, valid_entry = True)
 
         new_veterans = identify_new_veterans(self.event)
         self.assertEqual(new_veterans, 3)

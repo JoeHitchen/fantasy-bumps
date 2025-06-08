@@ -21,10 +21,6 @@ def award_event_trophies(event: models.Event) -> None:
             event = event,
             type = models.Trophy.Types.GOLDEN_SWAN,
         )
-        rankings.reverse()[0].team.trophies.create(
-            event = event,
-            type = models.Trophy.Types.UGLY_DUCKLING,
-        )
     if total_entries > 1:
         rankings[1].team.trophies.create(
             event = event,
@@ -76,6 +72,12 @@ def award_event_trophies(event: models.Event) -> None:
             type = models.Trophy.Types.STEADY_SWAN,
         )
 
+    if total_entries > 0:
+        rankings.reverse()[0].team.trophies.create(
+            event = event,
+            type = models.Trophy.Types.UGLY_DUCKLING,
+        )
+
     teams_to_update = []
     for rank, ranking in enumerate(rankings[0:10], start = 1):
         ranking.team.top_five_finisher = rank <= 5
@@ -107,7 +109,10 @@ def identify_new_veterans(event: models.Event) -> int:
     return (
         models.Team.objects
         .filter(**{veteran_property: False})
-        .annotate(entries_count = db.Count('entries', filter = location_filter))
+        .annotate(entries_count = db.Count(
+            'entries',
+            filter = location_filter & db.Q(entries__valid_entry = True),
+        ))
         .filter(entries_count__gte = 5)
         .update(**{veteran_property: True})
     )

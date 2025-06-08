@@ -401,10 +401,19 @@ class Team(models.Model):
 
         event_trophies = {}
         display_trophies = []
+        jester_trophy = None
         for trophy in self.trophies.all():
+
+            if trophy.type == Trophy.Types.JESTER_SWAN:
+                jester_trophy = trophy
+                continue
+
             if trophy.event not in event_trophies:
                 event_trophies[trophy.event] = trophy
                 display_trophies.append(trophy)
+
+        if jester_trophy:
+            display_trophies.append(jester_trophy)
 
         return display_trophies
 

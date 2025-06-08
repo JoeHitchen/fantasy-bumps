@@ -1623,6 +1623,20 @@ class Test__Team__Trophies(TestCase):
         self.assertEqual(self.team.get_leaderboard_trophies(), [trophy_1, trophy_3, trophy_2])
 
 
+    def test__jester_swan(self) -> None:
+        """The Jester Swan is still shown even if another trophy has been awarded."""
+
+        trophy_1 = self.team.trophies.create(
+            event = self.event_1,
+            type = models.Trophy.Types.GOLDEN_SWAN,  # Out-ranks Jester Swan
+        )
+        trophy_2 = self.team.trophies.create(
+            event = self.event_1,
+            type = models.Trophy.Types.JESTER_SWAN,
+        )
+        self.assertEqual(self.team.get_leaderboard_trophies(), [trophy_1, trophy_2])
+
+
 
 class Test__GameEntry(TestCase):
     fixtures = ['dev_event']
