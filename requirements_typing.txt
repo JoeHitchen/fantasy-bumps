@@ -1,4 +1,4 @@
-mypy
+mypy<1.16
 django-stubs
 celery-types
 types-pytz
