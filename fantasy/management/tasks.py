@@ -144,8 +144,11 @@ def update_live_bumps(series: str, year: int, gender: str) -> LiveBumpsWriteOutc
 
 
 @app.task
-def disable_live_bumps_updates() -> None:
+def disable_live_bumps_updates() -> int:
     """Disables the Live Bumps update tasks pipelines."""
 
-    PeriodicTask.objects.filter(name = update_live_bumps.__name__).update(enabled = False)
+    return PeriodicTask.objects.filter(
+        task__contains = update_live_bumps.__name__,
+        enabled = True,
+    ).update(enabled = False)
 

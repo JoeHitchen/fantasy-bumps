@@ -29,10 +29,10 @@ class _ClockedManager():
 
 class _PeriodicManager():
 
-    def filter(self, name: str) -> _PeriodicManager:
+    def filter(self, task__contains: str, enabled: bool) -> _PeriodicManager:
         ...
 
-    def update(self, enabled: bool) -> None:
+    def update(self, enabled: bool) -> int:
         ...
 
     def update_or_create(
