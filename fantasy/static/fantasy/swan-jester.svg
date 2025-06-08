@@ -5,10 +5,10 @@
     <path d="m 33.317 89.64 c -3.011-5.548-2.346-11.1.252-17.094 0 0 12.13-30.686 56.61-17.763 16.537 5.12 25.232 1.916 25.232 1.916 s -9.874 42.962-54.331 43.325 c -18.68.153-25.348-5.934-27.763-10.384 z" fill="#00bb00" />
     <path d="m 75.613 83.69 c -16.865 3.235-26.35-3.078-26.487-3.17"/>
     <path d="m 91.336 72.23 c -16.865 3.235-26.35-3.078-26.487-3.17"/>
-    <circle cx="43" cy="25" r="3" fill="yellow"/>
-    <circle cx="22" cy="20" r="3" fill="yellow"/>
-    <circle cx="39" cy="50" r="3" fill="yellow"/>
-    <circle cx="31" cy="62" r="3" fill="yellow"/>
+    <circle cx="41" cy="22" r="2" fill="yellow"/>
+    <circle cx="23" cy="21" r="3" fill="yellow"/>
+    <circle cx="43" cy="42" r="2" fill="yellow"/>
+    <circle cx="34" cy="58" r="3" fill="yellow"/>
     <circle cx="22" cy="75" r="5" fill="yellow"/>
     <circle cx="24" cy="95" r="6" fill="yellow"/>
     <circle cx="39" cy="105" r="5" fill="yellow"/>
@@ -17,13 +17,13 @@
     <circle cx="88" cy="101" r="3" fill="yellow"/>
     <circle cx="101" cy="92" r="3" fill="yellow"/>
     <circle cx="41" cy="80" r="4" fill="white"/>
-    <circle cx="52" cy="91" r="4" fill="white"/>
-    <circle cx="69" cy="92" r="4" fill="white"/>
+    <circle cx="54" cy="91" r="4" fill="white"/>
+    <circle cx="72" cy="91.5" r="4" fill="white"/>
     <circle cx="88" cy="82" r="4" fill="white"/>
     <circle cx="101" cy="68" r="4" fill="white"/>
     <circle cx="85" cy="63" r="4" fill="white"/>
     <circle cx="66" cy="60" r="4" fill="white"/>
     <circle cx="51" cy="66" r="4" fill="white"/>
-    <circle cx="62" cy="76" r="4" fill="white"/>
+    <circle cx="65" cy="77" r="4" fill="white"/>
   </g>
 </svg>
