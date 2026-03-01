@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = 'https://{}'.format(os.environ.get('LIVE_BUMPS_HOST', 'bumps.live'))
 AUTH_KEY = os.environ.get('LIVE_BUMPS_KEY', '')
+VERIFY_SSL = True
 
 write_enabled = bool(os.environ.get('LIVE_BUMPS_HOST') and os.environ.get('LIVE_BUMPS_KEY'))
 
@@ -81,7 +82,10 @@ def _parse_crew_list(crew_data: list[CrewSeatData]) -> dict[int, str]:
 def get_all_positions(series: str, year: int) -> dict[Crew, list[Position]]:
 
     # Load data
-    response = requests.get(f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}.json')
+    response = requests.get(
+        f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}.json',
+        verify = VERIFY_SSL,
+    )
     if not response.ok:
         response.raise_for_status()
 
@@ -128,7 +132,10 @@ def get_positions(series: str, year: int, day_number: int) -> PositionMap:
 def get_start_order(series: str, year: int, day_number: int) -> StartOrder:
     """Constructs a start order based on position and division information from Live Bumps."""
 
-    response = requests.get(f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}_divs.json')
+    response = requests.get(
+        f'{BASE_URL}/data/{series_text_map[series].lower()}_{year}_divs.json',
+        verify = VERIFY_SSL,
+    )
     if not response.ok:
         response.raise_for_status()
 
@@ -159,7 +166,10 @@ def get_crew_lists(series: str, year: int) -> CrewListMap:
     logger.info(f'Retrieving crew lists for {series_text} {year} from Live Bumps')
 
     # Load data
-    response = requests.get(f'{BASE_URL}/data/{series_text.lower()}_{year}_crews.json')
+    response = requests.get(
+        f'{BASE_URL}/data/{series_text.lower()}_{year}_crews.json',
+        verify = VERIFY_SSL,
+    )
     if not response.ok:
         response.raise_for_status()
 
@@ -220,6 +230,7 @@ def write_positions(
             response = requests.post(
                 f'{BASE_URL}/bump/{series_text_map[series].lower()}/{year}',
                 headers = {'Authorization': AUTH_KEY, 'Content-Type': 'application/json'},
+                verify = VERIFY_SSL,
                 json = payload,
             )
             if not response.ok:
@@ -304,6 +315,7 @@ def create_event(series: str, year: int, start_order: StartOrder) -> None:
     response = requests.post(
         f'{BASE_URL}/event',
         headers = {'Authorization': AUTH_KEY, 'Content-Type': 'application/json'},
+        verify = VERIFY_SSL,
         json = {
             'name': series_text_map[series].lower(),
             'year': year,
