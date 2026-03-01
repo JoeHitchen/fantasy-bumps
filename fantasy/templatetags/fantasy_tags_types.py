@@ -117,7 +117,6 @@ class EventBox(TypedDict):
     money: type[money]
 
 
-
 if TYPE_CHECKING:
     from django_stubs_ext import WithAnnotations
 
