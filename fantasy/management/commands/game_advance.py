@@ -83,6 +83,8 @@ class Command(BaseCommand):
             logger.info(f'Advancing {event}')
             if forced:
                 event.days.update(date = db.F('date') - timedelta(1))
+                event.initial_market_open = event.initial_market_open - timedelta(1)
+                event.save()
 
             perform_advance(
                 event,
