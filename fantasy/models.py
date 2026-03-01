@@ -432,7 +432,7 @@ class GameEntryQuerySet(models.QuerySet[FinancialGameEntry]):
 
     def extend_financials(self) -> 'GameEntryQuerySet':
         """Add crew values and non-gendered totals to the queried data."""
-        return self.annotate(
+        return self.annotate(  # type: ignore
             mens_crew_value = models.F('mens_budget') - models.F('mens_balance'),
             womens_crew_value = models.F('womens_budget') - models.F('womens_balance'),
         ).annotate(
