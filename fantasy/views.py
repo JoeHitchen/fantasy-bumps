@@ -78,14 +78,14 @@ class FantasyBaseMixin(ContextMixin):
 
         # Add default financial and days prefetch
         seats = models.Seat.objects.all()
-        db.prefetch_related_objects(events, db.Prefetch('days', to_attr = '_days'))
+        db.prefetch_related_objects(events, db.Prefetch('days', to_attr = '_days'))  # type: ignore
 
         # Additional augmentation for logged in users
         if not user.is_anonymous:
 
             # User financial data prefetch
             db.prefetch_related_objects(
-                events,
+                events,  # type: ignore
                 db.Prefetch(
                     'fantasies',
                     queryset = (

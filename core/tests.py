@@ -6,6 +6,7 @@ from django.contrib import auth, messages
 
 from . import forms
 
+
 if TYPE_CHECKING:
     from django.test.client import _MonkeyPatchedWSGIResponse as TestHttpResponse
 

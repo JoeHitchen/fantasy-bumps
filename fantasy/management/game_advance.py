@@ -152,7 +152,11 @@ def roll_over_purchases(day: models.Day) -> None:
 def evaluate_investments(day: models.Day) -> None:
     """Update entered teams budgets for changes in crew value from places gained/lost on day."""
 
-    def purchases_prefetch(day: models.Day, gender: Genders, target: str) -> db.Prefetch:
+    def purchases_prefetch(
+        day: models.Day,
+        gender: Genders,
+        target: str,
+    ) -> db.Prefetch:  # type: ignore
         """Prefetch a gendered crew list for day, and set to target attribute on Team model."""
         return db.Prefetch(
             'team__purchases',
@@ -237,7 +241,7 @@ def create_payout_matrix(day: models.Day) -> dict[models.Crew, utils.Payout]:
 
     # Retrieve crews racing
     crews = (
-        models.Crew.objects
+        models.Crew.objects  # type: ignore
         .filter(positions__day = day)
         .prefetch_related(
             db.Prefetch(
