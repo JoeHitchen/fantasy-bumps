@@ -534,6 +534,20 @@ class Test__Crew_List(TestCase):
 
 
     @staticmethod
+    def crew_list_coach_row(
+        crew: models.Crew | None,
+    ) -> str:
+        """A helper function that renders a crew list coach row."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% crew_list_coach_row crew %}')
+            .render(template.Context({
+                'crew': crew,
+            }))
+        )
+
+
+    @staticmethod
     def crew_list_box(
         crew_list: Iterable[models.Purchase],
         seats: db.QuerySet[models.Seat],
@@ -715,6 +729,43 @@ class Test__Crew_List(TestCase):
         self.assertInHTML(crew, html)
 
         self.assertNotIn('btn', html)
+
+
+    def test__crew_list_coach_row__no_coach(self) -> None:
+        """Renders a styled div, that contains an avatar."""
+
+        html = self.crew_list_coach_row(None)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        avatar = tags.avatar('X')
+        self.assertInHTML(avatar, html)
+
+        self.assertNotIn('<div class="flex-grow-1">', html)
+
+
+    def test__crew_list_coach_row__anonymous_coach(self) -> None:
+        """Renders a styled div, that contains an avatar and a crew."""
+
+        html = self.crew_list_coach_row(self.crew)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        avatar = tags.avatar('X', self.crew.club)
+        self.assertInHTML(avatar, html)
+
+        crew_str = '<div class="flex-grow-1"><div>{}</div></div>'.format(self.crew)
+        self.assertInHTML(crew_str, html)
 
 
     def test__crew_list_box__empty_list(self) -> None:

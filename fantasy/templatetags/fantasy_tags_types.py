@@ -87,6 +87,11 @@ class CrewListBox(TypedDict):
     show_actions: bool
 
 
+class CrewListCoachRow(TypedDict):
+    crew: models.Crew | None
+    club: str | None
+
+
 class CrewStatusStyling(TypedDict):
     colour: str
     crew: str

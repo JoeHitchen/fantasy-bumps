@@ -306,18 +306,22 @@ class MarketView(EventBase):
             context['other_crew_valid'] = utils.has_all_seats(other_crew, seats)
 
             try:
-                finances = self.team.entries.extend_financials().get(event = self.event)
+                game_entry = self.team.entries.extend_financials().get(event = self.event)
                 context['finances'] = {
                     Genders.MEN: {
-                        'budget': finances.mens_budget,
-                        'crew_value': finances.mens_crew_value,
-                        'balance': finances.mens_balance,
+                        'budget': game_entry.mens_budget,
+                        'crew_value': game_entry.mens_crew_value,
+                        'balance': game_entry.mens_balance,
                     },
                     Genders.WOMEN: {
-                        'budget': finances.womens_budget,
-                        'crew_value': finances.womens_crew_value,
-                        'balance': finances.womens_balance,
+                        'budget': game_entry.womens_budget,
+                        'crew_value': game_entry.womens_crew_value,
+                        'balance': game_entry.womens_balance,
                     },
+                }[gender]
+                context['coach_club'] = {
+                    Genders.MEN: game_entry.mens_coach,
+                    Genders.WOMEN: game_entry.womens_coach,
                 }[gender]
             except models.GameEntry.DoesNotExist:
                 context['finances'] = {

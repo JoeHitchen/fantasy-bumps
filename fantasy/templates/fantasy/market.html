@@ -74,6 +74,7 @@
   {% if user.is_authenticated %}<div class="col-lg-5 order-lg-last">
     <div class="list-group sticky-top mb-3" style="z-index: 980">
       {% crew_list_box crew seats finances show_actions %}
+      {% crew_list_coach_row coach_club %}
       {% crew_status_box event gender crew_valid other_crew_valid %}
     </div>
     <br/>
