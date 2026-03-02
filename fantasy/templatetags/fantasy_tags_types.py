@@ -50,6 +50,10 @@ class SellButton(TypedDict):
     crew_value: int
 
 
+class FireButton(TypedDict):
+    pass
+
+
 class SwitchButton(TypedDict):
     purchase: models.Purchase
 
@@ -90,6 +94,7 @@ class CrewListBox(TypedDict):
 class CrewListCoachRow(TypedDict):
     crew: models.Crew | None
     club: str | None
+    show_coach_fire: bool
 
 
 class CrewStatusStyling(TypedDict):

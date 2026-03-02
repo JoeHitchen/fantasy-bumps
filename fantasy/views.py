@@ -331,6 +331,10 @@ class MarketView(EventBase):
                 }
 
         context['show_crew_actions'] = user.is_authenticated and self.day.market_is_open
+        context['show_coach_fire'] = (
+            context['show_crew_actions']
+            and self.day == self.day.event.first_day
+        )
         return context
 
 
@@ -544,6 +548,55 @@ def sell(request: HttpRequest) -> HttpResponse:
         )
         messages.success(request, success_text)
 
+    return market_redirect
+
+
+
+@require_POST
+@login_required(redirect_field_name = None)
+def fire(request: HttpRequest) -> HttpResponse:
+    """Fires a previously hired coach.
+
+    Inputs:
+        POST 'event'  - Tag of the event for the firing.
+                        Must have first day markets open.
+             'gender' - Gender of the crew to fire the coach for.
+
+    Requires six queries.
+    """
+    assert isinstance(request.user, auth.User)  # Needed for MyPy
+
+    try:
+        fantasy = (
+            models.GameEntry.objects
+            .select_related('event', 'mens_coach', 'womens_coach')
+            .get(event__tag = request.POST['event'], team = request.user.team)
+        )
+        gender = Genders(request.POST['gender'])
+    except (models.GameEntry.DoesNotExist, MultiValueDictKeyError, ValueError):
+        messages.error(request, 'Unable to identify the coach to be fire.')
+        return redirect('fantasy:index')
+
+
+    # Check market status
+    market_url_name = f'fantasy:{gender.label.lower()}'
+    market_redirect = redirect(market_url_name, event_tag = fantasy.event.tag)
+
+    if not fantasy.event.first_day.market_is_open:
+        messages.warning(request, 'Markets are not open for this firing.')
+        return market_redirect
+
+    # Identify and fire coach
+    coach_attribute = f'{gender.label.lower()}s_coach'
+    old_coach = getattr(fantasy, coach_attribute)
+    setattr(fantasy, coach_attribute, None)
+    fantasy.save()
+
+    messages.success(request, (
+        f"Fired {old_coach} as your {gender.label.lower()}'s coach."
+        if old_coach else
+        f"Your {gender.label.lower()}'s coaching slot is now empty."
+    ))
     return market_redirect
 
 

@@ -213,6 +213,16 @@ def sell_button(purchase: models.Purchase) -> types.SellButton:
 
 
 @register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <button class="btn btn-primary btn-sm btn-fire flex-shrink-0">
+    Fire Coach
+  </button>
+'''))
+def fire_button() -> types.FireButton:
+    return {}
+
+
+@register.inclusion_tag(template.Template('''
   {% load static %}
   {% if not purchase.seat.cox %}
     <a
@@ -363,15 +373,18 @@ def crew_list_box(
     <div class="flex-grow-1">
       <div>{{ crew }}</div>
     </div>
+    {% if show_coach_fire %}{% fire_button %}{% endif %}
     {% endif %}
   </div>
 '''))
 def crew_list_coach_row(
     crew: models.Crew | None,
+    show_coach_fire: bool,
 ) -> types.CrewListCoachRow:
     return {
         'crew': crew,
         'club': crew.club if crew else None,
+        'show_coach_fire': show_coach_fire,
     }
 
 

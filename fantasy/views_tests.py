@@ -599,6 +599,7 @@ class MarketPageBase(GamePageBase):
         self.assertFalse('other_crew_valid' in context)
 
         self.assertFalse(context['show_crew_actions'])
+        self.assertFalse(context['show_coach_fire'])
 
 
     def extra_context_with_user(self, context: 'Context') -> None:
@@ -618,29 +619,66 @@ class MarketPageBase(GamePageBase):
         self.assertTrue('other_crew_valid' in context)
 
 
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__market_open(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """'show_crew_actions' reflects market status for logged in users.
-        Does not test response or default context.
-        """
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertTrue(response.context['show_crew_actions'])
-
-
     @patching.market_is_open(False)
     def test__market_closed(self, markets_mock: Mock) -> None:
-        """'show_crew_actions' reflects market status for logged in users.
+        """Tests the availability of actions:
+
+        * Crew action availability reflects market status for logged in users.
+        * Coach action availability also requires the current day to be the first day.
+
         Does not test response or default context.
         """
+
+        day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
+        self.event.days.update(date = db.F('date') + day_shift)
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
         self.assertFalse(response.context['show_crew_actions'])
+        self.assertFalse(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__market_open(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
+        """Tests the availability of actions:
+
+        * Crew action availability reflects market status for logged in users.
+        * Coach action availability also requires the current day to be the first day.
+
+        Does not test response or default context.
+        """
+
+        day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
+        self.event.days.update(date = db.F('date') + day_shift)
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__market_day_two(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
+        """Tests the availability of actions:
+
+        * Crew action availability reflects market status for logged in users.
+        * Coach action availability also requires the current day to be the first day.
+
+        Does not test response or default context.
+        """
+
+        day_shift = timezone.now().date() - self.event.first_day.date - timedelta(1)
+        self.event.days.update(date = db.F('date') + day_shift)
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertFalse(response.context['show_coach_fire'])
 
 
 
@@ -773,6 +811,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             (1) Select all seats
             (1) User's crew of other gender
             (1) User's game entry & financials
+            (1) Event's first day
             (2 <-> Divisions) Select start order for each division
 
             Could be reduced further by fetching the information for every division's start order
@@ -793,7 +832,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             )
 
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             self.client.get(self.url)
 
 
@@ -927,6 +966,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             (1) Select all seats
             (1) User's crew of other gender
             (1) User's game entry & financials
+            (1) Event's first day
             (2 <-> Divisions) Select start order for each division
 
             Could be reduced further by fetching the information for every division's start order
@@ -947,7 +987,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             )
 
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             self.client.get(self.url)
 
 
@@ -1781,6 +1821,206 @@ class Test__Sell(TestCase, MessagesTestMixin):
 
         with self.assertNumQueries(9):
             self.client.post(self.url, {'purchase': self.purchase.id})
+
+
+
+class Test__Fire(TestCase, MessagesTestMixin):
+    fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_team']
+    url = reverse('fantasy:fire')
+
+    womens_url: str
+
+    event: models.Event
+    mens_crew: models.Crew
+    womens_crew: models.Crew
+
+    team: models.Team
+    entry: models.GameEntry
+
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.event = exists(models.Event.objects.first())
+        cls.mens_crew = exists(models.Crew.objects.filter(gender = Genders.MEN).first())
+        cls.womens_crew = exists(models.Crew.objects.filter(gender = Genders.WOMEN).first())
+
+        cls.entry = cls.team.entries.create(
+            event = cls.event,
+            mens_coach = cls.mens_crew,
+            womens_coach = cls.womens_crew,
+        )
+
+        cls.womens_url = reverse('fantasy:women', kwargs = {'event_tag': cls.event.tag})
+
+
+    def test__deny_get(self) -> None:
+        """Rejects non-POST requests."""
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertEqual(self.entry.womens_coach, self.womens_crew)
+
+
+    def test__no_login(self) -> None:
+        """Redirects non-logged in users."""
+
+        response = self.client.post(self.url)
+        self.assertRedirects(response, reverse('login'))
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertEqual(self.entry.womens_coach, self.womens_crew)
+
+
+    def test__no_data(self) -> None:
+        """Denies request if no data is supplied.
+
+        Redirects to fantasy root and raises error to user.
+        """
+
+        self.client.login(username = 'DevTeam', password = 'password')
+
+        response = self.client.post(self.url)
+        self.assertRedirects(response, reverse('fantasy:index'))
+
+        self.assertMessages(response, [('error', 'Unable to identify the coach to be fire.')])
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertEqual(self.entry.womens_coach, self.womens_crew)
+
+
+    def test__unknown_event(self) -> None:
+        """Denies request if the event does not exist.
+
+        Redirects to fantasy root and raises error to user.
+        """
+
+        self.client.login(username = 'DevTeam', password = 'password')
+
+        response = self.client.post(self.url, {'event': 'citybumps2026', 'gender': 'X'})
+        self.assertRedirects(response, reverse('fantasy:index'))
+
+        self.assertMessages(response, [('error', 'Unable to identify the coach to be fire.')])
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertEqual(self.entry.womens_coach, self.womens_crew)
+
+
+    def test__unknown_gender(self) -> None:
+        """Denies request if the gender provided is not recognised.
+
+        Redirects to fantasy root and raises error to user.
+        """
+
+        self.client.login(username = 'DevTeam', password = 'password')
+
+        response = self.client.post(self.url, {'event': self.event.tag, 'gender': 'X'})
+        self.assertRedirects(response, reverse('fantasy:index'))
+
+        self.assertMessages(response, [('error', 'Unable to identify the coach to be fire.')])
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertEqual(self.entry.womens_coach, self.womens_crew)
+
+
+    @patching.market_is_open(False)
+    def test__markets_not_open(self, markets_mock: Mock) -> None:
+        """Denies request if market not open for the event's first day.
+
+        Redirects to relevant market page and raises warning to user.
+        """
+
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'event': self.event.tag, 'gender': Genders.WOMEN})
+        self.assertRedirects(response, self.womens_url)
+
+        self.assertMessages(response, [('warning', 'Markets are not open for this firing.')])
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertEqual(self.entry.womens_coach, self.womens_crew)
+
+
+    @patching.market_is_open(True)
+    def test__no_coach(self, markets_mock: Mock) -> None:
+        """Handles the case where there is no coach to be fired gracefully.
+
+        Redirects to relevant market page and raises success to user.
+        """
+
+        self.entry.womens_coach = None
+        self.entry.save()
+
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'event': self.event.tag, 'gender': Genders.WOMEN})
+        self.assertRedirects(response, self.womens_url)
+
+        self.assertMessages(response, [('success', "Your women's coaching slot is now empty.")])
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertIsNone(self.entry.womens_coach)
+
+
+    @patching.market_is_open(True)
+    def test__valid_mens(self, markets_mock: Mock) -> None:
+        """Completes the firing.
+
+        Redirects to relevant market page and raises success to user.
+        """
+
+        mens_url = reverse('fantasy:men', kwargs = {'event_tag': self.event.tag})
+
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'event': self.event.tag, 'gender': Genders.MEN})
+        self.assertRedirects(response, mens_url)
+
+        self.assertMessages(response, [('success', "Fired Oriel M1 as your men's coach.")])
+
+        self.entry.refresh_from_db()
+        self.assertIsNone(self.entry.mens_coach)
+        self.assertEqual(self.entry.womens_coach, self.womens_crew)
+
+
+    @patching.market_is_open(True)
+    def test__valid_womens(self, markets_mock: Mock) -> None:
+        """Completes the firing.
+
+        Redirects to relevant market page and raises success to user.
+        """
+
+        self.client.login(username = 'DevTeam', password = 'password')
+        response = self.client.post(self.url, {'event': self.event.tag, 'gender': Genders.WOMEN})
+        self.assertRedirects(response, self.womens_url)
+
+        self.assertMessages(response, [('success', "Fired Oriel W1 as your women's coach.")])
+
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.mens_coach, self.mens_crew)
+        self.assertIsNone(self.entry.womens_coach)
+
+
+    @patching.market_is_open(True)
+    def test__query_count(self, markets_mock: Mock) -> None:
+        """ Expect:
+            (2) Django internals
+            (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
+            (1) SELECT game entry, event, and coach-crews
+            (1) SELECT event's first day
+            (1) UPDATE coach
+        """
+
+        self.client.login(username = 'DevTeam', password = 'password')
+
+        with self.assertNumQueries(6):
+            self.client.post(self.url, {'event': self.event.tag, 'gender': Genders.WOMEN})
 
 
 

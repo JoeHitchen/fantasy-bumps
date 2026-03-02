@@ -506,6 +506,16 @@ class Test__Crew_List(TestCase):
 
 
     @staticmethod
+    def fire_button() -> str:
+        """A helper function that renders a fire coach button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% fire_button %}')
+            .render(template.Context({}))
+        )
+
+
+    @staticmethod
     def crew_list_header(finances: types.GenderFinances) -> str:
         """A helper function that renders a crew list header."""
         return (
@@ -536,13 +546,15 @@ class Test__Crew_List(TestCase):
     @staticmethod
     def crew_list_coach_row(
         crew: models.Crew | None,
+        show_coach_fire: bool,
     ) -> str:
         """A helper function that renders a crew list coach row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_list_coach_row crew %}')
+            .Template('{% load fantasy_tags %}{% crew_list_coach_row crew show_coach_fire %}')
             .render(template.Context({
                 'crew': crew,
+                'show_coach_fire': show_coach_fire,
             }))
         )
 
@@ -623,6 +635,22 @@ class Test__Crew_List(TestCase):
         self.purchase.price = 999
         with self.assertNumQueries(0):
             self.sell_button(self.purchase)
+
+
+    def test__fire_button__standard(self) -> None:
+        """Renders a styled button with associated data."""
+
+        html = self.fire_button()
+        button = parser(html)
+
+        self.assertEqual(button.tag, 'button')
+
+        classes = button.get('class', '').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-fire', classes)
+
+        self.assertInHTML('Fire Coach', html)
 
 
     def test__crew_list_row__no_purchase(self) -> None:
@@ -734,7 +762,7 @@ class Test__Crew_List(TestCase):
     def test__crew_list_coach_row__no_coach(self) -> None:
         """Renders a styled div, that contains an avatar."""
 
-        html = self.crew_list_coach_row(None)
+        html = self.crew_list_coach_row(None, False)
 
         # Test root
         row = parser(html)
@@ -747,12 +775,13 @@ class Test__Crew_List(TestCase):
         self.assertInHTML(avatar, html)
 
         self.assertNotIn('<div class="flex-grow-1">', html)
+        self.assertNotIn('btn', html)
 
 
     def test__crew_list_coach_row__anonymous_coach(self) -> None:
         """Renders a styled div, that contains an avatar and a crew."""
 
-        html = self.crew_list_coach_row(self.crew)
+        html = self.crew_list_coach_row(self.crew, False)
 
         # Test root
         row = parser(html)
@@ -766,6 +795,24 @@ class Test__Crew_List(TestCase):
 
         crew_str = '<div class="flex-grow-1"><div>{}</div></div>'.format(self.crew)
         self.assertInHTML(crew_str, html)
+
+        self.assertNotIn('btn', html)
+
+
+    def test__crew_list_coach_row__show_coach_fire(self) -> None:
+        """Renders a styled div, that contains a button for firing the coach."""
+
+        html = self.crew_list_coach_row(self.crew, True)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        fire_button = self.fire_button()
+        self.assertInHTML(fire_button, html)
 
 
     def test__crew_list_box__empty_list(self) -> None:
