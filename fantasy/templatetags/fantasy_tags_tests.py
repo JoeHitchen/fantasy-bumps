@@ -350,19 +350,34 @@ class Test__Misc(TestCase):
 
 
     @staticmethod
+    def hire_button(position: types.PositionWithPopularity) -> str:
+        """A helper function that renders a hire button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% hire_button position %}')
+            .render(template.Context({'position': position}))
+        )
+
+
+    @staticmethod
     def market_row(
         position: types.PositionWithPopularity,
         balance: int,
         show_crew_actions: bool = True,
+        show_coach_hire: bool = False,
     ) -> str:
         """A helper function that renders a market row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% market_row position balance show_crew_actions %}')
+            .Template((
+                '{% load fantasy_tags %}'
+                + '{% market_row position balance show_crew_actions show_coach_hire %}'
+            ))
             .render(template.Context({
                 'position': position,
                 'balance': balance,
                 'show_crew_actions': show_crew_actions,
+                'show_coach_hire': show_coach_hire,
             }))
         )
 
@@ -414,6 +429,24 @@ class Test__Misc(TestCase):
         self.assertInHTML('Buy ' + tags.currency(self.crew.value(self.day)), html)
 
 
+    def test__hire_button__standard(self) -> None:
+        """Renders a styled button with associated data."""
+
+        html = self.hire_button(self.position)
+        button = parser(html)
+
+        self.assertEqual(button.tag, 'button')
+
+        classes = button.get('class', '').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-hire', classes)
+
+        self.assertEqual(button.get('data-crew'), str(self.crew.id))
+
+        self.assertInHTML('Hire Coach', html)
+
+
     def test__market_row__standard(self) -> None:
         """Renders a styled div, that contains an avatar, crew box, and buy button."""
 
@@ -433,6 +466,8 @@ class Test__Misc(TestCase):
 
         buy_button = self.buy_button(self.position)
         self.assertInHTML(buy_button, html)
+
+        self.assertNotIn('btn-hire', html)
 
 
     def test__market_row__cant_afford(self) -> None:
@@ -455,8 +490,10 @@ class Test__Misc(TestCase):
         buy_button = self.buy_button(self.position, disabled = True)
         self.assertInHTML(buy_button, html)
 
+        self.assertNotIn('btn-hire', html)
 
-    def test__market_row__show_actions_false(self) -> None:
+
+    def test__market_row__show_crew_actions__false(self) -> None:
         """Renders a styled div, that contains an avatar and crew box, but not a buy button.
 
         N.B. View passes 'balance' is an empty string if missing.
@@ -466,6 +503,19 @@ class Test__Misc(TestCase):
 
         # Test containments
         self.assertNotIn('btn-buy', html)
+
+
+    def test__market_row__show_coach_hire__true(self) -> None:
+        """Renders a styled div, that contains a hire button.
+
+        N.B. View passes 'balance' is an empty string if missing.
+        """
+
+        html = self.market_row(self.position, 0, show_coach_hire = True)
+
+        # Test containments
+        hire_button = self.hire_button(self.position)
+        self.assertInHTML(hire_button, html)
 
 
 

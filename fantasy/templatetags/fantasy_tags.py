@@ -214,6 +214,16 @@ def sell_button(purchase: models.Purchase) -> types.SellButton:
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
+  <button class="btn btn-primary btn-sm btn-hire flex-shrink-0" data-crew="{{ crew.id }}">
+    Hire Coach
+  </button>
+'''))
+def hire_button(crew: models.Crew) -> types.HireButton:
+    return {'crew': crew}
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
   <button class="btn btn-primary btn-sm btn-fire flex-shrink-0">
     Fire Coach
   </button>
@@ -244,12 +254,14 @@ def switch_button(purchase: models.Purchase) -> types.SwitchButton:
     <div class="flex-grow-1">{{ position.crew }}</div>
     {% analysis_button position %}
     {% if show_crew_actions %}{% buy_button position disabled %}{% endif %}
+    {% if show_coach_hire %}{% hire_button position.crew %}{% endif %}
   </div>
 '''))
 def market_row(
     position: models.Position,
     balance: int,
     show_crew_actions: bool,
+    show_coach_hire: bool,
 ) -> types.MarketRow:
 
     crew_value = utils.pricing_by_day_gender(
@@ -264,6 +276,7 @@ def market_row(
         'position': position,
         'disabled': disabled,
         'show_crew_actions': show_crew_actions,
+        'show_coach_hire': show_coach_hire,
     }
 
 
@@ -273,7 +286,9 @@ def market_row(
     <div class="list-group-item list-group-item-dark market-row">
       <h5 class="mb-0">{{ gender.label }}'s Division {{ number }}</h5>
     </div>
-    {% for position in division %}{% market_row position balance show_crew_actions %}{% endfor %}
+    {% for position in division %}
+      {% market_row position balance show_crew_actions show_coach_hire %}
+    {% endfor %}
   </div>
 '''))
 def market_division_box(
@@ -282,13 +297,15 @@ def market_division_box(
     number: int,
     balance: int,
     show_crew_actions: bool,
+    show_coach_hire: bool,
 ) -> types.MarketDivision:
     return {
         'division': division,
         'gender': gender,
         'number': number,
         'balance': balance,
-        'show_crew_actions': show_crew_actions,
+        'show_crew_actions': show_crew_actions and not show_coach_hire,
+        'show_coach_hire': show_coach_hire,
     }
 
 

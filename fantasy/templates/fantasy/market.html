@@ -14,6 +14,7 @@
 <script type="text/javascript">
   $(document).ready(function () {
     $(".btn-sell").click(sell);
+    $(".btn-hire").click(hire);
     $(".btn-fire").click(fire);
     $(".btn-buy:not(.disabled)").click(buy);
     $('[data-toggle="tooltip"]').tooltip({delay: {"show": 750, "hide": 0}});
@@ -63,6 +64,11 @@
     };
   };
 
+  function hire(event) {
+    $("#hire-crew").val($(event.target).data('crew'));
+    $("#hire-form").submit();
+  }
+
   function fire(event) {
     $("#fire-form").submit();
   }
@@ -87,7 +93,7 @@
   
   <div class="col-lg order-lg-first">
     {% for division in start_order %}
-      {% market_division_box division gender forloop.counter finances.balance|default:0 show_crew_actions %}
+      {% market_division_box division gender forloop.counter finances.balance|default:0 show_crew_actions show_coach_hire %}
     {% endfor %}
   </div>
 </div>
@@ -103,6 +109,12 @@
   <input id="sell-event" name="event" type="hidden" value="{{ event.tag }}">
   <input id="sell-gender" name="gender" type="hidden" value="{{ gender }}">
   <input id="sell-purchase" name="purchase" type="hidden" value=""/>
+</form>
+
+<form id="hire-form" action="{% url 'fantasy:hire' %}" method="post">
+  {% csrf_token %}
+  <input id="hire-event" name="event" type="hidden" value="{{ event.tag }}">
+  <input id="hire-crew" name="crew" type="hidden" value=""/>
 </form>
 
 <form id="fire-form" action="{% url 'fantasy:fire' %}" method="post">

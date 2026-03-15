@@ -335,6 +335,11 @@ class MarketView(EventBase):
             context['show_crew_actions']
             and self.day == self.day.event.first_day
         )
+        context['show_coach_hire'] = (
+            context['show_coach_fire']
+            and context['crew_valid']
+            and not context['coach_club']
+        )
         return context
 
 
@@ -548,6 +553,56 @@ def sell(request: HttpRequest) -> HttpResponse:
         )
         messages.success(request, success_text)
 
+    return market_redirect
+
+
+
+@require_POST
+@login_required(redirect_field_name = None)
+def hire(request: HttpRequest) -> HttpResponse:
+    """Hires a coach.
+
+    Inputs:
+        POST 'event' - Tag of the event for the hiring.
+                        Must have first day markets open.
+             'crew'  - ID of the crew to hire as coach.
+
+    Requires seven queries.
+    """
+    assert isinstance(request.user, auth.User)  # Needed for MyPy
+
+    try:
+        fantasy = (
+            models.GameEntry.objects
+            .select_related('event')
+            .get(event__tag = request.POST['event'], team = request.user.team)
+        )
+    except (models.GameEntry.DoesNotExist, MultiValueDictKeyError):
+        messages.error(request, 'Unable to find a matching competition entry.')
+        return redirect('fantasy:index')
+
+    try:
+        crew = models.Crew.objects.get(id = request.POST['crew'])
+        gender_string = Genders(crew.gender).label.lower()
+    except (models.Crew.DoesNotExist, MultiValueDictKeyError):
+        messages.error(request, 'Unable to find the coach being hired.')
+        return redirect('fantasy:index')
+
+
+    # Check market status
+    market_redirect = redirect(f'fantasy:{gender_string}', event_tag = fantasy.event.tag)
+
+    if not fantasy.event.first_day.market_is_open:
+        messages.warning(request, 'Markets are not open for this hiring.')
+        return market_redirect
+
+
+    # Hire coach
+    coach_attribute = f'{gender_string}s_coach'
+    setattr(fantasy, coach_attribute, crew)
+    fantasy.save()
+
+    messages.success(request, f"Hired {crew} as your {gender_string}'s coach.")
     return market_redirect
 
 

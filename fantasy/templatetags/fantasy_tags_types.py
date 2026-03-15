@@ -50,6 +50,10 @@ class SellButton(TypedDict):
     crew_value: int
 
 
+class HireButton(TypedDict):
+    crew: models.Crew
+
+
 class FireButton(TypedDict):
     pass
 
@@ -62,6 +66,7 @@ class MarketRow(TypedDict):
     position: models.Position
     disabled: bool
     show_crew_actions: bool
+    show_coach_hire: bool
 
 
 class MarketDivision(TypedDict):
@@ -70,6 +75,7 @@ class MarketDivision(TypedDict):
     number: int
     balance: int
     show_crew_actions: bool
+    show_coach_hire: bool
 
 
 class GenderFinances(TypedDict):
