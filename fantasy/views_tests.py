@@ -598,13 +598,13 @@ class MarketPageBase(GamePageBase):
         self.assertFalse('crew_valid' in context)
         self.assertFalse('other_crew_valid' in context)
 
-        self.assertFalse(context['show_actions'])
+        self.assertFalse(context['show_crew_actions'])
 
 
     def extra_context_with_user(self, context: 'Context') -> None:
         """Extra context tests for with_user base test.
 
-        Cannot test show_actions here, since it depends on market status.
+        Cannot test show_crew_actions here, since it depends on market status.
         """
 
         self.assertEqual(context['gender'], self.gender)
@@ -621,26 +621,26 @@ class MarketPageBase(GamePageBase):
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))
     def test__market_open(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """'show_actions' reflects market status for logged in users.
+        """'show_crew_actions' reflects market status for logged in users.
         Does not test response or default context.
         """
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertTrue(response.context['show_actions'])
+        self.assertTrue(response.context['show_crew_actions'])
 
 
     @patching.market_is_open(False)
     def test__market_closed(self, markets_mock: Mock) -> None:
-        """'show_actions' reflects market status for logged in users.
+        """'show_crew_actions' reflects market status for logged in users.
         Does not test response or default context.
         """
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertFalse(response.context['show_actions'])
+        self.assertFalse(response.context['show_crew_actions'])
 
 
 

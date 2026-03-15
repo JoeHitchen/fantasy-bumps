@@ -353,16 +353,16 @@ class Test__Misc(TestCase):
     def market_row(
         position: types.PositionWithPopularity,
         balance: int,
-        show_actions: bool = True,
+        show_crew_actions: bool = True,
     ) -> str:
         """A helper function that renders a market row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% market_row position balance show_actions %}')
+            .Template('{% load fantasy_tags %}{% market_row position balance show_crew_actions %}')
             .render(template.Context({
                 'position': position,
                 'balance': balance,
-                'show_actions': show_actions,
+                'show_crew_actions': show_crew_actions,
             }))
         )
 
@@ -462,7 +462,7 @@ class Test__Misc(TestCase):
         N.B. View passes 'balance' is an empty string if missing.
         """
 
-        html = self.market_row(self.position, 0, show_actions = False)
+        html = self.market_row(self.position, 0, show_crew_actions = False)
 
         # Test containments
         self.assertNotIn('btn-buy', html)
@@ -519,16 +519,16 @@ class Test__Crew_List(TestCase):
     def crew_list_row(
         seat: models.Seat,
         purchase: models.Purchase | None,
-        show_actions: bool = True,
+        show_crew_actions: bool = True,
     ) -> str:
         """A helper function that renders a crew row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_list_row seat purchase show_actions %}')
+            .Template('{% load fantasy_tags %}{% crew_list_row seat purchase show_crew_actions %}')
             .render(template.Context({
                 'seat': seat,
                 'purchase': purchase,
-                'show_actions': show_actions,
+                'show_crew_actions': show_crew_actions,
             }))
         )
 
@@ -552,18 +552,18 @@ class Test__Crew_List(TestCase):
         crew_list: Iterable[models.Purchase],
         seats: db.QuerySet[models.Seat],
         finances: types.GenderFinances = {'budget': 0, 'crew_value': 0, 'balance': 0},
-        show_actions: bool = False,
+        show_crew_actions: bool = False,
     ) -> str:
         """A helper function that renders a crew list."""
-        component_string = '<div>{% crew_list_box crew_list seats finances show_actions %}</div>'
+        component_str = '<div>{% crew_list_box crew_list seats finances show_crew_actions %}</div>'
         return (
             template
-            .Template('{% load fantasy_tags %}' + component_string)
+            .Template('{% load fantasy_tags %}' + component_str)
             .render(template.Context({
                 'crew_list': crew_list,
                 'seats': seats,
                 'finances': finances,
-                'show_actions': show_actions,
+                'show_crew_actions': show_crew_actions,
             }))
         )
 
@@ -706,7 +706,7 @@ class Test__Crew_List(TestCase):
         self.assertInHTML(sell_button, html)
 
 
-    def test__crew_list_row__show_actions_false(self) -> None:
+    def test__crew_list_row__show_crew_actions__false(self) -> None:
         """Renders a styled div, that contains an avatar and crew box, but not a sell button."""
 
         purchase = self.team.purchases.create(
@@ -714,7 +714,7 @@ class Test__Crew_List(TestCase):
             seat = self.seat,
             crew = self.crew,
         )
-        html = self.crew_list_row(self.seat, purchase, show_actions = False)
+        html = self.crew_list_row(self.seat, purchase, show_crew_actions = False)
 
         # Test root
         row = parser(html)
@@ -798,7 +798,7 @@ class Test__Crew_List(TestCase):
 
         # Test containments
         self.assertInHTML(
-            self.crew_list_row(purchase.seat, purchase, show_actions = False),
+            self.crew_list_row(purchase.seat, purchase, show_crew_actions = False),
             html,
         )
 
@@ -821,11 +821,11 @@ class Test__Crew_List(TestCase):
 
 
 
-    def test__crew_list_box__show_actions(self) -> None:
-        """Propagates the show_actions flag."""
+    def test__crew_list_box__show_crew_actions(self) -> None:
+        """Propagates the show_crew_actions flag."""
 
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase], self.seats, show_actions = True)
+        html = self.crew_list_box([purchase], self.seats, show_crew_actions = True)
 
         # Test root
         crew_list = parser(html)
@@ -833,7 +833,7 @@ class Test__Crew_List(TestCase):
 
         # Test containments
         self.assertInHTML(
-            self.crew_list_row(purchase.seat, purchase, show_actions = True),
+            self.crew_list_row(purchase.seat, purchase, show_crew_actions = True),
             html,
         )
 

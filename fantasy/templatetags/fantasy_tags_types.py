@@ -57,7 +57,7 @@ class SwitchButton(TypedDict):
 class MarketRow(TypedDict):
     position: models.Position
     disabled: bool
-    show_actions: bool
+    show_crew_actions: bool
 
 
 class MarketDivision(TypedDict):
@@ -65,7 +65,7 @@ class MarketDivision(TypedDict):
     gender: Genders
     number: int
     balance: int
-    show_actions: bool
+    show_crew_actions: bool
 
 
 class GenderFinances(TypedDict):
@@ -78,13 +78,13 @@ class CrewListRow(TypedDict):
     seat: models.Seat
     purchase: models.Purchase
     club: str | None
-    show_actions: bool
+    show_crew_actions: bool
 
 
 class CrewListBox(TypedDict):
     crew_list: list[tuple[models.Seat, models.Purchase | None]]
     finances: GenderFinances | None
-    show_actions: bool
+    show_crew_actions: bool
 
 
 class CrewListCoachRow(TypedDict):

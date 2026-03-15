@@ -330,7 +330,7 @@ class MarketView(EventBase):
                     'balance': money.INITIAL_BALANCE,
                 }
 
-        context['show_actions'] = user.is_authenticated and self.day.market_is_open
+        context['show_crew_actions'] = user.is_authenticated and self.day.market_is_open
         return context
 
 
