@@ -14,6 +14,8 @@
 <script type="text/javascript">
   $(document).ready(function () {
     $(".btn-sell").click(sell);
+    $(".btn-hire").click(hire);
+    $(".btn-fire").click(fire);
     $(".btn-buy:not(.disabled)").click(buy);
     $('[data-toggle="tooltip"]').tooltip({delay: {"show": 750, "hide": 0}});
     $('[data-toggle="popover"]').popover({
@@ -61,6 +63,15 @@
       $("#sell-form").submit();
     };
   };
+
+  function hire(event) {
+    $("#hire-crew").val($(event.target).data('crew'));
+    $("#hire-form").submit();
+  }
+
+  function fire(event) {
+    $("#fire-form").submit();
+  }
 </script>
 {% endblock %}
 
@@ -73,8 +84,8 @@
 <div class="row">
   {% if user.is_authenticated %}<div class="col-lg-5 order-lg-last">
     <div class="list-group sticky-top mb-3" style="z-index: 980">
-      {% crew_list_box crew seats finances show_actions %}
-      {% crew_list_coach_row coach_club %}
+      {% crew_list_box crew seats finances show_crew_actions %}
+      {% crew_list_coach_row coach_club show_coach_fire %}
       {% crew_status_box event gender crew_valid other_crew_valid %}
     </div>
     <br/>
@@ -82,7 +93,7 @@
   
   <div class="col-lg order-lg-first">
     {% for division in start_order %}
-      {% market_division_box division gender forloop.counter finances.balance|default:0 show_actions %}
+      {% market_division_box division gender forloop.counter finances.balance|default:0 show_crew_actions show_coach_hire %}
     {% endfor %}
   </div>
 </div>
@@ -98,6 +109,18 @@
   <input id="sell-event" name="event" type="hidden" value="{{ event.tag }}">
   <input id="sell-gender" name="gender" type="hidden" value="{{ gender }}">
   <input id="sell-purchase" name="purchase" type="hidden" value=""/>
+</form>
+
+<form id="hire-form" action="{% url 'fantasy:hire' %}" method="post">
+  {% csrf_token %}
+  <input id="hire-event" name="event" type="hidden" value="{{ event.tag }}">
+  <input id="hire-crew" name="crew" type="hidden" value=""/>
+</form>
+
+<form id="fire-form" action="{% url 'fantasy:fire' %}" method="post">
+  {% csrf_token %}
+  <input id="fire-event" name="event" type="hidden" value="{{ event.tag }}">
+  <input id="fire-gender" name="gender" type="hidden" value="{{ gender }}">
 </form>
 
 <div id="analysis_wrapper" style="display: none">

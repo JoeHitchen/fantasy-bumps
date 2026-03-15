@@ -36,6 +36,8 @@ urlpatterns = [
     ),
     path('buy/', views.buy, name = 'buy'),
     path('sell/', views.sell, name = 'sell'),
+    path('hire/', views.hire, name = 'hire'),
+    path('fire/', views.fire, name = 'fire'),
     path('switch/<int:purchase_id>/', views.Switch.as_view(), name = 'switch'),
     path('market-hold/', views.market_hold, name = 'market-hold'),
     path('<slug:event_tag>/', include([
