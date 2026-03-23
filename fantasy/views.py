@@ -319,10 +319,9 @@ class MarketView(EventBase):
                         'balance': game_entry.womens_balance,
                     },
                 }[gender]
-                context['coach_club'] = {
-                    Genders.MEN: game_entry.mens_coach,
-                    Genders.WOMEN: game_entry.womens_coach,
-                }[gender]
+
+                context['coach_club'] = game_entry.get_coach(gender)
+
             except models.GameEntry.DoesNotExist:
                 context['finances'] = {
                     'budget': money.INITIAL_BALANCE,
@@ -598,8 +597,7 @@ def hire(request: HttpRequest) -> HttpResponse:
 
 
     # Hire coach
-    coach_attribute = f'{gender_string}s_coach'
-    setattr(fantasy, coach_attribute, crew)
+    fantasy.set_coach(Genders(crew.gender), crew)
     fantasy.save()
 
     messages.success(request, f"Hired {crew} as your {gender_string}'s coach.")
@@ -642,9 +640,8 @@ def fire(request: HttpRequest) -> HttpResponse:
         return market_redirect
 
     # Identify and fire coach
-    coach_attribute = f'{gender.label.lower()}s_coach'
-    old_coach = getattr(fantasy, coach_attribute)
-    setattr(fantasy, coach_attribute, None)
+    old_coach = fantasy.get_coach(gender)
+    fantasy.set_coach(gender, None)
     fantasy.save()
 
     messages.success(request, (

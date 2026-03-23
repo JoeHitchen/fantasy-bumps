@@ -1651,6 +1651,9 @@ class Test__GameEntry(TestCase):
     game_entry_3: models.GameEntry
     game_entry_4: models.GameEntry
 
+    crew_1: models.Crew
+    crew_2: models.Crew
+
     @classmethod
     def setUpTestData(cls) -> None:
         cls.event = exists(models.Event.objects.first())
@@ -1689,12 +1692,55 @@ class Test__GameEntry(TestCase):
             womens_balance = 112,
         )
 
+        cls.crew_1 = models.Crew.objects.create(rank = 1)
+        cls.crew_2 = models.Crew.objects.create(rank = 1)
+
 
     def test__unique_group(self) -> None:
         """Raises a DB IntegrityError if a duplicate team/event group created."""
 
         with self.assertRaises(IntegrityError):
             self.event.fantasies.create(team = self.team_1)  # Already exists
+
+
+    def test__get_coach__unset(self) -> None:
+        """Returns None without error."""
+
+        self.assertIsNone(self.game_entry_1.get_coach(Genders.MEN))
+        self.assertIsNone(self.game_entry_1.get_coach(Genders.WOMEN))
+
+
+    def test__get_coach__set(self) -> None:
+        """Returns the coaches set."""
+
+        self.game_entry_1.mens_coach = self.crew_1
+        self.game_entry_1.womens_coach = self.crew_2
+
+        self.assertEqual(self.game_entry_1.get_coach(Genders.MEN), self.crew_1)
+        self.assertEqual(self.game_entry_1.get_coach(Genders.WOMEN), self.crew_2)
+
+
+    def test__set_coach__set(self) -> None:
+        """Sets the coaches to the crews provided."""
+
+        self.game_entry_1.set_coach(Genders.MEN, self.crew_1)
+        self.game_entry_1.set_coach(Genders.WOMEN, self.crew_2)
+
+        self.assertEqual(self.game_entry_1.mens_coach, self.crew_1)
+        self.assertEqual(self.game_entry_1.womens_coach, self.crew_2)
+
+
+    def test__set_coach__unset(self) -> None:
+        """Unsets the coaches if None is provided."""
+
+        self.game_entry_1.mens_coach = self.crew_1
+        self.game_entry_1.womens_coach = self.crew_2
+
+        self.game_entry_1.set_coach(Genders.MEN, None)
+        self.game_entry_1.set_coach(Genders.WOMEN, None)
+
+        self.assertIsNone(self.game_entry_1.mens_coach, self.crew_1)
+        self.assertIsNone(self.game_entry_1.womens_coach, self.crew_2)
 
 
     def test__query__extend_financials__total_budget(self) -> None:

@@ -487,6 +487,21 @@ class GameEntry(models.Model):
         unique_together = ['team', 'event']
 
 
+    def get_coach(self, gender: Genders) -> Crew | None:
+        """Returns the fantasy's coach for the gender specified."""
+
+        return {
+            Genders.MEN: self.mens_coach,
+            Genders.WOMEN: self.womens_coach,
+        }[gender]
+
+
+    def set_coach(self, gender: Genders, crew: Crew | None) -> None:
+        """Sets the fantasy's coach for the gender specified but defers saving."""
+
+        setattr(self, f'{gender.label.lower()}s_coach', crew)
+
+
 
 class Purchase(models.Model):
     """A purchase for a fantasy team."""
