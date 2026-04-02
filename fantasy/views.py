@@ -273,6 +273,7 @@ class MarketView(EventBase):
         context['gender'] = gender
         seats = models.Seat.objects.all()
         context['seats'] = seats
+        is_first_day = self.day == self.day.event.first_day
 
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
         context['start_order'] = [
@@ -309,14 +310,13 @@ class MarketView(EventBase):
             }
 
             context['show_crew_actions'] = False
-            context['show_coach_row'] = self.day == self.day.event.first_day
+            context['show_coach_row'] = is_first_day
             context['show_coach_fire'] = False
             context['show_coach_hire'] = False
 
             return context
 
-        context['coach_club'] = game_entry.get_coach(gender)
-
+        context['show_crew_actions'] = self.day.market_is_open
         context['crew'] = (
             self.request.user.team
             .get_crew(self.day, gender)
@@ -333,21 +333,23 @@ class MarketView(EventBase):
                 self.day,
                 gender,
             )
-        context['crew_valid'] = utils.has_all_seats(context['crew'], seats)
+        crew_valid = utils.has_all_seats(context['crew'], seats)
+
+        context['coach_club'] = game_entry.get_coach(gender)
+        context['show_coach_row'] = context['coach_club'] or is_first_day
+        context['show_coach_fire'] = context['show_crew_actions'] and is_first_day
+        context['show_coach_hire'] = (
+            context['show_coach_fire']
+            and crew_valid
+            and not context['coach_club']
+        )
 
         other_gender = utils.reverse_gender(gender)
         other_crew = self.request.user.team.get_crew(self.day, other_gender)
-        context['other_crew_valid'] = utils.has_all_seats(other_crew, seats)
-
-        context['show_crew_actions'] = self.day.market_is_open
-        context['show_coach_fire'] = (
-            context['show_crew_actions']
-            and self.day == self.day.event.first_day
-        )
-        context['show_coach_hire'] = (
-            context['show_coach_fire']
-            and context['crew_valid']
-            and not context['coach_club']
+        context['crew_valid'] = crew_valid and (context['coach_club'] or not is_first_day)
+        context['other_crew_valid'] = (
+            utils.has_all_seats(other_crew, seats)
+            and (game_entry.get_coach(other_gender) or not is_first_day)
         )
         return context
 
