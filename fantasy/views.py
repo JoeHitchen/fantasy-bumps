@@ -286,6 +286,37 @@ class MarketView(EventBase):
             context['show_coach_hire'] = False
             return context
 
+        try:
+            game_entry = self.team.entries.extend_financials().get(event = self.event)
+            context['finances'] = {
+                Genders.MEN: {
+                    'budget': game_entry.mens_budget,
+                    'crew_value': game_entry.mens_crew_value,
+                    'balance': game_entry.mens_balance,
+                },
+                Genders.WOMEN: {
+                    'budget': game_entry.womens_budget,
+                    'crew_value': game_entry.womens_crew_value,
+                    'balance': game_entry.womens_balance,
+                },
+            }[gender]
+
+        except models.GameEntry.DoesNotExist:
+            context['finances'] = {
+                'budget': money.INITIAL_BALANCE,
+                'crew_value': 0,
+                'balance': money.INITIAL_BALANCE,
+            }
+
+            context['show_crew_actions'] = False
+            context['show_coach_row'] = self.day == self.day.event.first_day
+            context['show_coach_fire'] = False
+            context['show_coach_hire'] = False
+
+            return context
+
+        context['coach_club'] = game_entry.get_coach(gender)
+
         context['crew'] = (
             self.request.user.team
             .get_crew(self.day, gender)
@@ -307,30 +338,6 @@ class MarketView(EventBase):
         other_gender = utils.reverse_gender(gender)
         other_crew = self.request.user.team.get_crew(self.day, other_gender)
         context['other_crew_valid'] = utils.has_all_seats(other_crew, seats)
-
-        try:
-            game_entry = self.team.entries.extend_financials().get(event = self.event)
-            context['finances'] = {
-                Genders.MEN: {
-                    'budget': game_entry.mens_budget,
-                    'crew_value': game_entry.mens_crew_value,
-                    'balance': game_entry.mens_balance,
-                },
-                Genders.WOMEN: {
-                    'budget': game_entry.womens_budget,
-                    'crew_value': game_entry.womens_crew_value,
-                    'balance': game_entry.womens_balance,
-                },
-            }[gender]
-
-            context['coach_club'] = game_entry.get_coach(gender)
-
-        except models.GameEntry.DoesNotExist:
-            context['finances'] = {
-                'budget': money.INITIAL_BALANCE,
-                'crew_value': 0,
-                'balance': money.INITIAL_BALANCE,
-            }
 
         context['show_crew_actions'] = self.day.market_is_open
         context['show_coach_fire'] = (
