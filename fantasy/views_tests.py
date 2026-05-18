@@ -627,6 +627,7 @@ class MarketPageBase(GamePageBase):
 
         * Crew action availability reflects market status for logged in users.
         * Coach action availability also requires the current day to be the first day.
+        * Coach display requires the current day to be the first day or there to be a coach set.
 
         Does not test response or default context.
         """
@@ -646,6 +647,7 @@ class MarketPageBase(GamePageBase):
         response = self.client.get(self.url)
 
         self.assertFalse(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
         self.assertFalse(response.context['show_coach_fire'])
         self.assertFalse(response.context['show_coach_hire'])
 
@@ -657,6 +659,7 @@ class MarketPageBase(GamePageBase):
 
         * Crew action availability reflects market status for logged in users.
         * Coach action availability also requires the current day to be the first day.
+        * Coach display requires the current day to be the first day or there to be a coach set.
 
         Does not test response or default context.
         """
@@ -676,17 +679,23 @@ class MarketPageBase(GamePageBase):
         response = self.client.get(self.url)
 
         self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
         self.assertTrue(response.context['show_coach_fire'])
         self.assertTrue(response.context['show_coach_hire'])
 
 
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__coaches__day_two(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
+    def test__coaches__day_two_with_coach(
+        self,
+        market_closes_mock:
+        Mock, markets_mock: Mock,
+    ) -> None:
         """Tests the availability of actions:
 
         * Crew action availability reflects market status for logged in users.
         * Coach action availability also requires the current day to be the first day.
+        * Coach display requires the current day to be the first day or there to be a coach set.
 
         Does not test response or default context.
         """
@@ -706,6 +715,43 @@ class MarketPageBase(GamePageBase):
         response = self.client.get(self.url)
 
         self.assertTrue(response.context['show_crew_actions'])
+        self.assertFalse(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_fire'])
+        self.assertFalse(response.context['show_coach_hire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaches__day_two_without_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """Tests the availability of actions:
+
+        * Crew action availability reflects market status for logged in users.
+        * Coach action availability also requires the current day to be the first day.
+        * Coach display requires the current day to be the first day or there to be a coach set.
+
+        Does not test response or default context.
+        """
+
+        day_shift = timezone.now().date() - self.event.first_day.date - timedelta(1)
+        self.event.days.update(date = db.F('date') + day_shift)
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = exists(self.event.days.first()),
+                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
+                seat = seat,
+            )
+
+        # Test view
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertFalse(response.context['show_coach_row'])
         self.assertFalse(response.context['show_coach_fire'])
         self.assertFalse(response.context['show_coach_hire'])
 
@@ -731,6 +777,7 @@ class MarketPageBase(GamePageBase):
         response = self.client.get(self.url)
 
         self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
         self.assertTrue(response.context['show_coach_fire'])
         self.assertFalse(response.context['show_coach_hire'])
 
@@ -759,6 +806,7 @@ class MarketPageBase(GamePageBase):
         response = self.client.get(self.url)
 
         self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
         self.assertTrue(response.context['show_coach_fire'])
         self.assertFalse(response.context['show_coach_hire'])
 

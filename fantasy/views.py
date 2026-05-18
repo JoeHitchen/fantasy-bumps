@@ -273,6 +273,7 @@ class MarketView(EventBase):
         context['gender'] = gender
         seats = models.Seat.objects.all()
         context['seats'] = seats
+        is_first_day = self.day == self.day.event.first_day
 
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
         context['start_order'] = [
@@ -280,64 +281,75 @@ class MarketView(EventBase):
             for division_start_order in self.day.start_order(gender)
         ]
 
-        user = self.request.user
-        if user.is_authenticated:
+        if not self.request.user.is_authenticated:
+            context['show_crew_actions'] = False
+            context['show_coach_fire'] = False
+            context['show_coach_hire'] = False
+            return context
 
-            context['crew'] = (
-                user.team
-                .get_crew(self.day, gender)
-                .select_related('seat', 'crew', 'athlete')
-                .prefetch_related(db.Prefetch(
-                    'crew__positions',
-                    models.Position.objects.filter(day = self.day),
-                    to_attr = '_position',
-                ))
-            )
-            for purchase in context['crew']:
-                purchase.price = utils.pricing_by_day_gender(
-                    purchase.crew._position[0].rank,
-                    self.day,
-                    gender,
-                )
-            context['crew_valid'] = utils.has_all_seats(context['crew'], seats)
+        try:
+            game_entry = self.team.entries.extend_financials().get(event = self.event)
+            context['finances'] = {
+                Genders.MEN: {
+                    'budget': game_entry.mens_budget,
+                    'crew_value': game_entry.mens_crew_value,
+                    'balance': game_entry.mens_balance,
+                },
+                Genders.WOMEN: {
+                    'budget': game_entry.womens_budget,
+                    'crew_value': game_entry.womens_crew_value,
+                    'balance': game_entry.womens_balance,
+                },
+            }[gender]
 
-            other_gender = utils.reverse_gender(gender)
-            other_crew = user.team.get_crew(self.day, other_gender)
-            context['other_crew_valid'] = utils.has_all_seats(other_crew, seats)
+        except models.GameEntry.DoesNotExist:
+            context['finances'] = {
+                'budget': money.INITIAL_BALANCE,
+                'crew_value': 0,
+                'balance': money.INITIAL_BALANCE,
+            }
 
-            try:
-                game_entry = self.team.entries.extend_financials().get(event = self.event)
-                context['finances'] = {
-                    Genders.MEN: {
-                        'budget': game_entry.mens_budget,
-                        'crew_value': game_entry.mens_crew_value,
-                        'balance': game_entry.mens_balance,
-                    },
-                    Genders.WOMEN: {
-                        'budget': game_entry.womens_budget,
-                        'crew_value': game_entry.womens_crew_value,
-                        'balance': game_entry.womens_balance,
-                    },
-                }[gender]
+            context['show_crew_actions'] = False
+            context['show_coach_row'] = is_first_day
+            context['show_coach_fire'] = False
+            context['show_coach_hire'] = False
 
-                context['coach_club'] = game_entry.get_coach(gender)
+            return context
 
-            except models.GameEntry.DoesNotExist:
-                context['finances'] = {
-                    'budget': money.INITIAL_BALANCE,
-                    'crew_value': 0,
-                    'balance': money.INITIAL_BALANCE,
-                }
-
-        context['show_crew_actions'] = user.is_authenticated and self.day.market_is_open
-        context['show_coach_fire'] = (
-            context['show_crew_actions']
-            and self.day == self.day.event.first_day
+        context['show_crew_actions'] = self.day.market_is_open
+        context['crew'] = (
+            self.request.user.team
+            .get_crew(self.day, gender)
+            .select_related('seat', 'crew', 'athlete')
+            .prefetch_related(db.Prefetch(
+                'crew__positions',
+                models.Position.objects.filter(day = self.day),
+                to_attr = '_position',
+            ))
         )
+        for purchase in context['crew']:
+            purchase.price = utils.pricing_by_day_gender(
+                purchase.crew._position[0].rank,
+                self.day,
+                gender,
+            )
+        crew_valid = utils.has_all_seats(context['crew'], seats)
+
+        context['coach_club'] = game_entry.get_coach(gender)
+        context['show_coach_row'] = context['coach_club'] or is_first_day
+        context['show_coach_fire'] = context['show_crew_actions'] and is_first_day
         context['show_coach_hire'] = (
             context['show_coach_fire']
-            and context['crew_valid']
+            and crew_valid
             and not context['coach_club']
+        )
+
+        other_gender = utils.reverse_gender(gender)
+        other_crew = self.request.user.team.get_crew(self.day, other_gender)
+        context['crew_valid'] = crew_valid and (context['coach_club'] or not is_first_day)
+        context['other_crew_valid'] = (
+            utils.has_all_seats(other_crew, seats)
+            and (game_entry.get_coach(other_gender) or not is_first_day)
         )
         return context
 
