@@ -13,7 +13,8 @@ from django.dispatch import receiver
 from core.settings import TIME_ZONE
 from core.tests import exists
 
-from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
+from .constants import Series, Genders, GENDERS_OVERALL, timings
+from .constants import money, CoachingCompetitions, Clubs
 from .utils import pricing
 
 
@@ -54,6 +55,11 @@ class Event(models.Model):
 
     market_held_closed = models.BooleanField(default = False)
     initial_market_open = models.DateTimeField()
+    coaching_competition = models.CharField(
+        max_length = 10,
+        choices = CoachingCompetitions.choices,
+        null = True,
+    )
 
     _days: list['Day']
 

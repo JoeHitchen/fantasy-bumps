@@ -51,6 +51,13 @@ class money:
     INITIAL_BALANCE = 1000
     PRICE_MAX = 300
     PRICE_MIN = 20
+    BLADES_BONUS = 200
+    TORPIDS_REFUND = 20
+
+
+class CoachingCompetitions(models.TextChoices):
+    BLADES = ('blades', 'Blades-or-Bust')
+    REFUND = ('refund', 'Coaching Refund')
 
 
 class Clubs(models.TextChoices):

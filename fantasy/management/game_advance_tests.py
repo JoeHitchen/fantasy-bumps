@@ -12,7 +12,7 @@ from django.core import mail
 from integrations.types import PositionMap
 from core.tests import exists
 
-from ..constants import Series, Clubs, Genders, money
+from ..constants import Series, Clubs, Genders, money, CoachingCompetitions
 from .. import models
 from . import game_advance
 
@@ -185,6 +185,45 @@ class Test__PerformAdvance(TestCase):
         self.event.refresh_from_db()
         self.assertTrue(self.event.market_held_closed)
         self.assertEqual(len(mail.outbox), 1)
+
+
+    @patch('fantasy.management.game_advance.run_blades_or_bust')
+    @patch('fantasy.management.game_advance.run_coaching_refund')
+    def test__coaching__none(self, refund_mock: Mock, blades_mock: Mock) -> None:
+        """Only the relevant coaching competition function is called."""
+
+        game_advance.perform_advance(self.event, roll_over_positions)
+
+        blades_mock.assert_not_called()
+        refund_mock.assert_not_called()
+
+
+    @patch('fantasy.management.game_advance.run_blades_or_bust')
+    @patch('fantasy.management.game_advance.run_coaching_refund')
+    def test__coaching__blades(self, refund_mock: Mock, blades_mock: Mock) -> None:
+        """Only the relevant coaching competition function is called."""
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        game_advance.perform_advance(self.event, roll_over_positions)
+
+        blades_mock.assert_called_once()
+        refund_mock.assert_not_called()
+
+
+    @patch('fantasy.management.game_advance.run_blades_or_bust')
+    @patch('fantasy.management.game_advance.run_coaching_refund')
+    def test__coaching__refund(self, refund_mock: Mock, blades_mock: Mock) -> None:
+        """Only the relevant coaching competition function is called."""
+
+        self.event.coaching_competition = CoachingCompetitions.REFUND
+        self.event.save()
+
+        game_advance.perform_advance(self.event, roll_over_positions)
+
+        blades_mock.assert_not_called()
+        refund_mock.assert_called_once()
 
 
     @patch('fantasy.management.trophies.identify_new_veterans')
@@ -741,6 +780,131 @@ class Test__PayoutMatrix(TestCase):
 
         with self.assertNumQueries(4):
             game_advance.create_payout_matrix(fresh_day)
+
+
+class Test__CoachingCompetition(TestCase):
+    fixtures = [
+        'demo_event',
+        'demo_days',
+        'demo_crews',
+        'demo_start_day1',
+        'demo_start_day2',
+        'demo_start_day3',
+        'demo_start_day4',
+        'demo_start_day5',
+    ]
+
+    event: models.Event
+    entries: list[models.GameEntry]
+
+    mens_budget = 900
+    womens_budget = 1000
+    mens_balance = 700
+    womens_balance = 600
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.event = exists(models.Event.objects.first())
+        day = exists(cls.event.days.first())
+
+        mdiv1 = list(day.ranking.filter(crew__gender = Genders.MEN))[0:12]
+        wdiv1 = list(day.ranking.filter(crew__gender = Genders.WOMEN))[0:12]
+
+        cls.entries = []
+        for i in range(0, 12):
+            team = auth.User.objects.create(username = f'Team {i+1}').team
+            cls.entries.append(team.entries.create(
+                event = cls.event,
+                mens_coach = mdiv1[i].crew,
+                womens_coach = wdiv1[i].crew,
+                mens_budget = cls.mens_budget,
+                womens_budget = cls.womens_budget,
+                mens_balance = cls.mens_balance,
+                womens_balance = cls.womens_balance,
+            ))
+
+
+    def test__blades__not_last_day(self) -> None:
+        """Payouts are only awarded on the final day of racing to coaches who win blades.
+
+        Expected queries:
+            (1) SELECT Next racing day
+        """
+
+        for day in self.event.days.all()[0:3]:
+            with self.subTest(day = str(day)):
+                with self.assertNumQueries(1):
+                    self.assertIsNone(game_advance.run_blades_or_bust(day))
+
+
+    def test__blades__last_day(self) -> None:
+        """Payouts are only awarded on the final day of racing to coaches who win blades.
+
+        Expected queries:
+            (1) SELECT Next racing day
+            (2) SELECT Days & prefetch positions
+            (2) UPDATE Men's & women's finances
+        """
+
+        saturday = exists(exists(self.event.days.last()).prev)
+
+        with self.assertNumQueries(5):
+            winners = game_advance.run_blades_or_bust(saturday)
+            self.assertEqual(winners, 4)
+
+        for rank, entry in enumerate(self.entries, start = 1):
+            with self.subTest(rank = rank):
+                entry.refresh_from_db()
+
+                mens_increase = money.BLADES_BONUS if rank == 1 else 0
+                self.assertEqual(entry.mens_budget, self.mens_budget + mens_increase)
+                self.assertEqual(entry.mens_balance, self.mens_balance + mens_increase)
+
+                womens_increase = money.BLADES_BONUS if rank in [1, 8, 10] else 0
+                self.assertEqual(entry.womens_budget, self.womens_budget + womens_increase)
+                self.assertEqual(entry.womens_balance, self.womens_balance + womens_increase)
+
+
+    def test__refund(self) -> None:
+        """Issues a payout for every place the coach's crew has dropped.
+
+        Expected queries:
+            (1) SELECT Current day ranking
+            (2) SELECT Next day & next day ranking
+            (2) SELECT Men's & Women's fantasies that got bumped
+            (2) UPDATE Men's & women's finances
+        """
+
+        mens_places_lost = [
+            {6: 1, 8: 5},
+            {2: 1, 5: 1, 6: 2, 8: 6, 10: 1, 12: 1},
+            {2: 1, 5: 2, 6: 2, 8: 7, 10: 2, 11: 1, 12: 1},
+            {2: 1, 5: 2, 6: 3, 8: 8, 10: 3, 11: 2, 12: 2},
+        ]
+        womens_places_lost = [
+            {5: 1, 7: 1, 9: 1, 12: 1},
+            {5: 2, 7: 6, 9: 1, 12: 2},
+            {3: 1, 5: 3, 6: 1, 7: 8, 9: 2, 12: 2},
+            {3: 2, 5: 4, 6: 2, 7: 9, 9: 4, 12: 2},
+        ]
+
+        for num, day in enumerate(self.event.days.filter(first_race_time__isnull = False)):
+
+            with self.assertNumQueries(7):
+                game_advance.run_coaching_refund(day)
+
+
+            for rank, entry in enumerate(self.entries, start = 1):
+                with self.subTest(day = day, rank = rank):
+                    entry.refresh_from_db()
+
+                    mens_increase = money.TORPIDS_REFUND * mens_places_lost[num].get(rank, 0)
+                    self.assertEqual(entry.mens_budget, self.mens_budget + mens_increase)
+                    self.assertEqual(entry.mens_balance, self.mens_balance + mens_increase)
+
+                    womens_increase = money.TORPIDS_REFUND * womens_places_lost[num].get(rank, 0)
+                    self.assertEqual(entry.womens_budget, self.womens_budget + womens_increase)
+                    self.assertEqual(entry.womens_balance, self.womens_balance + womens_increase)
 
 
 class Test__EntryValidity(TestCase):

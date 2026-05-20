@@ -8,7 +8,7 @@ from django.core.mail import mail_admins
 from integrations import types as integrations
 from core.tests import exists
 
-from ..constants import Genders
+from ..constants import Genders, money, CoachingCompetitions
 from .. import models, utils
 from .commands import utils as mgmt_utils
 from . import trophies
@@ -61,6 +61,12 @@ def perform_advance(
             mgmt_utils.load_crew_rankings(source_function, exists(transaction_day.next))
             roll_over_purchases(transaction_day)
             evaluate_investments(transaction_day)
+            if transaction_day.event.coaching_competition:
+                competition_function = {
+                    CoachingCompetitions.BLADES: run_blades_or_bust,
+                    CoachingCompetitions.REFUND: run_coaching_refund,
+                }[CoachingCompetitions(transaction_day.event.coaching_competition)]
+                competition_function(transaction_day)
 
             transaction_day.advanced = True
             transaction_day.save()
@@ -266,6 +272,74 @@ def create_payout_matrix(day: models.Day) -> dict[models.Crew, utils.Payout]:
             crew.posn_new[0].rank,
         ) for crew in crews
     }
+
+
+def run_blades_or_bust(day: models.Day) -> int | None:
+    """Pays out on the final day of racing for crews which have won blades.
+
+    "Blades" is calculated assuming Eights rules, where gaining a place every day is sufficient.
+    """
+
+    if day.next and day.next.is_racing_day:
+        return None
+
+    ranking_prefetch = db.Prefetch('ranking', models.Position.objects.select_related('crew'))
+    all_days = list(day.event.days.prefetch_related(ranking_prefetch))
+
+    eligible_crews = {ranking.crew: ranking.rank for ranking in all_days[0].ranking.all()}
+    for event_day in all_days[1:]:
+        for ranking in event_day.ranking.all():
+            if ranking.crew not in eligible_crews:
+                continue
+            elif eligible_crews[ranking.crew] > ranking.rank or ranking.rank == 1:
+                eligible_crews[ranking.crew] = ranking.rank
+            else:
+                eligible_crews.pop(ranking.crew)
+
+    mens_winners = day.event.fantasies.filter(mens_coach__in = eligible_crews.keys()).update(
+        mens_budget = db.F('mens_budget') + money.BLADES_BONUS,
+        mens_balance = db.F('mens_balance') + money.BLADES_BONUS,
+    )
+    womens_winners = day.event.fantasies.filter(womens_coach__in = eligible_crews.keys()).update(
+        womens_budget = db.F('womens_budget') + money.BLADES_BONUS,
+        womens_balance = db.F('womens_balance') + money.BLADES_BONUS,
+    )
+    return mens_winners + womens_winners
+
+
+def run_coaching_refund(day: models.Day) -> None:
+    """Pays out each day for every place a crew has dropped that day."""
+
+    refunds: dict[models.Crew | None, int] = {}
+    starting_position = {
+        ranking.crew: ranking.rank
+        for ranking in day.ranking.select_related('crew')
+    }
+    for ranking in exists(day.next).ranking.select_related('crew'):
+        refund = money.TORPIDS_REFUND * (ranking.rank - starting_position[ranking.crew])
+        if not refund > 0:
+            continue
+        refunds[ranking.crew] = refund
+
+    mens_losers = (
+        day.event.fantasies
+        .filter(mens_coach__in = refunds.keys())
+        .select_related('mens_coach')
+    )
+    for loser in mens_losers:
+        loser.mens_budget += refunds[loser.mens_coach]
+        loser.mens_balance += refunds[loser.mens_coach]
+    day.event.fantasies.bulk_update(mens_losers, fields = ['mens_budget', 'mens_balance'])
+
+    womens_losers = (
+        day.event.fantasies
+        .filter(womens_coach__in = refunds.keys())
+        .select_related('womens_coach')
+    )
+    for loser in womens_losers:
+        loser.womens_budget += refunds[loser.womens_coach]
+        loser.womens_balance += refunds[loser.womens_coach]
+    day.event.fantasies.bulk_update(womens_losers, fields = ['womens_budget', 'womens_balance'])
 
 
 def update_entry_validity(day: models.Day) -> None:
