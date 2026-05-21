@@ -309,7 +309,7 @@ class MarketView(EventBase):
                 'balance': money.INITIAL_BALANCE,
             }
 
-            context['show_crew_actions'] = False
+            context['show_crew_actions'] = self.day.market_is_open
             context['show_coach_row'] = is_first_day
             context['show_coach_fire'] = False
             context['show_coach_hire'] = False
