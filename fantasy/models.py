@@ -380,6 +380,22 @@ class Athlete(models.Model):
 
 
 
+class Coach(models.Model):
+    """Descibes a coach for a crew."""
+
+    event = models.ForeignKey(Event, models.PROTECT, related_name = 'coaches')
+    crew = models.ForeignKey(Crew, models.PROTECT, related_name = 'coaches')
+    name = models.CharField(max_length = 100)
+
+    class Meta:
+        ordering = ['event', 'crew']
+        unique_together = ['event', 'crew']
+
+    def __str__(self) -> str:
+        return self.name
+
+
+
 class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
 

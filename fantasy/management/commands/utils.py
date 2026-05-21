@@ -5,6 +5,7 @@ from integrations import types
 from ... import models
 
 
+COACH_SEAT = 10
 CrewTupleMap = dict[models.Crew.Tuple, models.Crew]
 
 
@@ -51,9 +52,14 @@ def load_crew_lists(source_function: types.CrewListFcn, event: models.Event) -> 
     seats_map = {seat.id: seat for seat in models.Seat.objects.all()}
 
     athletes = []
+    coaches = []
     for crew_tuple, crew in crew_tuple_map.items():
+
+        if crew_tuple not in crew_lists:
+            continue
+
         for seat_id, seat in seats_map.items():
-            if crew_tuple in crew_lists and seat_id in crew_lists[crew_tuple]:
+            if seat_id in crew_lists[crew_tuple]:
                 athletes.append(models.Athlete(
                     event = event,
                     crew = crew,
@@ -61,5 +67,13 @@ def load_crew_lists(source_function: types.CrewListFcn, event: models.Event) -> 
                     name = crew_lists[crew_tuple][seat_id],
                 ))
 
+        if COACH_SEAT in crew_lists[crew_tuple]:
+            coaches.append(models.Coach(
+                event = event,
+                crew = crew,
+                name = crew_lists[crew_tuple][COACH_SEAT],
+            ))
+
     models.Athlete.objects.bulk_create(athletes)
+    models.Coach.objects.bulk_create(coaches)
 
