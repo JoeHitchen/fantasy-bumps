@@ -387,7 +387,8 @@ def crew_list_box(
   <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
     {{ "X"|avatar:club }}
     {% if crew %}
-    <div class="flex-grow-1">
+    <div class="flex-grow-1{% if name %} crew-row-athlete{% endif %}">
+      {% if name %}<div>{{ name }}</div>{% endif %}
       <div>{{ crew }}</div>
     </div>
     {% if show_coach_fire %}{% fire_button %}{% endif %}
@@ -396,11 +397,13 @@ def crew_list_box(
 '''))
 def crew_list_coach_row(
     crew: models.Crew | None,
+    name: models.Coach | None,
     show_coach_fire: bool,
 ) -> types.CrewListCoachRow:
     return {
         'crew': crew,
         'club': crew.club if crew else None,
+        'name': name,
         'show_coach_fire': show_coach_fire,
     }
 
