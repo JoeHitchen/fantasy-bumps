@@ -596,14 +596,16 @@ class Test__Crew_List(TestCase):
     @staticmethod
     def crew_list_coach_row(
         crew: models.Crew | None,
+        name: models.Coach | None,
         show_coach_fire: bool,
     ) -> str:
         """A helper function that renders a crew list coach row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_list_coach_row crew show_coach_fire %}')
+            .Template('{% load fantasy_tags %}{% crew_list_coach_row crew name show_coach_fire %}')
             .render(template.Context({
                 'crew': crew,
+                'name': name,
                 'show_coach_fire': show_coach_fire,
             }))
         )
@@ -812,7 +814,7 @@ class Test__Crew_List(TestCase):
     def test__crew_list_coach_row__no_coach(self) -> None:
         """Renders a styled div, that contains an avatar."""
 
-        html = self.crew_list_coach_row(None, False)
+        html = self.crew_list_coach_row(None, None, False)
 
         # Test root
         row = parser(html)
@@ -831,7 +833,7 @@ class Test__Crew_List(TestCase):
     def test__crew_list_coach_row__anonymous_coach(self) -> None:
         """Renders a styled div, that contains an avatar and a crew."""
 
-        html = self.crew_list_coach_row(self.crew, False)
+        html = self.crew_list_coach_row(self.crew, None, False)
 
         # Test root
         row = parser(html)
@@ -849,10 +851,36 @@ class Test__Crew_List(TestCase):
         self.assertNotIn('btn', html)
 
 
+    def test__crew_list_coach_row__named_coach(self) -> None:
+        """Renders a styled div, that contains an avatar and a crew."""
+
+        coach_name = models.Coach(name = 'A Name')
+        html = self.crew_list_coach_row(self.crew, coach_name, False)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        avatar = tags.avatar('X', self.crew.club)
+        self.assertInHTML(avatar, html)
+
+        crew_str = '''
+          <div class="flex-grow-1 crew-row-athlete">
+            <div>{}</div>
+            <div>{}</div>
+          </div>'''.format(coach_name, self.crew)
+        self.assertInHTML(crew_str, html)
+
+        self.assertNotIn('btn', html)
+
+
     def test__crew_list_coach_row__show_coach_fire(self) -> None:
         """Renders a styled div, that contains a button for firing the coach."""
 
-        html = self.crew_list_coach_row(self.crew, True)
+        html = self.crew_list_coach_row(self.crew, None, True)
 
         # Test root
         row = parser(html)

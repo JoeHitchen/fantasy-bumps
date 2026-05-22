@@ -939,6 +939,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             (1) User's crew for this gender
             (1) Prefetch purchase positions (for pricing)
             (1) Select all seats
+            (1) Select coach
             (1) User's crew of other gender
             (1) User's game entry & financials
             (1) Event's first day
@@ -962,7 +963,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             )
 
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(17):
             self.client.get(self.url)
 
 
@@ -1117,7 +1118,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             )
 
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(17):
             self.client.get(self.url)
 
 

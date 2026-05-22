@@ -100,6 +100,7 @@ class CrewListBox(TypedDict):
 class CrewListCoachRow(TypedDict):
     crew: models.Crew | None
     club: str | None
+    name: models.Coach | None
     show_coach_fire: bool
 
 
