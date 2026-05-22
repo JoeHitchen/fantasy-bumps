@@ -1370,9 +1370,10 @@ class Test__Team(TestCase):
             (1) SELECT recent events
             (1) SELECT all seats
             (2) SELECT purchases for crew lists (one for each crew lists)
+            (2) SELECT coaches (one for each crew list)
         """
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(10):
             response = self.client.get(self.url)
 
             # Needed to force crew list queries

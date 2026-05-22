@@ -17,10 +17,12 @@
   <div class="col-md mb-3">
     <h3>Men's Crew</h3>
     {% crew_list_box mens_crew seats %}
+    {% if show_coach_row %}{% crew_list_coach_row mens_coach_crew mens_coach_name %}{% endif %}
   </div>
   <div class="col-md mb-3">
     <h3>Women's Crew</h3>
     {% crew_list_box womens_crew seats %}
+    {% if show_coach_row %}{% crew_list_coach_row womens_coach_crew womens_coach_name %}{% endif %}
   </div>
 </div>
 

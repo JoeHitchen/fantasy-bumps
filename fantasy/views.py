@@ -390,18 +390,29 @@ class TeamView(EventBase):
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
 
-        finances = get_object_or_404(
+        entry = get_object_or_404(
             models.GameEntry.objects.select_related().extend_financials(),
             team__user__username = self.kwargs['team_name'],
             event = self.event,
         )
-        team = finances.team
+        team = entry.team
 
         context['team'] = team
         context['seats'] = models.Seat.objects.all()
-        context['finances'] = finances
+        context['finances'] = entry
         context['mens_crew'] = team.get_crew(self.day, Genders.MEN)
         context['womens_crew'] = team.get_crew(self.day, Genders.WOMEN)
+
+        context['show_coach_row'] = True
+        context['mens_coach_crew'] = entry.mens_coach
+        context['mens_coach_name'] = self.event.coaches.filter(crew = entry.mens_coach).first()
+        context['womens_coach_crew'] = entry.womens_coach
+        context['womens_coach_name'] = (
+            self.event.coaches
+            .filter(crew = entry.womens_coach)
+            .first()
+        )
+
         return context
 
 

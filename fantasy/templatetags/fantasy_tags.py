@@ -398,7 +398,7 @@ def crew_list_box(
 def crew_list_coach_row(
     crew: models.Crew | None,
     name: models.Coach | None,
-    show_coach_fire: bool,
+    show_coach_fire: bool = False,
 ) -> types.CrewListCoachRow:
     return {
         'crew': crew,
