@@ -10,7 +10,7 @@ from django.urls import reverse
 
 from core.tests import MessagesTestMixin, exists
 
-from .constants import Series, Genders, GENDERS_OVERALL, money
+from .constants import Series, Genders, GENDERS_OVERALL, money, CoachingCompetitions
 from . import models
 from . import utils
 from . import transactions
@@ -576,6 +576,9 @@ class MarketPageBase(GamePageBase):
         super().setUpTestData()
         cls.entry = cls.team.entries.create(event = cls.event)
 
+        cls.event.coaching_competition = CoachingCompetitions.BLADES
+        cls.event.save()
+
 
     def assertStartOrdersEqual(self, received: 'StartOrder', expected: 'StartOrder') -> None:
         """A helper method to compare if two start orders are equal."""
@@ -680,6 +683,39 @@ class MarketPageBase(GamePageBase):
 
         self.assertTrue(response.context['show_crew_actions'])
         self.assertTrue(response.context['show_coach_row'])
+        self.assertTrue(response.context['show_coach_fire'])
+        self.assertTrue(response.context['show_coach_hire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__no_coaching_competition(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
+        """Tests the availability of actions:
+
+        * Crew action availability reflects market status for logged in users.
+        * Coach actions/displays also require there to be a coaching competition.
+
+        Does not test response or default context.
+        """
+
+        day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
+        self.event.days.update(date = db.F('date') + day_shift)
+        self.event.coaching_competition = None
+        self.event.save()
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = exists(self.event.days.first()),
+                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
+                seat = seat,
+            )
+
+        # Test view
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertFalse(response.context['show_coach_row'])
         self.assertTrue(response.context['show_coach_fire'])
         self.assertTrue(response.context['show_coach_hire'])
 

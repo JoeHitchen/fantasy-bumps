@@ -310,7 +310,7 @@ class MarketView(EventBase):
             }
 
             context['show_crew_actions'] = self.day.market_is_open
-            context['show_coach_row'] = is_first_day
+            context['show_coach_row'] = self.day.event.coaching_competition and is_first_day
             context['show_coach_fire'] = False
             context['show_coach_hire'] = False
 
@@ -337,7 +337,10 @@ class MarketView(EventBase):
 
         context['coach_crew'] = game_entry.get_coach(gender)
         context['coach_name'] = self.event.coaches.filter(crew = context['coach_crew']).first()
-        context['show_coach_row'] = context['coach_crew'] or is_first_day
+        context['show_coach_row'] = (
+            self.day.event.coaching_competition
+            and (context['coach_crew'] or is_first_day)
+        )
         context['show_coach_fire'] = context['show_crew_actions'] and is_first_day
         context['show_coach_hire'] = (
             context['show_coach_fire']
@@ -403,7 +406,7 @@ class TeamView(EventBase):
         context['mens_crew'] = team.get_crew(self.day, Genders.MEN)
         context['womens_crew'] = team.get_crew(self.day, Genders.WOMEN)
 
-        context['show_coach_row'] = True
+        context['show_coach_row'] = self.event.coaching_competition
         context['mens_coach_crew'] = entry.mens_coach
         context['mens_coach_name'] = self.event.coaches.filter(crew = entry.mens_coach).first()
         context['womens_coach_crew'] = entry.womens_coach
