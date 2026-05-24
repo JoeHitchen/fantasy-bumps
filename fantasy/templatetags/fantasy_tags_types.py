@@ -18,6 +18,11 @@ class BunglinePopularity(TypedDict):
     popularity: float
 
 
+class CoachingButton(TypedDict):
+    competition: str
+    payout_condition: str
+
+
 class AnalysisButton(TypedDict):
     analysis_crew: models.Crew
     popularity: float
@@ -98,6 +103,7 @@ class CrewListBox(TypedDict):
 
 
 class CrewListCoachRow(TypedDict):
+    event: models.Event | None
     crew: models.Crew | None
     club: str | None
     name: models.Coach | None

@@ -10,7 +10,7 @@ from django.contrib.auth import models as auth
 from django.templatetags.static import static
 from django.contrib.humanize.templatetags.humanize import naturalday
 
-from ..constants import Genders, money
+from ..constants import Genders, money, CoachingCompetitions
 from .. import models, utils
 from . import fantasy_tags_types as types
 
@@ -100,10 +100,46 @@ def popularity_indicator(popularity: float) -> str:
     return mark_safe('<span class="popularity">{:.2}</span>'.format(popularity))
 
 
+@register.filter
+def coaching_competition_payouts(competition: CoachingCompetitions) -> str:
+    return {
+        CoachingCompetitions.BLADES: '{} on the Saturday, for crew winning blades'.format(
+            currency(money.BLADES_BONUS),
+        ),
+        CoachingCompetitions.REFUND: '{} per place lost each day'.format(
+            currency(money.TORPIDS_REFUND),
+        ),
+    }[competition]
+
+
+@register.inclusion_tag(template.Template('''
+  <button
+      class="btn btn-primary btn-sm"
+      data-toggle="coaching"
+      data-placement="top"
+      title="{{ competition }}"
+      data-text="{{ payout_condition }}"
+  >
+    <span class="oi oi-bullhorn"></span>
+  </button>
+'''))
+def coaching_competition_button(event: models.Event) -> types.CoachingButton:
+
+    competition = (
+        CoachingCompetitions(event.coaching_competition)
+        if event.coaching_competition else None
+    )
+    return {
+        'competition': competition.label if competition else 'Error',
+        'payout_condition': coaching_competition_payouts(competition) if competition else '',
+    }
+
+
+
 @register.inclusion_tag(template.Template('''
   <button
       class="payout btn btn-primary btn-sm flex-shrink-0"
-      data-toggle="popover"
+      data-toggle="analysis"
       data-placement="top"
       title="Analysis for {{ analysis_crew }}"
       data-popularity="{{ popularity|floatformat:2 }}"
@@ -391,6 +427,7 @@ def crew_list_box(
       {% if name %}<div>{{ name }}</div>{% endif %}
       <div>{{ crew }}</div>
     </div>
+    {% if event %}{% coaching_competition_button event %}{% endif %}
     {% if show_coach_fire %}{% fire_button %}{% endif %}
     {% endif %}
   </div>
@@ -398,12 +435,14 @@ def crew_list_box(
 def crew_list_coach_row(
     crew: models.Crew | None,
     name: models.Coach | None,
+    event: models.Event | None = None,
     show_coach_fire: bool = False,
 ) -> types.CrewListCoachRow:
     return {
         'crew': crew,
         'club': crew.club if crew else None,
         'name': name,
+        'event': event,
         'show_coach_fire': show_coach_fire,
     }
 

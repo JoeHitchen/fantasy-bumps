@@ -17,8 +17,8 @@
     $(".btn-hire").click(hire);
     $(".btn-fire").click(fire);
     $(".btn-buy:not(.disabled)").click(buy);
-    $('[data-toggle="tooltip"]').tooltip({delay: {"show": 750, "hide": 0}});
-    $('[data-toggle="popover"]').popover({
+    $('[data-toggle="analysis"]').tooltip({delay: {"show": 750, "hide": 0}});
+    $('[data-toggle="analysis"]').popover({
       html: true,
       trigger: 'focus',
       content: function() {
@@ -46,6 +46,14 @@
 
         return $('#analysis_wrapper').html();
       }
+    });
+    $('[data-toggle="coaching"]').popover({
+      html: true,
+      trigger: 'focus',
+      content: function() {
+        $('#coaching-rules').html($(this).data('text'));
+        return $('#coaching_wrapper').html();
+      },
     });
   });
 
@@ -85,7 +93,7 @@
   {% if user.is_authenticated %}<div class="col-lg-5 order-lg-last">
     <div class="list-group sticky-top mb-3" style="z-index: 980">
       {% crew_list_box crew seats finances show_crew_actions %}
-      {% if show_coach_row %}{% crew_list_coach_row coach_crew coach_name show_coach_fire %}{% endif %}
+      {% if show_coach_row %}{% crew_list_coach_row coach_crew coach_name event show_coach_fire %}{% endif %}
       {% crew_status_box event gender crew_valid other_crew_valid %}
     </div>
     <br/>
@@ -142,6 +150,13 @@
       <td><span id="analysis-popularity">-</span></td>
     </tr>
   </table>
+</div>
+
+<div id="coaching_wrapper" style="display:none">
+  <div class="m-2 mx-3">
+      <span id="coaching-rules">Competiton Rules</span>.
+      See <a href="{% url 'fantasy:rules' %}#coaching" target="_blank">Rules</a> for details.
+  </div>
 </div>
 
 {% endblock%}

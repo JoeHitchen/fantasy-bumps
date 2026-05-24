@@ -56,7 +56,7 @@ class money:
 
 
 class CoachingCompetitions(models.TextChoices):
-    BLADES = ('blades', 'Blades-or-Bust')
+    BLADES = ('blades', 'Blades or Bust')
     REFUND = ('refund', 'Coaching Refund')
 
 

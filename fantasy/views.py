@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse, HttpResponseBase
 
-from .constants import Genders, GENDERS_OVERALL, money, timings
+from .constants import Genders, GENDERS_OVERALL, money, timings, CoachingCompetitions
 from . import models
 from . import utils
 from . import transactions
@@ -60,6 +60,7 @@ class FantasyBaseMixin(ContextMixin):
         context = super().get_context_data(**kwargs)
         context['money'] = money
         context['timings'] = timings
+        context['coaching'] = CoachingCompetitions
 
         events = utils.ordered_events()
         if 'event' in context:

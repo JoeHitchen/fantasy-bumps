@@ -124,7 +124,7 @@
   </div>
 </div></div>
 
-<div class="row"><div class="col">
+<div class="row"><div class="col" id="coaching">
   <h2>Coaching Competition</h2>
   <div class="rule-text">
     Following an existential crisis by the Admin, Fantasy Bumps now recognises the role of coaches in team success.
@@ -134,20 +134,20 @@
     They will also get the same payout if they meet the criteria for that event's coaching competition, regardless of where the crew is on the river.
   </div>
 
-  <h5>Blades or Bust</h5>
+  <h5>{{ coaching.BLADES.label }}</h5>
   <div class="rule-text">
     This competition pays tribute to the coaches of negotiable attention who care about one thing and one thing only - Getting their set of blades and getting out of there.
     If they don't get their blades, you both get nothing.
     <br/>
-    <strong>Payout: {{ money.BLADES_BONUS|currency }} on the Saturday, for crew winning blades</strong>.
+    <strong>Payout: {{ coaching.BLADES|coaching_competition_payouts|safe }}</strong>.
   </div>
 
-  <h5>Coaching Refund</h5>
+  <h5>{{ coaching.REFUND.label }}</h5>
   <div class="rule-text">
     This competition pays tribute to those coaches whose impact is such that, on reflection, they owe you a refund of their coaching fees, even if you weren't paying them any coaching fees to begin with.
     <em>A Torpids special</em>.
     <br/>
-    <strong>Payout: {{ money.TORPIDS_REFUND|currency }} per place lost each day</strong>.
+    <strong>Payout: {{ coaching.REFUND|coaching_competition_payouts|safe }}</strong>.
   </div>
 </div></div>
 
