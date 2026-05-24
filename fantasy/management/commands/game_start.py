@@ -10,7 +10,7 @@ from typing_extensions import Unpack, NotRequired
 
 from integrations import live_bumps
 
-from ...constants import Locations, Series as EventSeries
+from ...constants import Locations, Series as EventSeries, CoachingCompetitions
 from ... import models
 from ..actions import create_event
 from .. import tasks
@@ -29,6 +29,7 @@ class StartArgs(TypedDict):
     year: int | None
     source: NotRequired[str]
     crew_lists: NotRequired[str]
+    coaching: NotRequired[str]
 
 
 class Command(BaseCommand):
@@ -75,6 +76,13 @@ class Command(BaseCommand):
                 parsers.location_crew_list_sources_map[Locations.OXFORD][0],
             ),
         )
+        parser.add_argument(
+            '--coaching',
+            choices = list(CoachingCompetitions) + ['none'],
+            help = 'The coaching competition to run for this event.',
+            default = 'none',
+            required = False,
+        )
 
 
     def handle(self, **kwargs: Unpack[StartArgs]) -> None:
@@ -113,6 +121,17 @@ class Command(BaseCommand):
             event = models.Event.objects.get(tag = 'demogame')
             event.days.update(date = db.F('date') + (start_date - event.first_day.date))
         utils.load_crew_lists(crew_list_source['function'], event)
+
+        # Set coaching competition
+        try:
+            event.coaching_competition = CoachingCompetitions(kwargs['coaching'])
+            event.save()
+            logger.info('Using "{}" as the coaching competition for {}'.format(
+                event.coaching_competition.label,
+                event,
+            ))
+        except (KeyError, ValueError):
+            logger.info('No coaching competition set for {}'.format(event))
 
         # Ancillary actions
         tasks.schedule_game_advances(event)
