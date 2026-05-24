@@ -350,19 +350,34 @@ class Test__Misc(TestCase):
 
 
     @staticmethod
+    def hire_button(position: types.PositionWithPopularity) -> str:
+        """A helper function that renders a hire button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% hire_button position %}')
+            .render(template.Context({'position': position}))
+        )
+
+
+    @staticmethod
     def market_row(
         position: types.PositionWithPopularity,
         balance: int,
-        show_actions: bool = True,
+        show_crew_actions: bool = True,
+        show_coach_hire: bool = False,
     ) -> str:
         """A helper function that renders a market row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% market_row position balance show_actions %}')
+            .Template((
+                '{% load fantasy_tags %}'
+                + '{% market_row position balance show_crew_actions show_coach_hire %}'
+            ))
             .render(template.Context({
                 'position': position,
                 'balance': balance,
-                'show_actions': show_actions,
+                'show_crew_actions': show_crew_actions,
+                'show_coach_hire': show_coach_hire,
             }))
         )
 
@@ -414,6 +429,24 @@ class Test__Misc(TestCase):
         self.assertInHTML('Buy ' + tags.currency(self.crew.value(self.day)), html)
 
 
+    def test__hire_button__standard(self) -> None:
+        """Renders a styled button with associated data."""
+
+        html = self.hire_button(self.position)
+        button = parser(html)
+
+        self.assertEqual(button.tag, 'button')
+
+        classes = button.get('class', '').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-hire', classes)
+
+        self.assertEqual(button.get('data-crew'), str(self.crew.id))
+
+        self.assertInHTML('Hire Coach', html)
+
+
     def test__market_row__standard(self) -> None:
         """Renders a styled div, that contains an avatar, crew box, and buy button."""
 
@@ -433,6 +466,8 @@ class Test__Misc(TestCase):
 
         buy_button = self.buy_button(self.position)
         self.assertInHTML(buy_button, html)
+
+        self.assertNotIn('btn-hire', html)
 
 
     def test__market_row__cant_afford(self) -> None:
@@ -455,17 +490,32 @@ class Test__Misc(TestCase):
         buy_button = self.buy_button(self.position, disabled = True)
         self.assertInHTML(buy_button, html)
 
+        self.assertNotIn('btn-hire', html)
 
-    def test__market_row__show_actions_false(self) -> None:
+
+    def test__market_row__show_crew_actions__false(self) -> None:
         """Renders a styled div, that contains an avatar and crew box, but not a buy button.
 
         N.B. View passes 'balance' is an empty string if missing.
         """
 
-        html = self.market_row(self.position, 0, show_actions = False)
+        html = self.market_row(self.position, 0, show_crew_actions = False)
 
         # Test containments
         self.assertNotIn('btn-buy', html)
+
+
+    def test__market_row__show_coach_hire__true(self) -> None:
+        """Renders a styled div, that contains a hire button.
+
+        N.B. View passes 'balance' is an empty string if missing.
+        """
+
+        html = self.market_row(self.position, 0, show_coach_hire = True)
+
+        # Test containments
+        hire_button = self.hire_button(self.position)
+        self.assertInHTML(hire_button, html)
 
 
 
@@ -506,6 +556,16 @@ class Test__Crew_List(TestCase):
 
 
     @staticmethod
+    def fire_button() -> str:
+        """A helper function that renders a fire coach button."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{% fire_button %}')
+            .render(template.Context({}))
+        )
+
+
+    @staticmethod
     def crew_list_header(finances: types.GenderFinances) -> str:
         """A helper function that renders a crew list header."""
         return (
@@ -519,16 +579,37 @@ class Test__Crew_List(TestCase):
     def crew_list_row(
         seat: models.Seat,
         purchase: models.Purchase | None,
-        show_actions: bool = True,
+        show_crew_actions: bool = True,
     ) -> str:
         """A helper function that renders a crew row."""
         return (
             template
-            .Template('{% load fantasy_tags %}{% crew_list_row seat purchase show_actions %}')
+            .Template('{% load fantasy_tags %}{% crew_list_row seat purchase show_crew_actions %}')
             .render(template.Context({
                 'seat': seat,
                 'purchase': purchase,
-                'show_actions': show_actions,
+                'show_crew_actions': show_crew_actions,
+            }))
+        )
+
+
+    @staticmethod
+    def crew_list_coach_row(
+        crew: models.Crew | None,
+        name: models.Coach | None,
+        event: models.Event | None,
+        show_coach_fire: bool,
+    ) -> str:
+        """A helper function that renders a crew list coach row."""
+        component_str = '{% crew_list_coach_row crew name event show_coach_fire %}'
+        return (
+            template
+            .Template('{% load fantasy_tags %}' + component_str)
+            .render(template.Context({
+                'crew': crew,
+                'name': name,
+                'event': event,
+                'show_coach_fire': show_coach_fire,
             }))
         )
 
@@ -538,18 +619,18 @@ class Test__Crew_List(TestCase):
         crew_list: Iterable[models.Purchase],
         seats: db.QuerySet[models.Seat],
         finances: types.GenderFinances = {'budget': 0, 'crew_value': 0, 'balance': 0},
-        show_actions: bool = False,
+        show_crew_actions: bool = False,
     ) -> str:
         """A helper function that renders a crew list."""
-        component_string = '<div>{% crew_list_box crew_list seats finances show_actions %}</div>'
+        component_str = '<div>{% crew_list_box crew_list seats finances show_crew_actions %}</div>'
         return (
             template
-            .Template('{% load fantasy_tags %}' + component_string)
+            .Template('{% load fantasy_tags %}' + component_str)
             .render(template.Context({
                 'crew_list': crew_list,
                 'seats': seats,
                 'finances': finances,
-                'show_actions': show_actions,
+                'show_crew_actions': show_crew_actions,
             }))
         )
 
@@ -609,6 +690,22 @@ class Test__Crew_List(TestCase):
         self.purchase.price = 999
         with self.assertNumQueries(0):
             self.sell_button(self.purchase)
+
+
+    def test__fire_button__standard(self) -> None:
+        """Renders a styled button with associated data."""
+
+        html = self.fire_button()
+        button = parser(html)
+
+        self.assertEqual(button.tag, 'button')
+
+        classes = button.get('class', '').split()
+        self.assertIn('btn', classes)
+        self.assertIn('btn-sm', classes)
+        self.assertIn('btn-fire', classes)
+
+        self.assertInHTML('Fire Coach', html)
 
 
     def test__crew_list_row__no_purchase(self) -> None:
@@ -692,7 +789,7 @@ class Test__Crew_List(TestCase):
         self.assertInHTML(sell_button, html)
 
 
-    def test__crew_list_row__show_actions_false(self) -> None:
+    def test__crew_list_row__show_crew_actions__false(self) -> None:
         """Renders a styled div, that contains an avatar and crew box, but not a sell button."""
 
         purchase = self.team.purchases.create(
@@ -700,7 +797,7 @@ class Test__Crew_List(TestCase):
             seat = self.seat,
             crew = self.crew,
         )
-        html = self.crew_list_row(self.seat, purchase, show_actions = False)
+        html = self.crew_list_row(self.seat, purchase, show_crew_actions = False)
 
         # Test root
         row = parser(html)
@@ -715,6 +812,88 @@ class Test__Crew_List(TestCase):
         self.assertInHTML(crew, html)
 
         self.assertNotIn('btn', html)
+
+
+    def test__crew_list_coach_row__no_coach(self) -> None:
+        """Renders a styled div, that contains an avatar."""
+
+        html = self.crew_list_coach_row(None, None, self.day.event, False)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        avatar = tags.avatar('X')
+        self.assertInHTML(avatar, html)
+
+        self.assertNotIn('<div class="flex-grow-1">', html)
+        self.assertNotIn('btn-fire', html)
+
+
+    def test__crew_list_coach_row__anonymous_coach(self) -> None:
+        """Renders a styled div, that contains an avatar and a crew."""
+
+        html = self.crew_list_coach_row(self.crew, None, self.day.event, False)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        avatar = tags.avatar('X', self.crew.club)
+        self.assertInHTML(avatar, html)
+
+        crew_str = '<div class="flex-grow-1"><div>{}</div></div>'.format(self.crew)
+        self.assertInHTML(crew_str, html)
+
+        self.assertNotIn('btn-fire', html)
+
+
+    def test__crew_list_coach_row__named_coach(self) -> None:
+        """Renders a styled div, that contains an avatar and a crew."""
+
+        coach_name = models.Coach(name = 'A Name')
+        html = self.crew_list_coach_row(self.crew, coach_name, self.day.event, False)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        avatar = tags.avatar('X', self.crew.club)
+        self.assertInHTML(avatar, html)
+
+        crew_str = '''
+          <div class="flex-grow-1 crew-row-athlete">
+            <div>{}</div>
+            <div>{}</div>
+          </div>'''.format(coach_name, self.crew)
+        self.assertInHTML(crew_str, html)
+
+        self.assertNotIn('btn-fire', html)
+
+
+    def test__crew_list_coach_row__show_coach_fire(self) -> None:
+        """Renders a styled div, that contains a button for firing the coach."""
+
+        html = self.crew_list_coach_row(self.crew, None, self.day.event, True)
+
+        # Test root
+        row = parser(html)
+        self.assertEqual(row.tag, 'div')
+        self.assertIn('crew-row', row.get('class', '').split())
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        # Test containments
+        fire_button = self.fire_button()
+        self.assertInHTML(fire_button, html)
 
 
     def test__crew_list_box__empty_list(self) -> None:
@@ -747,7 +926,7 @@ class Test__Crew_List(TestCase):
 
         # Test containments
         self.assertInHTML(
-            self.crew_list_row(purchase.seat, purchase, show_actions = False),
+            self.crew_list_row(purchase.seat, purchase, show_crew_actions = False),
             html,
         )
 
@@ -770,11 +949,11 @@ class Test__Crew_List(TestCase):
 
 
 
-    def test__crew_list_box__show_actions(self) -> None:
-        """Propagates the show_actions flag."""
+    def test__crew_list_box__show_crew_actions(self) -> None:
+        """Propagates the show_crew_actions flag."""
 
         purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase], self.seats, show_actions = True)
+        html = self.crew_list_box([purchase], self.seats, show_crew_actions = True)
 
         # Test root
         crew_list = parser(html)
@@ -782,7 +961,7 @@ class Test__Crew_List(TestCase):
 
         # Test containments
         self.assertInHTML(
-            self.crew_list_row(purchase.seat, purchase, show_actions = True),
+            self.crew_list_row(purchase.seat, purchase, show_crew_actions = True),
             html,
         )
 

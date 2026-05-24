@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpRequest, HttpResponse, HttpResponseBase
 
-from .constants import Genders, GENDERS_OVERALL, money, timings
+from .constants import Genders, GENDERS_OVERALL, money, timings, CoachingCompetitions
 from . import models
 from . import utils
 from . import transactions
@@ -60,6 +60,7 @@ class FantasyBaseMixin(ContextMixin):
         context = super().get_context_data(**kwargs)
         context['money'] = money
         context['timings'] = timings
+        context['coaching'] = CoachingCompetitions
 
         events = utils.ordered_events()
         if 'event' in context:
@@ -273,6 +274,7 @@ class MarketView(EventBase):
         context['gender'] = gender
         seats = models.Seat.objects.all()
         context['seats'] = seats
+        is_first_day = self.day == self.day.event.first_day
 
         self.game_entry_count = self.day.event.fantasies.count() or 1  # Avoid Div0 error
         context['start_order'] = [
@@ -280,53 +282,80 @@ class MarketView(EventBase):
             for division_start_order in self.day.start_order(gender)
         ]
 
-        user = self.request.user
-        if user.is_authenticated:
+        if not self.request.user.is_authenticated:
+            context['show_crew_actions'] = False
+            context['show_coach_fire'] = False
+            context['show_coach_hire'] = False
+            return context
 
-            context['crew'] = (
-                user.team
-                .get_crew(self.day, gender)
-                .select_related('seat', 'crew', 'athlete')
-                .prefetch_related(db.Prefetch(
-                    'crew__positions',
-                    models.Position.objects.filter(day = self.day),
-                    to_attr = '_position',
-                ))
+        try:
+            game_entry = self.team.entries.extend_financials().get(event = self.event)
+            context['finances'] = {
+                Genders.MEN: {
+                    'budget': game_entry.mens_budget,
+                    'crew_value': game_entry.mens_crew_value,
+                    'balance': game_entry.mens_balance,
+                },
+                Genders.WOMEN: {
+                    'budget': game_entry.womens_budget,
+                    'crew_value': game_entry.womens_crew_value,
+                    'balance': game_entry.womens_balance,
+                },
+            }[gender]
+
+        except models.GameEntry.DoesNotExist:
+            context['finances'] = {
+                'budget': money.INITIAL_BALANCE,
+                'crew_value': 0,
+                'balance': money.INITIAL_BALANCE,
+            }
+
+            context['show_crew_actions'] = self.day.market_is_open
+            context['show_coach_row'] = self.day.event.coaching_competition and is_first_day
+            context['show_coach_fire'] = False
+            context['show_coach_hire'] = False
+
+            return context
+
+        context['show_crew_actions'] = self.day.market_is_open
+        context['crew'] = (
+            self.request.user.team
+            .get_crew(self.day, gender)
+            .select_related('seat', 'crew', 'athlete')
+            .prefetch_related(db.Prefetch(
+                'crew__positions',
+                models.Position.objects.filter(day = self.day),
+                to_attr = '_position',
+            ))
+        )
+        for purchase in context['crew']:
+            purchase.price = utils.pricing_by_day_gender(
+                purchase.crew._position[0].rank,
+                self.day,
+                gender,
             )
-            for purchase in context['crew']:
-                purchase.price = utils.pricing_by_day_gender(
-                    purchase.crew._position[0].rank,
-                    self.day,
-                    gender,
-                )
-            context['crew_valid'] = utils.has_all_seats(context['crew'], seats)
+        crew_valid = utils.has_all_seats(context['crew'], seats)
 
-            other_gender = utils.reverse_gender(gender)
-            other_crew = user.team.get_crew(self.day, other_gender)
-            context['other_crew_valid'] = utils.has_all_seats(other_crew, seats)
+        context['coach_crew'] = game_entry.get_coach(gender)
+        context['coach_name'] = self.event.coaches.filter(crew = context['coach_crew']).first()
+        context['show_coach_row'] = (
+            self.day.event.coaching_competition
+            and (context['coach_crew'] or is_first_day)
+        )
+        context['show_coach_fire'] = context['show_crew_actions'] and is_first_day
+        context['show_coach_hire'] = (
+            context['show_coach_fire']
+            and crew_valid
+            and not context['coach_crew']
+        )
 
-            try:
-                finances = self.team.entries.extend_financials().get(event = self.event)
-                context['finances'] = {
-                    Genders.MEN: {
-                        'budget': finances.mens_budget,
-                        'crew_value': finances.mens_crew_value,
-                        'balance': finances.mens_balance,
-                    },
-                    Genders.WOMEN: {
-                        'budget': finances.womens_budget,
-                        'crew_value': finances.womens_crew_value,
-                        'balance': finances.womens_balance,
-                    },
-                }[gender]
-            except models.GameEntry.DoesNotExist:
-                context['finances'] = {
-                    'budget': money.INITIAL_BALANCE,
-                    'crew_value': 0,
-                    'balance': money.INITIAL_BALANCE,
-                }
-
-        context['show_actions'] = user.is_authenticated and self.day.market_is_open
+        other_gender = utils.reverse_gender(gender)
+        other_crew = self.request.user.team.get_crew(self.day, other_gender)
+        context['crew_valid'] = crew_valid and (context['coach_crew'] or not is_first_day)
+        context['other_crew_valid'] = (
+            utils.has_all_seats(other_crew, seats)
+            and (game_entry.get_coach(other_gender) or not is_first_day)
+        )
         return context
 
 
@@ -365,18 +394,29 @@ class TeamView(EventBase):
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
 
-        finances = get_object_or_404(
+        entry = get_object_or_404(
             models.GameEntry.objects.select_related().extend_financials(),
             team__user__username = self.kwargs['team_name'],
             event = self.event,
         )
-        team = finances.team
+        team = entry.team
 
         context['team'] = team
         context['seats'] = models.Seat.objects.all()
-        context['finances'] = finances
+        context['finances'] = entry
         context['mens_crew'] = team.get_crew(self.day, Genders.MEN)
         context['womens_crew'] = team.get_crew(self.day, Genders.WOMEN)
+
+        context['show_coach_row'] = self.event.coaching_competition
+        context['mens_coach_crew'] = entry.mens_coach
+        context['mens_coach_name'] = self.event.coaches.filter(crew = entry.mens_coach).first()
+        context['womens_coach_crew'] = entry.womens_coach
+        context['womens_coach_name'] = (
+            self.event.coaches
+            .filter(crew = entry.womens_coach)
+            .first()
+        )
+
         return context
 
 
@@ -540,6 +580,103 @@ def sell(request: HttpRequest) -> HttpResponse:
         )
         messages.success(request, success_text)
 
+    return market_redirect
+
+
+
+@require_POST
+@login_required(redirect_field_name = None)
+def hire(request: HttpRequest) -> HttpResponse:
+    """Hires a coach.
+
+    Inputs:
+        POST 'event' - Tag of the event for the hiring.
+                        Must have first day markets open.
+             'crew'  - ID of the crew to hire as coach.
+
+    Requires seven queries.
+    """
+    assert isinstance(request.user, auth.User)  # Needed for MyPy
+
+    try:
+        fantasy = (
+            models.GameEntry.objects
+            .select_related('event')
+            .get(event__tag = request.POST['event'], team = request.user.team)
+        )
+    except (models.GameEntry.DoesNotExist, MultiValueDictKeyError):
+        messages.error(request, 'Unable to find a matching competition entry.')
+        return redirect('fantasy:index')
+
+    try:
+        crew = models.Crew.objects.get(id = request.POST['crew'])
+        gender_string = Genders(crew.gender).label.lower()
+    except (models.Crew.DoesNotExist, MultiValueDictKeyError):
+        messages.error(request, 'Unable to find the coach being hired.')
+        return redirect('fantasy:index')
+
+
+    # Check market status
+    market_redirect = redirect(f'fantasy:{gender_string}', event_tag = fantasy.event.tag)
+
+    if not fantasy.event.first_day.market_is_open:
+        messages.warning(request, 'Markets are not open for this hiring.')
+        return market_redirect
+
+
+    # Hire coach
+    fantasy.set_coach(Genders(crew.gender), crew)
+    fantasy.save()
+
+    messages.success(request, f"Hired {crew} as your {gender_string}'s coach.")
+    return market_redirect
+
+
+
+@require_POST
+@login_required(redirect_field_name = None)
+def fire(request: HttpRequest) -> HttpResponse:
+    """Fires a previously hired coach.
+
+    Inputs:
+        POST 'event'  - Tag of the event for the firing.
+                        Must have first day markets open.
+             'gender' - Gender of the crew to fire the coach for.
+
+    Requires six queries.
+    """
+    assert isinstance(request.user, auth.User)  # Needed for MyPy
+
+    try:
+        fantasy = (
+            models.GameEntry.objects
+            .select_related('event', 'mens_coach', 'womens_coach')
+            .get(event__tag = request.POST['event'], team = request.user.team)
+        )
+        gender = Genders(request.POST['gender'])
+    except (models.GameEntry.DoesNotExist, MultiValueDictKeyError, ValueError):
+        messages.error(request, 'Unable to identify the coach to be fire.')
+        return redirect('fantasy:index')
+
+
+    # Check market status
+    market_url_name = f'fantasy:{gender.label.lower()}'
+    market_redirect = redirect(market_url_name, event_tag = fantasy.event.tag)
+
+    if not fantasy.event.first_day.market_is_open:
+        messages.warning(request, 'Markets are not open for this firing.')
+        return market_redirect
+
+    # Identify and fire coach
+    old_coach = fantasy.get_coach(gender)
+    fantasy.set_coach(gender, None)
+    fantasy.save()
+
+    messages.success(request, (
+        f"Fired {old_coach} as your {gender.label.lower()}'s coach."
+        if old_coach else
+        f"Your {gender.label.lower()}'s coaching slot is now empty."
+    ))
     return market_redirect
 
 

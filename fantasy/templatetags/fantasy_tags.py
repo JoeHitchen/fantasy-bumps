@@ -10,7 +10,7 @@ from django.contrib.auth import models as auth
 from django.templatetags.static import static
 from django.contrib.humanize.templatetags.humanize import naturalday
 
-from ..constants import Genders, money
+from ..constants import Genders, money, CoachingCompetitions
 from .. import models, utils
 from . import fantasy_tags_types as types
 
@@ -100,10 +100,46 @@ def popularity_indicator(popularity: float) -> str:
     return mark_safe('<span class="popularity">{:.2}</span>'.format(popularity))
 
 
+@register.filter
+def coaching_competition_payouts(competition: CoachingCompetitions) -> str:
+    return {
+        CoachingCompetitions.BLADES: '{} on the Saturday, for crew winning blades'.format(
+            currency(money.BLADES_BONUS),
+        ),
+        CoachingCompetitions.REFUND: '{} per place lost each day'.format(
+            currency(money.TORPIDS_REFUND),
+        ),
+    }[competition]
+
+
+@register.inclusion_tag(template.Template('''
+  <button
+      class="btn btn-primary btn-sm"
+      data-toggle="coaching"
+      data-placement="top"
+      title="{{ competition }}"
+      data-text="{{ payout_condition }}"
+  >
+    <span class="oi oi-bullhorn"></span>
+  </button>
+'''))
+def coaching_competition_button(event: models.Event) -> types.CoachingButton:
+
+    competition = (
+        CoachingCompetitions(event.coaching_competition)
+        if event.coaching_competition else None
+    )
+    return {
+        'competition': competition.label if competition else 'Error',
+        'payout_condition': coaching_competition_payouts(competition) if competition else '',
+    }
+
+
+
 @register.inclusion_tag(template.Template('''
   <button
       class="payout btn btn-primary btn-sm flex-shrink-0"
-      data-toggle="popover"
+      data-toggle="analysis"
       data-placement="top"
       title="Analysis for {{ analysis_crew }}"
       data-popularity="{{ popularity|floatformat:2 }}"
@@ -213,6 +249,26 @@ def sell_button(purchase: models.Purchase) -> types.SellButton:
 
 
 @register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <button class="btn btn-primary btn-sm btn-hire flex-shrink-0" data-crew="{{ crew.id }}">
+    Hire Coach
+  </button>
+'''))
+def hire_button(crew: models.Crew) -> types.HireButton:
+    return {'crew': crew}
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <button class="btn btn-primary btn-sm btn-fire flex-shrink-0">
+    Fire Coach
+  </button>
+'''))
+def fire_button() -> types.FireButton:
+    return {}
+
+
+@register.inclusion_tag(template.Template('''
   {% load static %}
   {% if not purchase.seat.cox %}
     <a
@@ -233,11 +289,16 @@ def switch_button(purchase: models.Purchase) -> types.SwitchButton:
     {{ position.bungline|avatar:position.crew.club }}
     <div class="flex-grow-1">{{ position.crew }}</div>
     {% analysis_button position %}
-    {% if show_actions %}
-    {% buy_button position disabled %}{% endif %}
+    {% if show_crew_actions %}{% buy_button position disabled %}{% endif %}
+    {% if show_coach_hire %}{% hire_button position.crew %}{% endif %}
   </div>
 '''))
-def market_row(position: models.Position, balance: int, show_actions: bool) -> types.MarketRow:
+def market_row(
+    position: models.Position,
+    balance: int,
+    show_crew_actions: bool,
+    show_coach_hire: bool,
+) -> types.MarketRow:
 
     crew_value = utils.pricing_by_day_gender(
         position.rank,
@@ -245,12 +306,13 @@ def market_row(position: models.Position, balance: int, show_actions: bool) -> t
         Genders(position.crew.gender),
     )
 
-    disabled = show_actions and crew_value > balance
+    disabled = show_crew_actions and crew_value > balance
 
     return {
         'position': position,
         'disabled': disabled,
-        'show_actions': show_actions,
+        'show_crew_actions': show_crew_actions,
+        'show_coach_hire': show_coach_hire,
     }
 
 
@@ -260,7 +322,9 @@ def market_row(position: models.Position, balance: int, show_actions: bool) -> t
     <div class="list-group-item list-group-item-dark market-row">
       <h5 class="mb-0">{{ gender.label }}'s Division {{ number }}</h5>
     </div>
-    {% for position in division %}{% market_row position balance show_actions %}{% endfor %}
+    {% for position in division %}
+      {% market_row position balance show_crew_actions show_coach_hire %}
+    {% endfor %}
   </div>
 '''))
 def market_division_box(
@@ -268,14 +332,16 @@ def market_division_box(
     gender: Genders,
     number: int,
     balance: int,
-    show_actions: bool,
+    show_crew_actions: bool,
+    show_coach_hire: bool,
 ) -> types.MarketDivision:
     return {
         'division': division,
         'gender': gender,
         'number': number,
         'balance': balance,
-        'show_actions': show_actions,
+        'show_crew_actions': show_crew_actions and not show_coach_hire,
+        'show_coach_hire': show_coach_hire,
     }
 
 
@@ -301,7 +367,7 @@ def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
       {% if purchase.athlete %}<div>{{ purchase.athlete }}</div>{% endif %}
       <div>{{ purchase.crew }}</div>
     </div>
-    {% if show_actions %}
+    {% if show_crew_actions %}
       {% switch_button purchase %}
       {% sell_button purchase %}
     {% endif %}
@@ -311,13 +377,13 @@ def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
 def crew_list_row(
     seat: models.Seat,
     purchase: models.Purchase,
-    show_actions: bool,
+    show_crew_actions: bool,
 ) -> types.CrewListRow:
     return {
         'seat': seat,
         'purchase': purchase,
         'club': purchase.crew.club if purchase else None,
-        'show_actions': show_actions,
+        'show_crew_actions': show_crew_actions,
     }
 
 
@@ -327,14 +393,14 @@ def crew_list_row(
     {% crew_list_header finances %}
   {% endif %}
   {% for seat, rower in crew_list %}
-    {% crew_list_row seat rower show_actions %}
+    {% crew_list_row seat rower show_crew_actions %}
   {% endfor %}
 '''))
 def crew_list_box(
     crew_list: db.QuerySet[models.Purchase],
     seats: db.QuerySet[models.Seat],
     finances: types.GenderFinances | None = None,
-    show_actions: bool = False,
+    show_crew_actions: bool = False,
 ) -> types.CrewListBox:
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
@@ -345,7 +411,40 @@ def crew_list_box(
         rowers[0] if rowers else None,
     ) for seat, rowers in seat_rowers.items()]
 
-    return {'crew_list': merged_crew_list, 'finances': finances, 'show_actions': show_actions}
+    return {
+        'crew_list': merged_crew_list,
+        'finances': finances,
+        'show_crew_actions': show_crew_actions,
+    }
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
+    {{ "X"|avatar:club }}
+    {% if crew %}
+    <div class="flex-grow-1{% if name %} crew-row-athlete{% endif %}">
+      {% if name %}<div>{{ name }}</div>{% endif %}
+      <div>{{ crew }}</div>
+    </div>
+    {% if event %}{% coaching_competition_button event %}{% endif %}
+    {% if show_coach_fire %}{% fire_button %}{% endif %}
+    {% endif %}
+  </div>
+'''))
+def crew_list_coach_row(
+    crew: models.Crew | None,
+    name: models.Coach | None,
+    event: models.Event | None = None,
+    show_coach_fire: bool = False,
+) -> types.CrewListCoachRow:
+    return {
+        'crew': crew,
+        'club': crew.club if crew else None,
+        'name': name,
+        'event': event,
+        'show_coach_fire': show_coach_fire,
+    }
 
 
 @register.inclusion_tag(template.Template('''

@@ -13,7 +13,8 @@ from django.dispatch import receiver
 from core.settings import TIME_ZONE
 from core.tests import exists
 
-from .constants import Series, Genders, GENDERS_OVERALL, timings, money, Clubs
+from .constants import Series, Genders, GENDERS_OVERALL, timings
+from .constants import money, CoachingCompetitions, Clubs
 from .utils import pricing
 
 
@@ -54,6 +55,11 @@ class Event(models.Model):
 
     market_held_closed = models.BooleanField(default = False)
     initial_market_open = models.DateTimeField()
+    coaching_competition = models.CharField(
+        max_length = 10,
+        choices = CoachingCompetitions.choices,
+        null = True,
+    )
 
     _days: list['Day']
 
@@ -374,6 +380,22 @@ class Athlete(models.Model):
 
 
 
+class Coach(models.Model):
+    """Descibes a coach for a crew."""
+
+    event = models.ForeignKey(Event, models.PROTECT, related_name = 'coaches')
+    crew = models.ForeignKey(Crew, models.PROTECT, related_name = 'coaches')
+    name = models.CharField(max_length = 100)
+
+    class Meta:
+        ordering = ['event', 'crew']
+        unique_together = ['event', 'crew']
+
+    def __str__(self) -> str:
+        return self.name
+
+
+
 class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
 
@@ -465,6 +487,19 @@ class GameEntry(models.Model):
     mens_balance = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
     womens_balance = models.PositiveSmallIntegerField(default = money.INITIAL_BALANCE)
 
+    mens_coach = models.ForeignKey(
+        Crew,
+        models.PROTECT,
+        related_name = 'mens_coaching_entries',
+        null = True,
+    )
+    womens_coach = models.ForeignKey(
+        Crew,
+        models.PROTECT,
+        related_name = 'womens_coaching_entries',
+        null = True,
+    )
+
     valid_entry = models.BooleanField(null = True, default = None)
     has_subs = models.BooleanField(default = False)
 
@@ -472,6 +507,21 @@ class GameEntry(models.Model):
 
     class Meta:
         unique_together = ['team', 'event']
+
+
+    def get_coach(self, gender: Genders) -> Crew | None:
+        """Returns the fantasy's coach for the gender specified."""
+
+        return {
+            Genders.MEN: self.mens_coach,
+            Genders.WOMEN: self.womens_coach,
+        }[gender]
+
+
+    def set_coach(self, gender: Genders, crew: Crew | None) -> None:
+        """Sets the fantasy's coach for the gender specified but defers saving."""
+
+        setattr(self, f'{gender.label.lower()}s_coach', crew)
 
 
 
