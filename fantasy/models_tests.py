@@ -928,6 +928,7 @@ class Test__Day__Market_Status(TestCase):
             tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
         )
         self.event.save()
+        self.event.refresh_from_db()  # Strips timezone information
 
         day = self.event.days.create(
             name = 'Main',
@@ -938,6 +939,7 @@ class Test__Day__Market_Status(TestCase):
 
         assert day.market_opens
         self.assertEqual(day.market_opens, self.event.initial_market_open)
+        self.assertEqual(day.market_opens.tzinfo, zoneinfo.ZoneInfo(TIME_ZONE))
 
 
     def test__market_opens__first_race_day__summer(self) -> None:
@@ -949,6 +951,7 @@ class Test__Day__Market_Status(TestCase):
             tzinfo = zoneinfo.ZoneInfo(TIME_ZONE),
         )
         self.event.save()
+        self.event.refresh_from_db()  # Strips timezone information
 
         day = self.event.days.create(
             name = 'Main',
@@ -959,6 +962,7 @@ class Test__Day__Market_Status(TestCase):
 
         assert day.market_opens
         self.assertEqual(day.market_opens, self.event.initial_market_open)
+        self.assertEqual(day.market_opens.tzinfo, zoneinfo.ZoneInfo(TIME_ZONE))
 
 
     def test__market_opens__later_race_day__winter(self) -> None:

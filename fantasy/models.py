@@ -242,7 +242,7 @@ class Day(models.Model):
         if self.prev and self.prev.last_race:
             return self.prev.last_race + timings.MARKET_DELAY
 
-        return self.event.initial_market_open
+        return self.event.initial_market_open.astimezone(zoneinfo.ZoneInfo(TIME_ZONE))
 
 
     @cached_property
