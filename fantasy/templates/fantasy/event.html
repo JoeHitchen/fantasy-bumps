@@ -34,11 +34,11 @@
       <div class="list-group">
         <div class="list-group-item list-group-item-primary">
           <div class="row justify-content-between">
-            <span class="ml-3">Leaderboard</span>
+            <span class="ml-2">Leaderboard</span>
             <a
               href="{% url 'fantasy:leaderboard' event.tag %}"
-              class="btn btn-primary btn-sm"
-              style="padding-top: 0.1em; padding-bottom: 0.1em; margin: 0"
+              class="btn btn-primary btn-sm mr-1"
+              style="padding-top: 0.1em; padding-bottom: 0.1em"
             >
               See all
             </a>
@@ -53,14 +53,36 @@
   <div class="row">
     <div class="col-md mb-3">
       <div class="list-group">
-        <div class="list-group-item list-group-item-primary">Most Popular Men's Crews</div>
+        <div class="list-group-item list-group-item-primary">
+          <div class="row justify-content-between"">
+            <span class="ml-2">Most Popular Men's Crews</span>
+            <a
+              href="{% url 'fantasy:men' event.tag %}"
+              class="btn btn-primary btn-sm mr-1"
+              style="padding-top: 0.1em; padding-bottom: 0.1em"
+            >
+              Market
+            </a>
+          </div>
+        </div>
         {% for crew in popular_crews_men %}
         {% popularity_row forloop.counter crew %}{% endfor %}
       </div>
     </div>
     <div class="col-md mb-3">
       <div class="list-group">
-        <div class="list-group-item list-group-item-primary">Most Popular Women's Crews</div>
+        <div class="list-group-item list-group-item-primary">
+          <div class="row justify-content-between"">
+            <span class="ml-2">Most Popular Women's Crews</span>
+            <a
+              href="{% url 'fantasy:women' event.tag %}"
+              class="btn btn-primary btn-sm mr-1"
+              style="padding-top: 0.1em; padding-bottom: 0.1em"
+            >
+              Market
+            </a>
+          </div>
+        </div>
         {% for crew in popular_crews_women %}
         {% popularity_row forloop.counter crew %}{% endfor %}
       </div>
