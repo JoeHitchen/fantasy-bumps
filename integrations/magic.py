@@ -7,9 +7,9 @@ def anu_day_code(series: str, year: int, day_number: int) -> list[str]:
     """Provides the correct day code for loading data from Anu."""
 
     if (series, year) == (TORPIDS, 2021):
-        return [['tue'], ['wed'], ['thu'], ['fri'], ['end']][day_number - 1]
+        return [['tue'], ['wed'], ['thu'], ['fri'], ['end', 'fin']][day_number - 1]
 
-    return [['wed', 'sta'], ['thu'], ['fri'], ['sat'], ['end']][day_number - 1]
+    return [['wed', 'sta'], ['thu'], ['fri'], ['sat'], ['end', 'fin']][day_number - 1]
 
 
 def anu_data_url_template(series: str, year: int) -> str:
