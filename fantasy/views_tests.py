@@ -441,20 +441,18 @@ class Test__Event(GamePageBase, TestCase):
         """Lists the best fantasies, by total score."""
 
         # Create teams
-        teams = [
-            auth.User.objects.create_user('T-{}'.format(index)).team
-            for index in range(1, 16)
-        ]
-        fantasies = [
-            team.entries.create(
+        fantasies = []
+        for index in range(1, 16):
+            team = auth.User.objects.create_user('T-{}'.format(index)).team
+            fantasy = team.entries.create(
                 event = self.event,
                 mens_budget = money.INITIAL_BALANCE + 10 * index,
                 womens_budget = money.INITIAL_BALANCE + 100 * index,
             )
-            for index, team in enumerate(teams)
-        ]
+            fantasies.append(fantasy)
 
         response = self.client.get(self.url)
+        self.assertContains(response, 'Leaderboard')
         self.assertEqual(list(response.context['fantasies']), fantasies[::-1][:5])
 
 
@@ -542,6 +540,24 @@ class Test__Event(GamePageBase, TestCase):
                 self.assertEqual(crew, expected[index][0])
                 self.assertEqual(crew.purchase_count, expected[index][1])
                 self.assertEqual(crew.popularity, expected[index][2])
+
+
+    def test__query_count(self) -> None:
+        """Expect:
+            (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
+            (1) SELECT Total entry count (for popularity)
+            (1) FantasyBumps Overhead - Recent events
+            (2) SELECT First and last racing days
+            (1) SELECT Top ranked teams
+            (2) SELECT Most popular crews of each gender
+        """
+
+        for index in range(1, 6):
+            team = auth.User.objects.create(username = f'team-{index}').team
+            team.entries.create(event = self.event)
+
+        with self.assertNumQueries(10):
+            self.client.get(self.url)
 
 
 

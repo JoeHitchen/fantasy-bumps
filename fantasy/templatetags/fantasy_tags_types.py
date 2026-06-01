@@ -36,13 +36,6 @@ class PopularityRow(TypedDict):
     crew: 'CrewWithPopularity'
 
 
-class MiniLeaderboardRow(TypedDict):
-    fantasy: models.FinancialGameEntry
-    rank: int
-    event: models.Event
-    style: str
-
-
 class BuyButton(TypedDict):
     day: models.Day
     crew: models.Crew
