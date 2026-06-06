@@ -1,0 +1,17 @@
+{% load fantasy_tags %}
+      <div class="list-group">
+        <div class="list-group-item list-group-item-primary">
+          <div class="row justify-content-between">
+            <span class="ml-2">Leaderboard</span>
+            <a href="{% url 'fantasy:leaderboard' event.tag %}" class="btn btn-primary btn-sm mr-1" style="padding-top: 0.1em; padding-bottom: 0.1em">
+              See all
+            </a>
+          </div>
+        </div>
+        {% for fantasy in fantasies %}
+        <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="list-group-item list-group-item-action popularity-row">
+          {{ forloop.counter|mini_leaderboard_avatar }}
+          <div class="flex-grow-1">{{ fantasy.team }}</div>
+          <span>{{ fantasy.total_budget|currency }}</span>
+        </a>{% endfor %}
+      </div>

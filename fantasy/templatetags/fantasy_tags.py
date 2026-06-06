@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import cast
 
 from django import template
 from django.db import models as db
@@ -91,6 +92,12 @@ def avatar(text: str | int, club: str | None = None) -> str:
 
 
 @register.filter
+def mini_leaderboard_avatar(rank: int) -> str:
+    style_matrix = {1: 'first', 2: 'second', 3: 'third'}
+    return avatar(rank, style_matrix.get(rank, 'other'))
+
+
+@register.filter
 def currency(amount: int) -> str:
     return format_html('{}&nbsp;🦀', amount)
 
@@ -175,31 +182,6 @@ def analysis_button(position: types.PositionWithPopularity) -> types.AnalysisBut
         'bump_up': bump_up,
         'row_over': row_over,
         'bumped_down': bumped_down,
-    }
-
-
-@register.inclusion_tag(template.Template('''
-  {% load fantasy_tags %}
-  <a
-    href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}"
-    class="list-group-item list-group-item-action popularity-row"
-  >
-    {{ rank|avatar:style }}
-    <div class="flex-grow-1">{{ fantasy.team }}</div>
-    <span>{{ fantasy.total_budget }}</span>
-  </a>
-'''))
-def mini_leaderboard_row(
-    rank: int,
-    fantasy: models.FinancialGameEntry,
-    event: models.Event,
-) -> types.MiniLeaderboardRow:
-    style_matrix = {1: 'first', 2: 'second', 3: 'third'}
-    return {
-        'fantasy': fantasy,
-        'rank': rank,
-        'event': event,
-        'style': style_matrix.get(rank, 'other'),
     }
 
 
@@ -551,7 +533,8 @@ trophy_styles: dict[str, tuple[str, bool, bool]] = {
 }
 
 
-def swan_image(trophy_type: str, tooltip: str, bottom_tooltip: bool) -> str:
+@register.filter
+def swan_image(trophy_type: str, tooltip: str = '', bottom_tooltip: bool = False) -> str:
 
     file_tag, is_large, is_reversed = trophy_styles[trophy_type]
 
@@ -587,3 +570,15 @@ def display_trophies(team: models.Team, bottom_tooltip: bool = False) -> str:
         trophy_string += swan_image('Cambridge', 'Cambridge Veteran', bottom_tooltip)
 
     return mark_safe(trophy_string)
+
+
+@register.filter
+def trophy_label(trophy_type: str) -> str:
+    return models.Trophy.Types(trophy_type).label
+
+
+@register.filter
+def trophy_team_score(team: models.Team) -> int:
+    # Unclear how to correctly type an annotated related model in this context
+    return cast(int, team._event_entry[0].total_budget)  # type: ignore
+

@@ -20,7 +20,7 @@
   width: 6.6em;
 }
 
-.popularity-row, .market-row, .crew-row {
+.popularity-row, .trophy-row, .market-row, .crew-row {
   display: flex;
   align-items: center;
 }
@@ -35,13 +35,19 @@
   margin-left: 1em;
 }
 
-.popularity-row {
+.popularity-row, .trophy-row {
   padding: 0.3em;
   padding-right: 0.5em;
 }
 
 .popularity-row :last-child {
   margin-left: 1em;
+}
+
+.trophy-row :first-child {
+  width: 2.25em;
+  margin-top: 0em;
+  margin-right: 0.25em;
 }
 
 .market-row, .crew-row {
