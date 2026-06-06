@@ -380,11 +380,27 @@ class LeaderboardView(EventBase):
         context['genders'] = Genders
         context['GENDERS_OVERALL'] = GENDERS_OVERALL
 
+        invalid_entries = self.request.GET.get('invalid-entries', 'true') == 'true'
+        allow_subs = self.request.GET.get('allow-subs', 'true') == 'true'
+        returners = self.request.GET.get('returners', 'true') == 'true'
+        context.update({
+            'invalid_entries': invalid_entries,
+            'allow_subs': allow_subs,
+            'returners': returners,
+        })
+
         ranking = self.kwargs.get('gender', GENDERS_OVERALL)
         context['ranking'] = ranking
         context['fantasies'] = (
             self.event.fantasies
             .select_related('team', 'team__user')
+            .filter(**{'valid_entry': True} if not invalid_entries else {})
+            .filter(**{'has_subs': False} if not allow_subs else {})
+            .annotate(previous_entries = db.Count(
+                'id',
+                filter = db.Q(team__entries__event_id__lt = self.event.id),
+            ))
+            .filter(**{'previous_entries': 0} if not returners else {})
             .extend_financials()
             .rank_by(ranking)
             .prefetch_related('team__trophies')
