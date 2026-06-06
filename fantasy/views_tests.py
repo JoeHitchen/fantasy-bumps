@@ -438,7 +438,7 @@ class Test__Event(GamePageBase, TestCase):
 
 
     def test__leaderboard(self) -> None:
-        """Lists the best fantasies, by total score."""
+        """Lists the best fantasies, by total score, if there is one or fewer trophy winners."""
 
         # Create teams
         fantasies = []
@@ -449,10 +449,37 @@ class Test__Event(GamePageBase, TestCase):
                 mens_budget = money.INITIAL_BALANCE + 10 * index,
                 womens_budget = money.INITIAL_BALANCE + 100 * index,
             )
+            if index == 1:
+                team.trophies.create(event = self.event, type = models.Trophy.Types.JESTER_SWAN)
             fantasies.append(fantasy)
 
         response = self.client.get(self.url)
         self.assertContains(response, 'Leaderboard')
+        self.assertNotContains(response, 'Trophy Winners')
+        self.assertEqual(list(response.context['fantasies']), fantasies[::-1][:5])
+
+
+    def test__trophies(self) -> None:
+        """Lists the trophy winners, if more than one has been awarded."""
+
+        trophies = list(models.Trophy.Types)
+
+        # Create teams
+        fantasies = []
+        for index in range(1, 16):
+            team = auth.User.objects.create_user('T-{}'.format(index)).team
+            fantasy = team.entries.create(
+                event = self.event,
+                mens_budget = money.INITIAL_BALANCE + 10 * index,
+                womens_budget = money.INITIAL_BALANCE + 100 * index,
+            )
+            if index - 1 < len(trophies):
+                team.trophies.create(event = self.event, type = trophies[index - 1])
+            fantasies.append(fantasy)
+
+        response = self.client.get(self.url)
+        # Navigation link prevents checking for "Leaderboard" text exclusion
+        self.assertContains(response, 'Trophy Winners')
         self.assertEqual(list(response.context['fantasies']), fantasies[::-1][:5])
 
 
@@ -542,12 +569,13 @@ class Test__Event(GamePageBase, TestCase):
                 self.assertEqual(crew.popularity, expected[index][2])
 
 
-    def test__query_count(self) -> None:
+    def test__query_count__no_trophies(self) -> None:
         """Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
             (1) SELECT Total entry count (for popularity)
             (1) FantasyBumps Overhead - Recent events
             (2) SELECT First and last racing days
+            (1) SELECT Trophy winners
             (1) SELECT Top ranked teams
             (2) SELECT Most popular crews of each gender
         """
@@ -556,7 +584,29 @@ class Test__Event(GamePageBase, TestCase):
             team = auth.User.objects.create(username = f'team-{index}').team
             team.entries.create(event = self.event)
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
+            self.client.get(self.url)
+
+
+    def test__query_count__trophies(self) -> None:
+        """Expect:
+            (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
+            (1) SELECT Total entry count (for popularity)
+            (1) FantasyBumps Overhead - Recent events
+            (2) SELECT First and last racing days
+            (1) SELECT Trophy winners
+            (1) SELECT Trophy winner game entries
+            (2) SELECT Most popular crews of each gender
+        """
+
+        for trophy in models.Trophy.Types:
+            team = auth.User.objects.create(
+                username = trophy.label,
+            ).team
+            team.entries.create(event = self.event)
+            team.trophies.create(event = self.event, type = trophy)
+
+        with self.assertNumQueries(11):
             self.client.get(self.url)
 
 

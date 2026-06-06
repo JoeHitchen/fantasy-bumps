@@ -561,3 +561,17 @@ class Trophy(models.Model):
     def __str__(self) -> str:
         return f'{self.Types(self.type).label} ({self.event})'
 
+
+    def description(self) -> str:
+        return {
+            self.Types.GOLDEN_SWAN: 'Overall Winner',
+            self.Types.SILVER_SWAN: 'Second Place',
+            self.Types.BRONZE_SWAN: 'Third Place',
+            self.Types.GOLDEN_COB: "Men's Competition Winner",
+            self.Types.GOLDEN_PEN: "Women's Competition Winner",
+            self.Types.GOLDEN_CYGNET: 'Best Newcomer',
+            self.Types.STEADY_SWAN: 'Best Performance (Without Substitutes)',
+            self.Types.UGLY_DUCKLING: 'Worst Performing Team',
+            self.Types.JESTER_SWAN: 'Best Team Name',
+        }[self.Types(self.type)]
+

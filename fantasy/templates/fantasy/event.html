@@ -5,6 +5,12 @@
 {% block page_head %}
 <link rel="stylesheet" type="text/css" href="{% static 'fantasy/main.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'fantasy/club_styles.css' %}">
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
 {% endblock %}
 
 {% block content %}
@@ -31,7 +37,7 @@
       </div>
     </div>
     <div class="col-md mb-3">
-      {% include 'fantasy/event-leaderboard-mini.html' %}
+      {% if trophies|length > 1 %}{% include "fantasy/event-trophies.html" %}{% else %}{% include "fantasy/event-leaderboard-mini.html" %}{% endif %}
     </div>
   </div>
 

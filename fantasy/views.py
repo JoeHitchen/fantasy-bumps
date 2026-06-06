@@ -230,6 +230,15 @@ class EventView(EventBase):
             .extend_financials()
             .rank_by(GENDERS_OVERALL)
         )[:5]
+        context['trophies'] = (
+            self.event.trophies
+            .select_related('team', 'team__user')
+            .prefetch_related(db.Prefetch(
+                'team__entries',
+                models.GameEntry.objects.filter(event = self.event).extend_financials(),
+                to_attr = '_event_entry',
+            )).all()
+        )
 
         # Crew popularity data
         self.game_entry_count = self.event.fantasies.count() or 1  # Avoid Div0 error

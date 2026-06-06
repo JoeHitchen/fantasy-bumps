@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import cast
 
 from django import template
 from django.db import models as db
@@ -532,7 +533,8 @@ trophy_styles: dict[str, tuple[str, bool, bool]] = {
 }
 
 
-def swan_image(trophy_type: str, tooltip: str, bottom_tooltip: bool) -> str:
+@register.filter
+def swan_image(trophy_type: str, tooltip: str = '', bottom_tooltip: bool = False) -> str:
 
     file_tag, is_large, is_reversed = trophy_styles[trophy_type]
 
@@ -568,3 +570,15 @@ def display_trophies(team: models.Team, bottom_tooltip: bool = False) -> str:
         trophy_string += swan_image('Cambridge', 'Cambridge Veteran', bottom_tooltip)
 
     return mark_safe(trophy_string)
+
+
+@register.filter
+def trophy_label(trophy_type: str) -> str:
+    return models.Trophy.Types(trophy_type).label
+
+
+@register.filter
+def trophy_team_score(team: models.Team) -> int:
+    # Unclear how to correctly type an annotated related model in this context
+    return cast(int, team._event_entry[0].total_budget)  # type: ignore
+
