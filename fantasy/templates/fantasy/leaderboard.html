@@ -22,7 +22,24 @@
 <script type="text/javascript">
   $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
+    $(".btn-sort").click(changeSort);
+    $(".btn-filter").click(toggleFilters);
   });
+
+  function changeSort(event) {
+    newUrl = new URL(window.location.origin + $(this).attr("href"));
+    newUrl.search = new URL(window.location.href).search;
+    window.location.href = newUrl.href;
+  };
+
+  function toggleFilters(event) {
+    thisFilter = $(this).data("filter");
+
+    url = new URL(window.location.href);
+    currentState = url.searchParams.get(thisFilter);
+    url.searchParams.set(thisFilter, currentState === 'false');  // Flips boolean string, with null=true
+    window.location.href = url.href;
+  };
 </script>
 {% endblock %}
 
@@ -33,6 +50,14 @@
     {% if ranking == GENDERS_OVERALL %}Teams are ranked by the total number of crabs accumulated and then by the combined value of their crews.
     {% else %}Teams are ranked by the number of crabs their {{ ranking.label|lower }}'s crew has accumulated and then by the value of their {{ ranking.label|lower }}'s crews.{% endif %}
   </div>
+  <div class="btn-group mb-3">
+    {% if show_validity %}{% if invalid_entries %}<button class="btn btn-sm btn-success btn-filter" data-filter="invalid-entries">Hide Invalid Entries</button>
+    {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="invalid-entries">Show Invalid Entries</button>{% endif %}{% endif %}
+    {% if show_subs_usage %}{% if allow_subs %}<button class="btn btn-sm btn-success btn-filter" data-filter="allow-subs">Disallow Substitutes</button>
+    {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="allow-subs">Allow Substitutes</button>{% endif %}{% endif %}
+    {% if returners %}<button class="btn btn-sm btn-success btn-filter" data-filter="returners">Hide Returning Players</button>
+    {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="returners">Show Returning Players</button>{% endif %}
+  </div>
 
   <div class="card mb-3">
     <table class="table table-hover table-sm table-responsive-md text-center mb-0 mt-0">
@@ -41,21 +66,21 @@
         <th class="text-left">Team</th>
         <th>
           <span>Overall</span>
-          <a href="{% url 'fantasy:leaderboard' event.tag %}" class="btn btn-{% if ranking == GENDERS_OVERALL %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-1">
+          <button href="{% url 'fantasy:leaderboard' event.tag %}" class="btn btn-{% if ranking == GENDERS_OVERALL %}success{% else %}primary{% endif %} btn-sm btn-sort px-1 py-0 ml-1">
             <small><span class="oi oi-sort-descending"></span></small>
-          </a>
+          </button>
         </th>
         <th>
           <span>Men</span>
-          <a href="{% url 'fantasy:leaderboard_men' event.tag %}" class="btn btn-{% if ranking == genders.MEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-1">
+          <button href="{% url 'fantasy:leaderboard_men' event.tag %}" class="btn btn-{% if ranking == genders.MEN %}success{% else %}primary{% endif %} btn-sm btn-sort px-1 py-0 ml-1">
             <small><span class="oi oi-sort-descending"></span></small>
-          </a>
+          </button>
         </th>
         <th>
           <span>Women</span>
-          <a href="{% url 'fantasy:leaderboard_women' event.tag %}" class="btn btn-{% if ranking == genders.WOMEN %}success{% else %}primary{% endif %} btn-sm px-1 py-0 ml-1">
+          <button href="{% url 'fantasy:leaderboard_women' event.tag %}" class="btn btn-{% if ranking == genders.WOMEN %}success{% else %}primary{% endif %} btn-sm btn-sort px-1 py-0 ml-1">
             <small><span class="oi oi-sort-descending"></span></small>
-          </a>
+          </button>
         </th>
         <th>Crews</th>
       </tr></thead>
@@ -82,7 +107,10 @@
             <small>{{ fantasy.womens_crew_value }}</small>
           </td>
           <td class="align-middle">
-            <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2" style="padding-bottom: 2px">
+            {% if show_validity %}{{ fantasy.valid_entry|entry_validity_flag }}{% endif %}
+            {% if show_subs_usage %}{{ fantasy.has_subs|subs_usage_flag }}{% endif %}
+            {{ fantasy.previous_entries|new_player_flag }}
+            <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm ml-2 pt-0 pl-2 pr-2" style="padding-bottom: 2px">
               <small><span class="oi oi-chevron-right"></span></small>
             </a>
           </td>

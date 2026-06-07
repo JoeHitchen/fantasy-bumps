@@ -108,6 +108,33 @@ def popularity_indicator(popularity: float) -> str:
 
 
 @register.filter
+def entry_validity_flag(value: bool) -> str:
+    base_string = '<span class="{}" data-toggle="tooltip" data-placement="top" title="{}"></span>'
+    return mark_safe(base_string.format(
+        'oi oi-check text-success' if value else 'oi oi-x text-danger',
+        'Entry is valid' if value else 'Entry is not valid',
+    ))
+
+
+@register.filter
+def subs_usage_flag(value: bool) -> str:
+    base_string = '<span class="{}" data-toggle="tooltip" data-placement="top" title="{}"></span>'
+    return mark_safe(base_string.format(
+        'oi oi-people text-secondary' if value else 'oi oi-person text-info',
+        'Entry has used subs' if value else 'Entry has not used subs',
+    ))
+
+
+@register.filter
+def new_player_flag(value: int) -> str:
+    base_string = '<span class="{}" data-toggle="tooltip" data-placement="top" title="{}"></span>'
+    return mark_safe(base_string.format(
+        'oi oi-star text-white' if value else 'oi oi-star text-warning',
+        'Returning player' if value else 'First entry!',
+    ))
+
+
+@register.filter
 def coaching_competition_payouts(competition: CoachingCompetitions) -> str:
     return {
         CoachingCompetitions.BLADES: '{} on the Saturday, for crew winning blades'.format(
