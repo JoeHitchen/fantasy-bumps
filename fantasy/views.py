@@ -358,12 +358,13 @@ class MarketView(EventBase):
             and not context['coach_crew']
         )
 
+        require_coach = self.event.coaching_competition and is_first_day
         other_gender = utils.reverse_gender(gender)
         other_crew = self.request.user.team.get_crew(self.day, other_gender)
-        context['crew_valid'] = crew_valid and (context['coach_crew'] or not is_first_day)
+        context['crew_valid'] = crew_valid and (not require_coach or context['coach_crew'])
         context['other_crew_valid'] = (
             utils.has_all_seats(other_crew, seats)
-            and (game_entry.get_coach(other_gender) or not is_first_day)
+            and (not require_coach or game_entry.get_coach(other_gender))
         )
         return context
 

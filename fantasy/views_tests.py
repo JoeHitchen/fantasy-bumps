@@ -642,6 +642,12 @@ class MarketPageBase(GamePageBase):
         super().setUpTestData()
         cls.entry = cls.team.entries.create(event = cls.event)
 
+        day_shift = timezone.now().date() - cls.event.first_day.date + timedelta(1)
+        cls.event.days.update(date = db.F('date') + day_shift)
+        del cls.event.active_day
+        cls.day = cls.event.active_day
+
+
         cls.event.coaching_competition = CoachingCompetitions.BLADES
         cls.event.save()
 
@@ -700,9 +706,6 @@ class MarketPageBase(GamePageBase):
 
         Does not test response or default context.
         """
-
-        day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
-        self.event.days.update(date = db.F('date') + day_shift)
 
         for seat in models.Seat.objects.all():
             self.team.purchases.create(
@@ -764,8 +767,6 @@ class MarketPageBase(GamePageBase):
         Does not test response or default context.
         """
 
-        day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
-        self.event.days.update(date = db.F('date') + day_shift)
         self.event.coaching_competition = None
         self.event.save()
 
@@ -802,8 +803,7 @@ class MarketPageBase(GamePageBase):
         Does not test response or default context.
         """
 
-        day_shift = timezone.now().date() - self.event.first_day.date - timedelta(1)
-        self.event.days.update(date = db.F('date') + day_shift)
+        self.event.days.update(date = db.F('date') - timedelta(2))
 
         for seat in models.Seat.objects.all():
             self.team.purchases.create(
@@ -838,8 +838,7 @@ class MarketPageBase(GamePageBase):
         Does not test response or default context.
         """
 
-        day_shift = timezone.now().date() - self.event.first_day.date - timedelta(1)
-        self.event.days.update(date = db.F('date') + day_shift)
+        self.event.days.update(date = db.F('date') - timedelta(2))
 
         for seat in models.Seat.objects.all():
             self.team.purchases.create(
@@ -922,10 +921,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
 
 
     def test__partial_crew(self) -> None:
-        """
-        Returns the user's team, complete or otherwise.
-        Does not test response or default context.
-        """
+        """A crew is invalid if it does not have all seats."""
 
         self.team.purchases.create(
             day = self.day,
@@ -944,11 +940,11 @@ class Test__Market_Men(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
 
 
-    def test__crew_valid(self) -> None:
-        """
-        Sets a flag if the user's team is valid.
-        Does not test response or default context.
-        """
+    def test__crew_valid__no_coaching_competition(self) -> None:
+        """A crew is valid if it has all athlete seats and there is no coaching competition."""
+
+        self.event.coaching_competition = None
+        self.event.save()
 
         for seat in models.Seat.objects.all():
             self.team.purchases.create(
@@ -968,11 +964,85 @@ class Test__Market_Men(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
 
 
+    def test__crew_valid__without_coach(self) -> None:
+        """A coach is required if there is a coaching competition."""
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_mens,
+                seat = seat,
+            )
+
+        crew = self.team.get_crew(self.day, Genders.MEN)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
+        self.assertFalse(response.context['other_crew_valid'])
+
+
+    def test__crew_valid__with_coach(self) -> None:
+        """A coach is required if there is a coaching competition."""
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_mens,
+                seat = seat,
+            )
+        self.entry.mens_coach = self.crew_mens
+        self.entry.save()
+
+        crew = self.team.get_crew(self.day, Genders.MEN)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+        self.assertFalse(response.context['other_crew_valid'])
+
+
+    def test__crew_valid__later_day_without_coach(self) -> None:
+        """Coaches are ignored for validity on later days."""
+
+        self.event.days.update(date = db.F('date') - timedelta(2))
+        del self.event.active_day
+
+        self.event.coaching_competition = None
+        self.event.save()
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.event.active_day,
+                crew = self.crew_mens,
+                seat = seat,
+            )
+
+        crew = self.team.get_crew(self.event.active_day, Genders.MEN)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+        self.assertFalse(response.context['other_crew_valid'])
+
+
     def test__other_crew_valid(self) -> None:
         """
         Sets a flag if the user's other-gendered team is valid.
         Does not test response or default context.
         """
+
+        self.event.coaching_competition = None
+        self.event.save()
 
         for seat in models.Seat.objects.all():
             self.team.purchases.create(
@@ -1034,7 +1104,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Expect:
-            (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
+            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
             (2) Django Auth overheard - Session (1), User (1)
             (1) User's team
             (1) All game entries for event (for popularity count)
@@ -1044,6 +1114,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             (1) Select coach
             (1) User's crew of other gender
             (1) User's game entry & financials
+            (1) User's coach
             (1) Event's first day
             (2 <-> Divisions) Select start order for each division
 
@@ -1065,7 +1136,7 @@ class Test__Market_Men(MarketPageBase, TestCase):
             )
 
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(16):
             self.client.get(self.url)
 
 
@@ -1100,11 +1171,11 @@ class Test__Market_Women(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
 
 
-    def test__crew_valid(self) -> None:
-        """
-        Sets a flag if the user's team is valid.
-        Does not test response or default context.
-        """
+    def test__crew_valid__no_coaching_competition(self) -> None:
+        """A crew is valid if it has all athlete seats and there is no coaching competition."""
+
+        self.event.coaching_competition = None
+        self.event.save()
 
         for seat in models.Seat.objects.all():
             self.team.purchases.create(
@@ -1124,11 +1195,85 @@ class Test__Market_Women(MarketPageBase, TestCase):
         self.assertFalse(response.context['other_crew_valid'])
 
 
+    def test__crew_valid__without_coach(self) -> None:
+        """A coach is required if there is a coaching competition."""
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_womens,
+                seat = seat,
+            )
+
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
+        self.assertFalse(response.context['other_crew_valid'])
+
+
+    def test__crew_valid__with_coach(self) -> None:
+        """A coach is required if there is a coaching competition."""
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.day,
+                crew = self.crew_womens,
+                seat = seat,
+            )
+        self.entry.womens_coach = self.crew_womens
+        self.entry.save()
+
+        crew = self.team.get_crew(self.day, Genders.WOMEN)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+        self.assertFalse(response.context['other_crew_valid'])
+
+
+    def test__crew_valid__later_day_without_coach(self) -> None:
+        """Coaches are ignored for validity on later days."""
+
+        self.event.days.update(date = db.F('date') - timedelta(2))
+        del self.event.active_day
+
+        self.event.coaching_competition = None
+        self.event.save()
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(
+                day = self.event.active_day,
+                crew = self.crew_womens,
+                seat = seat,
+            )
+
+        crew = self.team.get_crew(self.event.active_day, Genders.WOMEN)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+        self.assertFalse(response.context['other_crew_valid'])
+
+
     def test__other_crew_valid(self) -> None:
         """
         Sets a flag if the user's other-gendered team is valid.
         Does not test response or default context.
         """
+
+        self.event.coaching_competition = None
+        self.event.save()
 
         for seat in models.Seat.objects.all():
             self.team.purchases.create(
@@ -1190,7 +1335,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Expect:
-            (4) FantasyBumps Overhead - Event (1), Active day (2, but can be 1), Recent events (1)
+            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
             (2) Django Auth overheard - Session (1), User (1)
             (1) User's team
             (1) All game entries for event (for popularity count)
@@ -1199,6 +1344,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             (1) Select all seats
             (1) User's crew of other gender
             (1) User's game entry & financials
+            (1) User's coach
             (1) Event's first day
             (2 <-> Divisions) Select start order for each division
 
@@ -1220,7 +1366,7 @@ class Test__Market_Women(MarketPageBase, TestCase):
             )
 
         self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(16):
             self.client.get(self.url)
 
 
