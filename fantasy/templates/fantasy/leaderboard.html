@@ -107,7 +107,10 @@
             <small>{{ fantasy.womens_crew_value }}</small>
           </td>
           <td class="align-middle">
-            <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2" style="padding-bottom: 2px">
+            {{ fantasy.valid_entry|entry_validity_flag }}
+            {{ fantasy.has_subs|subs_usage_flag }}
+            {{ fantasy.previous_entries|new_player_flag }}
+            <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm ml-2 pt-0 pl-2 pr-2" style="padding-bottom: 2px">
               <small><span class="oi oi-chevron-right"></span></small>
             </a>
           </td>
