@@ -384,6 +384,8 @@ class LeaderboardView(EventBase):
         allow_subs = self.request.GET.get('allow-subs', 'true') == 'true'
         returners = self.request.GET.get('returners', 'true') == 'true'
         context.update({
+            'show_validity': self.day.prev,
+            'show_subs_usage': self.day.prev and self.day.prev.prev,
             'invalid_entries': invalid_entries,
             'allow_subs': allow_subs,
             'returners': returners,

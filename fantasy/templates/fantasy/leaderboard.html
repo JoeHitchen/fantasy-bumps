@@ -51,10 +51,10 @@
     {% else %}Teams are ranked by the number of crabs their {{ ranking.label|lower }}'s crew has accumulated and then by the value of their {{ ranking.label|lower }}'s crews.{% endif %}
   </div>
   <div class="btn-group mb-3">
-    {% if invalid_entries %}<button class="btn btn-sm btn-success btn-filter" data-filter="invalid-entries">Hide Invalid Entries</button>
-    {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="invalid-entries">Show Invalid Entries</button>{% endif %}
-    {% if allow_subs %}<button class="btn btn-sm btn-success btn-filter" data-filter="allow-subs">Disallow Substitutes</button>
-    {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="allow-subs">Allow Substitutes</button>{% endif %}
+    {% if show_validity %}{% if invalid_entries %}<button class="btn btn-sm btn-success btn-filter" data-filter="invalid-entries">Hide Invalid Entries</button>
+    {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="invalid-entries">Show Invalid Entries</button>{% endif %}{% endif %}
+    {% if show_subs_usage %}{% if allow_subs %}<button class="btn btn-sm btn-success btn-filter" data-filter="allow-subs">Disallow Substitutes</button>
+    {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="allow-subs">Allow Substitutes</button>{% endif %}{% endif %}
     {% if returners %}<button class="btn btn-sm btn-success btn-filter" data-filter="returners">Hide Returning Players</button>
     {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="returners">Show Returning Players</button>{% endif %}
   </div>
@@ -107,8 +107,8 @@
             <small>{{ fantasy.womens_crew_value }}</small>
           </td>
           <td class="align-middle">
-            {{ fantasy.valid_entry|entry_validity_flag }}
-            {{ fantasy.has_subs|subs_usage_flag }}
+            {% if show_validity %}{{ fantasy.valid_entry|entry_validity_flag }}{% endif %}
+            {% if show_subs_usage %}{{ fantasy.has_subs|subs_usage_flag }}{% endif %}
             {{ fantasy.previous_entries|new_player_flag }}
             <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm ml-2 pt-0 pl-2 pr-2" style="padding-bottom: 2px">
               <small><span class="oi oi-chevron-right"></span></small>

@@ -1292,12 +1292,13 @@ class LeaderboardPageBase(GamePageBase):
     def test__query_count__without_login(self) -> None:
         """ Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
+            (2) SELECT previous day and twice-previous day
             (1) SELECT recent events
             (1) Get rankings
             (1) Prefetch trophies
         """
 
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(8):
             self.client.get(self.url)
 
 
@@ -1305,6 +1306,7 @@ class LeaderboardPageBase(GamePageBase):
         """ Expect:
             (4) Base queries
             (2) Django Auth overheard
+            (2) SELECT previous day and twice-previous day
             (1) SELECT recent events
             (1) Get user's team
             (1) Prefetch trophies
@@ -1312,7 +1314,7 @@ class LeaderboardPageBase(GamePageBase):
 
         self.client.login(username='DevTeam', password='password')
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(11):
             self.client.get(self.url)
 
 
