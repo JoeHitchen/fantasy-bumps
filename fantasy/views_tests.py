@@ -31,6 +31,7 @@ class AbstractTestCase:
     assertEqual: Callable  # type: ignore
     assertTrue: Callable  # type: ignore
     assertFalse: Callable  # type: ignore
+    assertIsNone: Callable  # type: ignore
     assertQuerySetEqual: Callable  # type: ignore
     assertTemplateUsed: Callable  # type: ignore
     assertNumQueries: Callable  # type: ignore
@@ -635,6 +636,14 @@ class MarketPageBase(GamePageBase):
     template = 'fantasy/market.html'
 
     entry: models.GameEntry
+    crew_primary: models.Crew
+    crew_secondary: models.Crew
+    bow: models.Seat
+
+    @classmethod
+    def reset_active_day(cls) -> None:
+        del cls.event.active_day
+        cls.day = cls.event.active_day
 
 
     @classmethod
@@ -644,12 +653,13 @@ class MarketPageBase(GamePageBase):
 
         day_shift = timezone.now().date() - cls.event.first_day.date + timedelta(1)
         cls.event.days.update(date = db.F('date') + day_shift)
-        del cls.event.active_day
-        cls.day = cls.event.active_day
+        cls.reset_active_day()
+
+        cls.bow = exists(models.Seat.objects.first())
 
 
-        cls.event.coaching_competition = CoachingCompetitions.BLADES
-        cls.event.save()
+    def setUp(cls) -> None:
+        cls.reset_active_day()
 
 
     def assertStartOrdersEqual(self, received: 'StartOrder', expected: 'StartOrder') -> None:
@@ -698,28 +708,19 @@ class MarketPageBase(GamePageBase):
 
     @patching.market_is_open(False)
     def test__market_closed(self, markets_mock: Mock) -> None:
-        """Tests the availability of actions:
+        """No crew or coach actions are available if the market is closed."""
 
-        * Crew action availability reflects market status for logged in users.
-        * Coach action availability also requires the current day to be the first day.
-        * Coach display requires the current day to be the first day or there to be a coach set.
-
-        Does not test response or default context.
-        """
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
 
         for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = exists(self.event.days.first()),
-                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
-                seat = seat,
-            )
+            self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
 
         # Test view
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
         self.assertFalse(response.context['show_crew_actions'])
-        self.assertTrue(response.context['show_coach_row'])
         self.assertFalse(response.context['show_coach_fire'])
         self.assertFalse(response.context['show_coach_hire'])
 
@@ -727,189 +728,419 @@ class MarketPageBase(GamePageBase):
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))
     def test__market_open(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """Tests the availability of actions:
+        """Crew & coach actions are available if the market is open and their conditions hold."""
 
-        * Crew action availability reflects market status for logged in users.
-        * Coach action availability also requires the current day to be the first day.
-        * Coach display requires the current day to be the first day or there to be a coach set.
-
-        Does not test response or default context.
-        """
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
 
         day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
         self.event.days.update(date = db.F('date') + day_shift)
 
         for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = exists(self.event.days.first()),
-                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
-                seat = seat,
-            )
+            self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
 
         # Test view
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
         self.assertTrue(response.context['show_crew_actions'])
-        self.assertTrue(response.context['show_coach_row'])
         self.assertTrue(response.context['show_coach_fire'])
         self.assertTrue(response.context['show_coach_hire'])
 
 
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__no_coaching_competition(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """Tests the availability of actions:
-
-        * Crew action availability reflects market status for logged in users.
-        * Coach actions/displays also require there to be a coaching competition.
-
-        Does not test response or default context.
-        """
-
-        self.event.coaching_competition = None
-        self.event.save()
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = exists(self.event.days.first()),
-                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
-                seat = seat,
-            )
-
-        # Test view
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertTrue(response.context['show_crew_actions'])
-        self.assertFalse(response.context['show_coach_row'])
-        self.assertTrue(response.context['show_coach_fire'])
-        self.assertTrue(response.context['show_coach_hire'])
-
-
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__coaches__day_two_with_coach(
-        self,
-        market_closes_mock:
-        Mock, markets_mock: Mock,
-    ) -> None:
-        """Tests the availability of actions:
-
-        * Crew action availability reflects market status for logged in users.
-        * Coach action availability also requires the current day to be the first day.
-        * Coach display requires the current day to be the first day or there to be a coach set.
-
-        Does not test response or default context.
-        """
-
-        self.event.days.update(date = db.F('date') - timedelta(2))
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = exists(self.event.days.first()),
-                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
-                seat = seat,
-            )
-
-        # Test view
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertTrue(response.context['show_crew_actions'])
-        self.assertFalse(response.context['show_coach_row'])
-        self.assertFalse(response.context['show_coach_fire'])
-        self.assertFalse(response.context['show_coach_hire'])
-
-
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__coaches__day_two_without_coach(
+    def test__no_coaching__invalid_crew(
         self,
         market_closes_mock: Mock,
         markets_mock: Mock,
     ) -> None:
-        """Tests the availability of actions:
+        """If there is no coaching competition, a crew is valid if all seats are filled."""
 
-        * Crew action availability reflects market status for logged in users.
-        * Coach action availability also requires the current day to be the first day.
-        * Coach display requires the current day to be the first day or there to be a coach set.
+        self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
 
-        Does not test response or default context.
-        """
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
 
-        self.event.days.update(date = db.F('date') - timedelta(2))
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = exists(self.event.days.first()),
-                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
-                seat = seat,
-            )
-
-        # Test view
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
         self.assertFalse(response.context['show_coach_row'])
-        self.assertFalse(response.context['show_coach_fire'])
         self.assertFalse(response.context['show_coach_hire'])
+        self.assertFalse(response.context['show_coach_fire'])
 
 
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__coaches__crew_incomplete(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """Coach hiring is not possible if the crew is incomplete.
-        """
+    def test__no_coaching__valid_crew(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
+        """If there is no coaching competition, a crew is valid if all seats are filled."""
 
-        for seat in models.Seat.objects.filter(cox = False):
-            self.team.purchases.create(
-                day = exists(self.event.days.first()),
-                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
-                seat = seat,
-            )
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
 
-        day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
-        self.event.days.update(date = db.F('date') + day_shift)
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
 
-        # Test view
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+
         self.assertTrue(response.context['show_crew_actions'])
-        self.assertTrue(response.context['show_coach_row'])
-        self.assertTrue(response.context['show_coach_fire'])
+        self.assertFalse(response.context['show_coach_row'])
         self.assertFalse(response.context['show_coach_hire'])
+        self.assertFalse(response.context['show_coach_fire'])
 
 
     @patching.market_is_open(True)
     @patching.market_closes(timezone.localtime() + timedelta(1))
-    def test__coaches__already_hired(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """Coach hiring is not shown if a coach has already been hired.
+    def test__coaching_day_one__invalid_crew_without_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_hire'])
+        self.assertTrue(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaching_day_one__valid_crew_without_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
+        self.assertTrue(response.context['show_coach_hire'])
+        self.assertTrue(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaching_day_one__invalid_crew_with_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
+        self.entry.set_coach(self.gender, self.crew_primary)
+        self.entry.save()
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_hire'])
+        self.assertTrue(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaching_day_one__valid_crew_with_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
+
+        self.entry.set_coach(self.gender, self.crew_primary)
+        self.entry.save()
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_hire'])
+        self.assertTrue(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaching_day_two__invalid_crew_without_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.days.update(date = db.F('date') - timedelta(2))
+        self.reset_active_day()
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertFalse(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_hire'])
+        self.assertFalse(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaching_day_two__valid_crew_without_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.days.update(date = db.F('date') - timedelta(2))
+        self.reset_active_day()
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertFalse(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_hire'])
+        self.assertFalse(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaching_day_two__invalid_crew_with_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.days.update(date = db.F('date') - timedelta(2))
+        self.reset_active_day()
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
+        self.entry.set_coach(self.gender, self.crew_primary)
+        self.entry.save()
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertFalse(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_hire'])
+        self.assertFalse(response.context['show_coach_fire'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))
+    def test__coaching_day_two__valid_crew_with_coach(
+        self,
+        market_closes_mock: Mock,
+        markets_mock: Mock,
+    ) -> None:
+        """On day one of events with coaching, both the athletes and coach must be valid."""
+
+        self.event.days.update(date = db.F('date') - timedelta(2))
+        self.reset_active_day()
+
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        for seat in models.Seat.objects.all():
+            self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
+
+        self.entry.set_coach(self.gender, self.crew_primary)
+        self.entry.save()
+
+        crew = self.team.get_crew(self.day, self.gender)
+        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+
+        self.client.login(username='DevTeam', password='password')
+        response = self.client.get(self.url)
+
+        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertTrue(response.context['crew_valid'])
+
+        self.assertTrue(response.context['show_crew_actions'])
+        self.assertTrue(response.context['show_coach_row'])
+        self.assertFalse(response.context['show_coach_hire'])
+        self.assertFalse(response.context['show_coach_fire'])
+
+
+    def test__popularity(self) -> None:
+        """`purchase_count` and `popularity` are added to start order query sets.
+        Popularity is the average number of seats purchased per team, and both are per-day.
+
+        *** Due to limitations, SQLite is unable to test non-integer popularity results. ***
+        """
+
+        # Create additional teams
+        team2 = auth.User.objects.create_user('Team2').team
+        team3 = auth.User.objects.create_user('Team3').team
+        team2.entries.create(event = self.event)
+        team3.entries.create(event = self.event)
+
+        seat_bow = models.Seat.objects.get(name = 'Bow')
+        seat_two = models.Seat.objects.get(name = '2')
+        seat_cox = models.Seat.objects.get(name = 'Cox')
+
+        # Create purchases
+        team2.purchases.create(day = self.day, crew = self.crew_primary, seat = seat_bow)
+        team2.purchases.create(day = self.day, crew = self.crew_primary, seat = seat_two)
+        team3.purchases.create(day = self.day, crew = self.crew_primary, seat = seat_cox)
+
+        self.team.purchases.create(day = self.prev_day, crew = self.crew_primary, seat = seat_bow)
+        # ^ Distraction, wrong day
+
+
+        # Generate and test expectations
+        expect = {self.crew_primary: {'count': 3, 'popularity': 1.0}}
+
+        response = self.client.get(self.url)
+        for division in response.context['start_order']:
+            for position in division:
+                with self.subTest(crew = position.crew):
+                    expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
+                    self.assertEqual(position.purchase_count, expect_crew['count'])
+                    self.assertEqual(position.popularity, expect_crew['popularity'])
+
+
+    @patching.market_is_open(True)
+    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
+    def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
+        """Expect:
+            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
+            (2) Django Auth overheard - Session (1), User (1)
+            (1) User's team
+            (1) All game entries for event (for popularity count)
+            (1) User's crew for this gender
+            (1) Prefetch purchase positions (for pricing)
+            (1) Select all seats
+            (1) User's crew of other gender
+            (1) User's game entry & financials
+            (1) User's coach
+            (1) Event's first day
+            (2 <-> Divisions) Select start order for each division
+
+            Could be reduced further by fetching the information for every division's start order
+            in a single query and filtering in the code. See #88.
         """
 
         for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = exists(self.event.days.first()),
-                crew = {Genders.MEN: self.crew_mens, Genders.WOMEN: self.crew_womens}[self.gender],
+            male_athlete = self.crew_mens.crew_lists.create(
+                event = self.event,
                 seat = seat,
+                name = str(seat),
             )
-        self.entry.mens_coach = self.crew_mens
-        self.entry.womens_coach = self.crew_womens
-        self.entry.save()
+            self.team.purchases.create(
+                day = self.event.active_day,
+                crew = self.crew_mens,
+                seat = seat,
+                athlete = male_athlete,
+            )
+            female_athlete = self.crew_womens.crew_lists.create(
+                event = self.event,
+                seat = seat,
+                name = str(seat),
+            )
+            self.team.purchases.create(
+                day = self.event.active_day,
+                crew = self.crew_womens,
+                seat = seat,
+                athlete = female_athlete,
+            )
 
-        day_shift = timezone.now().date() - self.event.first_day.date + timedelta(1)
-        self.event.days.update(date = db.F('date') + day_shift)
-
-        # Test view
         self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertTrue(response.context['show_crew_actions'])
-        self.assertTrue(response.context['show_coach_row'])
-        self.assertTrue(response.context['show_coach_fire'])
-        self.assertFalse(response.context['show_coach_hire'])
+        with self.assertNumQueries(16):
+            self.client.get(self.url)
 
 
 
@@ -919,225 +1150,11 @@ class Test__Market_Men(MarketPageBase, TestCase):
     url_name = 'fantasy:men'
     gender = Genders.MEN
 
-
-    def test__partial_crew(self) -> None:
-        """A crew is invalid if it does not have all seats."""
-
-        self.team.purchases.create(
-            day = self.day,
-            crew = self.crew_mens,
-            seat = exists(models.Seat.objects.first()),
-        )
-
-        crew = self.team.get_crew(self.day, Genders.MEN)
-        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertFalse(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__no_coaching_competition(self) -> None:
-        """A crew is valid if it has all athlete seats and there is no coaching competition."""
-
-        self.event.coaching_competition = None
-        self.event.save()
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_mens,
-                seat = seat,
-            )
-
-        crew = self.team.get_crew(self.day, Genders.MEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertTrue(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__without_coach(self) -> None:
-        """A coach is required if there is a coaching competition."""
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_mens,
-                seat = seat,
-            )
-
-        crew = self.team.get_crew(self.day, Genders.MEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertFalse(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__with_coach(self) -> None:
-        """A coach is required if there is a coaching competition."""
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_mens,
-                seat = seat,
-            )
-        self.entry.mens_coach = self.crew_mens
-        self.entry.save()
-
-        crew = self.team.get_crew(self.day, Genders.MEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertTrue(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__later_day_without_coach(self) -> None:
-        """Coaches are ignored for validity on later days."""
-
-        self.event.days.update(date = db.F('date') - timedelta(2))
-        del self.event.active_day
-
-        self.event.coaching_competition = None
-        self.event.save()
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.event.active_day,
-                crew = self.crew_mens,
-                seat = seat,
-            )
-
-        crew = self.team.get_crew(self.event.active_day, Genders.MEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertTrue(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__other_crew_valid(self) -> None:
-        """
-        Sets a flag if the user's other-gendered team is valid.
-        Does not test response or default context.
-        """
-
-        self.event.coaching_competition = None
-        self.event.save()
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_womens,
-                seat = seat,
-            )
-
-        other_crew = self.team.get_crew(self.day, Genders.WOMEN)
-        self.assertTrue(utils.has_all_seats(other_crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertFalse(response.context['crew'])
-        self.assertFalse(response.context['crew_valid'])
-        self.assertTrue(response.context['other_crew_valid'])
-
-
-    def test__popularity(self) -> None:
-        """`purchase_count` and `popularity` are added to start order query sets.
-        Popularity is the average number of seats purchased per team, and both are per-day.
-
-        *** Due to limitations, SQLite is unable to test non-integer popularity results. ***
-        """
-
-        # Create additional teams
-        team2 = auth.User.objects.create_user('Team2').team
-        team3 = auth.User.objects.create_user('Team3').team
-        team2.entries.create(event = self.event)
-        team3.entries.create(event = self.event)
-
-        seat_bow = models.Seat.objects.get(name = 'Bow')
-        seat_two = models.Seat.objects.get(name = '2')
-        seat_cox = models.Seat.objects.get(name = 'Cox')
-
-        # Create purchases
-        team2.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_bow)
-        team2.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_two)
-        team3.purchases.create(day = self.day, crew = self.crew_mens, seat = seat_cox)
-
-        self.team.purchases.create(day = self.prev_day, crew = self.crew_mens, seat = seat_bow)
-        # ^ Distraction, wrong day
-
-
-        # Generate and test expectations
-        expect = {self.crew_mens: {'count': 3, 'popularity': 1.0}}
-
-        response = self.client.get(self.url)
-        for division in response.context['start_order']:
-            for position in division:
-                with self.subTest(crew = position.crew):
-                    expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
-                    self.assertEqual(position.purchase_count, expect_crew['count'])
-                    self.assertEqual(position.popularity, expect_crew['popularity'])
-
-
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """Expect:
-            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
-            (2) Django Auth overheard - Session (1), User (1)
-            (1) User's team
-            (1) All game entries for event (for popularity count)
-            (1) User's crew for this gender
-            (1) Prefetch purchase positions (for pricing)
-            (1) Select all seats
-            (1) Select coach
-            (1) User's crew of other gender
-            (1) User's game entry & financials
-            (1) User's coach
-            (1) Event's first day
-            (2 <-> Divisions) Select start order for each division
-
-            Could be reduced further by fetching the information for every division's start order
-            in a single query and filtering in the code. See #88.
-        """
-
-        for seat in models.Seat.objects.all():
-            athlete = self.crew_mens.crew_lists.create(
-                event = self.day.event,
-                seat = seat,
-                name = str(seat),
-            )
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_mens,
-                seat = seat,
-                athlete = athlete,
-            )
-
-        self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(16):
-            self.client.get(self.url)
+    @classmethod
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
+        cls.crew_primary = cls.crew_mens
+        cls.crew_secondary = cls.crew_womens
 
 
 
@@ -1147,227 +1164,11 @@ class Test__Market_Women(MarketPageBase, TestCase):
     url_name = 'fantasy:women'
     gender = Genders.WOMEN
 
-
-    def test__partial_crew(self) -> None:
-        """
-        Returns the user's team, complete or otherwise.
-        Does not test response or default context.
-        """
-
-        self.team.purchases.create(
-            day = self.day,
-            crew = self.crew_womens,
-            seat = exists(models.Seat.objects.first()),
-        )
-
-        crew = self.team.get_crew(self.day, Genders.WOMEN)
-        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertFalse(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__no_coaching_competition(self) -> None:
-        """A crew is valid if it has all athlete seats and there is no coaching competition."""
-
-        self.event.coaching_competition = None
-        self.event.save()
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_womens,
-                seat = seat,
-            )
-
-        crew = self.team.get_crew(self.day, Genders.WOMEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertTrue(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__without_coach(self) -> None:
-        """A coach is required if there is a coaching competition."""
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_womens,
-                seat = seat,
-            )
-
-        crew = self.team.get_crew(self.day, Genders.WOMEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertFalse(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__with_coach(self) -> None:
-        """A coach is required if there is a coaching competition."""
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_womens,
-                seat = seat,
-            )
-        self.entry.womens_coach = self.crew_womens
-        self.entry.save()
-
-        crew = self.team.get_crew(self.day, Genders.WOMEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertTrue(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__crew_valid__later_day_without_coach(self) -> None:
-        """Coaches are ignored for validity on later days."""
-
-        self.event.days.update(date = db.F('date') - timedelta(2))
-        del self.event.active_day
-
-        self.event.coaching_competition = None
-        self.event.save()
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.event.active_day,
-                crew = self.crew_womens,
-                seat = seat,
-            )
-
-        crew = self.team.get_crew(self.event.active_day, Genders.WOMEN)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertEqual(list(response.context['crew']), list(crew))
-        self.assertTrue(response.context['crew_valid'])
-        self.assertFalse(response.context['other_crew_valid'])
-
-
-    def test__other_crew_valid(self) -> None:
-        """
-        Sets a flag if the user's other-gendered team is valid.
-        Does not test response or default context.
-        """
-
-        self.event.coaching_competition = None
-        self.event.save()
-
-        for seat in models.Seat.objects.all():
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_mens,
-                seat = seat,
-            )
-
-        other_crew = self.team.get_crew(self.day, Genders.MEN)
-        self.assertTrue(utils.has_all_seats(other_crew, models.Seat.objects.all()))
-
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
-
-        self.assertFalse(response.context['crew'])
-        self.assertFalse(response.context['crew_valid'])
-        self.assertTrue(response.context['other_crew_valid'])
-
-
-    def test__popularity(self) -> None:
-        """`purchase_count` and `popularity` are added to start order query sets.
-        Popularity is the average number of seats purchased per team, and both are per-day.
-
-        *** Due to limitations, SQLite is unable to test non-integer popularity results. ***
-        """
-
-        # Create additional teams
-        team2 = auth.User.objects.create_user('Team2').team
-        team3 = auth.User.objects.create_user('Team3').team
-        team2.entries.create(event = self.event)
-        team3.entries.create(event = self.event)
-
-        seat_bow = models.Seat.objects.get(name = 'Bow')
-        seat_two = models.Seat.objects.get(name = '2')
-        seat_cox = models.Seat.objects.get(name = 'Cox')
-
-        # Create purchases
-        team2.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_bow)
-        team2.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_two)
-        team3.purchases.create(day = self.day, crew = self.crew_womens, seat = seat_cox)
-
-        self.team.purchases.create(day = self.prev_day, crew = self.crew_womens, seat = seat_bow)
-        # ^ Distraction, wrong day
-
-
-        # Generate and test expectations
-        expect = {self.crew_womens: {'count': 3, 'popularity': 1.0}}
-
-        response = self.client.get(self.url)
-        for division in response.context['start_order']:
-            for position in division:
-                with self.subTest(crew = position.crew):
-                    expect_crew = expect.get(position.crew, {'count': 0, 'popularity': 0})
-                    self.assertEqual(position.purchase_count, expect_crew['count'])
-                    self.assertEqual(position.popularity, expect_crew['popularity'])
-
-
-    @patching.market_is_open(True)
-    @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
-    def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
-        """Expect:
-            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
-            (2) Django Auth overheard - Session (1), User (1)
-            (1) User's team
-            (1) All game entries for event (for popularity count)
-            (1) User's crew for this gender
-            (1) Prefetch purchase positions (for pricing)
-            (1) Select all seats
-            (1) User's crew of other gender
-            (1) User's game entry & financials
-            (1) User's coach
-            (1) Event's first day
-            (2 <-> Divisions) Select start order for each division
-
-            Could be reduced further by fetching the information for every division's start order
-            in a single query and filtering in the code. See #88.
-        """
-
-        for seat in models.Seat.objects.all():
-            athlete = self.crew_womens.crew_lists.create(
-                event = self.day.event,
-                seat = seat,
-                name = str(seat),
-            )
-            self.team.purchases.create(
-                day = self.day,
-                crew = self.crew_womens,
-                seat = seat,
-                athlete = athlete,
-            )
-
-        self.client.login(username='DevTeam', password='password')
-        with self.assertNumQueries(16):
-            self.client.get(self.url)
+    @classmethod
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
+        cls.crew_primary = cls.crew_womens
+        cls.crew_secondary = cls.crew_mens
 
 
 
