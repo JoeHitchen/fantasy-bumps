@@ -61,6 +61,7 @@ class FantasyBaseMixin(ContextMixin):
         context['money'] = money
         context['timings'] = timings
         context['coaching'] = CoachingCompetitions
+        context['trophy_types'] = models.Trophy.Types
 
         events = utils.ordered_events()
         if 'event' in context:

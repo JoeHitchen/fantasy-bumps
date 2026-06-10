@@ -569,12 +569,12 @@ def swan_image(trophy_type: str, tooltip: str = '', bottom_tooltip: bool = False
     if is_reversed:
         style_classes.append('swan-trophy-reversed')
 
-    return '<img src="{}" class="{}" data-toggle="tooltip" data-placement="{}" title="{}" />'.format(  # noqa: E501
+    return mark_safe('<img src="{}" class="{}" data-toggle="tooltip" data-placement="{}" title="{}" />'.format(  # noqa: E501
         static('fantasy/swan-{}.svg'.format(file_tag)),
         ' '.join(style_classes),
         'bottom' if bottom_tooltip else 'top',
         tooltip,
-    )
+    ))
 
 
 @register.filter

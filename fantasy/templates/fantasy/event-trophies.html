@@ -2,7 +2,12 @@
       <div class="list-group">
         <div class="list-group-item list-group-item-primary">
           <div class="row justify-content-between">
-            <span class="ml-2">Trophy Winners</span>
+            <span class="ml-2">
+              Trophy Winners
+              <a class="badge badge-pill badge-primary ml-2" href="{% url 'fantasy:rules' %}#trophies" data-toggle="tooltip" data-placement="bottom" title="Click for more info about trophies">
+                <span class="oi oi-info info-icon"></span>
+              </a>
+            </span>
             <a href="{% url 'fantasy:leaderboard' event.tag %}" class="btn btn-primary btn-sm mr-1" style="padding-top: 0.1em; padding-bottom: 0.1em">
               See full results
             </a>
@@ -10,7 +15,7 @@
         </div>
         {% for trophy in trophies %}
           <div class="list-group-item trophy-row">
-            {{ trophy.type|swan_image|safe }}
+            {{ trophy.type|swan_image }}
             <div class="flex-grow-1">{{ trophy.team }}</div>
             <span data-toggle="tooltip" data-placement="top" title="{{ trophy.description }}"><em>{{ trophy.type|trophy_label }}</em></span>
             <span class="pl-2">{{ trophy.team|trophy_team_score|currency }}</span>

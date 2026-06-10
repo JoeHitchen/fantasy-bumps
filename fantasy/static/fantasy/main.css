@@ -116,3 +116,7 @@
   margin-left: -0.25rem;
   margin-right: 0.25rem;
 }
+
+.info-icon {
+  padding-top: 0.25em; padding-bottom: 0.4em; padding-left: 0.25em; padding-right: 0.25em;
+}
