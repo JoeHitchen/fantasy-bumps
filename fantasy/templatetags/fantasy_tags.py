@@ -98,8 +98,9 @@ def mini_leaderboard_avatar(rank: int) -> str:
 
 
 @register.filter
-def currency(amount: int) -> str:
-    return format_html('{}&nbsp;🦀', amount)
+def currency(amount: int, leading_plus: bool = False) -> str:
+    amount_str = f'{amount:+d}' if leading_plus else str(amount)
+    return format_html('{}&nbsp;🦀', amount_str)
 
 
 @register.filter

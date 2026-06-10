@@ -382,11 +382,25 @@ class Test__Misc(TestCase):
         )
 
 
-    def test__currency_filter(self) -> None:
+    def test__currency_filter__positive(self) -> None:
         """Renders the amount with currency symbol."""
 
         html = tags.currency(100)
         self.assertEqual(html, '100&nbsp;🦀')
+
+
+    def test__currency_filter__negative(self) -> None:
+        """Renders the amount with currency symbol."""
+
+        html = tags.currency(-100)
+        self.assertEqual(html, '-100&nbsp;🦀')
+
+
+    def test__currency_filter__positive_with_sign(self) -> None:
+        """Renders the amount with currency symbol."""
+
+        html = tags.currency(100, leading_plus = True)
+        self.assertEqual(html, '+100&nbsp;🦀')
 
 
     def test__buy_button__standard(self) -> None:
