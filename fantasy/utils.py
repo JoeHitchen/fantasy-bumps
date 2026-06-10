@@ -11,6 +11,8 @@ from . import errors
 
 
 class Payout(TypedDict):
+    position_change: int
+    headship: bool
     value_change: int
     payout: int
 
@@ -106,5 +108,10 @@ def payout_by_day_gender_positions(
         headship_bonus = 0.105 if new_position == old_position == 1 else 0
         payout = (0.14 * position_change + 0.07 + headship_bonus) * crew_value_old
 
-    return {'value_change': crew_value_new - crew_value_old, 'payout': round(payout)}
+    return {
+        'position_change': position_change,
+        'headship': new_position == 1,
+        'value_change': crew_value_new - crew_value_old,
+        'payout': round(payout),
+    }
 
