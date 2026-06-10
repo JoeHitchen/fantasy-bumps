@@ -82,7 +82,7 @@
             <small><span class="oi oi-sort-descending"></span></small>
           </button>
         </th>
-        <th>Crews</th>
+        <th colspan="2">Team Info</th>
       </tr></thead>
       <tbody>
         {% for fantasy in fantasies %}<tr {% if fantasy.team == team %}class="table-info"{% endif %}>
@@ -110,7 +110,9 @@
             {% if show_validity %}{{ fantasy.valid_entry|entry_validity_flag }}{% endif %}
             {% if show_subs_usage %}{{ fantasy.has_subs|subs_usage_flag }}{% endif %}
             {{ fantasy.previous_entries|new_player_flag }}
-            <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm ml-2 pt-0 pl-2 pr-2" style="padding-bottom: 2px">
+          </td>
+          <td class="align-middle">
+            <a href="{% url 'fantasy:team' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2" style="padding-bottom: 2px">
               <small><span class="oi oi-chevron-right"></span></small>
             </a>
           </td>
