@@ -1,5 +1,5 @@
 from unittest.mock import patch, Mock
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from typing import Callable, Any, TYPE_CHECKING
 
 from django.test import TestCase, Client
@@ -1304,6 +1304,11 @@ class Test__Team(TestCase):
         'dev_event',
         'dev_days',
         'dev_team',
+        'dev_crews',
+        'dev_start_day1',
+        'dev_start_day2',
+        'dev_start_day3',
+        'seats',
     ]
 
     # Test settings
@@ -1313,6 +1318,11 @@ class Test__Team(TestCase):
     url: str
     event: models.Event
     day: models.Day
+    base_date_shift: timedelta
+
+    crew_mens: models.Crew
+    crew_womens: models.Crew
+    athlete: models.Athlete
 
     user_team: models.Team
     view_team: models.Team
@@ -1325,6 +1335,17 @@ class Test__Team(TestCase):
         cls.event = exists(models.Event.objects.first())
         cls.user_team = exists(models.Team.objects.select_related().first())
         cls.day = cls.event.active_day
+        cls.base_date_shift = timezone.now().date() - cls.event.active_day.date
+
+        cls.crew_mens = exists(models.Crew.objects.filter(gender = Genders.MEN).first())
+        cls.crew_womens = exists(models.Crew.objects.filter(gender = Genders.WOMEN).first())
+        cls.athlete = cls.event.crew_lists.create(
+            crew = cls.crew_womens,
+            seat = exists(models.Seat.objects.first()),
+            name = 'Test Athlete',
+        )
+        cls.event.coaches.create(crew = cls.crew_mens, name = 'Test Coach 1')
+        cls.event.coaches.create(crew = cls.crew_womens, name = 'Test Coach 2')
 
         cls.view_team = auth.User.objects.create_user('Target', '', '').team
         cls.budgets = cls.view_team.entries.create(event = cls.event)
@@ -1371,65 +1392,93 @@ class Test__Team(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-    @patching.team_get_crew
-    def test__without_login(self, get_crew_mock: Mock) -> None:
-        """Generates a context containing the selected team, their financials, and their crews."""
+    @patching.localtime_time(time(11, 15))
+    def test__day_one(self, _localtime_mock: Mock) -> None:
+        """Only displays one set of crew lists."""
 
-        response = self.client.get(self.url)
+        self.event.days.update(date = db.F('date') + self.base_date_shift + timedelta(2))
+
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+        ))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, self.template)
 
-        self.assertEqual(response.context['team'], self.view_team)
-        self.assertEqual(response.context['finances'], self.budgets)
-
-        self.assertEqual(
-            response.context['mens_crew'],
-            (self.view_team, self.day, Genders.MEN),
-        )
-        self.assertEqual(
-            response.context['womens_crew'],
-            (self.view_team, self.day, Genders.WOMEN),
-        )
+        self.assertIn('Current crew lists for ', str(response.content))
+        self.assertNotIn('Thursday crew lists for ', str(response.content))
+        self.assertNotIn('Wednesday crew lists for ', str(response.content))
 
 
-    @patching.team_get_crew
-    def test__with_login(self, get_crew_mock: Mock) -> None:
-        """Does not replace the requested team with the viewer's own team."""
+    @patching.localtime_time(time(11, 15))
+    def test__day_two(self, _localtime_mock: Mock) -> None:
+        """Displays both the current and the previous crew lists."""
 
-        self.client.login(username='DevTeam', password='password')
-        response = self.client.get(self.url)
+        self.event.days.update(date = db.F('date') + self.base_date_shift + timedelta(1))
+
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+        ))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, self.template)
 
-        self.assertEqual(response.context['team'], self.view_team)
-        self.assertEqual(response.context['finances'], self.budgets)
+        self.assertIn('Current crew lists for ', str(response.content))
+        self.assertNotIn('Thursday crew lists for ', str(response.content))
+        self.assertIn('Wednesday crew lists for ', str(response.content))
 
-        self.assertEqual(
-            response.context['mens_crew'],
-            (self.view_team, self.day, Genders.MEN),
-        )
-        self.assertEqual(
-            response.context['womens_crew'],
-            (self.view_team, self.day, Genders.WOMEN),
-        )
+
+    @patching.localtime_time(time(11, 15))
+    def test__end_of_racing(self, _localtime_mock: Mock) -> None:
+        """Displays the crew lists for all racing days, but not the 'end' day crews."""
+
+        self.event.days.update(date = db.F('date') + self.base_date_shift)
+
+        response = self.client.get(reverse(
+            self.url_name,
+            kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+        ))
+        self.assertEqual(response.status_code, 200)
+
+        self.assertNotIn('Current crew lists for ', str(response.content))
+        self.assertIn('Thursday crew lists for ', str(response.content))
+        self.assertIn('Wednesday crew lists for ', str(response.content))
 
 
     def test__query_count(self) -> None:
-        """ Expect:
-            (3) SELECT event and active day
-            (1) SELECT team to view
-            (1) SELECT recent events
+        """Expect:
+            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
+            (1) SELECT target team's game entry
+            (1) SELECT racing days
+            (2) SELECT coaches' names
             (1) SELECT all seats
-            (2) SELECT purchases for crew lists (one for each crew lists)
-            (2) SELECT coaches (one for each crew list)
+            (4) SELECT target team's crews    (2x racing days until now)
         """
 
-        with self.assertNumQueries(10):
-            response = self.client.get(self.url)
+        self.event.days.update(date = db.F('date') + self.base_date_shift)
 
-            # Needed to force crew list queries
-            list(response.context['mens_crew'])
-            list(response.context['womens_crew'])
+        for day in self.event.days.all():
+            for seat in models.Seat.objects.all():
+                self.view_team.purchases.create(
+                    day = day,
+                    seat = seat,
+                    crew = self.crew_mens,
+                    athlete = self.athlete,
+                )
+                self.view_team.purchases.create(
+                    day = day,
+                    seat = seat,
+                    crew = self.crew_womens,
+                    athlete = self.athlete,
+                )
+
+        self.budgets.mens_coach = self.crew_mens
+        self.budgets.womens_coach = self.crew_womens
+        self.budgets.save()
+
+        with self.assertNumQueries(12):
+            self.client.get(reverse(
+                self.url_name,
+                kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+            ))
 
 
 
