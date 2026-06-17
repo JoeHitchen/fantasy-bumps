@@ -988,6 +988,110 @@ class Test__Crew_List(TestCase):
 
 
 
+class Test__Result_Components(TestCase):
+
+    def test__bump_arrow__bump_up_single(self) -> None:
+        """Displays a green arrow pointing upwards."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 1,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-top', classes)
+        self.assertIn('text-success', classes)
+
+        self.assertEqual(arrow.get('title'), 'Gained one place')
+
+
+    def test__bump_arrow__bump_up_multiple(self) -> None:
+        """Displays a green arrow pointing upwards."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 3,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-top', classes)
+        self.assertIn('text-success', classes)
+
+        self.assertEqual(arrow.get('title'), 'Gained three places')
+
+
+    def test__bump_arrow__bump_down_single(self) -> None:
+        """Displays a red arrow pointing down."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': -1,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-bottom', classes)
+        self.assertIn('text-danger', classes)
+
+        self.assertEqual(arrow.get('title'), 'Lost one place')
+
+
+    def test__bump_arrow__bump_down_multiple(self) -> None:
+        """Displays a red arrow pointing down."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': -3,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-bottom', classes)
+        self.assertIn('text-danger', classes)
+
+        self.assertEqual(arrow.get('title'), 'Lost three places')
+
+
+    def test__bump_arrow__row_over(self) -> None:
+        """Displays a blue arrow pointing right."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 0,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-right', classes)
+        self.assertIn('text-info', classes)
+
+        self.assertEqual(arrow.get('title'), 'Rowed over')
+
+
+    def test__bump_arrow__headship_row_over(self) -> None:
+        """Displays a orange ("gold") arrow pointing right."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 0,
+            'headship': True,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-right', classes)
+        self.assertIn('text-warning', classes)
+
+        self.assertEqual(arrow.get('title'), 'Rowed over as head')
+
+
 class Test__Event_Box(TestCase):
     fixtures = ['dev_event']
 

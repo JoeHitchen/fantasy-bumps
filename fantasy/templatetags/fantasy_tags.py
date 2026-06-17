@@ -9,7 +9,8 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.contrib.auth import models as auth
 from django.templatetags.static import static
-from django.contrib.humanize.templatetags.humanize import naturalday
+from django.template.defaultfilters import pluralize
+from django.contrib.humanize.templatetags.humanize import naturalday, apnumber
 
 from ..constants import Genders, money, CoachingCompetitions
 from .. import models, utils
@@ -133,6 +134,32 @@ def new_player_flag(value: int) -> str:
         'oi oi-star text-white' if value else 'oi oi-star text-warning',
         'Returning player' if value else 'First entry!',
     ))
+
+
+@register.filter
+def bump_arrow(payout: utils.Payout) -> str:
+
+    if payout['position_change'] > 0:
+        bump_arrow = 'oi-arrow-thick-top text-success'
+        bump_message = 'Gained {} place{}'.format(
+            apnumber(payout['position_change']),
+            pluralize(payout['position_change']),
+        )
+    elif payout['position_change'] < 0:
+        bump_arrow = 'oi-arrow-thick-bottom text-danger'
+        bump_message = 'Lost {} place{}'.format(
+            apnumber(-payout['position_change']),
+            pluralize(-payout['position_change']),
+        )
+    elif payout['headship']:
+        bump_arrow = 'oi-arrow-thick-right text-warning'
+        bump_message = 'Rowed over as head'
+    else:
+        bump_arrow = 'oi-arrow-thick-right text-info'
+        bump_message = 'Rowed over'
+
+    base_string = '<span class="oi {} bump-arrow" data-toggle="tooltip" title="{}"></span>'
+    return mark_safe(base_string.format(bump_arrow, bump_message))
 
 
 @register.filter

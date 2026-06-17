@@ -85,6 +85,13 @@
   width: 2.5em;
 }
 
+.bump-arrow {
+  display: inline-block;
+  margin-right: 0.5em;
+  width: 1em;
+  text-align: center;
+}
+
 .analysis-box.table {
   margin-bottom: 0em;
 }
