@@ -163,6 +163,15 @@ def bump_arrow(payout: utils.Payout) -> str:
 
 
 @register.filter
+def format_payout(payout: utils.Payout) -> str:
+    total_change = payout['value_change'] + payout['payout']
+    return mark_safe('<strong class="{}">{}</strong>'.format(
+        '' if total_change > 0 else 'text-danger',
+        currency(total_change, leading_plus = True),
+    ))
+
+
+@register.filter
 def coaching_competition_payouts(competition: CoachingCompetitions) -> str:
     return {
         CoachingCompetitions.BLADES: '{} on the Saturday, for crew winning blades'.format(
