@@ -244,6 +244,8 @@ class Test__Payouts(TestCase):
         )
 
         self.assertEqual(value_change, 0)
+        self.assertEqual(delta_crabs['position_change'], 0)
+        self.assertFalse(delta_crabs['headship'])
         self.assertEqual(delta_crabs['value_change'], value_change)
         self.assertEqual(delta_crabs['payout'], round(0.07 * old_price))
 
@@ -266,6 +268,8 @@ class Test__Payouts(TestCase):
         )
 
         self.assertEqual(value_change, 0)
+        self.assertEqual(delta_crabs['position_change'], 0)
+        self.assertTrue(delta_crabs['headship'])
         self.assertEqual(delta_crabs['value_change'], value_change)
         self.assertEqual(delta_crabs['payout'], round(0.175 * old_price))
 
@@ -288,6 +292,8 @@ class Test__Payouts(TestCase):
         )
 
         self.assertTrue(value_change > 0)
+        self.assertEqual(delta_crabs['position_change'], 1)
+        self.assertFalse(delta_crabs['headship'])
         self.assertEqual(delta_crabs['value_change'], value_change)
         self.assertEqual(delta_crabs['payout'], round(0.21 * old_price))
 
@@ -310,6 +316,8 @@ class Test__Payouts(TestCase):
         )
 
         self.assertTrue(value_change < 0)
+        self.assertEqual(delta_crabs['position_change'], -1)
+        self.assertFalse(delta_crabs['headship'])
         self.assertEqual(delta_crabs['value_change'], value_change)
         self.assertEqual(delta_crabs['payout'], 0)
 
