@@ -95,6 +95,7 @@ class CrewListBox(TypedDict):
     finances: GenderFinances | None
     show_crew_actions: bool
     evaluate_payouts: bool
+    event: models.Event | None
 
 
 class CrewListCoachRow(TypedDict):

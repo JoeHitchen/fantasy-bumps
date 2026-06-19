@@ -427,11 +427,12 @@ def crew_list_row(
     purchase: models.Purchase,
     show_crew_actions: bool,
     evaluate_payouts: bool = False,
+    event: models.Event | None = None,
 ) -> types.CrewListRow:
 
     payout = None
     if evaluate_payouts and purchase:
-        target_day = purchase.day.event.active_day
+        target_day = event.active_day if event else purchase.day.event.active_day
         if purchase.day != target_day:
             payout = create_payout_matrix(purchase.day)[purchase.crew]
 
@@ -450,7 +451,7 @@ def crew_list_row(
     {% crew_list_header finances %}
   {% endif %}
   {% for seat, rower in crew_list %}
-    {% crew_list_row seat rower show_crew_actions evaluate_payouts %}
+    {% crew_list_row seat rower show_crew_actions evaluate_payouts event %}
   {% endfor %}
 '''))
 def crew_list_box(
@@ -459,6 +460,7 @@ def crew_list_box(
     finances: types.GenderFinances | None = None,
     show_crew_actions: bool = False,
     evaluate_payouts: bool = False,
+    event: models.Event | None = None,
 ) -> types.CrewListBox:
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
@@ -474,6 +476,7 @@ def crew_list_box(
         'finances': finances,
         'show_crew_actions': show_crew_actions,
         'evaluate_payouts': evaluate_payouts,
+        'event': event,
     }
 
 

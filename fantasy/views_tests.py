@@ -14,6 +14,7 @@ from .constants import Series, Genders, GENDERS_OVERALL, money, CoachingCompetit
 from . import models
 from . import utils
 from . import transactions
+from .management import game_advance
 from . import patching
 
 
@@ -1443,7 +1444,8 @@ class Test__Team(TestCase):
         self.assertIn('Wednesday crew lists for ', str(response.content))
 
 
-    def test__query_count(self) -> None:
+    @patching.localtime_time(time(11, 15))
+    def test__query_count(self, _localtime_mock: Mock) -> None:
         """Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
             (1) SELECT target team's game entry
@@ -1451,6 +1453,9 @@ class Test__Team(TestCase):
             (2) SELECT coaches' names
             (1) SELECT all seats
             (4) SELECT target team's crews    (2x racing days until now)
+            (2) SELECT next day    (1x racing days until now, cachable)
+            (2) SELECT crews racing that day    (1x racing days until now, cachable)
+            (4) SELECT before & after positions    (2x racing days until now, cachable)
         """
 
         self.event.days.update(date = db.F('date') + self.base_date_shift)
@@ -1474,7 +1479,14 @@ class Test__Team(TestCase):
         self.budgets.womens_coach = self.crew_womens
         self.budgets.save()
 
-        with self.assertNumQueries(12):
+        game_advance.create_payout_matrix.cache_clear()
+        with self.assertNumQueries(20):
+            self.client.get(reverse(
+                self.url_name,
+                kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+            ))
+
+        with self.assertNumQueries(12):  # Caching saves 10 queries
             self.client.get(reverse(
                 self.url_name,
                 kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
