@@ -14,6 +14,7 @@ from django.contrib.humanize.templatetags.humanize import naturalday, apnumber
 
 from ..constants import Genders, money, CoachingCompetitions
 from .. import models, utils
+from ..management.game_advance import create_payout_matrix
 from . import fantasy_tags_types as types
 
 register = template.Library()
@@ -417,6 +418,7 @@ def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
       {% switch_button purchase %}
       {% sell_button purchase %}
     {% endif %}
+    {% if payout %}{{ payout|format_payout }}&emsp;{{ payout|bump_arrow }}{% endif %}
     {% endif %}
   </div>
 '''))
@@ -424,12 +426,21 @@ def crew_list_row(
     seat: models.Seat,
     purchase: models.Purchase,
     show_crew_actions: bool,
+    evaluate_payouts: bool = False,
 ) -> types.CrewListRow:
+
+    payout = None
+    if evaluate_payouts and purchase:
+        target_day = purchase.day.event.active_day
+        if purchase.day != target_day:
+            payout = create_payout_matrix(purchase.day)[purchase.crew]
+
     return {
         'seat': seat,
         'purchase': purchase,
         'club': purchase.crew.club if purchase else None,
         'show_crew_actions': show_crew_actions,
+        'payout': payout,
     }
 
 
@@ -439,7 +450,7 @@ def crew_list_row(
     {% crew_list_header finances %}
   {% endif %}
   {% for seat, rower in crew_list %}
-    {% crew_list_row seat rower show_crew_actions %}
+    {% crew_list_row seat rower show_crew_actions evaluate_payouts %}
   {% endfor %}
 '''))
 def crew_list_box(
@@ -447,6 +458,7 @@ def crew_list_box(
     seats: db.QuerySet[models.Seat],
     finances: types.GenderFinances | None = None,
     show_crew_actions: bool = False,
+    evaluate_payouts: bool = False,
 ) -> types.CrewListBox:
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
@@ -461,6 +473,7 @@ def crew_list_box(
         'crew_list': merged_crew_list,
         'finances': finances,
         'show_crew_actions': show_crew_actions,
+        'evaluate_payouts': evaluate_payouts,
     }
 
 

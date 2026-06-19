@@ -4,7 +4,7 @@ from django.db import models as db
 from django.contrib.auth import models as auth
 
 from ..constants import Genders, money
-from .. import models
+from .. import models, utils
 
 
 class MarketStatus(TypedDict):
@@ -87,12 +87,14 @@ class CrewListRow(TypedDict):
     purchase: models.Purchase
     club: str | None
     show_crew_actions: bool
+    payout: utils.Payout | None
 
 
 class CrewListBox(TypedDict):
     crew_list: list[tuple[models.Seat, models.Purchase | None]]
     finances: GenderFinances | None
     show_crew_actions: bool
+    evaluate_payouts: bool
 
 
 class CrewListCoachRow(TypedDict):
