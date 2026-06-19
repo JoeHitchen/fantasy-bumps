@@ -441,10 +441,13 @@ class TeamView(EventBase):
         )
         context['crews'] = [{
             'day': day,
-            'mens_crew': team.get_crew(day, Genders.MEN).select_related('crew', 'seat', 'athlete'),
+            'mens_crew': (
+                team.get_crew(day, Genders.MEN)
+                .select_related('day', 'day__event', 'crew', 'seat', 'athlete')
+            ),
             'womens_crew': (
                 team.get_crew(day, Genders.WOMEN)
-                .select_related('crew', 'seat', 'athlete')
+                .select_related('day', 'day__event', 'crew', 'seat', 'athlete')
             ),
         } for day in racing_days.reverse()]
 
