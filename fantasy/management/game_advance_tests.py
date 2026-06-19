@@ -415,6 +415,11 @@ class Test__EvaluateInvestments(TestCase):
         cls.all_seats = models.Seat.objects.all()
 
 
+    @classmethod
+    def setUp(cls) -> None:
+        game_advance.create_payout_matrix.cache_clear()
+
+
     def test__bump_down__men_complete(self) -> None:
         """Crews lose value and no bonuses are awarded, regardless of completeness."""
 
@@ -736,6 +741,12 @@ class Test__PayoutMatrix(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         cls.day = exists(models.Day.objects.first())
+
+
+    @classmethod
+    def setUp(cls) -> None:
+        game_advance.create_payout_matrix.cache_clear()
+
 
     @patch(
         'fantasy.utils.payout_by_day_gender_positions',

@@ -1,4 +1,5 @@
 from typing import Iterable
+from functools import lru_cache
 import logging
 
 from django.db import models as db, transaction
@@ -158,6 +159,10 @@ def roll_over_purchases(day: models.Day) -> None:
 def evaluate_investments(day: models.Day) -> None:
     """Update entered teams budgets for changes in crew value from places gained/lost on day."""
 
+    # Preparation
+    payout_matrix = create_payout_matrix(day)
+    all_seats = models.Seat.objects.all()
+
     def purchases_prefetch(
         day: models.Day,
         gender: Genders,
@@ -207,11 +212,6 @@ def evaluate_investments(day: models.Day) -> None:
             entry.womens_budget += womens_payout
             entry.womens_balance += womens_payout
 
-
-    # Preparation
-    payout_matrix = create_payout_matrix(day)
-    all_seats = models.Seat.objects.all()
-
     # Main routine
     entries = (
         models.GameEntry.objects
@@ -237,6 +237,7 @@ def evaluate_investments(day: models.Day) -> None:
     )
 
 
+@lru_cache(maxsize = 20)
 def create_payout_matrix(day: models.Day) -> dict[models.Crew, utils.Payout]:
     """Calculates the value change and payout for every crew racing on the day provided.
 

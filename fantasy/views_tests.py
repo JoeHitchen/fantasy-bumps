@@ -14,6 +14,7 @@ from .constants import Series, Genders, GENDERS_OVERALL, money, CoachingCompetit
 from . import models
 from . import utils
 from . import transactions
+from .management import game_advance
 from . import patching
 
 
@@ -1474,6 +1475,7 @@ class Test__Team(TestCase):
         self.budgets.womens_coach = self.crew_womens
         self.budgets.save()
 
+        game_advance.create_payout_matrix.cache_clear()
         with self.assertNumQueries(12):
             self.client.get(reverse(
                 self.url_name,
