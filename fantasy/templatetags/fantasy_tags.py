@@ -487,9 +487,6 @@ def crew_list_row(
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  {% if finances %}
-    {% crew_list_header finances %}
-  {% endif %}
   {% for seat, rower in crew_list %}
     {% crew_list_row seat rower show_crew_actions evaluate_payouts event %}
   {% endfor %}
@@ -497,7 +494,6 @@ def crew_list_row(
 def crew_list_box(
     crew_list: db.QuerySet[models.Purchase],
     seats: db.QuerySet[models.Seat],
-    finances: types.GenderFinances | None = None,
     show_crew_actions: bool = False,
     evaluate_payouts: bool = False,
     event: models.Event | None = None,
@@ -513,7 +509,6 @@ def crew_list_box(
 
     return {
         'crew_list': merged_crew_list,
-        'finances': finances,
         'show_crew_actions': show_crew_actions,
         'evaluate_payouts': evaluate_payouts,
         'event': event,

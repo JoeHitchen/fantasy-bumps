@@ -632,18 +632,16 @@ class Test__Crew_List(TestCase):
     def crew_list_box(
         crew_list: Iterable[models.Purchase],
         seats: db.QuerySet[models.Seat],
-        finances: types.GenderFinances = {'budget': 0, 'crew_value': 0, 'balance': 0},
         show_crew_actions: bool = False,
     ) -> str:
         """A helper function that renders a crew list."""
-        component_str = '<div>{% crew_list_box crew_list seats finances show_crew_actions %}</div>'
+        component_str = '<div>{% crew_list_box crew_list seats show_crew_actions %}</div>'
         return (
             template
             .Template('{% load fantasy_tags %}' + component_str)
             .render(template.Context({
                 'crew_list': crew_list,
                 'seats': seats,
-                'finances': finances,
                 'show_crew_actions': show_crew_actions,
             }))
         )
@@ -950,17 +948,6 @@ class Test__Crew_List(TestCase):
                     self.crew_list_row(seat, None),
                     html,
                 )
-
-
-    def test__crew_list_box__finances(self) -> None:
-        """Includes financial information if provided."""
-
-        finances: types.GenderFinances = {'budget': 1079, 'crew_value': 856, 'balance': 223}
-        html = self.crew_list_box([], self.seats, finances)
-
-        # Test containments
-        self.assertInHTML(self.crew_list_header(finances), html)
-
 
 
     def test__crew_list_box__show_crew_actions(self) -> None:

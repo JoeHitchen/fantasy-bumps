@@ -100,7 +100,6 @@ class CrewListRow(TypedDict):
 
 class CrewListBox(TypedDict):
     crew_list: list[tuple[models.Seat, models.Purchase | None]]
-    finances: GenderFinances | None
     show_crew_actions: bool
     evaluate_payouts: bool
     event: models.Event | None
