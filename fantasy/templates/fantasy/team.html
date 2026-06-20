@@ -23,10 +23,12 @@
   <div class="col-md mb-3">
     <h3>Men's Crew</h3>
     {% crew_list_box day_data.mens_crew seats None False True event %}
+    {% crew_list_coach_result mens_coach_crew mens_coach_name %}
   </div>
   <div class="col-md mb-3">
     <h3>Women's Crew</h3>
     {% crew_list_box day_data.womens_crew seats None False True event %}
+    {% crew_list_coach_result womens_coach_crew womens_coach_name %}
   </div>
 </div>
 {% endfor %}

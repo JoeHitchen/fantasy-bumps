@@ -114,6 +114,12 @@ class CrewListCoachRow(TypedDict):
     show_coach_fire: bool
 
 
+class CrewListCoachResult(TypedDict):
+    crew: models.Crew | None
+    club: str | None
+    name: models.Coach | None
+
+
 class CrewStatusStyling(TypedDict):
     colour: str
     crew: str

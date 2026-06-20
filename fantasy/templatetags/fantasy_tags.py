@@ -550,6 +550,29 @@ def crew_list_coach_row(
 
 
 @register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
+    {{ "X"|avatar:club }}
+    {% if crew %}
+    <div class="flex-grow-1{% if name %} crew-row-athlete{% endif %}">
+      {% if name %}<div>{{ name }}</div>{% endif %}
+      <div>{{ crew }}</div>
+    </div>
+    {% endif %}
+  </div>
+'''))
+def crew_list_coach_result(
+    crew: models.Crew | None,
+    name: models.Coach | None,
+) -> types.CrewListCoachResult:
+    return {
+        'crew': crew,
+        'club': crew.club if crew else None,
+        'name': name,
+    }
+
+
+@register.inclusion_tag(template.Template('''
     <div class="list-group-item p-0">
       <table class="table table-sm table-borderless mb-0"><tr>
       <td class="table-{{ main.colour }} text-center align-middle" style="width: 50%">
