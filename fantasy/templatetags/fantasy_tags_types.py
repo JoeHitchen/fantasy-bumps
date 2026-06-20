@@ -1,10 +1,18 @@
 from typing import TypedDict, TYPE_CHECKING
+from enum import Enum
 
 from django.db import models as db
 from django.contrib.auth import models as auth
 
 from ..constants import Genders, money
 from .. import models, utils
+
+
+class Blades(Enum):
+    WON = 'won'
+    ON = 'on'
+    OFF = 'off'
+    LOST = 'lost'
 
 
 class MarketStatus(TypedDict):
@@ -104,6 +112,14 @@ class CrewListCoachRow(TypedDict):
     club: str | None
     name: models.Coach | None
     show_coach_fire: bool
+
+
+class CrewListCoachResult(TypedDict):
+    crew: models.Crew | None
+    club: str | None
+    name: models.Coach | None
+    payout: utils.Payout | None
+    payout_html: str
 
 
 class CrewStatusStyling(TypedDict):

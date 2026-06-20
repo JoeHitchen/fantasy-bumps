@@ -1445,7 +1445,7 @@ class Test__Team(TestCase):
 
 
     @patching.localtime_time(time(11, 15))
-    def test__query_count(self, _localtime_mock: Mock) -> None:
+    def test__query_count__standard(self, _localtime_mock: Mock) -> None:
         """Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
             (1) SELECT target team's game entry
@@ -1487,6 +1487,51 @@ class Test__Team(TestCase):
             ))
 
         with self.assertNumQueries(12):  # Caching saves 10 queries
+            self.client.get(reverse(
+                self.url_name,
+                kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+            ))
+
+
+    @patching.localtime_time(time(11, 15))
+    def test__query_count__blades(self, _localtime_mock: Mock) -> None:
+        """Expect:
+            Base 12-20 queries
+            (4) SELECT previous days of racing for blades performance (1x per gender per day shown)
+            (1) SELECT last day of racing
+        """
+
+        self.event.days.update(date = db.F('date') + self.base_date_shift)
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        for day in self.event.days.all():
+            for seat in models.Seat.objects.all():
+                self.view_team.purchases.create(
+                    day = day,
+                    seat = seat,
+                    crew = self.crew_mens,
+                    athlete = self.athlete,
+                )
+                self.view_team.purchases.create(
+                    day = day,
+                    seat = seat,
+                    crew = self.crew_womens,
+                    athlete = self.athlete,
+                )
+
+        self.budgets.mens_coach = self.crew_mens
+        self.budgets.womens_coach = self.crew_womens
+        self.budgets.save()
+
+        game_advance.create_payout_matrix.cache_clear()
+        with self.assertNumQueries(25):
+            self.client.get(reverse(
+                self.url_name,
+                kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
+            ))
+
+        with self.assertNumQueries(17):  # Caching saves 10 queries
             self.client.get(reverse(
                 self.url_name,
                 kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},

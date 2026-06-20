@@ -173,6 +173,46 @@ def format_payout(payout: utils.Payout) -> str:
 
 
 @register.filter
+def coaching_blades(blades: types.Blades, crew: models.Crew) -> str:
+
+    if blades == types.Blades.WON:
+        message = f'{crew} won blades'
+        content = currency(money.BLADES_BONUS, leading_plus = True)
+
+    elif blades == types.Blades.ON:
+        message = f'{crew} is on for blades'
+        content = '<span class="oi oi-check text-success"></span>'
+
+    elif blades == types.Blades.OFF:
+        message = f'{crew} is not on for blades'
+        content = '<span class="oi oi-x text-danger"></span>'
+
+    else:
+        message = f'{crew} did not win blades'
+        content = '<span class="oi oi-x text-danger"></span>'
+
+    return mark_safe(f'<strong data-toggle="tooltip" title="{message}">{content}</strong>')
+
+
+@register.filter
+def coaching_refund(payout: utils.Payout, crew: models.Crew) -> str:
+
+    value = max(-money.TORPIDS_REFUND * payout['position_change'], 0)
+
+    if payout['position_change'] >= 0:
+        tooltip = '{} were not owed a refund'
+    elif payout['position_change'] < -3:
+        tooltip = '{} were owed a big refund'
+    else:
+        tooltip = '{} were owed a refund'
+
+    return mark_safe('<strong data-toggle="tooltip" title="{}">{}</strong>'.format(
+        tooltip.format(crew),
+        currency(value, leading_plus = True),
+    ))
+
+
+@register.filter
 def coaching_competition_payouts(competition: CoachingCompetitions) -> str:
     return {
         CoachingCompetitions.BLADES: '{} on the Saturday, for crew winning blades'.format(
@@ -506,6 +546,56 @@ def crew_list_coach_row(
         'name': name,
         'event': event,
         'show_coach_fire': show_coach_fire,
+    }
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
+    {{ "X"|avatar:club }}
+    {% if crew %}
+    <div class="flex-grow-1{% if name %} crew-row-athlete{% endif %}">
+      {% if name %}<div>{{ name }}</div>{% endif %}
+      <div>{{ crew }}</div>
+    </div>
+    {% if payout %}{{ payout_html }}&emsp;{{ payout|bump_arrow }}{% endif %}
+    {% endif %}
+  </div>
+'''))
+def crew_list_coach_result(
+    crew: models.Crew | None,
+    name: models.Coach | None,
+    day: models.Day,
+) -> types.CrewListCoachResult:
+
+    payout = None
+    payout_html = ''
+    if crew and day != day.event.active_day:
+        payout = create_payout_matrix(day)[crew]
+
+        if day.event.coaching_competition == CoachingCompetitions.REFUND:
+            payout_html = coaching_refund(payout, crew)
+
+        elif day.event.coaching_competition == CoachingCompetitions.BLADES:
+
+            blades = types.Blades.ON
+            for itr_day in day.event.days.filter(date__lte = day.date):
+                if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
+                    blades = types.Blades.OFF
+                if itr_day == day.event.last_racing_day:
+                    blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
+
+            if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
+                blades = types.Blades.LOST
+
+            payout_html = coaching_blades(blades, crew)
+
+    return {
+        'crew': crew,
+        'club': crew.club if crew else None,
+        'name': name,
+        'payout': payout,
+        'payout_html': payout_html,
     }
 
 
