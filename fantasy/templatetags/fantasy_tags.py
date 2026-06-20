@@ -558,17 +558,25 @@ def crew_list_coach_row(
       {% if name %}<div>{{ name }}</div>{% endif %}
       <div>{{ crew }}</div>
     </div>
+    {% if payout %}{{ payout|bump_arrow }}{% endif %}
     {% endif %}
   </div>
 '''))
 def crew_list_coach_result(
     crew: models.Crew | None,
     name: models.Coach | None,
+    day: models.Day,
 ) -> types.CrewListCoachResult:
+
+    payout = None
+    if crew and day != day.event.active_day:
+        payout = create_payout_matrix(day)[crew]
+
     return {
         'crew': crew,
         'club': crew.club if crew else None,
         'name': name,
+        'payout': payout,
     }
 
 
