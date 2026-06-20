@@ -558,7 +558,7 @@ def crew_list_coach_row(
       {% if name %}<div>{{ name }}</div>{% endif %}
       <div>{{ crew }}</div>
     </div>
-    {% if payout %}{{ payout|bump_arrow }}{% endif %}
+    {% if payout %}{{ payout_html }}&emsp;{{ payout|bump_arrow }}{% endif %}
     {% endif %}
   </div>
 '''))
@@ -569,14 +569,33 @@ def crew_list_coach_result(
 ) -> types.CrewListCoachResult:
 
     payout = None
+    payout_html = ''
     if crew and day != day.event.active_day:
         payout = create_payout_matrix(day)[crew]
+
+        if day.event.coaching_competition == CoachingCompetitions.REFUND:
+            payout_html = coaching_refund(payout, crew)
+
+        elif day.event.coaching_competition == CoachingCompetitions.BLADES:
+
+            blades = types.Blades.ON
+            for itr_day in day.event.days.filter(date__lte = day.date):
+                if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
+                    blades = types.Blades.OFF
+                if itr_day == day.event.last_racing_day:
+                    blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
+
+            if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
+                blades = types.Blades.LOST
+
+            payout_html = coaching_blades(blades, crew)
 
     return {
         'crew': crew,
         'club': crew.club if crew else None,
         'name': name,
         'payout': payout,
+        'payout_html': payout_html,
     }
 
 

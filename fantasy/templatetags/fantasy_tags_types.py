@@ -119,6 +119,7 @@ class CrewListCoachResult(TypedDict):
     club: str | None
     name: models.Coach | None
     payout: utils.Payout | None
+    payout_html: str
 
 
 class CrewStatusStyling(TypedDict):
