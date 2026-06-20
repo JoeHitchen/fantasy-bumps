@@ -181,15 +181,15 @@ def coaching_blades(blades: types.Blades, crew: models.Crew) -> str:
 
     elif blades == types.Blades.ON:
         message = f'{crew} is on for blades'
-        content = '<span class="oi oi-check text-success"></span>'
+        content = '<span class="oi oi-check text-success mr-1"></span>'
 
     elif blades == types.Blades.OFF:
         message = f'{crew} is not on for blades'
-        content = '<span class="oi oi-x text-danger"></span>'
+        content = '<span class="oi oi-x text-danger mr-1"></span>'
 
     else:
         message = f'{crew} did not win blades'
-        content = '<span class="oi oi-x text-danger"></span>'
+        content = '<span class="oi oi-x text-danger mr-1"></span>'
 
     return mark_safe(f'<strong data-toggle="tooltip" title="{message}">{content}</strong>')
 
@@ -458,7 +458,7 @@ def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
       {% switch_button purchase %}
       {% sell_button purchase %}
     {% endif %}
-    {% if payout %}{{ payout|format_payout }}&emsp;{{ payout|bump_arrow }}{% endif %}
+    {% if payout %}{{ payout|format_payout }}{{ payout|bump_arrow }}{% endif %}
     {% endif %}
   </div>
 '''))
@@ -558,7 +558,7 @@ def crew_list_coach_row(
       {% if name %}<div>{{ name }}</div>{% endif %}
       <div>{{ crew }}</div>
     </div>
-    {% if payout %}{{ payout_html }}&emsp;{{ payout|bump_arrow }}{% endif %}
+    {% if payout %}{{ payout_html }}{{ payout|bump_arrow }}{% endif %}
     {% endif %}
   </div>
 '''))
