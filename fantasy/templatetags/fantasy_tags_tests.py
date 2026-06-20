@@ -13,7 +13,7 @@ from core.tests import exists
 
 from .. import models
 from .. import patching
-from ..constants import Genders
+from ..constants import Genders, Clubs, money
 from . import fantasy_tags as tags, fantasy_tags_types as types
 
 
@@ -990,9 +990,15 @@ class Test__Crew_List(TestCase):
 
 class Test__Result_Components(TestCase):
 
+    crew: models.Crew
+
     @staticmethod
     def currency(value: int) -> str:
         return tags.currency(value, leading_plus = True).replace('&nbsp;', ' ')
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.crew = models.Crew.objects.create(club = Clubs.WOLF, gender = Genders.WOMEN, rank = 1)
 
 
     def test__bump_arrow__bump_up_single(self) -> None:
@@ -1124,6 +1130,101 @@ class Test__Result_Components(TestCase):
         classes = payout_text.get('class', '').split(' ')
         self.assertIn('text-danger', classes)
         self.assertEqual(payout_text.text, self.currency(-5))
+
+
+    def test__blades__won(self) -> None:
+        """Displays successful text and the payout amount."""
+
+        blades = parser(tags.coaching_blades(types.Blades.WON, self.crew))
+        self.assertEqual(blades.get('title'), f'{self.crew} won blades')
+        self.assertEqual(blades.text, self.currency(money.BLADES_BONUS))
+
+
+    def test__blades__on_track(self) -> None:
+        """Displays hopeful text and a green tick."""
+
+        blades = parser(tags.coaching_blades(types.Blades.ON, self.crew))
+
+        self.assertEqual(blades.get('title'), f'{self.crew} is on for blades')
+
+        inner_classes = blades[0].get('class', '').split(' ')
+        self.assertIn('oi-check', inner_classes)
+        self.assertIn('text-success', inner_classes)
+
+
+    def test__blades__off_track(self) -> None:
+        """Displays unhappy text and a red cross."""
+
+        blades = parser(tags.coaching_blades(types.Blades.OFF, self.crew))
+        self.assertEqual(blades.get('title'), f'{self.crew} is not on for blades')
+
+        inner_classes = blades[0].get('class', '').split(' ')
+        self.assertIn('oi-x', inner_classes)
+        self.assertIn('text-danger', inner_classes)
+
+
+    def test__blades__lost(self) -> None:
+        """Displays unhappy text and a red cross."""
+
+        blades = parser(tags.coaching_blades(types.Blades.LOST, self.crew))
+        self.assertEqual(blades.get('title'), f'{self.crew} did not win blades')
+
+        inner_classes = blades[0].get('class', '').split(' ')
+        self.assertIn('oi-x', inner_classes)
+        self.assertIn('text-danger', inner_classes)
+
+
+    def test__refund__bumped_up(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': 3,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were not owed a refund')
+        self.assertEqual(refund.text, self.currency(0))
+
+
+    def test__refund__rowed_over(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': 0,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were not owed a refund')
+        self.assertEqual(refund.text, self.currency(0))
+
+
+    def test__refund__bumped_down(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': -1,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were owed a refund')
+        self.assertEqual(refund.text, self.currency(money.TORPIDS_REFUND))
+
+
+    def test__refund__bumped_down_several_places(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': -4,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were owed a big refund')
+        self.assertEqual(refund.text, self.currency(4 * money.TORPIDS_REFUND))
+
 
 
 class Test__Event_Box(TestCase):
