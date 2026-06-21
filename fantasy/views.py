@@ -451,7 +451,11 @@ class TeamView(EventBase):
             ),
         } for day in racing_days.reverse()]
 
-        context['show_coach_row'] = self.event.coaching_competition
+        context['show_coach_row'] = self.event.coaching_competition and (
+            entry.mens_coach
+            or entry.womens_coach
+            or self.event.active_day == self.event.first_day
+        )
         context['mens_coach_crew'] = entry.mens_coach
         context['mens_coach_name'] = self.event.coaches.filter(crew = entry.mens_coach).first()
         context['womens_coach_crew'] = entry.womens_coach
