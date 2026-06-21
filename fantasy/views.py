@@ -125,8 +125,18 @@ class FantasyBaseMixin(ContextMixin):
             for event in events:
                 if event._user_fantasy:
                     event.user_fantasy = event._user_fantasy[0]
-                event.mens_crew_ready = utils.has_all_seats(event.active_day.mens_crew, seats)
-                event.womens_crew_ready = utils.has_all_seats(event.active_day.womens_crew, seats)
+                event.mens_crew_ready = bool(
+                    utils.has_all_seats(event.active_day.mens_crew, seats)
+                    and not event.coaching_competition
+                    or (hasattr(event, 'user_fantasy') and event.user_fantasy.mens_coach)
+                    or event.active_day != event.first_day,
+                )
+                event.womens_crew_ready = bool(
+                    utils.has_all_seats(event.active_day.womens_crew, seats)
+                    and not event.coaching_competition
+                    or (hasattr(event, 'user_fantasy') and event.user_fantasy.womens_coach)
+                    or event.active_day != event.first_day,
+                )
 
 
 
