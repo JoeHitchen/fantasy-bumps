@@ -9,10 +9,12 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.contrib.auth import models as auth
 from django.templatetags.static import static
-from django.contrib.humanize.templatetags.humanize import naturalday
+from django.template.defaultfilters import pluralize
+from django.contrib.humanize.templatetags.humanize import naturalday, apnumber
 
 from ..constants import Genders, money, CoachingCompetitions
 from .. import models, utils
+from ..management.game_advance import create_payout_matrix
 from . import fantasy_tags_types as types
 
 register = template.Library()
@@ -98,8 +100,9 @@ def mini_leaderboard_avatar(rank: int) -> str:
 
 
 @register.filter
-def currency(amount: int) -> str:
-    return format_html('{}&nbsp;🦀', amount)
+def currency(amount: int, leading_plus: bool = False) -> str:
+    amount_str = f'{amount:+d}' if leading_plus else str(amount)
+    return format_html('{}&nbsp;🦀', amount_str)
 
 
 @register.filter
@@ -131,6 +134,81 @@ def new_player_flag(value: int) -> str:
     return mark_safe(base_string.format(
         'oi oi-star text-white' if value else 'oi oi-star text-warning',
         'Returning player' if value else 'First entry!',
+    ))
+
+
+@register.filter
+def bump_arrow(payout: utils.Payout) -> str:
+
+    if payout['position_change'] > 0:
+        bump_arrow = 'oi-arrow-thick-top text-success'
+        bump_message = 'Gained {} place{}'.format(
+            apnumber(payout['position_change']),
+            pluralize(payout['position_change']),
+        )
+    elif payout['position_change'] < 0:
+        bump_arrow = 'oi-arrow-thick-bottom text-danger'
+        bump_message = 'Lost {} place{}'.format(
+            apnumber(-payout['position_change']),
+            pluralize(-payout['position_change']),
+        )
+    elif payout['headship']:
+        bump_arrow = 'oi-arrow-thick-right text-warning'
+        bump_message = 'Rowed over as head'
+    else:
+        bump_arrow = 'oi-arrow-thick-right text-info'
+        bump_message = 'Rowed over'
+
+    base_string = '<span class="oi {} bump-arrow" data-toggle="tooltip" title="{}"></span>'
+    return mark_safe(base_string.format(bump_arrow, bump_message))
+
+
+@register.filter
+def format_payout(payout: utils.Payout) -> str:
+    total_change = payout['value_change'] + payout['payout']
+    return mark_safe('<strong class="{}">{}</strong>'.format(
+        '' if total_change > 0 else 'text-danger',
+        currency(total_change, leading_plus = True),
+    ))
+
+
+@register.filter
+def coaching_blades(blades: types.Blades, crew: models.Crew) -> str:
+
+    if blades == types.Blades.WON:
+        message = f'{crew} won blades'
+        content = currency(money.BLADES_BONUS, leading_plus = True)
+
+    elif blades == types.Blades.ON:
+        message = f'{crew} is on for blades'
+        content = '<span class="oi oi-check text-success mr-1"></span>'
+
+    elif blades == types.Blades.OFF:
+        message = f'{crew} is not on for blades'
+        content = '<span class="oi oi-x text-danger mr-1"></span>'
+
+    else:
+        message = f'{crew} did not win blades'
+        content = '<span class="oi oi-x text-danger mr-1"></span>'
+
+    return mark_safe(f'<strong data-toggle="tooltip" title="{message}">{content}</strong>')
+
+
+@register.filter
+def coaching_refund(payout: utils.Payout, crew: models.Crew) -> str:
+
+    value = max(-money.TORPIDS_REFUND * payout['position_change'], 0)
+
+    if payout['position_change'] >= 0:
+        tooltip = '{} were not owed a refund'
+    elif payout['position_change'] < -3:
+        tooltip = '{} were owed a big refund'
+    else:
+        tooltip = '{} were owed a refund'
+
+    return mark_safe('<strong data-toggle="tooltip" title="{}">{}</strong>'.format(
+        tooltip.format(crew),
+        currency(value, leading_plus = True),
     ))
 
 
@@ -380,6 +458,7 @@ def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
       {% switch_button purchase %}
       {% sell_button purchase %}
     {% endif %}
+    {% if payout %}{{ payout|format_payout }}{{ payout|bump_arrow }}{% endif %}
     {% endif %}
   </div>
 '''))
@@ -387,12 +466,22 @@ def crew_list_row(
     seat: models.Seat,
     purchase: models.Purchase,
     show_crew_actions: bool,
+    evaluate_payouts: bool = False,
+    event: models.Event | None = None,
 ) -> types.CrewListRow:
+
+    payout = None
+    if evaluate_payouts and purchase:
+        target_day = event.active_day if event else purchase.day.event.active_day
+        if purchase.day != target_day:
+            payout = create_payout_matrix(purchase.day)[purchase.crew]
+
     return {
         'seat': seat,
         'purchase': purchase,
         'club': purchase.crew.club if purchase else None,
         'show_crew_actions': show_crew_actions,
+        'payout': payout,
     }
 
 
@@ -402,7 +491,7 @@ def crew_list_row(
     {% crew_list_header finances %}
   {% endif %}
   {% for seat, rower in crew_list %}
-    {% crew_list_row seat rower show_crew_actions %}
+    {% crew_list_row seat rower show_crew_actions evaluate_payouts event %}
   {% endfor %}
 '''))
 def crew_list_box(
@@ -410,6 +499,8 @@ def crew_list_box(
     seats: db.QuerySet[models.Seat],
     finances: types.GenderFinances | None = None,
     show_crew_actions: bool = False,
+    evaluate_payouts: bool = False,
+    event: models.Event | None = None,
 ) -> types.CrewListBox:
     seat_rowers = {seat: [
         rower for rower in crew_list if rower.seat == seat
@@ -424,6 +515,8 @@ def crew_list_box(
         'crew_list': merged_crew_list,
         'finances': finances,
         'show_crew_actions': show_crew_actions,
+        'evaluate_payouts': evaluate_payouts,
+        'event': event,
     }
 
 
@@ -453,6 +546,56 @@ def crew_list_coach_row(
         'name': name,
         'event': event,
         'show_coach_fire': show_coach_fire,
+    }
+
+
+@register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
+    {{ "X"|avatar:club }}
+    {% if crew %}
+    <div class="flex-grow-1{% if name %} crew-row-athlete{% endif %}">
+      {% if name %}<div>{{ name }}</div>{% endif %}
+      <div>{{ crew }}</div>
+    </div>
+    {% if payout %}{{ payout_html }}{{ payout|bump_arrow }}{% endif %}
+    {% endif %}
+  </div>
+'''))
+def crew_list_coach_result(
+    crew: models.Crew | None,
+    name: models.Coach | None,
+    day: models.Day,
+) -> types.CrewListCoachResult:
+
+    payout = None
+    payout_html = ''
+    if crew and day != day.event.active_day:
+        payout = create_payout_matrix(day)[crew]
+
+        if day.event.coaching_competition == CoachingCompetitions.REFUND:
+            payout_html = coaching_refund(payout, crew)
+
+        elif day.event.coaching_competition == CoachingCompetitions.BLADES:
+
+            blades = types.Blades.ON
+            for itr_day in day.event.days.filter(date__lte = day.date):
+                if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
+                    blades = types.Blades.OFF
+                if itr_day == day.event.last_racing_day:
+                    blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
+
+            if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
+                blades = types.Blades.LOST
+
+            payout_html = coaching_blades(blades, crew)
+
+    return {
+        'crew': crew,
+        'club': crew.club if crew else None,
+        'name': name,
+        'payout': payout,
+        'payout_html': payout_html,
     }
 
 

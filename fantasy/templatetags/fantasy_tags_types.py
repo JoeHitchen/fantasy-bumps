@@ -1,10 +1,18 @@
 from typing import TypedDict, TYPE_CHECKING
+from enum import Enum
 
 from django.db import models as db
 from django.contrib.auth import models as auth
 
 from ..constants import Genders, money
-from .. import models
+from .. import models, utils
+
+
+class Blades(Enum):
+    WON = 'won'
+    ON = 'on'
+    OFF = 'off'
+    LOST = 'lost'
 
 
 class MarketStatus(TypedDict):
@@ -87,12 +95,15 @@ class CrewListRow(TypedDict):
     purchase: models.Purchase
     club: str | None
     show_crew_actions: bool
+    payout: utils.Payout | None
 
 
 class CrewListBox(TypedDict):
     crew_list: list[tuple[models.Seat, models.Purchase | None]]
     finances: GenderFinances | None
     show_crew_actions: bool
+    evaluate_payouts: bool
+    event: models.Event | None
 
 
 class CrewListCoachRow(TypedDict):
@@ -101,6 +112,14 @@ class CrewListCoachRow(TypedDict):
     club: str | None
     name: models.Coach | None
     show_coach_fire: bool
+
+
+class CrewListCoachResult(TypedDict):
+    crew: models.Crew | None
+    club: str | None
+    name: models.Coach | None
+    payout: utils.Payout | None
+    payout_html: str
 
 
 class CrewStatusStyling(TypedDict):

@@ -13,7 +13,7 @@ from core.tests import exists
 
 from .. import models
 from .. import patching
-from ..constants import Genders
+from ..constants import Genders, Clubs, money
 from . import fantasy_tags as tags, fantasy_tags_types as types
 
 
@@ -382,11 +382,25 @@ class Test__Misc(TestCase):
         )
 
 
-    def test__currency_filter(self) -> None:
+    def test__currency_filter__positive(self) -> None:
         """Renders the amount with currency symbol."""
 
         html = tags.currency(100)
         self.assertEqual(html, '100&nbsp;🦀')
+
+
+    def test__currency_filter__negative(self) -> None:
+        """Renders the amount with currency symbol."""
+
+        html = tags.currency(-100)
+        self.assertEqual(html, '-100&nbsp;🦀')
+
+
+    def test__currency_filter__positive_with_sign(self) -> None:
+        """Renders the amount with currency symbol."""
+
+        html = tags.currency(100, leading_plus = True)
+        self.assertEqual(html, '+100&nbsp;🦀')
 
 
     def test__buy_button__standard(self) -> None:
@@ -971,6 +985,245 @@ class Test__Crew_List(TestCase):
                     self.crew_list_row(seat, None),
                     html,
                 )
+
+
+
+class Test__Result_Components(TestCase):
+
+    crew: models.Crew
+
+    @staticmethod
+    def currency(value: int) -> str:
+        return tags.currency(value, leading_plus = True).replace('&nbsp;', ' ')
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.crew = models.Crew.objects.create(club = Clubs.WOLF, gender = Genders.WOMEN, rank = 1)
+
+
+    def test__bump_arrow__bump_up_single(self) -> None:
+        """Displays a green arrow pointing upwards."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 1,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-top', classes)
+        self.assertIn('text-success', classes)
+
+        self.assertEqual(arrow.get('title'), 'Gained one place')
+
+
+    def test__bump_arrow__bump_up_multiple(self) -> None:
+        """Displays a green arrow pointing upwards."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 3,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-top', classes)
+        self.assertIn('text-success', classes)
+
+        self.assertEqual(arrow.get('title'), 'Gained three places')
+
+
+    def test__bump_arrow__bump_down_single(self) -> None:
+        """Displays a red arrow pointing down."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': -1,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-bottom', classes)
+        self.assertIn('text-danger', classes)
+
+        self.assertEqual(arrow.get('title'), 'Lost one place')
+
+
+    def test__bump_arrow__bump_down_multiple(self) -> None:
+        """Displays a red arrow pointing down."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': -3,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-bottom', classes)
+        self.assertIn('text-danger', classes)
+
+        self.assertEqual(arrow.get('title'), 'Lost three places')
+
+
+    def test__bump_arrow__row_over(self) -> None:
+        """Displays a blue arrow pointing right."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 0,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-right', classes)
+        self.assertIn('text-info', classes)
+
+        self.assertEqual(arrow.get('title'), 'Rowed over')
+
+
+    def test__bump_arrow__headship_row_over(self) -> None:
+        """Displays a orange ("gold") arrow pointing right."""
+
+        arrow = parser(tags.bump_arrow({
+            'position_change': 0,
+            'headship': True,
+            'value_change': 0,
+            'payout': 0,
+        }))
+
+        classes = arrow.get('class', '').split(' ')
+        self.assertIn('oi-arrow-thick-right', classes)
+        self.assertIn('text-warning', classes)
+
+        self.assertEqual(arrow.get('title'), 'Rowed over as head')
+
+
+    def test__format_payout__net_positive(self) -> None:
+        """Displays the gained amount with a leading plus in the regular colour."""
+
+        payout_text = parser(tags.format_payout({
+            'value_change': 10,
+            'payout': -5,
+            'position_change': 0,
+            'headship': True,
+        }))
+
+        self.assertEqual(payout_text.get('class'), '')
+        self.assertEqual(payout_text.text, self.currency(5))
+
+
+    def test__format_payout__net_negative(self) -> None:
+        """Displays the lost amount in red."""
+
+        payout_text = parser(tags.format_payout({
+            'value_change': 5,
+            'payout': -10,
+            'position_change': 0,
+            'headship': True,
+        }))
+
+        classes = payout_text.get('class', '').split(' ')
+        self.assertIn('text-danger', classes)
+        self.assertEqual(payout_text.text, self.currency(-5))
+
+
+    def test__blades__won(self) -> None:
+        """Displays successful text and the payout amount."""
+
+        blades = parser(tags.coaching_blades(types.Blades.WON, self.crew))
+        self.assertEqual(blades.get('title'), f'{self.crew} won blades')
+        self.assertEqual(blades.text, self.currency(money.BLADES_BONUS))
+
+
+    def test__blades__on_track(self) -> None:
+        """Displays hopeful text and a green tick."""
+
+        blades = parser(tags.coaching_blades(types.Blades.ON, self.crew))
+
+        self.assertEqual(blades.get('title'), f'{self.crew} is on for blades')
+
+        inner_classes = blades[0].get('class', '').split(' ')
+        self.assertIn('oi-check', inner_classes)
+        self.assertIn('text-success', inner_classes)
+
+
+    def test__blades__off_track(self) -> None:
+        """Displays unhappy text and a red cross."""
+
+        blades = parser(tags.coaching_blades(types.Blades.OFF, self.crew))
+        self.assertEqual(blades.get('title'), f'{self.crew} is not on for blades')
+
+        inner_classes = blades[0].get('class', '').split(' ')
+        self.assertIn('oi-x', inner_classes)
+        self.assertIn('text-danger', inner_classes)
+
+
+    def test__blades__lost(self) -> None:
+        """Displays unhappy text and a red cross."""
+
+        blades = parser(tags.coaching_blades(types.Blades.LOST, self.crew))
+        self.assertEqual(blades.get('title'), f'{self.crew} did not win blades')
+
+        inner_classes = blades[0].get('class', '').split(' ')
+        self.assertIn('oi-x', inner_classes)
+        self.assertIn('text-danger', inner_classes)
+
+
+    def test__refund__bumped_up(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': 3,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were not owed a refund')
+        self.assertEqual(refund.text, self.currency(0))
+
+
+    def test__refund__rowed_over(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': 0,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were not owed a refund')
+        self.assertEqual(refund.text, self.currency(0))
+
+
+    def test__refund__bumped_down(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': -1,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were owed a refund')
+        self.assertEqual(refund.text, self.currency(money.TORPIDS_REFUND))
+
+
+    def test__refund__bumped_down_several_places(self) -> None:
+
+        refund = parser(tags.coaching_refund({
+            'position_change': -4,
+            'headship': False,
+            'value_change': 0,
+            'payout': 0,
+        }, self.crew))
+
+        self.assertEqual(refund.get('title'), f'{self.crew} were owed a big refund')
+        self.assertEqual(refund.text, self.currency(4 * money.TORPIDS_REFUND))
 
 
 

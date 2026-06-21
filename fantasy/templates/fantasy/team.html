@@ -6,24 +6,83 @@
 <link rel="stylesheet" type="text/css" href="{% static 'fantasy/main.css' %}">
 <link rel="stylesheet" type="text/css" href="{% static 'fantasy/club_styles.css' %}">
 <meta name="robots" content="none">
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
 {% endblock %}
 
 
 {% block content %}
+<h1 class="mb-3">{% if event.active_day.is_racing_day %}Current{% else %}Final{% endif %} finances for {{ team }}</h1>
+<div class="row">
+  <div class="col-md mb-3">
+    <div class="card card-body bg-primary text-light">
+      <div class="d-flex mb-2 team-finance-header">
+        <div class="flex-grow-1"><strong>Overall Budget:</strong></div>
+        <div><strong>{{ finances.total_budget|currency }}</strong></div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Overall Crew Value:</div>
+        <div>{{ finances.total_crew_value|currency }}</div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Overall Balance:</div>
+        <div>{{ finances.total_balance|currency }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md mb-3">
+    <div class="card card-body bg-primary text-light">
+      <div class="d-flex mb-2 team-finance-header">
+        <div class="flex-grow-1"><strong>Men's Budget:</strong></div>
+        <div><strong>{{ finances.mens_budget|currency }}</strong></div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Men's Crew Value:</div>
+        <div>{{ finances.mens_crew_value|currency }}</div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Men's Balance:</div>
+        <div>{{ finances.mens_balance|currency }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md mb-3">
+    <div class="card card-body bg-primary text-light">
+      <div class="d-flex mb-2 team-finance-header">
+        <div class="flex-grow-1"><strong>Women's Budget:</strong></div>
+        <div><strong>{{ finances.womens_budget|currency }}</strong></div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Women's Crew Value:</div>
+        <div>{{ finances.womens_crew_value|currency }}</div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Women's Balance:</div>
+        <div>{{ finances.womens_balance|currency }}</div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<h1 class="mb-3">Current crew lists for {{ team }}</h1>
+{% for day_data in crews %}
+<h1 class="mb-3">{% if event.active_day == day_data.day %}Current{% else %}{{ day_data.day }}{% endif %} crew lists for {{ team }}</h1>
 
 <div class="row">
   <div class="col-md mb-3">
     <h3>Men's Crew</h3>
-    {% crew_list_box mens_crew seats %}
-    {% if show_coach_row %}{% crew_list_coach_row mens_coach_crew mens_coach_name %}{% endif %}
+    {% crew_list_box day_data.mens_crew seats None False True event %}
+    {% if show_coach_row %}{% crew_list_coach_result mens_coach_crew mens_coach_name day_data.day %}{% endif %}
   </div>
   <div class="col-md mb-3">
     <h3>Women's Crew</h3>
-    {% crew_list_box womens_crew seats %}
-    {% if show_coach_row %}{% crew_list_coach_row womens_coach_crew womens_coach_name %}{% endif %}
+    {% crew_list_box day_data.womens_crew seats None False True event %}
+    {% if show_coach_row %}{% crew_list_coach_result womens_coach_crew womens_coach_name day_data.day %}{% endif %}
   </div>
 </div>
+{% endfor %}
 
 {% endblock %}

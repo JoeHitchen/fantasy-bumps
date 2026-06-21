@@ -433,8 +433,9 @@ class TeamView(EventBase):
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
 
+        related_selects = ['team', 'team__user', 'mens_coach', 'womens_coach']
         entry = get_object_or_404(
-            models.GameEntry.objects.select_related().extend_financials(),
+            models.GameEntry.objects.select_related(*related_selects).extend_financials(),
             team__user__username = self.kwargs['team_name'],
             event = self.event,
         )
@@ -443,10 +444,28 @@ class TeamView(EventBase):
         context['team'] = team
         context['seats'] = models.Seat.objects.all()
         context['finances'] = entry
-        context['mens_crew'] = team.get_crew(self.day, Genders.MEN)
-        context['womens_crew'] = team.get_crew(self.day, Genders.WOMEN)
 
-        context['show_coach_row'] = self.event.coaching_competition
+        racing_days = self.day.event.days.filter(
+            date__lte = self.day.date,
+            first_race_time__isnull = False,
+        )
+        context['crews'] = [{
+            'day': day,
+            'mens_crew': (
+                team.get_crew(day, Genders.MEN)
+                .select_related('day', 'day__event', 'crew', 'seat', 'athlete')
+            ),
+            'womens_crew': (
+                team.get_crew(day, Genders.WOMEN)
+                .select_related('day', 'day__event', 'crew', 'seat', 'athlete')
+            ),
+        } for day in racing_days.reverse()]
+
+        context['show_coach_row'] = self.event.coaching_competition and (
+            entry.mens_coach
+            or entry.womens_coach
+            or self.event.active_day == self.event.first_day
+        )
         context['mens_coach_crew'] = entry.mens_coach
         context['mens_coach_name'] = self.event.coaches.filter(crew = entry.mens_coach).first()
         context['womens_coach_crew'] = entry.womens_coach
