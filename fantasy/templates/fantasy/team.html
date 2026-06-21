@@ -16,6 +16,58 @@
 
 
 {% block content %}
+<h1 class="mb-3">{% if event.active_day.is_racing_day %}Current{% else %}Final{% endif %} finances for {{ team }}</h1>
+<div class="row">
+  <div class="col-md mb-3">
+    <div class="card card-body bg-primary text-light">
+      <div class="d-flex mb-2 team-finance-header">
+        <div class="flex-grow-1"><strong>Overall Budget:</strong></div>
+        <div><strong>{{ finances.total_budget|currency }}</strong></div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Overall Crew Value:</div>
+        <div>{{ finances.total_crew_value|currency }}</div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Overall Balance:</div>
+        <div>{{ finances.total_balance|currency }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md mb-3">
+    <div class="card card-body bg-primary text-light">
+      <div class="d-flex mb-2 team-finance-header">
+        <div class="flex-grow-1"><strong>Men's Budget:</strong></div>
+        <div><strong>{{ finances.mens_budget|currency }}</strong></div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Men's Crew Value:</div>
+        <div>{{ finances.mens_crew_value|currency }}</div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Men's Balance:</div>
+        <div>{{ finances.mens_balance|currency }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md mb-3">
+    <div class="card card-body bg-primary text-light">
+      <div class="d-flex mb-2 team-finance-header">
+        <div class="flex-grow-1"><strong>Women's Budget:</strong></div>
+        <div><strong>{{ finances.womens_budget|currency }}</strong></div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Women's Crew Value:</div>
+        <div>{{ finances.womens_crew_value|currency }}</div>
+      </div>
+      <div class="d-flex">
+        <div class="flex-grow-1">Women's Balance:</div>
+        <div>{{ finances.womens_balance|currency }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% for day_data in crews %}
 <h1 class="mb-3">{% if event.active_day == day_data.day %}Current{% else %}{{ day_data.day }}{% endif %} crew lists for {{ team }}</h1>
 

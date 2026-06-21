@@ -85,6 +85,11 @@
   width: 2.5em;
 }
 
+.team-finance-header {
+  font-size: 125%;
+  margin-top: -0.25em;
+}
+
 .bump-arrow {
   display: inline-block;
   margin-right: 0.5em;

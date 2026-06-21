@@ -460,6 +460,7 @@ class GameEntryQuerySet(models.QuerySet[FinancialGameEntry]):
         ).annotate(
             total_budget = models.F('mens_budget') + models.F('womens_budget'),
             total_crew_value = models.F('mens_crew_value') + models.F('womens_crew_value'),
+            total_balance = models.F('total_budget') - models.F('total_crew_value'),
         )
 
     def rank_by(self, gender: str = GENDERS_OVERALL) -> 'GameEntryQuerySet':
