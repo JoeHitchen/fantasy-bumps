@@ -74,12 +74,16 @@
 <div class="row">
   <div class="col-md mb-3">
     <h3>Men's Crew</h3>
-    {% crew_list_box day_data.mens_crew seats False True event %}
+    {% for seat, athlete in day_data.mens_crew.items %}
+      {% crew_list_row seat athlete show_crew_actions True event %}
+    {% endfor %}
     {% if show_coach_row %}{% crew_list_coach_result mens_coach_crew mens_coach_name day_data.day %}{% endif %}
   </div>
   <div class="col-md mb-3">
     <h3>Women's Crew</h3>
-    {% crew_list_box day_data.womens_crew seats False True event %}
+    {% for seat, athlete in day_data.womens_crew.items %}
+      {% crew_list_row seat athlete show_crew_actions True event %}
+    {% endfor %}
     {% if show_coach_row %}{% crew_list_coach_result womens_coach_crew womens_coach_name day_data.day %}{% endif %}
   </div>
 </div>

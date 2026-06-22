@@ -182,6 +182,70 @@ class Test__Has_All_Seats(TestCase):
 
 
 
+class Test__Crew_List_By_Seat(TestCase):
+    fixtures = ['dev_event', 'dev_days', 'seats', 'dev_team']
+
+    team: models.Team
+    day: models.Day
+    crew: models.Crew
+    all_seats: db.QuerySet[models.Seat]
+
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+        cls.day = exists(models.Day.objects.first())
+        cls.crew = models.Crew.objects.create(club = Clubs.NEWC, gender = Genders.MEN, rank = 1)
+
+        cls.all_seats = models.Seat.objects.order_by('pk').all()
+
+
+    def test__empty_crew(self) -> None:
+        """Returns dict with all seats mapping to None."""
+
+        crew_list = utils.crew_list_by_seat(models.Purchase.objects.all(), self.all_seats)
+        self.assertQuerySetEqual(self.all_seats, list(crew_list.keys()))
+
+        for seat, purchase in crew_list.items():
+            with self.subTest(seat = seat.name):
+                self.assertIsNone(purchase)
+
+
+    def test__all_seats_filled(self) -> None:
+        """Returns dict mapping each seat to its corresponding purchase."""
+
+        for seat in self.all_seats:
+            self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
+
+        crew_list = utils.crew_list_by_seat(self.team.purchases.all(), self.all_seats)
+        self.assertQuerySetEqual(self.all_seats, list(crew_list.keys()))
+
+        for seat, purchase in crew_list.items():
+            with self.subTest(seat = seat.name):
+                self.assertIsNotNone(purchase)
+                self.assertEqual(exists(purchase).seat, seat)
+
+
+    def test__partial_seats_filled(self) -> None:
+        """Returns dict with some seats filled and some None."""
+
+        seats_to_fill = list(self.all_seats)[:5]
+        for seat in seats_to_fill:
+            self.team.purchases.create(day = self.day, crew = self.crew, seat = seat)
+
+        crew_list = utils.crew_list_by_seat(self.team.purchases.all(), self.all_seats)
+        self.assertQuerySetEqual(self.all_seats, list(crew_list.keys()))
+
+        for seat, purchase in crew_list.items():
+            with self.subTest(seat = seat.name):
+                if seat in seats_to_fill:
+                    self.assertIsNotNone(purchase)
+                    self.assertEqual(exists(purchase).seat, seat)
+                else:
+                    self.assertIsNone(purchase)
+
+
+
 class Test__Reverse_Gender(TestCase):
 
     def test__men_to_women(self) -> None:

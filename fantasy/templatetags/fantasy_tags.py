@@ -487,36 +487,6 @@ def crew_list_row(
 
 @register.inclusion_tag(template.Template('''
   {% load fantasy_tags %}
-  {% for seat, rower in crew_list %}
-    {% crew_list_row seat rower show_crew_actions evaluate_payouts event %}
-  {% endfor %}
-'''))
-def crew_list_box(
-    crew_list: db.QuerySet[models.Purchase],
-    seats: db.QuerySet[models.Seat],
-    show_crew_actions: bool = False,
-    evaluate_payouts: bool = False,
-    event: models.Event | None = None,
-) -> types.CrewListBox:
-    seat_rowers = {seat: [
-        rower for rower in crew_list if rower.seat == seat
-    ] for seat in seats}
-
-    merged_crew_list = [(
-        seat,
-        rowers[0] if rowers else None,
-    ) for seat, rowers in seat_rowers.items()]
-
-    return {
-        'crew_list': merged_crew_list,
-        'show_crew_actions': show_crew_actions,
-        'evaluate_payouts': evaluate_payouts,
-        'event': event,
-    }
-
-
-@register.inclusion_tag(template.Template('''
-  {% load fantasy_tags %}
   <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
     {{ "X"|avatar:club }}
     {% if crew %}

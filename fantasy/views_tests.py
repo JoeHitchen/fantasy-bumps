@@ -640,6 +640,7 @@ class MarketPageBase(GamePageBase):
     crew_primary: models.Crew
     crew_secondary: models.Crew
     bow: models.Seat
+    all_seats: db.QuerySet[models.Seat]
 
     @classmethod
     def reset_active_day(cls) -> None:
@@ -657,6 +658,7 @@ class MarketPageBase(GamePageBase):
         cls.reset_active_day()
 
         cls.bow = exists(models.Seat.objects.first())
+        cls.all_seats = models.Seat.objects.all()
 
 
     def setUp(cls) -> None:
@@ -761,12 +763,12 @@ class MarketPageBase(GamePageBase):
         self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertFalse(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertFalse(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -784,12 +786,12 @@ class MarketPageBase(GamePageBase):
             self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertTrue(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertTrue(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -813,12 +815,12 @@ class MarketPageBase(GamePageBase):
         self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertFalse(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertFalse(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -843,12 +845,12 @@ class MarketPageBase(GamePageBase):
             self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertTrue(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertFalse(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -874,12 +876,12 @@ class MarketPageBase(GamePageBase):
         self.entry.save()
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertFalse(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertFalse(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -907,12 +909,12 @@ class MarketPageBase(GamePageBase):
         self.entry.save()
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertTrue(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertTrue(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -939,12 +941,12 @@ class MarketPageBase(GamePageBase):
         self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = self.bow)
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertFalse(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertFalse(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -972,12 +974,12 @@ class MarketPageBase(GamePageBase):
             self.team.purchases.create(day = self.day, crew = self.crew_primary, seat = seat)
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertTrue(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertTrue(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -1006,12 +1008,12 @@ class MarketPageBase(GamePageBase):
         self.entry.save()
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertFalse(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertFalse(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertFalse(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])
@@ -1042,12 +1044,12 @@ class MarketPageBase(GamePageBase):
         self.entry.save()
 
         crew = self.team.get_crew(self.day, self.gender)
-        self.assertTrue(utils.has_all_seats(crew, models.Seat.objects.all()))
+        self.assertTrue(utils.has_all_seats(crew, self.all_seats))
 
         self.client.login(username='DevTeam', password='password')
         response = self.client.get(self.url)
 
-        self.assertEqual(list(response.context['crew']), list(crew))
+        self.assertEqual(response.context['crew'], utils.crew_list_by_seat(crew, self.all_seats))
         self.assertTrue(response.context['crew_valid'])
 
         self.assertTrue(response.context['show_crew_actions'])

@@ -98,13 +98,6 @@ class CrewListRow(TypedDict):
     payout: utils.Payout | None
 
 
-class CrewListBox(TypedDict):
-    crew_list: list[tuple[models.Seat, models.Purchase | None]]
-    show_crew_actions: bool
-    evaluate_payouts: bool
-    event: models.Event | None
-
-
 class CrewListCoachRow(TypedDict):
     event: models.Event | None
     crew: models.Crew | None

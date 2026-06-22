@@ -1,6 +1,6 @@
 from datetime import time, timedelta
 from xml.etree import ElementTree as ET
-from typing import Iterable, cast
+from typing import cast
 from unittest.mock import Mock
 
 from django.test import TestCase
@@ -580,16 +580,6 @@ class Test__Crew_List(TestCase):
 
 
     @staticmethod
-    def crew_list_header(finances: types.GenderFinances) -> str:
-        """A helper function that renders a crew list header."""
-        return (
-            template
-            .Template('{% load fantasy_tags %}{% crew_list_header finances %}')
-            .render(template.Context({'finances': finances}))
-        )
-
-
-    @staticmethod
     def crew_list_row(
         seat: models.Seat,
         purchase: models.Purchase | None,
@@ -624,25 +614,6 @@ class Test__Crew_List(TestCase):
                 'name': name,
                 'event': event,
                 'show_coach_fire': show_coach_fire,
-            }))
-        )
-
-
-    @staticmethod
-    def crew_list_box(
-        crew_list: Iterable[models.Purchase],
-        seats: db.QuerySet[models.Seat],
-        show_crew_actions: bool = False,
-    ) -> str:
-        """A helper function that renders a crew list."""
-        component_str = '<div>{% crew_list_box crew_list seats show_crew_actions %}</div>'
-        return (
-            template
-            .Template('{% load fantasy_tags %}' + component_str)
-            .render(template.Context({
-                'crew_list': crew_list,
-                'seats': seats,
-                'show_crew_actions': show_crew_actions,
             }))
         )
 
@@ -906,72 +877,6 @@ class Test__Crew_List(TestCase):
         # Test containments
         fire_button = self.fire_button()
         self.assertInHTML(fire_button, html)
-
-
-    def test__crew_list_box__empty_list(self) -> None:
-        """Renders a styled div that always has all seats."""
-
-        html = self.crew_list_box([], self.seats)
-
-        # Test root
-        crew_list = parser(html)
-        self.assertEqual(crew_list.tag, 'div')
-
-        # Test containments
-        for seat in models.Seat.objects.all():
-            with self.subTest(seat = seat.name):
-                self.assertInHTML(
-                    self.crew_list_row(seat, None),
-                    html,
-                )
-
-
-    def test__crew_list_box__with_purchase(self) -> None:
-        """Renders a styled div that includes any purchases provided."""
-
-        purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase], self.seats)
-
-        # Test root
-        crew_list = parser(html)
-        self.assertEqual(crew_list.tag, 'div')
-
-        # Test containments
-        self.assertInHTML(
-            self.crew_list_row(purchase.seat, purchase, show_crew_actions = False),
-            html,
-        )
-
-        for seat in models.Seat.objects.exclude(id = purchase.seat.id):
-            with self.subTest(seat = seat.name):
-                self.assertInHTML(
-                    self.crew_list_row(seat, None),
-                    html,
-                )
-
-
-    def test__crew_list_box__show_crew_actions(self) -> None:
-        """Propagates the show_crew_actions flag."""
-
-        purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
-        html = self.crew_list_box([purchase], self.seats, show_crew_actions = True)
-
-        # Test root
-        crew_list = parser(html)
-        self.assertEqual(crew_list.tag, 'div')
-
-        # Test containments
-        self.assertInHTML(
-            self.crew_list_row(purchase.seat, purchase, show_crew_actions = True),
-            html,
-        )
-
-        for seat in models.Seat.objects.exclude(id = purchase.seat.id):
-            with self.subTest(seat = seat.name):
-                self.assertInHTML(
-                    self.crew_list_row(seat, None),
-                    html,
-                )
 
 
 
