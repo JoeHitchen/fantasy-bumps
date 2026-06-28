@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load fantasy_tags %}
+{% load fantasy_containers %}
 {% load static %}
 
 {% block page_head %}
@@ -75,16 +76,24 @@
   <div class="col-md mb-3">
     <h3>Men's Crew</h3>
     {% for seat, athlete in day_data.mens_crew.items %}
-      {% crew_list_row seat athlete show_crew_actions True event %}
+      {% crew_list_row seat athlete %}
+        {% if athlete and athlete.day != event.active_day %}{% athlete_result_display athlete %}{% endif %}
+      {% end_crew_list_row %}
     {% endfor %}
-    {% if show_coach_row %}{% crew_list_coach_result mens_coach_crew mens_coach_name day_data.day %}{% endif %}
+    {% if show_coach_row %}{% crew_list_row 'X' mens_coach_crew mens_coach_name %}
+      {% if mens_coach_crew and day_data.day != event.active_day %}{% coaching_result_display mens_coach_crew day_data.day %}{% endif %}
+    {% end_crew_list_row %}{% endif %}
   </div>
   <div class="col-md mb-3">
     <h3>Women's Crew</h3>
     {% for seat, athlete in day_data.womens_crew.items %}
-      {% crew_list_row seat athlete show_crew_actions True event %}
+      {% crew_list_row seat athlete %}
+        {% if athlete and athlete.day != event.active_day %}{% athlete_result_display athlete %}{% endif %}
+      {% end_crew_list_row %}
     {% endfor %}
-    {% if show_coach_row %}{% crew_list_coach_result womens_coach_crew womens_coach_name day_data.day %}{% endif %}
+    {% if show_coach_row %}{% crew_list_row 'X' womens_coach_crew womens_coach_name %}
+      {% if womens_coach_crew and day_data.day != event.active_day %}{% coaching_result_display womens_coach_crew day_data.day %}{% endif %}
+    {% end_crew_list_row %}{% endif %}
   </div>
 </div>
 {% endfor %}

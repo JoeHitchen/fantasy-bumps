@@ -579,6 +579,37 @@ class Test__Crew_List(TestCase):
         )
 
 
+    @staticmethod
+    def crew_list_row_container(
+        seat: models.Seat,
+        purchase_or_crew: models.Purchase | models.Crew | None,
+        name: str | None = None,
+        inner_content: str = '',
+    ) -> ET.Element:
+        """A helper function that renders the fantasy_containers crew row tag."""
+
+        if name:
+            component = '{% crew_list_row seat purchase_or_crew name %}'
+        else:
+            component = '{% crew_list_row seat purchase_or_crew %}'
+
+        return parser((
+            template
+            .Template('''
+                {% load fantasy_containers %}
+                ''' + component + '''
+                      {{ inner_content|safe }}
+                {% end_crew_list_row %}
+            ''')
+            .render(template.Context({
+                'seat': seat,
+                'purchase_or_crew': purchase_or_crew,
+                'name': name,
+                'inner_content': inner_content,
+            }))
+        ))
+
+
     def test__sell_button__standard(self) -> None:
         """Renders a styled button with associated data."""
 
@@ -650,6 +681,152 @@ class Test__Crew_List(TestCase):
         self.assertIn('btn-fire', classes)
 
         self.assertInHTML('Fire Coach', html)
+
+
+    def test__crew_list_row_container__empty_state(self) -> None:
+        """Renders a red-tinted row when no crew is provided."""
+
+        row = self.crew_list_row_container(self.seat, None)
+
+        self.assertIn('list-group-item-danger', row.get('class', '').split())
+
+        children = list(row)
+        self.assertEqual(len(children), 1)
+
+        avatar = parser(tags.avatar(self.seat.short))
+        self.assertEqual(children[0].tag, avatar.tag)
+        self.assertEqual(children[0].attrib, avatar.attrib)
+        self.assertEqual(children[0].text, avatar.text)
+
+
+    def test__crew_list_row_container__purchase_no_athlete(self) -> None:
+        """Renders the crew but no name when a purchase without an athlete is provided."""
+
+        purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
+        row = self.crew_list_row_container(self.seat, purchase)
+
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        children = list(row)
+        self.assertEqual(len(children), 2)
+
+        avatar = parser(tags.avatar(self.seat.short, self.crew.club))
+        self.assertEqual(children[0].tag, avatar.tag)
+        self.assertEqual(children[0].attrib, avatar.attrib)
+        self.assertEqual(children[0].text, avatar.text)
+
+        athlete_classes = children[1].get('class', '').split()
+        self.assertIn('flex-grow-1', athlete_classes)
+        self.assertNotIn('crew-row-athlete', athlete_classes)
+
+        athlete_children = list(children[1])
+        self.assertEqual(len(athlete_children), 1)
+        self.assertEqual(athlete_children[0].text, str(self.crew))
+
+
+    def test__crew_list_row_container__purchase_with_athlete(self) -> None:
+        """Renders the athlete name above the crew when one is attached to the purchase."""
+
+        athlete = self.crew.crew_lists.create(
+            event = self.day.event,
+            seat = self.seat,
+            name = 'Test Athlete',
+        )
+        purchase = self.team.purchases.create(
+            day = self.day,
+            seat = self.seat,
+            crew = self.crew,
+            athlete = athlete,
+        )
+        row = self.crew_list_row_container(self.seat, purchase)
+
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        children = list(row)
+        self.assertEqual(len(children), 2)
+
+        avatar = parser(tags.avatar(self.seat.short, self.crew.club))
+        self.assertEqual(children[0].tag, avatar.tag)
+        self.assertEqual(children[0].attrib, avatar.attrib)
+        self.assertEqual(children[0].text, avatar.text)
+
+        athlete_classes = children[1].get('class', '').split()
+        self.assertIn('flex-grow-1', athlete_classes)
+        self.assertIn('crew-row-athlete', athlete_classes)
+
+        athlete_children = list(children[1])
+        self.assertEqual(len(athlete_children), 2)
+        self.assertEqual(athlete_children[0].text, athlete.name)
+        self.assertEqual(athlete_children[1].text, str(self.crew))
+
+
+    def test__crew_list_row_container__crew_no_name(self) -> None:
+        """Renders the crew but no name when a crew is provided without a name."""
+
+        row = self.crew_list_row_container(self.seat, self.crew, None)
+
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        children = list(row)
+        self.assertEqual(len(children), 2)
+
+        avatar = parser(tags.avatar(self.seat.short, self.crew.club))
+        self.assertEqual(children[0].tag, avatar.tag)
+        self.assertEqual(children[0].attrib, avatar.attrib)
+        self.assertEqual(children[0].text, avatar.text)
+
+        athlete_classes = children[1].get('class', '').split()
+        self.assertIn('flex-grow-1', athlete_classes)
+        self.assertNotIn('crew-row-athlete', athlete_classes)
+
+        athlete_children = list(children[1])
+        self.assertEqual(len(athlete_children), 1)
+        self.assertEqual(athlete_children[0].text, str(self.crew))
+
+
+    def test__crew_list_row_container__crew_with_name(self) -> None:
+        """Renders the crew and name when a crew with a name is provided."""
+
+        row = self.crew_list_row_container(self.seat, self.crew, 'Coach Name')
+
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        children = list(row)
+        self.assertEqual(len(children), 2)
+
+        avatar = parser(tags.avatar(self.seat.short, self.crew.club))
+        self.assertEqual(children[0].tag, avatar.tag)
+        self.assertEqual(children[0].attrib, avatar.attrib)
+        self.assertEqual(children[0].text, avatar.text)
+
+        athlete_classes = children[1].get('class', '').split()
+        self.assertIn('flex-grow-1', athlete_classes)
+        self.assertIn('crew-row-athlete', athlete_classes)
+
+        athlete_children = list(children[1])
+        self.assertEqual(len(athlete_children), 2)
+        self.assertEqual(athlete_children[0].text, 'Coach Name')
+        self.assertEqual(athlete_children[1].text, str(self.crew))
+
+
+    def test__crew_list_row_container__inner_content(self) -> None:
+        """Renders any inner content provided inside the container."""
+
+        purchase = self.team.purchases.create(day = self.day, seat = self.seat, crew = self.crew)
+        row = self.crew_list_row_container(
+            self.seat,
+            purchase,
+            inner_content = '<strong>Some HTML</strong>',
+        )
+
+        self.assertNotIn('list-group-item-danger', row.get('class', '').split())
+
+        children = list(row)
+        self.assertEqual(len(children), 3)
+
+        inner_content = children[2]
+        self.assertEqual(inner_content.tag, 'strong')
+        self.assertEqual(inner_content.text, 'Some HTML')
 
 
 
