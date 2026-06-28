@@ -172,6 +172,13 @@ def format_payout(payout: utils.Payout) -> str:
     ))
 
 
+@register.simple_tag
+def athlete_result_display(purchase: models.Purchase) -> str:
+
+    payout = create_payout_matrix(purchase.day)[purchase.crew]
+    return mark_safe('{}{}'.format(format_payout(payout), bump_arrow(payout)))
+
+
 @register.filter
 def coaching_blades(blades: types.Blades, crew: models.Crew) -> str:
 
@@ -210,6 +217,32 @@ def coaching_refund(payout: utils.Payout, crew: models.Crew) -> str:
         tooltip.format(crew),
         currency(value, leading_plus = True),
     ))
+
+
+@register.simple_tag
+def coaching_result_display(crew: models.Crew, day: models.Day) -> str:
+
+    payout_html = ''
+    payout = create_payout_matrix(day)[crew]
+
+    if day.event.coaching_competition == CoachingCompetitions.REFUND:
+        payout_html = coaching_refund(payout, crew)
+
+    elif day.event.coaching_competition == CoachingCompetitions.BLADES:
+
+        blades = types.Blades.ON
+        for itr_day in day.event.days.filter(date__lte = day.date):
+            if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
+                blades = types.Blades.OFF
+            if itr_day == day.event.last_racing_day:
+                blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
+
+        if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
+            blades = types.Blades.LOST
+
+        payout_html = coaching_blades(blades, crew)
+
+    return mark_safe('{}{}'.format(payout_html, bump_arrow(payout)))
 
 
 @register.filter
@@ -458,7 +491,7 @@ def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
       {% switch_button purchase %}
       {% sell_button purchase %}
     {% endif %}
-    {% if payout %}{{ payout|format_payout }}{{ payout|bump_arrow }}{% endif %}
+    {% if evaluate_payouts and purchase %}{% athlete_result_display purchase %}{% endif %}
     {% endif %}
   </div>
 '''))
@@ -470,18 +503,13 @@ def crew_list_row(
     event: models.Event | None = None,
 ) -> types.CrewListRow:
 
-    payout = None
-    if evaluate_payouts and purchase:
-        target_day = event.active_day if event else purchase.day.event.active_day
-        if purchase.day != target_day:
-            payout = create_payout_matrix(purchase.day)[purchase.crew]
-
     return {
         'seat': seat,
         'purchase': purchase,
         'club': purchase.crew.club if purchase else None,
         'show_crew_actions': show_crew_actions,
-        'payout': payout,
+        'evaluate_payouts': evaluate_payouts,
+        'event': event,
     }
 
 
@@ -523,7 +551,7 @@ def crew_list_coach_row(
       {% if name %}<div>{{ name }}</div>{% endif %}
       <div>{{ crew }}</div>
     </div>
-    {% if payout %}{{ payout_html }}{{ payout|bump_arrow }}{% endif %}
+    {% if crew and day != day.event.active_day %}{% coaching_result_display crew day %}{% endif %}
     {% endif %}
   </div>
 '''))
@@ -533,34 +561,11 @@ def crew_list_coach_result(
     day: models.Day,
 ) -> types.CrewListCoachResult:
 
-    payout = None
-    payout_html = ''
-    if crew and day != day.event.active_day:
-        payout = create_payout_matrix(day)[crew]
-
-        if day.event.coaching_competition == CoachingCompetitions.REFUND:
-            payout_html = coaching_refund(payout, crew)
-
-        elif day.event.coaching_competition == CoachingCompetitions.BLADES:
-
-            blades = types.Blades.ON
-            for itr_day in day.event.days.filter(date__lte = day.date):
-                if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
-                    blades = types.Blades.OFF
-                if itr_day == day.event.last_racing_day:
-                    blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
-
-            if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
-                blades = types.Blades.LOST
-
-            payout_html = coaching_blades(blades, crew)
-
     return {
         'crew': crew,
         'club': crew.club if crew else None,
         'name': name,
-        'payout': payout,
-        'payout_html': payout_html,
+        'day': day,
     }
 
 

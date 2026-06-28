@@ -5,7 +5,7 @@ from django.db import models as db
 from django.contrib.auth import models as auth
 
 from ..constants import Genders, money
-from .. import models, utils
+from .. import models
 
 
 class Blades(Enum):
@@ -95,7 +95,8 @@ class CrewListRow(TypedDict):
     purchase: models.Purchase
     club: str | None
     show_crew_actions: bool
-    payout: utils.Payout | None
+    evaluate_payouts: bool
+    event: models.Event | None
 
 
 class CrewListCoachRow(TypedDict):
@@ -110,8 +111,7 @@ class CrewListCoachResult(TypedDict):
     crew: models.Crew | None
     club: str | None
     name: models.Coach | None
-    payout: utils.Payout | None
-    payout_html: str
+    day: models.Day
 
 
 class CrewStatusStyling(TypedDict):
