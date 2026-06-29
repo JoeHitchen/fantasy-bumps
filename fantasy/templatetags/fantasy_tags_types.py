@@ -90,30 +90,6 @@ class GenderFinances(TypedDict):
     balance: int
 
 
-class CrewListRow(TypedDict):
-    seat: models.Seat
-    purchase: models.Purchase
-    club: str | None
-    show_crew_actions: bool
-    evaluate_payouts: bool
-    event: models.Event | None
-
-
-class CrewListCoachRow(TypedDict):
-    event: models.Event | None
-    crew: models.Crew | None
-    club: str | None
-    name: models.Coach | None
-    show_coach_fire: bool
-
-
-class CrewListCoachResult(TypedDict):
-    crew: models.Crew | None
-    club: str | None
-    name: models.Coach | None
-    day: models.Day
-
-
 class CrewStatusStyling(TypedDict):
     colour: str
     crew: str
