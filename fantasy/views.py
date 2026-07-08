@@ -335,6 +335,8 @@ class MarketView(EventBase):
             context['show_coach_fire'] = False
             context['show_coach_hire'] = False
             context['crew'] = utils.crew_list_by_seat([], seats)
+            context['coach_crew'] = None
+            context['coach_name'] = None
 
             return context
 

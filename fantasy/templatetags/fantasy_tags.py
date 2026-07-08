@@ -172,6 +172,13 @@ def format_payout(payout: utils.Payout) -> str:
     ))
 
 
+@register.simple_tag
+def athlete_result_display(purchase: models.Purchase) -> str:
+
+    payout = create_payout_matrix(purchase.day)[purchase.crew]
+    return mark_safe('{}{}'.format(format_payout(payout), bump_arrow(payout)))
+
+
 @register.filter
 def coaching_blades(blades: types.Blades, crew: models.Crew) -> str:
 
@@ -210,6 +217,32 @@ def coaching_refund(payout: utils.Payout, crew: models.Crew) -> str:
         tooltip.format(crew),
         currency(value, leading_plus = True),
     ))
+
+
+@register.simple_tag
+def coaching_result_display(crew: models.Crew, day: models.Day) -> str:
+
+    payout_html = ''
+    payout = create_payout_matrix(day)[crew]
+
+    if day.event.coaching_competition == CoachingCompetitions.REFUND:
+        payout_html = coaching_refund(payout, crew)
+
+    elif day.event.coaching_competition == CoachingCompetitions.BLADES:
+
+        blades = types.Blades.ON
+        for itr_day in day.event.days.filter(date__lte = day.date):
+            if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
+                blades = types.Blades.OFF
+            if itr_day == day.event.last_racing_day:
+                blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
+
+        if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
+            blades = types.Blades.LOST
+
+        payout_html = coaching_blades(blades, crew)
+
+    return mark_safe('{}{}'.format(payout_html, bump_arrow(payout)))
 
 
 @register.filter
@@ -443,125 +476,6 @@ def market_division_box(
 '''))
 def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
     return finances
-
-
-@register.inclusion_tag(template.Template('''
-  {% load fantasy_tags %}
-  <div class="list-group-item{% if not purchase %} list-group-item-danger{% endif %} crew-row">
-    {{ seat.short|avatar:club }}
-    {% if purchase %}
-    <div class="flex-grow-1{% if purchase.athlete %} crew-row-athlete{% endif %}">
-      {% if purchase.athlete %}<div>{{ purchase.athlete }}</div>{% endif %}
-      <div>{{ purchase.crew }}</div>
-    </div>
-    {% if show_crew_actions %}
-      {% switch_button purchase %}
-      {% sell_button purchase %}
-    {% endif %}
-    {% if payout %}{{ payout|format_payout }}{{ payout|bump_arrow }}{% endif %}
-    {% endif %}
-  </div>
-'''))
-def crew_list_row(
-    seat: models.Seat,
-    purchase: models.Purchase,
-    show_crew_actions: bool,
-    evaluate_payouts: bool = False,
-    event: models.Event | None = None,
-) -> types.CrewListRow:
-
-    payout = None
-    if evaluate_payouts and purchase:
-        target_day = event.active_day if event else purchase.day.event.active_day
-        if purchase.day != target_day:
-            payout = create_payout_matrix(purchase.day)[purchase.crew]
-
-    return {
-        'seat': seat,
-        'purchase': purchase,
-        'club': purchase.crew.club if purchase else None,
-        'show_crew_actions': show_crew_actions,
-        'payout': payout,
-    }
-
-
-@register.inclusion_tag(template.Template('''
-  {% load fantasy_tags %}
-  <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
-    {{ "X"|avatar:club }}
-    {% if crew %}
-    <div class="flex-grow-1{% if name %} crew-row-athlete{% endif %}">
-      {% if name %}<div>{{ name }}</div>{% endif %}
-      <div>{{ crew }}</div>
-    </div>
-    {% if event %}{% coaching_competition_button event %}{% endif %}
-    {% if show_coach_fire %}{% fire_button %}{% endif %}
-    {% endif %}
-  </div>
-'''))
-def crew_list_coach_row(
-    crew: models.Crew | None,
-    name: models.Coach | None,
-    event: models.Event | None = None,
-    show_coach_fire: bool = False,
-) -> types.CrewListCoachRow:
-    return {
-        'crew': crew,
-        'club': crew.club if crew else None,
-        'name': name,
-        'event': event,
-        'show_coach_fire': show_coach_fire,
-    }
-
-
-@register.inclusion_tag(template.Template('''
-  {% load fantasy_tags %}
-  <div class="list-group-item{% if not crew %} list-group-item-danger{% endif %} crew-row">
-    {{ "X"|avatar:club }}
-    {% if crew %}
-    <div class="flex-grow-1{% if name %} crew-row-athlete{% endif %}">
-      {% if name %}<div>{{ name }}</div>{% endif %}
-      <div>{{ crew }}</div>
-    </div>
-    {% if payout %}{{ payout_html }}{{ payout|bump_arrow }}{% endif %}
-    {% endif %}
-  </div>
-'''))
-def crew_list_coach_result(
-    crew: models.Crew | None,
-    name: models.Coach | None,
-    day: models.Day,
-) -> types.CrewListCoachResult:
-
-    payout = None
-    payout_html = ''
-    if crew and day != day.event.active_day:
-        payout = create_payout_matrix(day)[crew]
-
-        if day.event.coaching_competition == CoachingCompetitions.REFUND:
-            payout_html = coaching_refund(payout, crew)
-
-        elif day.event.coaching_competition == CoachingCompetitions.BLADES:
-
-            blades = types.Blades.ON
-            for itr_day in day.event.days.filter(date__lte = day.date):
-                if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
-                    blades = types.Blades.OFF
-                if itr_day == day.event.last_racing_day:
-                    blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
-
-            if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
-                blades = types.Blades.LOST
-
-            payout_html = coaching_blades(blades, crew)
-
-    return {
-        'crew': crew,
-        'club': crew.club if crew else None,
-        'name': name,
-        'payout': payout,
-        'payout_html': payout_html,
-    }
 
 
 @register.inclusion_tag(template.Template('''
