@@ -334,11 +334,14 @@ class MarketView(EventBase):
             context['show_coach_row'] = self.day.event.coaching_competition and is_first_day
             context['show_coach_fire'] = False
             context['show_coach_hire'] = False
+            context['crew'] = utils.crew_list_by_seat([], seats)
+            context['coach_crew'] = None
+            context['coach_name'] = None
 
             return context
 
         context['show_crew_actions'] = self.day.market_is_open
-        context['crew'] = (
+        crew = (
             self.request.user.team
             .get_crew(self.day, gender)
             .select_related('seat', 'crew', 'athlete')
@@ -348,13 +351,14 @@ class MarketView(EventBase):
                 to_attr = '_position',
             ))
         )
-        for purchase in context['crew']:
+        for purchase in crew:
             purchase.price = utils.pricing_by_day_gender(
-                purchase.crew._position[0].rank,
+                purchase.crew._position[0].rank,  # type: ignore
                 self.day,
                 gender,
             )
-        crew_valid = utils.has_all_seats(context['crew'], seats)
+        context['crew'] = utils.crew_list_by_seat(crew, seats)
+        crew_valid = utils.has_all_seats(crew, seats)
 
         require_coach = self.event.coaching_competition and is_first_day
         context['coach_crew'] = game_entry.get_coach(gender)
@@ -451,13 +455,15 @@ class TeamView(EventBase):
         )
         context['crews'] = [{
             'day': day,
-            'mens_crew': (
+            'mens_crew': utils.crew_list_by_seat(
                 team.get_crew(day, Genders.MEN)
-                .select_related('day', 'day__event', 'crew', 'seat', 'athlete')
+                .select_related('day', 'day__event', 'crew', 'seat', 'athlete'),
+                context['seats'],
             ),
-            'womens_crew': (
+            'womens_crew': utils.crew_list_by_seat(
                 team.get_crew(day, Genders.WOMEN)
-                .select_related('day', 'day__event', 'crew', 'seat', 'athlete')
+                .select_related('day', 'day__event', 'crew', 'seat', 'athlete'),
+                context['seats'],
             ),
         } for day in racing_days.reverse()]
 

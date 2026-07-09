@@ -37,6 +37,16 @@ def has_all_seats(
     return all(seats_filled)
 
 
+def crew_list_by_seat(
+    purchases: Iterable['models.Purchase'],
+    expected_seats: Iterable['models.Seat'],
+) -> dict['models.Seat', 'models.Purchase | None']:
+    """Creates a dictionary of seats and the associated purchases (if one exists)."""
+
+    athlete_seats = {athlete.seat: athlete for athlete in purchases}
+    return {seat: athlete_seats.get(seat) for seat in expected_seats}
+
+
 def reverse_gender(gender: Genders) -> Genders:
     """Return opposite gender constant to that provided."""
     return {

@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load fantasy_tags %}
+{% load fantasy_containers %}
 {% load static %}
 
 {% block page_head %}
@@ -92,8 +93,19 @@
 <div class="row">
   {% if user.is_authenticated %}<div class="col-lg-5 order-lg-last">
     <div class="list-group sticky-top mb-3" style="z-index: 980">
-      {% crew_list_box crew seats finances show_crew_actions %}
-      {% if show_coach_row %}{% crew_list_coach_row coach_crew coach_name event show_coach_fire %}{% endif %}
+      {% crew_list_header finances %}
+      {% for seat, athlete in crew.items %}
+        {% crew_list_row seat athlete %}
+          {% if athlete and show_crew_actions %}
+            {% switch_button athlete %}
+            {% sell_button athlete %}
+          {% endif %}
+        {% end_crew_list_row %}
+      {% endfor %}
+      {% if show_coach_row %}{% crew_list_row 'X' coach_crew coach_name %}
+        {% coaching_competition_button event %}
+        {% if show_coach_fire %}{% fire_button %}{% endif %}
+      {% end_crew_list_row %}{% endif %}
       {% crew_status_box event gender crew_valid other_crew_valid %}
     </div>
     <br/>
