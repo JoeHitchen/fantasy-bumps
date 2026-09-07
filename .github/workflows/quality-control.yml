@@ -2,6 +2,9 @@ name: Quality Control
 
 on:
   push:
+  schedule:
+    - cron: '34 3 * * 5'
+      timezone: 'Europe/London'
 
 jobs:
   linting:
