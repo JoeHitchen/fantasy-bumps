@@ -823,7 +823,7 @@ class Test__CoachingCompetition(TestCase):
 
         cls.entries = []
         for i in range(0, 12):
-            team = auth.User.objects.create(username = f'Team {i+1}').team
+            team = auth.User.objects.create(username = f'Team {i + 1}').team
             cls.entries.append(team.entries.create(
                 event = cls.event,
                 mens_coach = mdiv1[i].crew,

@@ -4,7 +4,7 @@ from enum import Enum
 from django.db import models as db
 from django.contrib.auth import models as auth
 
-from ..constants import Genders, money
+from ..constants import Genders, money as money_type
 from .. import models
 
 
@@ -117,7 +117,7 @@ class EventBox(TypedDict):
     event: 'AugmentedEvent'
     genders: type[Genders]
     user: auth.User | auth.AnonymousUser
-    money: type[money]
+    money: type[money_type]
 
 
 if TYPE_CHECKING:
