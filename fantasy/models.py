@@ -381,7 +381,7 @@ class Athlete(models.Model):
 
 
 class Coach(models.Model):
-    """Descibes a coach for a crew."""
+    """Describes a coach for a crew."""
 
     event = models.ForeignKey(Event, models.PROTECT, related_name = 'coaches')
     crew = models.ForeignKey(Crew, models.PROTECT, related_name = 'coaches')

@@ -148,7 +148,7 @@ class Test__PerformAdvance(TestCase):
 
 
     def test__core__market_hold_override(self) -> None:
-        """The market hold rejection can be overriden if desired."""
+        """The market hold rejection can be overridden if desired."""
 
         self.day.event.market_held_closed = True
         self.day.event.save()
@@ -711,7 +711,7 @@ class Test__EvaluateInvestments(TestCase):
     def test__query_count(self) -> None:
         """ Expect:
             (1) SELECT entries
-            (2) SELECT mens's & women's crews as prefetch objects
+            (2) SELECT men's & women's crews as prefetch objects
             (1) SELECT all seats
             (4) Create payout matrix  (3 if day.next is cached)
             (1) UPDATE entries
@@ -967,7 +967,7 @@ class Test__EntryValidity(TestCase):
 
 
     def test__invalid_entry__mens_crew_missing_seat(self) -> None:
-        """The entry is invalid if the mens's crew is missing a seat."""
+        """The entry is invalid if the men's crew is missing a seat."""
 
         self.team.purchases.filter(
             day = self.day,
@@ -982,7 +982,7 @@ class Test__EntryValidity(TestCase):
 
 
     def test__invalid_entry__womens_crew_missing_seat(self) -> None:
-        """The entry is invalid if the womens's crew is missing a seat."""
+        """The entry is invalid if the women's crew is missing a seat."""
 
         self.team.purchases.filter(
             day = self.day,

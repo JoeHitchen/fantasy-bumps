@@ -17,7 +17,7 @@ last_race_times_map = {
 }
 
 def add_last_race_times(apps: Apps, schema_editor: SchemaEditor) -> None:
-    """Populatese the historical last race times."""
+    """Populates the historical last race times."""
     Event = apps.get_model('fantasy', 'Event')
 
     events = Event.objects.all()

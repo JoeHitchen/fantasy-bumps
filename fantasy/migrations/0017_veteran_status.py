@@ -9,7 +9,7 @@ from fantasy.management.trophies import identify_new_veterans
 
 
 def add_veteran_status(apps: Apps, schema_editor: SchemaEditor) -> None:
-    """Adds veteran status to all applicableteams."""
+    """Adds veteran status to all applicable teams."""
 
     Event = apps.get_model('fantasy', 'Event')
 

@@ -191,7 +191,7 @@ class EventBase(FantasyBaseMixin, EventDetailView):
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
 
-        self.event = self.object  # Provide friendly name for retrived event.
+        self.event = self.object  # Provide friendly name for retrieved event.
         self.day = self.event.active_day
         context['day'] = self.day
 
@@ -591,7 +591,7 @@ def sell(request: HttpRequest) -> HttpResponse:
 
     except (models.Purchase.DoesNotExist, MultiValueDictKeyError):
 
-        # Try elegent redirect back to market page using additional form data
+        # Try elegant redirect back to market page using additional form data
         messages.error(request, 'You are not authorised to conduct this sale.')
         try:
             gender = Genders(request.POST['gender'])
@@ -763,7 +763,7 @@ class Switch(FantasyBaseMixin, TemplateView):
 
         # Look for purchase
         self.purchase = get_object_or_404(
-            models.Purchase.objects.select_related(),  # Misses purchase.athlete, but simplier code
+            models.Purchase.objects.select_related(),  # Misses purchase.athlete, but simpler code
             id = kwargs.get('purchase_id', None),
             team = request.user.team,
         )

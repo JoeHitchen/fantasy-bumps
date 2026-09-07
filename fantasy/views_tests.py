@@ -1455,9 +1455,9 @@ class Test__Team(TestCase):
             (2) SELECT coaches' names
             (1) SELECT all seats
             (4) SELECT target team's crews    (2x racing days until now)
-            (2) SELECT next day    (1x racing days until now, cachable)
-            (2) SELECT crews racing that day    (1x racing days until now, cachable)
-            (4) SELECT before & after positions    (2x racing days until now, cachable)
+            (2) SELECT next day    (1x racing days until now, cacheable)
+            (2) SELECT crews racing that day    (1x racing days until now, cacheable)
+            (4) SELECT before & after positions    (2x racing days until now, cacheable)
         """
 
         self.event.days.update(date = db.F('date') + self.base_date_shift)

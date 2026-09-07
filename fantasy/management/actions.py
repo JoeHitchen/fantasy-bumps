@@ -101,7 +101,7 @@ def create_days(
 
 
 def create_gendered_crew_positions(event: models.Event, divisions: StartOrder) -> None:
-    """Greates crew positions for one gender's start order."""
+    """Creates crew positions for one gender's start order."""
 
     flattened_crews = [
         models.Crew.make_tuple(*crew)

@@ -15,7 +15,7 @@ def buy(
 ) -> None:
     """Transaction-wrapped buy action.
 
-    Checks the team has sufficients funds and updates their balance, before creating the purchase.
+    Checks the team has sufficient funds and updates their balance, before creating the purchase.
     Rolls back both changes in the event either fails.
 
     Optimised when:

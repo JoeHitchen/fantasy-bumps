@@ -8,7 +8,7 @@
 <div class="container text-center" style="max-width: 30em; margin-top: 1.5em">
 
 <h3>Micromanage crew</h3>
-Alter puchase of {% if purchase.athlete %}<strong>{{ purchase.athlete }}</strong> ({{ purchase.crew }}){% else %}{{ purchase.crew }}{% endif %}
+Alter purchase of {% if purchase.athlete %}<strong>{{ purchase.athlete }}</strong> ({{ purchase.crew }}){% else %}{{ purchase.crew }}{% endif %}
 
 <form action="{% url 'fantasy:switch' purchase.id %}" method="post">
   {% csrf_token %}

@@ -296,7 +296,7 @@ class Test__Anu__HTML(TestCase):
                         self.assertEqual(parsed[crew], expected[crew])
 
 
-    def test__postions__smoke(self) -> None:
+    def test__positions__smoke(self) -> None:
         """Checks that other historical events can be parsed without error."""
 
         events = [
