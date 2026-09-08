@@ -399,6 +399,7 @@ linting = [
     { name = "flake8-import-order-pep8app" },
     { name = "flake8-print" },
     { name = "flake8-pyi" },
+    { name = "flake8-pyproject" },
     { name = "flake8-quotes" },
 ]
 markdown = [
@@ -436,6 +437,7 @@ linting = [
     { name = "flake8-import-order-pep8app" },
     { name = "flake8-print" },
     { name = "flake8-pyi" },
+    { name = "flake8-pyproject" },
     { name = "flake8-quotes" },
 ]
 markdown = [{ name = "pymarkdownlnt" }]
@@ -539,6 +541,17 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/28/8d/c31a6bd3d74a4ec81c7d52ca50ce51288b60f50b39d36cbf3eee4bfbd88b/flake8_pyi-26.5.0.tar.gz", hash = "sha256:6e846efa7bdf4221cbf35c5123b8e8882ab1220578e89db2294a077368ac4885", size = 61202, upload-time = "2026-05-11T14:41:45.003Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/14/1c30394b49b7e600c12d89e1fe3c33dbec0b1b0532a0f16ccb5eab403b78/flake8_pyi-26.5.0-py3-none-any.whl", hash = "sha256:24fa143364f78d919930d04f9d99e01ac6666c096f9d01eb9436c469a5b777cb", size = 25219, upload-time = "2026-05-11T14:41:43.992Z" },
+]
+
+[[package]]
+name = "flake8-pyproject"
+version = "1.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "flake8" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/6a/cdee9ff7f2b7c6ddc219fd95b7c70c0a3d9f0367a506e9793eedfc72e337/flake8_pyproject-1.2.4-py3-none-any.whl", hash = "sha256:ea34c057f9a9329c76d98723bb2bb498cc6ba8ff9872c4d19932d48c91249a77", size = 5694, upload-time = "2025-11-28T21:40:01.309Z" },
 ]
 
 [[package]]

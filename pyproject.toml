@@ -24,6 +24,7 @@ markdown = [
 
 linting = [
     "flake8",
+    "flake8-pyproject",
     "flake8-pyi",
     "flake8-print",
     "flake8-commas",
@@ -51,9 +52,8 @@ typing = [
 max-line-length = 99
 exclude = [
     ".git",
-    ".venv/**",
     ".venv",
-    "venv**",
+    "venv",
     "__pycache__",
     "*.pyc",
     "migrations",
@@ -108,3 +108,7 @@ django_settings_module = "core.settings"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "core.settings"
 python_files = "*tests.py"
+
+[tool.pymarkdown]
+system.exclude_path = ".*/"
+plugins.MD013.enabled = false
