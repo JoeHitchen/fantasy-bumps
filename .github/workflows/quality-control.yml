@@ -98,9 +98,7 @@ jobs:
           cache-suffix: testing
 
       - name: Install dependencies
-        # Use --group (not --only-group) to include base project dependencies
-        # Tests need Django, Celery, and other runtime packages to function
-        run: uv sync --group testing
+        run: uv sync --group testing  # N.B. "uv sync --group ___" also includes base dependencies
 
       - name: Run checks
         run: python project.py test
