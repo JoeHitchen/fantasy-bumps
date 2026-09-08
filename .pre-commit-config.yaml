@@ -9,18 +9,40 @@ repos:
         entry: python project.py markdown
         language: system
         pass_filenames: false
+        stages: [pre-commit]
       - id: flake8
         name: Python linting (flake8)
         entry: python project.py lint
         language: system
         pass_filenames: false
+        stages: [pre-commit]
       - id: mypy
         name: Type checking (mypy)
         entry: python project.py type
         language: system
         pass_filenames: false
+        stages: [pre-commit]
+      - id: pymarkdown-push
+        name: Markdown linting (pymarkdownlnt) on push
+        entry: python project.py markdown
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+      - id: flake8-push
+        name: Python linting (flake8) on push
+        entry: python project.py lint
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+      - id: mypy-push
+        name: Type checking (mypy) on push
+        entry: python project.py type
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
       - id: pytest
-        name: Unit tests (pytest)
+        name: Unit tests (pytest) on push
         entry: python project.py test
         language: system
         pass_filenames: false
+        stages: [pre-push]
