@@ -48,6 +48,16 @@ typing = [
     "types-beautifulsoup4",
 ]
 
+
+[tool.pymarkdown]
+system.exclude_path = ".*/"
+plugins.MD013.enabled = false
+
+extensions.markdown-tables.enabled = true
+extensions.markdown-strikethrough.enabled = true
+extensions.markdown-task-list-items.enabled = true
+
+
 [tool.flake8]
 max-line-length = 99
 exclude = [
@@ -78,6 +88,7 @@ application-package-names = [
 ]
 multiline-quotes = "'''"
 
+
 [tool.mypy]
 files = [
     "fantasy",
@@ -105,10 +116,7 @@ follow_imports = "silent"
 [tool.django-stubs]
 django_settings_module = "core.settings"
 
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "core.settings"
 python_files = "*tests.py"
-
-[tool.pymarkdown]
-system.exclude_path = ".*/"
-plugins.MD013.enabled = false

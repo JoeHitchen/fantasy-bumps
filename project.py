@@ -9,28 +9,14 @@ commands = {
     'test:ff': ('uv run pytest -x', 'fantasy core'),
     'test:external': ('uv run pytest', 'integrations'),
     'type': ('uv run mypy', ''),
-    'lint': ('uv run flake8 --extend-exclude .venv,venv', ''),
-    'markdown': (
-        'uv run pymarkdownlnt --disable-rules=line-length scan --respect-gitignore -r',
-        '.',
-    ),
-    'markdown:fix': (
-        'uv run pymarkdownlnt --disable-rules=line-length fix --respect-gitignore -r',
-        '.',
-    ),
+    'lint': ('uv run flake8', ''),
+    'markdown': ('uv run pymarkdownlnt scan -r', '.'),
+    'markdown:fix': ('uv run pymarkdownlnt fix -r', '.'),
 }
 
 command_raw = args[0]
-
-if command_raw in commands:
-    cmd, default_args = commands[command_raw]
-    if len(args) > 1:
-        command_str = ' '.join([cmd, *args[1:]])
-    else:
-        command_str = ' '.join([cmd, default_args]) if default_args else cmd
-else:
-    command_str = 'python manage.py {}'.format(command_raw)
-
+command_parts = commands.get(command_raw, ('python manage.py {}'.format(command_raw), []))
+command_str = ' '.join([command_parts[0], *(args[1:] if len(args) > 1 else command_parts[1:])])
 status = os.system(command_str)
 
 raise SystemExit(bool(status))
