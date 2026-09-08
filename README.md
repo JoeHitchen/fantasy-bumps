@@ -23,16 +23,16 @@ This project uses [uv](https://docs.astral.sh/uv/) for fast, reliable Python pac
    ```
 
 3. Initialize the application:
-  
-   ```bash
-python project.py init [--dev-team]
 
+   ```bash
+   python project.py init [--dev-team]
    ```
-   
+
    This command migrates the database and installs fixed data (such as seat values).
 With the `--dev-team` flag, a user/team can also be loaded for development.
 
    > Default credentials when using `--dev-team`:
+   >
    > - Username: DevTeam
    > - Password: password
 
@@ -45,6 +45,7 @@ python project.py game_start --eights | --torpids | --demo [--date YYYY-MM-DD | 
 ```
 
 Where:
+
 - The first flag (e.g., `--torpids`, `--eights`) indicates which series the event belongs to
 - `--demo` uses fixed data for demonstration/testing (requires an empty database)
 - By default, events start in five days; override with `--date` flag
@@ -71,6 +72,7 @@ python project.py <command> [args]
 ```
 
 Available commands include:
+
 - `test` - Run pytest on core and fantasy modules
 - `test:ff` - Run tests, stopping on first failure
 - `test:external` - Run tests on integrations
@@ -91,6 +93,7 @@ uv sync --all-groups
 ```
 
 This includes:
+
 - **Testing**: pytest and pytest-django
 - **Linting**: flake8 and plugins (style, import order, comprehensions, etc.)
 - **Type Checking**: mypy and type stubs for Django, Celery, and other packages
@@ -141,6 +144,7 @@ uv sync --all-groups  # Installs all optional groups
 ## Docker
 
 The application is containerized for production deployment. The Docker image:
+
 - Uses Python 3.14 on Alpine Linux for minimal size
 - Installs dependencies via `uv` with frozen lock file for reproducibility
 - Runs gunicorn on port 8000

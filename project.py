@@ -10,8 +10,14 @@ commands = {
     'test:external': ('uv run pytest', 'integrations'),
     'type': ('uv run mypy', ''),
     'lint': ('uv run flake8 --extend-exclude .venv,venv', ''),
-    'markdown': ('uv run pymarkdownlnt --disable-rules=line-length scan --respect-gitignore -r', '.'),
-    'markdown:fix': ('uv run pymarkdownlnt --disable-rules=line-length fix --respect-gitignore -r', '.'),
+    'markdown': (
+        'uv run pymarkdownlnt --disable-rules=line-length scan --respect-gitignore -r',
+        '.',
+    ),
+    'markdown:fix': (
+        'uv run pymarkdownlnt --disable-rules=line-length fix --respect-gitignore -r',
+        '.',
+    ),
 }
 
 command_raw = args[0]
