@@ -14,9 +14,8 @@ RUN apk add --no-cache --update mariadb-connector-c-dev libcurl \
  && apk add --no-cache --virtual .build gcc musl-dev mariadb-dev curl-dev \
  && pip install --no-cache-dir uv mysqlclient 'celery[sqs]' 'boto3>=1.43.86' 'pycurl>=7.47.0' django-storages[s3] gunicorn \
  && apk del --purge .build
-# boto3 version pin required because messages are not received with the latest version
 
-COPY --chown=python pyproject.toml uv.lock .
+COPY --chown=python pyproject.toml uv.lock ./
 RUN uv sync
 
 COPY --chown=python . .
