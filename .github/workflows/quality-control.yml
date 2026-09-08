@@ -12,26 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version-file: pyproject.toml
 
       - name: Install uv
-        run: pip install uv
-
-      - name: Cache uv dependencies
-        uses: actions/cache@v4
+        uses: astral-sh/setup-uv@v2
         with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-
+          enable-cache: true
+          cache-suffix: markdown
 
       - name: Install dependencies
-        run: uv sync --group linting --no-cache
+        run: uv sync --group linting
 
       - name: Run checks
         run: python project.py markdown
@@ -41,26 +36,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version-file: pyproject.toml
 
       - name: Install uv
-        run: pip install uv
-
-      - name: Cache uv dependencies
-        uses: actions/cache@v4
+        uses: astral-sh/setup-uv@v2
         with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-
+          enable-cache: true
+          cache-suffix: linting
 
       - name: Install dependencies
-        run: uv sync --group linting --no-cache
+        run: uv sync --group linting
 
       - name: Run checks
         run: python project.py lint
@@ -70,26 +60,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version-file: pyproject.toml
 
       - name: Install uv
-        run: pip install uv
-
-      - name: Cache uv dependencies
-        uses: actions/cache@v4
+        uses: astral-sh/setup-uv@v2
         with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-
+          enable-cache: true
+          cache-suffix: typing
 
       - name: Install dependencies
-        run: uv sync --group typing --no-cache
+        run: uv sync --group typing
 
       - name: Run checks
         run: python project.py type
@@ -99,26 +84,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version-file: pyproject.toml
 
       - name: Install uv
-        run: pip install uv
-
-      - name: Cache uv dependencies
-        uses: actions/cache@v4
+        uses: astral-sh/setup-uv@v2
         with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
-          restore-keys: |
-            uv-${{ runner.os }}-
+          enable-cache: true
+          cache-suffix: testing
 
       - name: Install dependencies
-        run: uv sync --no-cache
+        run: uv sync
 
       - name: Run checks
         run: python project.py test
