@@ -23,9 +23,10 @@ This project uses [uv](https://docs.astral.sh/uv/) for fast, reliable Python pac
    ```
 
 3. Initialize the application:
-   
+  
    ```bash
 python project.py init [--dev-team]
+
    ```
    
    This command migrates the database and installs fixed data (such as seat values).
