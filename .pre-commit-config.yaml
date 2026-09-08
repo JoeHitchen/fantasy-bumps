@@ -1,0 +1,25 @@
+minimum_pre_commit_version: "4.0.0"
+
+repos:
+  - repo: local
+    hooks:
+      - id: pymarkdown
+        name: Markdown linting (pymarkdownlnt)
+        entry: python project.py markdown
+        language: system
+        pass_filenames: false
+      - id: flake8
+        name: Python linting (flake8)
+        entry: python project.py lint
+        language: system
+        pass_filenames: false
+      - id: mypy
+        name: Type checking (mypy)
+        entry: python project.py type
+        language: system
+        pass_filenames: false
+      - id: pytest
+        name: Unit tests (pytest)
+        entry: python project.py test
+        language: system
+        pass_filenames: false

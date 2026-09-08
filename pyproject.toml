@@ -48,6 +48,10 @@ typing = [
     "types-beautifulsoup4",
 ]
 
+dev = [
+    "pre-commit>=4.3.0",
+]
+
 
 [tool.pymarkdown]
 system.exclude_path = ".*/"
