@@ -1,0 +1,122 @@
+[project]
+name = "fantasy-bumps"
+version = "0.1.0"
+description = "Fantasy Bumps - Django application for fantasy sports analysis"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+    { name = "Joe Hitchen", email = "joe@example.com" }
+]
+
+dependencies = [
+    "django < 6",
+    "requests",
+    "beautifulsoup4",
+    "celery",
+    "django-celery-beat",
+    "typing-extensions",
+]
+
+[dependency-groups]
+markdown = [
+    "pymarkdownlnt",
+]
+
+linting = [
+    "flake8",
+    "flake8-pyproject",
+    "flake8-pyi",
+    "flake8-print",
+    "flake8-commas",
+    "flake8-quotes",
+    "flake8-import-order",
+    "flake8-import-order-pep8app",
+    "flake8-comprehensions",
+]
+
+testing = [
+    "pytest",
+    "pytest-django",
+]
+
+typing = [
+    "mypy<1.16",
+    "django-stubs",
+    "celery-types",
+    "types-pytz",
+    "types-requests",
+    "types-beautifulsoup4",
+]
+
+
+[tool.pymarkdown]
+system.exclude_path = ".*/"
+plugins.MD013.enabled = false
+
+extensions.markdown-tables.enabled = true
+extensions.markdown-strikethrough.enabled = true
+extensions.markdown-task-list-items.enabled = true
+
+
+[tool.flake8]
+max-line-length = 99
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "*.pyc",
+    "migrations",
+    "manage.py",
+]
+ignore = [
+    "E251",
+    "E303",
+    "W391",
+    "W503",
+    "I300",
+]
+per-file-ignores = [
+    "typing/django_celery_beat/models.pyi:F821",
+]
+import-order-style = "pep8app"
+application-package-names = [
+    "core",
+    "common",
+    "fantasy",
+    "integrations",
+]
+multiline-quotes = "'''"
+
+
+[tool.mypy]
+files = [
+    "fantasy",
+    "integrations",
+    "core",
+    "*.py",
+]
+exclude = [
+    "migrations",
+]
+strict = true
+mypy_path = "typing"
+plugins = [
+    "mypy_django_plugin.main",
+]
+
+[[tool.mypy.overrides]]
+module = "fantasy.*"
+follow_imports = "silent"
+
+[[tool.mypy.overrides]]
+module = "core.*"
+follow_imports = "silent"
+
+[tool.django-stubs]
+django_settings_module = "core.settings"
+
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "core.settings"
+python_files = "*tests.py"

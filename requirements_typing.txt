@@ -1,9 +1,0 @@
-mypy<1.16
-django-stubs
-celery-types
-types-pytz
-types-requests
-types-beautifulsoup4
-
-# Project Installs
-django-celery-beat
