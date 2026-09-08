@@ -18,6 +18,10 @@ dependencies = [
 ]
 
 [dependency-groups]
+markdown = [
+    "pymarkdownlnt",
+]
+
 linting = [
     "flake8",
     "flake8-pyi",
@@ -27,10 +31,10 @@ linting = [
     "flake8-import-order",
     "flake8-import-order-pep8app",
     "flake8-comprehensions",
-    "pymarkdownlnt",
 ]
 
 testing = [
+    "pytest",
     "pytest-django",
 ]
 
@@ -41,25 +45,6 @@ typing = [
     "types-pytz",
     "types-requests",
     "types-beautifulsoup4",
-]
-
-dev = [
-    "flake8",
-    "flake8-pyi",
-    "flake8-print",
-    "flake8-commas",
-    "flake8-quotes",
-    "flake8-import-order",
-    "flake8-import-order-pep8app",
-    "flake8-comprehensions",
-    "pytest-django",
-    "mypy<1.16",
-    "django-stubs",
-    "celery-types",
-    "types-pytz",
-    "types-requests",
-    "types-beautifulsoup4",
-    "pymarkdownlnt",
 ]
 
 [tool.flake8]

@@ -391,24 +391,6 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-dev = [
-    { name = "celery-types" },
-    { name = "django-stubs" },
-    { name = "flake8" },
-    { name = "flake8-commas" },
-    { name = "flake8-comprehensions" },
-    { name = "flake8-import-order" },
-    { name = "flake8-import-order-pep8app" },
-    { name = "flake8-print" },
-    { name = "flake8-pyi" },
-    { name = "flake8-quotes" },
-    { name = "mypy" },
-    { name = "pymarkdownlnt" },
-    { name = "pytest-django" },
-    { name = "types-beautifulsoup4" },
-    { name = "types-pytz" },
-    { name = "types-requests" },
-]
 linting = [
     { name = "flake8" },
     { name = "flake8-commas" },
@@ -418,9 +400,12 @@ linting = [
     { name = "flake8-print" },
     { name = "flake8-pyi" },
     { name = "flake8-quotes" },
+]
+markdown = [
     { name = "pymarkdownlnt" },
 ]
 testing = [
+    { name = "pytest" },
     { name = "pytest-django" },
 ]
 typing = [
@@ -443,24 +428,6 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "celery-types" },
-    { name = "django-stubs" },
-    { name = "flake8" },
-    { name = "flake8-commas" },
-    { name = "flake8-comprehensions" },
-    { name = "flake8-import-order" },
-    { name = "flake8-import-order-pep8app" },
-    { name = "flake8-print" },
-    { name = "flake8-pyi" },
-    { name = "flake8-quotes" },
-    { name = "mypy", specifier = "<1.16" },
-    { name = "pymarkdownlnt" },
-    { name = "pytest-django" },
-    { name = "types-beautifulsoup4" },
-    { name = "types-pytz" },
-    { name = "types-requests" },
-]
 linting = [
     { name = "flake8" },
     { name = "flake8-commas" },
@@ -470,9 +437,12 @@ linting = [
     { name = "flake8-print" },
     { name = "flake8-pyi" },
     { name = "flake8-quotes" },
-    { name = "pymarkdownlnt" },
 ]
-testing = [{ name = "pytest-django" }]
+markdown = [{ name = "pymarkdownlnt" }]
+testing = [
+    { name = "pytest" },
+    { name = "pytest-django" },
+]
 typing = [
     { name = "celery-types" },
     { name = "django-stubs" },
