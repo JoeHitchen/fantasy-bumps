@@ -18,6 +18,10 @@ dependencies = [
 ]
 
 [dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+]
+
 markdown = [
     "pymarkdownlnt",
 ]
@@ -46,10 +50,6 @@ typing = [
     "types-pytz",
     "types-requests",
     "types-beautifulsoup4",
-]
-
-dev = [
-    "pre-commit>=4.3.0",
 ]
 
 
