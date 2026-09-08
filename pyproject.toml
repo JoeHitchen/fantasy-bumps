@@ -66,6 +66,8 @@ dev = [
 max-line-length = 99
 exclude = [
     ".git",
+    ".venv/**",
+    ".venv",
     "venv**",
     "__pycache__",
     "*.pyc",
