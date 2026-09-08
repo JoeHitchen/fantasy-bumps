@@ -1,11 +1,11 @@
 [project]
 name = "fantasy-bumps"
-version = "0.1.0"
-description = "Fantasy Bumps - Django application for fantasy sports analysis"
+version = "2.1"
+description = "Fantasy Bumps - A prediction and speculation game for Oxford bumps racing"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 authors = [
-    { name = "Joe Hitchen", email = "joe@example.com" }
+    { name = "Joe Hitchen", email = "hitchenjoe@gmail.com" }
 ]
 
 dependencies = [
