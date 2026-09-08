@@ -10,6 +10,8 @@ commands = {
     'test:external': ['pytest', 'integrations'],
     'type': ['mypy'],
     'lint': ['flake8'],
+    'markdown': ['pymarkdownlnt', 'scan', '--respect-gitignore', '-r', '.'],
+    'markdown:fix': ['pymarkdownlnt', 'fix', '--respect-gitignore', '-r', '.'],
 }
 
 command_raw = args[0]
