@@ -25,13 +25,10 @@ command_raw = args[0]
 if command_raw in commands:
     cmd, default_args = commands[command_raw]
     if len(args) > 1:
-        # User provided arguments - replace defaults with user args
         command_str = ' '.join([cmd, *args[1:]])
     else:
-        # Use default arguments
         command_str = ' '.join([cmd, default_args]) if default_args else cmd
 else:
-    # Unknown command - pass to Django manage.py
     command_str = 'python manage.py {}'.format(command_raw)
 
 status = os.system(command_str)
