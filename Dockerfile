@@ -19,7 +19,7 @@ RUN apk add --no-cache --update mariadb-connector-c-dev libcurl \
 
 COPY pyproject.toml uv.lock ./
 RUN uv sync --inexact \
- && chown -R python:python /usr/local
+ && chown -R python:python /usr/local $HOME
 
 COPY --chown=python . .
 
