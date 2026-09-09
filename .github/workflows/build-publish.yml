@@ -5,24 +5,19 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  workflow_run:
-    workflows:
-      - Quality Control
-    types:
-      - completed
-    branches:
-      - deploy
+  workflow_call:
+    inputs:
+      publish:
+        type: boolean
+        default: false
 
 jobs:
   building:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'deploy' }}
     name: Building
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Build Docker image
         run: docker build -t joehitchen/fantasy-bumps .
@@ -164,6 +159,7 @@ jobs:
   publishing:
     name: Publishing
     needs: [building, mock-server, mock-worker, mock-scheduler]
+    if: inputs.publish
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub

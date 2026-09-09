@@ -102,3 +102,13 @@ jobs:
 
       - name: Run checks
         run: python project.py test
+
+  build-and-publish:
+    name: Build & Publish
+    needs: [markdown-linting, code-linting, typing, testing]
+    # TEMPORARY: feature/mock-live-commands added for live verification while building issue #9, remove before merge
+    if: contains(fromJSON('["refs/heads/development", "refs/heads/master", "refs/heads/deploy", "refs/heads/feature/mock-live-commands"]'), github.ref)
+    uses: ./.github/workflows/build-publish.yml
+    with:
+      publish: ${{ github.ref == 'refs/heads/deploy' }}
+    secrets: inherit
