@@ -5,6 +5,7 @@ ENV PYTHONUNBUFFERED 1
 ENV HOME /usr/src/app
 ENV STATIC_ROOT /usr/data/static
 ENV MEDIA_ROOT /usr/data/media
+ENV UV_PROJECT_ENVIRONMENT /usr/local
 
 WORKDIR $HOME
 RUN adduser --disabled-password python && chown -R python:python $HOME \
@@ -16,12 +17,13 @@ RUN apk add --no-cache --update mariadb-connector-c-dev libcurl \
  && apk del --purge .build
 # boto3 version pin required because messages are not received with the latest version
 
-USER python
-COPY --chown=python pyproject.toml uv.lock ./
-RUN uv sync
+COPY pyproject.toml uv.lock ./
+RUN uv sync --inexact \
+ && chown -R python:python /usr/local
 
 COPY --chown=python . .
 
+USER python
 CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--logger-class", "overrides.GunicornLogger"]
 EXPOSE 8000
 
