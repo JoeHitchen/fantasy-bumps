@@ -16,12 +16,12 @@ RUN apk add --no-cache --update mariadb-connector-c-dev libcurl \
  && apk del --purge .build
 # boto3 version pin required because messages are not received with the latest version
 
+USER python
 COPY --chown=python pyproject.toml uv.lock ./
 RUN uv sync
 
 COPY --chown=python . .
 
-USER python
 CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000", "--logger-class", "overrides.GunicornLogger"]
 EXPOSE 8000
 
