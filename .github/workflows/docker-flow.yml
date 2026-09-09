@@ -48,7 +48,7 @@ jobs:
           container-name: server-check
           run-args: -p 8000:8000 -e DJANGO_HOSTS=localhost
           command: >-
-            sh -c "python manage.py migrate --no-color && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --logger-class overrides.GunicornLogger"
+            sh -c "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --logger-class overrides.GunicornLogger"
           ready-check: curl -sf -o /dev/null http://localhost:8000/
 
   worker-testing:
@@ -81,7 +81,7 @@ jobs:
           container-name: scheduler-check
           run-args: -e CELERY_BROKER=memory://
           command: >-
-            sh -c "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
+            sh -c "python manage.py migrate && celery --app=core beat --loglevel=info"
           ready-check: 'docker logs scheduler-check 2>&1 | grep -q ''beat: Starting\.\.\.'''
 
   publishing:
