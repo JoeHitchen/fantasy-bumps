@@ -28,7 +28,7 @@ jobs:
         run: docker build -t joehitchen/fantasy-bumps .
 
       - name: Run tests to verify image
-        run: docker run --rm joehitchen/fantasy-bumps sh -c 'uv sync --group testing && python project.py test'
+        run: docker run --rm joehitchen/fantasy-bumps sh -c 'uv sync --group testing --inexact && python project.py test'
 
       - name: Save image
         run: docker save --output fantasy-bumps.docker joehitchen/fantasy-bumps
