@@ -83,11 +83,6 @@ jobs:
     name: Mock Worker
     needs: building
     runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
     steps:
       - name: Retrieve image artifact
         uses: actions/download-artifact@v8
@@ -100,7 +95,7 @@ jobs:
 
       - name: Start worker container
         run: >-
-          docker run -d --name worker-check --network host
+          docker run -d --name worker-check -e CELERY_BROKER=memory://
           joehitchen/fantasy-bumps celery --app=core worker --loglevel=info
 
       - name: Wait for worker to report ready
@@ -129,11 +124,6 @@ jobs:
     name: Mock Scheduler
     needs: building
     runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
     steps:
       - name: Retrieve image artifact
         uses: actions/download-artifact@v8
@@ -146,7 +136,7 @@ jobs:
 
       - name: Start scheduler container
         run: >-
-          docker run -d --name scheduler-check --network host
+          docker run -d --name scheduler-check -e CELERY_BROKER=memory://
           joehitchen/fantasy-bumps sh -c
           "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
 
