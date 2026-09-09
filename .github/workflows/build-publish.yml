@@ -55,7 +55,7 @@ jobs:
         run: docker load --input fantasy-bumps.docker
 
       - name: Start server container
-        run: docker run -d --rm --name server-check -p 8000:8000 -e DJANGO_HOSTS=localhost joehitchen/fantasy-bumps
+        run: docker run -d --name server-check -p 8000:8000 -e DJANGO_HOSTS=localhost joehitchen/fantasy-bumps
 
       - name: Wait for server to respond
         run: |
@@ -100,7 +100,7 @@ jobs:
 
       - name: Start worker container
         run: >-
-          docker run -d --rm --name worker-check --network host
+          docker run -d --name worker-check --network host
           joehitchen/fantasy-bumps celery --app=core worker --loglevel=info
 
       - name: Wait for worker to report ready
@@ -146,7 +146,7 @@ jobs:
 
       - name: Start scheduler container
         run: >-
-          docker run -d --rm --name scheduler-check --network host
+          docker run -d --name scheduler-check --network host
           joehitchen/fantasy-bumps sh -c
           "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
 
