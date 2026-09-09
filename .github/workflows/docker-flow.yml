@@ -1,7 +1,7 @@
-name: Build & Publish
+name: Docker
 
 concurrency:
-  group: build-publish-${{ github.ref }}
+  group: docker-${{ github.ref }}
   cancel-in-progress: false
 
 on:
@@ -34,16 +34,16 @@ jobs:
           name: fantasy-bumps-docker
           path: fantasy-bumps.docker
 
-  mock-server:
-    name: Mock Server
+  server-testing:
+    name: Server Testing
     needs: building
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Run mock server check
-        uses: ./.github/actions/mock-live-command
+      - name: Run server check
+        uses: ./.github/actions/runtime-command
         with:
           container-name: server-check
           run-args: -p 8000:8000 -e DJANGO_HOSTS=localhost
@@ -51,42 +51,42 @@ jobs:
             sh -c "python manage.py migrate --no-color && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --logger-class overrides.GunicornLogger"
           ready-check: curl -sf -o /dev/null http://localhost:8000/
 
-  mock-worker:
-    name: Mock Worker
+  worker-testing:
+    name: Worker Testing
     needs: building
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Run mock worker check
-        uses: ./.github/actions/mock-live-command
+      - name: Run worker check
+        uses: ./.github/actions/runtime-command
         with:
           container-name: worker-check
           run-args: -e CELERY_BROKER=memory://
-          command: celery --app=core worker --loglevel=info
+          command: celery --app=core worker
           ready-check: docker logs worker-check 2>&1 | grep -q 'ready\.'
 
-  mock-scheduler:
-    name: Mock Scheduler
+  scheduler-testing:
+    name: Scheduler Testing
     needs: building
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Run mock scheduler check
-        uses: ./.github/actions/mock-live-command
+      - name: Run scheduler check
+        uses: ./.github/actions/runtime-command
         with:
           container-name: scheduler-check
           run-args: -e CELERY_BROKER=memory://
           command: >-
-            sh -c "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
+            sh -c "python manage.py migrate --no-color && celery --app=core beat
           ready-check: 'docker logs scheduler-check 2>&1 | grep -q ''beat: Starting\.\.\.'''
 
   publishing:
     name: Publishing
-    needs: [building, mock-server, mock-worker, mock-scheduler]
+    needs: [server-testing, worker-testing, scheduler-testing]
     if: inputs.publish && success()
     runs-on: ubuntu-latest
     steps:
@@ -100,7 +100,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Load built image
-        uses: ./.github/actions/load-built-image
+        uses: ./.github/actions/load-image
 
       - name: Push Docker image
         run: docker push joehitchen/fantasy-bumps

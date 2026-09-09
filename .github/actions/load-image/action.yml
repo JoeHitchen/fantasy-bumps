@@ -1,4 +1,4 @@
-name: Load built image
+name: Load image
 description: Download the fantasy-bumps-docker build artifact and load it into the local Docker daemon
 
 runs:

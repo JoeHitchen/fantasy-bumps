@@ -1,4 +1,4 @@
-name: Mock live command
+name: Runtime command
 description: >-
   Load the freshly built image, run one of the app's real production commands
   against it, and wait for it to reach a genuine ready state (or fail fast on
@@ -27,15 +27,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Retrieve image artifact
-      uses: actions/download-artifact@v8
-      with:
-        name: fantasy-bumps-docker
-        path: .
-
-    - name: Load image into Docker
-      shell: bash
-      run: docker load --input fantasy-bumps.docker
+    - name: Load image
+      uses: ./.github/actions/load-image
 
     - name: Start container
       shell: bash

@@ -107,7 +107,7 @@ jobs:
     name: Build & Publish
     needs: [markdown-linting, code-linting, typing, testing]
     if: success() && contains(fromJSON('["refs/heads/development", "refs/heads/master", "refs/heads/deploy"]'), github.ref)
-    uses: ./.github/workflows/build-publish.yml
+    uses: ./.github/workflows/docker-flow.yml
     with:
       publish: ${{ github.ref == 'refs/heads/deploy' }}
     secrets: inherit
