@@ -1,7 +1,7 @@
 name: Build & Publish
 
 concurrency:
-  group: build-publish
+  group: build-publish-${{ github.ref }}
   cancel-in-progress: false
 
 on:
@@ -39,143 +39,67 @@ jobs:
     needs: building
     runs-on: ubuntu-latest
     steps:
-      - name: Retrieve image artifact
-        uses: actions/download-artifact@v8
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Run mock server check
+        uses: ./.github/actions/mock-live-command
         with:
-          name: fantasy-bumps-docker
-          path: .
-
-      - name: Load image into Docker
-        run: docker load --input fantasy-bumps.docker
-
-      - name: Start server container
-        run: docker run -d --name server-check -p 8000:8000 -e DJANGO_HOSTS=localhost joehitchen/fantasy-bumps
-
-      - name: Wait for server to respond
-        run: |
-          for i in $(seq 1 30); do
-            if curl -s -o /dev/null http://localhost:8000/; then
-              echo "Server responded"
-              exit 0
-            fi
-            if [ "$(docker inspect -f '{{.State.Running}}' server-check 2>/dev/null)" != "true" ]; then
-              echo "::error::Server container exited unexpectedly"
-              docker logs server-check
-              exit 1
-            fi
-            sleep 1
-          done
-          echo "::error::Server did not respond within timeout"
-          docker logs server-check
-          exit 1
-
-      - name: Stop container
-        if: always()
-        run: docker stop server-check || true
+          container-name: server-check
+          run-args: -p 8000:8000 -e DJANGO_HOSTS=localhost
+          command: gunicorn core.wsgi:application --bind 0.0.0.0:8000 --logger-class overrides.GunicornLogger
+          ready-check: curl -sf -o /dev/null http://localhost:8000/
 
   mock-worker:
     name: Mock Worker
     needs: building
     runs-on: ubuntu-latest
     steps:
-      - name: Retrieve image artifact
-        uses: actions/download-artifact@v8
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Run mock worker check
+        uses: ./.github/actions/mock-live-command
         with:
-          name: fantasy-bumps-docker
-          path: .
-
-      - name: Load image into Docker
-        run: docker load --input fantasy-bumps.docker
-
-      - name: Start worker container
-        run: >-
-          docker run -d --name worker-check -e CELERY_BROKER=memory://
-          joehitchen/fantasy-bumps celery --app=core worker --loglevel=info
-
-      - name: Wait for worker to report ready
-        run: |
-          for i in $(seq 1 30); do
-            if docker logs worker-check 2>&1 | grep -q 'ready\.'; then
-              echo "Worker reported ready"
-              exit 0
-            fi
-            if [ "$(docker inspect -f '{{.State.Running}}' worker-check 2>/dev/null)" != "true" ]; then
-              echo "::error::Worker container exited unexpectedly"
-              docker logs worker-check
-              exit 1
-            fi
-            sleep 1
-          done
-          echo "::error::Worker did not report ready within timeout"
-          docker logs worker-check
-          exit 1
-
-      - name: Stop container
-        if: always()
-        run: docker stop worker-check || true
+          container-name: worker-check
+          run-args: -e CELERY_BROKER=memory://
+          command: celery --app=core worker --loglevel=info
+          ready-check: docker logs worker-check 2>&1 | grep -q 'ready\.'
 
   mock-scheduler:
     name: Mock Scheduler
     needs: building
     runs-on: ubuntu-latest
     steps:
-      - name: Retrieve image artifact
-        uses: actions/download-artifact@v8
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Run mock scheduler check
+        uses: ./.github/actions/mock-live-command
         with:
-          name: fantasy-bumps-docker
-          path: .
-
-      - name: Load image into Docker
-        run: docker load --input fantasy-bumps.docker
-
-      - name: Start scheduler container
-        run: >-
-          docker run -d --name scheduler-check -e CELERY_BROKER=memory://
-          joehitchen/fantasy-bumps sh -c
-          "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
-
-      - name: Wait for scheduler to start
-        run: |
-          for i in $(seq 1 30); do
-            if docker logs scheduler-check 2>&1 | grep -q 'beat: Starting\.\.\.'; then
-              echo "Scheduler started"
-              exit 0
-            fi
-            if [ "$(docker inspect -f '{{.State.Running}}' scheduler-check 2>/dev/null)" != "true" ]; then
-              echo "::error::Scheduler container exited unexpectedly"
-              docker logs scheduler-check
-              exit 1
-            fi
-            sleep 1
-          done
-          echo "::error::Scheduler did not start within timeout"
-          docker logs scheduler-check
-          exit 1
-
-      - name: Stop container
-        if: always()
-        run: docker stop scheduler-check || true
+          container-name: scheduler-check
+          run-args: -e CELERY_BROKER=memory://
+          command: >-
+            sh -c "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
+          ready-check: 'docker logs scheduler-check 2>&1 | grep -q ''beat: Starting\.\.\.'''
 
   publishing:
     name: Publishing
     needs: [building, mock-server, mock-worker, mock-scheduler]
-    if: inputs.publish
+    if: inputs.publish && success()
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Retrieve image artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: fantasy-bumps-docker
-          path: .
-
-      - name: Load image into Docker
-        run: docker load --input fantasy-bumps.docker
+      - name: Load built image
+        uses: ./.github/actions/load-built-image
 
       - name: Push Docker image
         run: docker push joehitchen/fantasy-bumps

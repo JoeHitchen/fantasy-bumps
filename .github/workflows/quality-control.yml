@@ -106,7 +106,8 @@ jobs:
   build-and-publish:
     name: Build & Publish
     needs: [markdown-linting, code-linting, typing, testing]
-    if: contains(fromJSON('["refs/heads/development", "refs/heads/master", "refs/heads/deploy"]'), github.ref)
+    # TEMPORARY: feature/mock-live-commands added for live verification, remove before merge
+    if: success() && contains(fromJSON('["refs/heads/development", "refs/heads/master", "refs/heads/deploy", "refs/heads/feature/mock-live-commands"]'), github.ref)
     uses: ./.github/workflows/build-publish.yml
     with:
       publish: ${{ github.ref == 'refs/heads/deploy' }}
