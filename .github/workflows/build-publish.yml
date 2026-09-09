@@ -12,17 +12,18 @@ on:
       - completed
     branches:
       - deploy
+  workflow_dispatch:  # TEMPORARY: for fast iteration while building issue #9, remove before merge
 
 jobs:
   building:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'deploy' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'deploy') }}
     name: Building
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Build Docker image
         run: docker build -t joehitchen/fantasy-bumps .
@@ -39,9 +40,142 @@ jobs:
           name: fantasy-bumps-docker
           path: fantasy-bumps.docker
 
+  mock-server:
+    name: Mock Server
+    needs: building
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve image artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: fantasy-bumps-docker
+          path: .
+
+      - name: Load image into Docker
+        run: docker load --input fantasy-bumps.docker
+
+      - name: Start server container
+        run: docker run -d --rm --name server-check -p 8000:8000 -e DJANGO_HOSTS=localhost joehitchen/fantasy-bumps
+
+      - name: Wait for server to respond
+        run: |
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null http://localhost:8000/; then
+              echo "Server responded"
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' server-check 2>/dev/null)" != "true" ]; then
+              echo "::error::Server container exited unexpectedly"
+              docker logs server-check
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "::error::Server did not respond within timeout"
+          docker logs server-check
+          exit 1
+
+      - name: Stop container
+        if: always()
+        run: docker stop server-check || true
+
+  mock-worker:
+    name: Mock Worker
+    needs: building
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Retrieve image artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: fantasy-bumps-docker
+          path: .
+
+      - name: Load image into Docker
+        run: docker load --input fantasy-bumps.docker
+
+      - name: Start worker container
+        run: >-
+          docker run -d --rm --name worker-check --network host
+          joehitchen/fantasy-bumps celery --app=core worker --loglevel=info
+
+      - name: Wait for worker to report ready
+        run: |
+          for i in $(seq 1 30); do
+            if docker logs worker-check 2>&1 | grep -q 'ready\.'; then
+              echo "Worker reported ready"
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' worker-check 2>/dev/null)" != "true" ]; then
+              echo "::error::Worker container exited unexpectedly"
+              docker logs worker-check
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "::error::Worker did not report ready within timeout"
+          docker logs worker-check
+          exit 1
+
+      - name: Stop container
+        if: always()
+        run: docker stop worker-check || true
+
+  mock-scheduler:
+    name: Mock Scheduler
+    needs: building
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Retrieve image artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: fantasy-bumps-docker
+          path: .
+
+      - name: Load image into Docker
+        run: docker load --input fantasy-bumps.docker
+
+      - name: Start scheduler container
+        run: >-
+          docker run -d --rm --name scheduler-check --network host
+          joehitchen/fantasy-bumps sh -c
+          "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
+
+      - name: Wait for scheduler to start
+        run: |
+          for i in $(seq 1 30); do
+            if docker logs scheduler-check 2>&1 | grep -q 'beat: Starting\.\.\.'; then
+              echo "Scheduler started"
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' scheduler-check 2>/dev/null)" != "true" ]; then
+              echo "::error::Scheduler container exited unexpectedly"
+              docker logs scheduler-check
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "::error::Scheduler did not start within timeout"
+          docker logs scheduler-check
+          exit 1
+
+      - name: Stop container
+        if: always()
+        run: docker stop scheduler-check || true
+
   publishing:
     name: Publishing
-    needs: building
+    needs: [building, mock-server, mock-worker, mock-scheduler]
+    if: false  # TEMPORARY: never publish while building/testing issue #9, remove before merge
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub
