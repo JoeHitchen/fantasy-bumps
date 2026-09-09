@@ -18,8 +18,7 @@ RUN apk add --no-cache --update mariadb-connector-c-dev libcurl \
 # boto3 version pin required because messages are not received with the latest version
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --inexact \
- && chown -R python:python /usr/local $HOME
+RUN uv sync --inexact && chown -R python:python /usr/local $HOME
 
 COPY --chown=python . .
 
