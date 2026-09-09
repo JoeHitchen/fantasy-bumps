@@ -64,7 +64,7 @@ jobs:
         with:
           container-name: worker-check
           run-args: -e CELERY_BROKER=memory://
-          command: celery --app=core worker
+          command: celery --app=core worker --loglevel=info
           ready-check: docker logs worker-check 2>&1 | grep -q 'ready\.'
 
   scheduler-testing:
@@ -81,7 +81,7 @@ jobs:
           container-name: scheduler-check
           run-args: -e CELERY_BROKER=memory://
           command: >-
-            sh -c "python manage.py migrate --no-color && celery --app=core beat
+            sh -c "python manage.py migrate --no-color && celery --app=core beat --loglevel=info"
           ready-check: 'docker logs scheduler-check 2>&1 | grep -q ''beat: Starting\.\.\.'''
 
   publishing:

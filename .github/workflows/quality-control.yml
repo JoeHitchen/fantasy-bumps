@@ -1,10 +1,7 @@
 name: Quality Control
 
 on:
-  push:
-  schedule:
-    - cron: '34 3 * * 5'
-      timezone: 'Europe/London'
+  workflow_call:
 
 jobs:
   markdown-linting:
@@ -102,12 +99,3 @@ jobs:
 
       - name: Run checks
         run: python project.py test
-
-  build-and-publish:
-    name: Build & Publish
-    needs: [markdown-linting, code-linting, typing, testing]
-    if: success() && contains(fromJSON('["refs/heads/development", "refs/heads/master", "refs/heads/deploy"]'), github.ref)
-    uses: ./.github/workflows/docker-flow.yml
-    with:
-      publish: ${{ github.ref == 'refs/heads/deploy' }}
-    secrets: inherit
