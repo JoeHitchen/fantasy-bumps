@@ -14,8 +14,7 @@ jobs:
   docker:
     name: Docker
     needs: quality-control
-    # TEMPORARY: feature/mock-live-commands added for live verification, remove before merge
-    if: success() && contains(fromJSON('["refs/heads/development", "refs/heads/master", "refs/heads/deploy", "refs/heads/feature/mock-live-commands"]'), github.ref)
+    if: success() && contains(fromJSON('["refs/heads/development", "refs/heads/master", "refs/heads/deploy"]'), github.ref)
     uses: ./.github/workflows/docker-flow.yml
     with:
       publish: ${{ github.ref == 'refs/heads/deploy' }}
