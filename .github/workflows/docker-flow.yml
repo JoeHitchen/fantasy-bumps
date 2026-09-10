@@ -34,59 +34,66 @@ jobs:
           name: fantasy-bumps-docker
           path: fantasy-bumps.docker
 
-  server-testing:
-    name: Server Testing
+  live-command-testing:
+    name: ${{ matrix.name }}
     needs: building
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Server Testing
+            container-name: server-check
+            run-args: -p 8000:8000 -e DJANGO_HOSTS=localhost
+            command: >-
+              sh -c "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --logger-class overrides.GunicornLogger"
+            ready-check: curl -sf -o /dev/null http://localhost:8000/
+          - name: Worker Testing
+            container-name: worker-check
+            run-args: -e CELERY_BROKER=memory://
+            command: celery --app=core worker --loglevel=info
+            ready-check: docker logs worker-check 2>&1 | grep -q 'ready\.'
+          - name: Scheduler Testing
+            container-name: scheduler-check
+            run-args: -e CELERY_BROKER=memory://
+            command: >-
+              sh -c "python manage.py migrate && celery --app=core beat --loglevel=info"
+            ready-check: 'docker logs scheduler-check 2>&1 | grep -q ''beat: Starting\.\.\.'''
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Run server check
-        uses: ./.github/actions/runtime-command
-        with:
-          container-name: server-check
-          run-args: -p 8000:8000 -e DJANGO_HOSTS=localhost
-          command: >-
-            sh -c "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --logger-class overrides.GunicornLogger"
-          ready-check: curl -sf -o /dev/null http://localhost:8000/
+      - name: Load built image
+        uses: ./.github/actions/load-image
 
-  worker-testing:
-    name: Worker Testing
-    needs: building
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
+      - name: Start container
+        run: docker run -d --name ${{ matrix.container-name }} ${{ matrix.run-args }} joehitchen/fantasy-bumps ${{ matrix.command }}
 
-      - name: Run worker check
-        uses: ./.github/actions/runtime-command
-        with:
-          container-name: worker-check
-          run-args: -e CELERY_BROKER=memory://
-          command: celery --app=core worker --loglevel=info
-          ready-check: docker logs worker-check 2>&1 | grep -q 'ready\.'
+      - name: Wait for container to become ready
+        run: |
+          for i in $(seq 1 30); do
+            if ${{ matrix.ready-check }}; then
+              echo "Ready"
+              exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' ${{ matrix.container-name }} 2>/dev/null)" != "true" ]; then
+              echo "::error::${{ matrix.container-name }} exited unexpectedly"
+              docker logs ${{ matrix.container-name }}
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "::error::${{ matrix.container-name }} did not become ready within 30s"
+          docker logs ${{ matrix.container-name }}
+          exit 1
 
-  scheduler-testing:
-    name: Scheduler Testing
-    needs: building
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-
-      - name: Run scheduler check
-        uses: ./.github/actions/runtime-command
-        with:
-          container-name: scheduler-check
-          run-args: -e CELERY_BROKER=memory://
-          command: >-
-            sh -c "python manage.py migrate && celery --app=core beat --loglevel=info"
-          ready-check: 'docker logs scheduler-check 2>&1 | grep -q ''beat: Starting\.\.\.'''
+      - name: Stop container
+        if: always()
+        run: docker stop ${{ matrix.container-name }} || true
 
   publishing:
     name: Publishing
-    needs: [server-testing, worker-testing, scheduler-testing]
+    needs: live-command-testing
     if: inputs.publish && success()
     runs-on: ubuntu-latest
     steps:
