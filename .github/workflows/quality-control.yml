@@ -1,15 +1,36 @@
 name: Quality Control
 
 on:
-  push:
-  schedule:
-    - cron: '34 3 * * 5'
-      timezone: 'Europe/London'
+  workflow_call:
 
 jobs:
-  markdown-linting:
-    name: Markdown Linting
+  qa:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Markdown Linting
+            group: markdown
+            sync-args: --only-group markdown
+            command: markdown
+
+          - name: Code Linting
+            group: linting
+            sync-args: --only-group linting
+            command: lint
+
+          - name: Typing
+            group: typing
+            sync-args: --only-group typing
+            command: type
+
+          - name: Testing
+            group: testing
+            sync-args: --group testing  # `--group ___` also includes base dependencies
+            command: test
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -23,82 +44,10 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-          cache-suffix: markdown
+          cache-suffix: ${{ matrix.group }}
 
       - name: Install dependencies
-        run: uv sync --only-group markdown
+        run: uv sync ${{ matrix.sync-args }}
 
       - name: Run checks
-        run: python project.py markdown
-
-  code-linting:
-    name: Code Linting
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.14'
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.0.1
-        with:
-          enable-cache: true
-          cache-suffix: linting
-
-      - name: Install dependencies
-        run: uv sync --only-group linting
-
-      - name: Run checks
-        run: python project.py lint
-
-  typing:
-    name: Typing
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.14'
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.0.1
-        with:
-          enable-cache: true
-          cache-suffix: typing
-
-      - name: Install dependencies
-        run: uv sync --only-group typing
-
-      - name: Run checks
-        run: python project.py type
-
-  testing:
-    name: Testing
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.14'
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.0.1
-        with:
-          enable-cache: true
-          cache-suffix: testing
-
-      - name: Install dependencies
-        run: uv sync --group testing  # N.B. "uv sync --group ___" also includes base dependencies
-
-      - name: Run checks
-        run: python project.py test
+        run: python project.py ${{ matrix.command }}
