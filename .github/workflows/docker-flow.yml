@@ -34,7 +34,7 @@ jobs:
           name: fantasy-bumps-docker
           path: fantasy-bumps.docker
 
-  live-command-testing:
+  runtime-testing:
     name: ${{ matrix.name }}
     needs: building
     runs-on: ubuntu-latest
@@ -48,17 +48,20 @@ jobs:
             command: >-
               sh -c "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --logger-class overrides.GunicornLogger"
             ready-check: curl -sf -o /dev/null http://localhost:8000/
+
           - name: Worker Testing
             container-name: worker-check
             run-args: -e CELERY_BROKER=memory://
             command: celery --app=core worker --loglevel=info
             ready-check: docker logs worker-check 2>&1 | grep -q 'ready\.'
+
           - name: Scheduler Testing
             container-name: scheduler-check
             run-args: -e CELERY_BROKER=memory://
             command: >-
               sh -c "python manage.py migrate && celery --app=core beat --loglevel=info"
             ready-check: 'docker logs scheduler-check 2>&1 | grep -q ''beat: Starting\.\.\.'''
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -93,7 +96,7 @@ jobs:
 
   publishing:
     name: Publishing
-    needs: live-command-testing
+    needs: runtime-testing
     if: inputs.publish && success()
     runs-on: ubuntu-latest
     steps:

@@ -15,18 +15,22 @@ jobs:
             group: markdown
             sync-args: --only-group markdown
             command: markdown
+
           - name: Code Linting
             group: linting
             sync-args: --only-group linting
             command: lint
+
           - name: Typing
             group: typing
             sync-args: --only-group typing
             command: type
+
           - name: Testing
             group: testing
-            sync-args: --group testing  # also includes base dependencies
+            sync-args: --group testing  # `--group ___` also includes base dependencies
             command: test
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
