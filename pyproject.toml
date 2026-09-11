@@ -54,7 +54,7 @@ typing = [
 
 
 [tool.pymarkdown]
-system.exclude_path = ".*/"
+system.exclude_path = ".*/,CLAUDE.md"
 plugins.MD013.enabled = false
 
 extensions.markdown-tables.enabled = true
