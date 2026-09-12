@@ -5,6 +5,7 @@ ENV PYTHONUNBUFFERED 1
 ENV HOME /usr/src/app
 ENV STATIC_ROOT /usr/data/static
 ENV MEDIA_ROOT /usr/data/media
+ENV UV_PROJECT_ENVIRONMENT /usr/local
 
 WORKDIR $HOME
 RUN adduser --disabled-password python && chown -R python:python $HOME \
@@ -12,12 +13,12 @@ RUN adduser --disabled-password python && chown -R python:python $HOME \
 
 RUN apk add --no-cache --update mariadb-connector-c-dev libcurl \
  && apk add --no-cache --virtual .build gcc musl-dev mariadb-dev curl-dev \
- && pip install --no-cache-dir mysqlclient 'celery[sqs]' 'boto3>=1.43.86' 'pycurl>=7.47.0' django-storages[s3] gunicorn \
+ && pip install --no-cache-dir uv mysqlclient 'celery[sqs]' 'boto3>=1.43.86' 'pycurl>=7.47.0' django-storages[s3] gunicorn \
  && apk del --purge .build
 # boto3 version pin required because messages are not received with the latest version
 
-COPY --chown=python requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+RUN uv sync --inexact && chown -R python:python /usr/local $HOME
 
 COPY --chown=python . .
 
