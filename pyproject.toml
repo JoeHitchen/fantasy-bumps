@@ -44,7 +44,7 @@ testing = [
 ]
 
 typing = [
-    "mypy<1.16",
+    "mypy",
     "django-stubs",
     "celery-types",
     "types-pytz",

@@ -1,6 +1,6 @@
-from unittest.mock import patch, Mock, PropertyMock
+from unittest.mock import patch, PropertyMock
 from datetime import time, datetime, timedelta
-from typing import Callable, ParamSpec, TypeVar, Concatenate
+from typing import Callable
 import zoneinfo
 
 from django.utils import timezone
@@ -9,12 +9,8 @@ from core.settings import TIME_ZONE
 
 from . import models
 
-_Params = ParamSpec('_Params')
-_RetType = TypeVar('_RetType')
-_OriginalFunc = Callable[_Params, _RetType]
-_DecoratedFunc = Callable[Concatenate[Mock, _Params], _RetType]
-
-Patch = Callable[[_OriginalFunc], _DecoratedFunc]  # type: ignore  # This use-case is too complex
+Patch = Callable[[Callable[..., None]], Callable[..., None]]
+# ^ Type alias for a patch decorator that wraps test functions (last argument) returning None
 
 
 def localtime_time(time: time, shift: timedelta = timedelta(0)) -> Patch:

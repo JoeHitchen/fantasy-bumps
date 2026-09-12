@@ -3,6 +3,7 @@ from typing import Callable, TypeVar, TYPE_CHECKING
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib import auth, messages
+from django.contrib.messages.storage.base import Message
 
 from . import forms
 
@@ -28,7 +29,7 @@ class MessagesTestMixin():
     assertEqual: Callable  # type: ignore
 
     @classmethod
-    def message_tuple(cls, msg: messages.storage.base.Message) -> MsgTuple:
+    def message_tuple(cls, msg: Message) -> MsgTuple:
         """Converts a message object into a tuple for easy comparison."""
         return (cls.levels_matrix[msg.level], msg.message)
 
