@@ -1,7 +1,7 @@
 from typing import TypedDict, Iterable, Any, TYPE_CHECKING
 
 from django.views.generic.detail import DetailView
-from django.views.generic.base import ContextMixin, TemplateView
+from django.views.generic.base import ContextMixin, TemplateView, TemplateResponseMixin
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 from django.utils.datastructures import MultiValueDictKeyError
@@ -11,7 +11,7 @@ from django.contrib.auth import models as auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
-from django.http import HttpRequest, HttpResponse, HttpResponseBase
+from django.http import HttpRequest, HttpResponse, HttpResponseBase, JsonResponse
 
 from .constants import Genders, GENDERS_OVERALL, money, timings, CoachingCompetitions
 from . import models
@@ -22,6 +22,7 @@ from . import errors
 
 ContextKwargs = dict[str, Any]
 ContextDict = dict[str, Any]
+JsonOutput = dict[str, Any]
 
 
 class EventAugmentation(TypedDict):
@@ -54,7 +55,27 @@ else:
 
 
 
-class FantasyBaseMixin(ContextMixin):
+class FantasyBaseMixin(TemplateResponseMixin, ContextMixin):
+
+    request: HttpRequest
+
+    def render_to_response(self, context: Any, **response_kwargs: Any) -> HttpResponse:
+        """
+        Returns a JSON response, transforming 'context' to make the payload.
+        """
+
+        get_format = self.request.GET.get('format')
+        accept_header = self.request.headers.get('Accept')
+
+        if get_format != 'json' and accept_header != 'application/json':
+            return super().render_to_response(context, **response_kwargs)
+
+        if hasattr(self, 'convert_to_json'):
+            return JsonResponse(self.convert_to_json(context), **response_kwargs)
+        return JsonResponse({
+            'message': 'This page does not support JSON responses.',
+        }, status = 406)
+
 
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
@@ -382,6 +403,45 @@ class MarketView(EventBase):
             and (not require_coach or game_entry.get_coach(other_gender))
         )
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+
+        def calculate_single_payout(crew: models.StartOrderPosition, change: int) -> int:
+            payouts = utils.payout_by_day_gender_positions(
+                crew.day,
+                Genders(crew.crew.gender),
+                crew.rank,
+                crew.rank - change,
+            )
+            return payouts['value_change'] + payouts['payout']
+
+        def calculate_payouts(crew: models.StartOrderPosition) -> dict[int, int]:
+            payouts = {0: calculate_single_payout(crew, 0)}
+            if crew.rank > 1:
+                payouts[1] = calculate_single_payout(crew, 1)
+            if crew.rank < crew.day.event.num_crews(Genders(crew.crew.gender)):
+                payouts[-1] = calculate_single_payout(crew, -1)
+            return payouts
+
+        return {
+            'event': context['event'].json(),
+            'day': self.day.json(),
+            'start_order': [
+                {
+                    'rank': crew_position.rank,
+                    'division': div_idx + 1,
+                    'bungline': crew_position.bungline,
+                    'crew': crew_position.crew.json(),
+                    'payouts': calculate_payouts(crew_position),
+                    'purchases': crew_position.purchase_count,
+                    'popularity': crew_position.popularity,
+                }
+                for div_idx, division in enumerate(context['start_order'])
+                for crew_position in list(division)
+            ],
+            'total_crews': self.event.num_crews(context['gender']),
+        }
 
 
 

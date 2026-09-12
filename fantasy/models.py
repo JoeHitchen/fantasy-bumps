@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date as date_type, datetime, timedelta
 from typing import TypedDict, TYPE_CHECKING
 from dataclasses import dataclass
 from functools import lru_cache
@@ -39,6 +39,30 @@ else:
     FinancialGameEntry = 'GameEntry'
 
 
+class EventJson(TypedDict):
+    series: str
+    year: int
+    name: str
+    tag: str
+    coaching_competition: str | None
+
+
+class DayJson(TypedDict):
+    name: str
+    date: date_type
+    first_race: datetime | None
+    last_race: datetime | None
+    market_opens: datetime | None
+    market_closes: datetime | None
+    market_is_open: bool
+
+
+class CrewJson(TypedDict):
+    club: str
+    gender: str
+    rank: int
+
+
 class Event(models.Model):
     """A bumps competition, with simple division information."""
 
@@ -70,6 +94,16 @@ class Event(models.Model):
             Series.MAYS.value: 'May Bumps',
         }.get(self.series, self.get_series_display())
         return '{} {}'.format(series_long, self.year)
+
+
+    def json(self) -> EventJson:
+        return {
+            'series': self.series,
+            'year': self.year,
+            'name': str(self),
+            'tag': self.tag,
+            'coaching_competition': self.coaching_competition,
+        }
 
 
     @cached_property
@@ -143,6 +177,18 @@ class Day(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+    def json(self) -> DayJson:
+        return {
+            'name': self.name,
+            'date': self.date,
+            'first_race': self.first_race,
+            'last_race': self.last_race,
+            'market_opens': self.market_opens,
+            'market_closes': self.market_closes,
+            'market_is_open': self.market_is_open,
+        }
 
     @cached_property
     def next(self) -> 'Day | None':
@@ -320,6 +366,14 @@ class Crew(models.Model):
     def as_tuple(self) -> 'Crew.Tuple':
         """Describes the crew in the tuple-form needed for parser interaction."""
         return self.make_tuple(self.club, self.gender, self.rank)
+
+
+    def json(self) -> CrewJson:
+        return {
+            'club': self.club,
+            'gender': self.gender,
+            'rank': self.rank,
+        }
 
 
     def value(self, day: Day) -> int:
