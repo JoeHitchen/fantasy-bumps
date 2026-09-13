@@ -63,6 +63,13 @@ class CrewJson(TypedDict):
     rank: int
 
 
+class FinanceJson(TypedDict):
+    budget: int
+    crew_value: int
+    balance: int
+
+
+
 class Event(models.Model):
     """A bumps competition, with simple division information."""
 
@@ -560,8 +567,34 @@ class GameEntry(models.Model):
 
     objects = GameEntryQuerySet.as_manager()
 
+    total_budget: int
+    total_crew_value: int
+    total_balance: int
+    mens_crew_value: int
+    womens_crew_value: int
+
     class Meta:
         unique_together = ['team', 'event']
+
+
+    def finance_json(self) -> dict[str, FinanceJson]:
+        return {
+            'overall': {
+                'budget': self.total_budget,
+                'crew_value': self.total_crew_value,
+                'balance': self.total_balance,
+            },
+            'mens': {
+                'budget': self.mens_budget,
+                'crew_value': self.mens_crew_value,
+                'balance': self.mens_balance,
+            },
+            'womens': {
+                'budget': self.womens_budget,
+                'crew_value': self.womens_crew_value,
+                'balance': self.womens_balance,
+            },
+        }
 
 
     def get_coach(self, gender: Genders) -> Crew | None:

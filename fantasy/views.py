@@ -487,6 +487,26 @@ class LeaderboardView(EventBase):
         return context
 
 
+    def convert_to_json(self, context: ContextDict) -> dict[str, Any]:
+        return {
+            'event': context['event'].json(),
+            'day': context['day'].json(),
+            'ranking': {'O': 'overall', 'M': 'men', 'W': 'women'}[context['ranking']],
+            'filters': {
+                'invalid-entries': context['invalid_entries'],
+                'allow-subs': context['allow_subs'],
+                'returners': context['returners'],
+            },
+            'leaderboard': [{
+                'rank': rank,
+                'team': str(fantasy.team),
+                'finances': fantasy.finance_json(),
+                'valid_entry': fantasy.valid_entry,
+                'has_subs': fantasy.has_subs,
+                'previous_entries': fantasy.previous_entries,
+            } for rank, fantasy in enumerate(context['fantasies'], start = 1)],
+        }
+
 
 class TeamView(EventBase):
     """Presents a team's crews for an event."""
@@ -542,6 +562,45 @@ class TeamView(EventBase):
         )
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+
+        def convert_crew_list(
+            crew_list: dict[models.Seat, 'models.Purchase'],
+            day: 'models.Day',
+        ) -> JsonOutput:
+            return {
+                seat.short: {
+                    'crew': purchase.crew.json(),
+                    'athlete': purchase.athlete.name if purchase.athlete else None,
+                    'price': purchase.crew.value(day),
+                }
+                for seat, purchase in crew_list.items()
+            }
+
+        def convert_coach(gender: Genders) -> JsonOutput | None:
+            crew_key = {Genders.MEN: 'mens_coach_crew', Genders.WOMEN: 'womens_coach_crew'}[gender]
+            name_key = {Genders.MEN: 'mens_coach_name', Genders.WOMEN: 'womens_coach_name'}[gender]
+            return {
+                'crew': context.get(crew_key),
+                'name': context.get(name_key, ''),
+            } if context.get(crew_key) else None
+
+        return {
+            'event': context['event'].json(),
+            'team': context['team'].user.username,
+            'finances': context['finances'].finance_json(),
+            'crews': [
+                {
+                    'day': day_data['day'].json(),
+                    'mens_crew': convert_crew_list(day_data['mens_crew'], day_data['day']),
+                    'womens_crew': convert_crew_list(day_data['womens_crew'], day_data['day']),
+                } for day_data in context['crews'][::-1]
+            ],
+            'mens_coach': convert_coach(Genders.MEN),
+            'womens_coach': convert_coach(Genders.WOMEN),
+        }
 
 
 
