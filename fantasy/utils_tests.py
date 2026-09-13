@@ -3,7 +3,7 @@ from django.db import models as db
 
 from core.tests import exists
 
-from .constants import Series, Genders, Clubs
+from .constants import Series, Genders, Clubs, money
 from . import models
 from . import utils
 from . import errors
@@ -276,6 +276,22 @@ class Test__Pricing(TestCase):
                 bungline_3 = utils.pricing(3, num_crews)
 
                 self.assertGreaterEqual(bungline_1 - bungline_2, bungline_2 - bungline_3)
+
+
+    def test__upper_boundary_safety(self) -> None:
+        """Ensure no errors occur at the upper boundary of rankings."""
+
+        self.assertEqual(utils.pricing(1, 60), money.PRICE_MAX)
+        self.assertEqual(utils.pricing(0, 60), money.PRICE_MAX)
+        self.assertEqual(utils.pricing(-1, 60), money.PRICE_MAX)
+
+
+    def test__lower_boundary_safety(self) -> None:
+        """Ensure no errors occur at the lower boundary of rankings."""
+
+        self.assertEqual(utils.pricing(60, 60), money.PRICE_MIN)
+        self.assertEqual(utils.pricing(61, 60), money.PRICE_MIN)
+
 
 
 

@@ -83,9 +83,9 @@ def _pricing_gradient(num_crews: int) -> Callable[[int], int]:
 def pricing(bungline: int, num_crews: int) -> int:
     """Iteratively calculates the price of a crew on a given bungline for a given event size."""
 
-    if bungline == 1:
+    if bungline <= 1:
         return money.PRICE_MAX
-    elif bungline == num_crews:
+    elif bungline >= num_crews:
         return money.PRICE_MIN
 
     price_delta = _pricing_gradient(num_crews)(bungline)
