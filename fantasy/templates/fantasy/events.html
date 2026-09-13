@@ -4,15 +4,15 @@
 {% block content %}
 
 <h3 class="mb-3">Latest events</h3>
-{% for event in recent_events %}
+{% for event in events|slice:":3" %}
 {% event_box event user %}
 {% empty %}
 There are no events available
 {% endfor %}
 
-{% if past_events %}
+{% if events|length > 3 %}
 <h3 class="mb-3">Past events</h3>
-{% for event in past_events %}
+{% for event in events|slice:"3:" %}
 {% event_box event user %}
 {% endfor %}
 {% endif %}

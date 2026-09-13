@@ -78,13 +78,13 @@ class Test__Index(TestCase):
 
         self.user = auth.User.objects.get(username = 'DevTeam')
 
-        self.recent_events = [
+        self.events = [
             prepare_event(self.user, 2021, -2),
             prepare_event(self.user, 2020, 0),
             prepare_event(self.user, 2019, 2),
+            prepare_event(self.user, 2018, 4),
+            prepare_event(self.user, 2017, 6),
         ]
-        prepare_event(self.user, 2018, 4)
-        prepare_event(self.user, 2017, 6)
 
 
     def check_event_augmentation(self, event: models.Event, with_user: bool) -> None:
@@ -94,22 +94,22 @@ class Test__Index(TestCase):
 
 
     def test__without_login(self) -> None:
-        """Returns a 200 success with augmented recent and past events."""
+        """Returns a 200 success with augmented events."""
 
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
 
-        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['events'], self.events)
 
-        for event in response.context['recent_events']:
+        for event in response.context['events']:
             with self.subTest(year = event.year):
                 self.check_event_augmentation(event, with_user = False)
 
 
     def test__with_login(self) -> None:
-        """Returns a 200 success with augmented recent and past events."""
+        """Returns a 200 success with augmented events."""
 
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.get(self.url)
@@ -117,16 +117,16 @@ class Test__Index(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/index.html')
 
-        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['events'], self.events)
 
-        for event in response.context['recent_events']:
+        for event in response.context['events']:
             with self.subTest(year = event.year):
                 self.check_event_augmentation(event, with_user = True)
 
 
     def test__query_count__without_login(self) -> None:
         """Expect:
-            (1) SELECT recent events
+            (1) SELECT events
             (1) SELECT event days prefetch
 
         * Seats query defined but not executed since it is not used
@@ -138,7 +138,7 @@ class Test__Index(TestCase):
 
     def test__query_count__with_login(self) -> None:
         """Expect:
-            (1) SELECT recent events
+            (1) SELECT events
             (3) SELECT session, user & team
             (1) SELECT financial information prefetch
             (2) SELECT user crew prefetches
@@ -156,21 +156,20 @@ class Test__GuideRules(TestCase):
     fixtures = ['dev_team']
 
     user: auth.User
-    recent_events: list[models.Event]
-    past_events: list[models.Event]
+    events: list[models.Event]
 
 
     @classmethod
     def setUpTestData(cls) -> None:
         cls.user = auth.User.objects.get(username = 'DevTeam')
 
-        cls.recent_events = [
+        cls.events = [
             prepare_event(cls.user, 2021, -2),
             prepare_event(cls.user, 2020, 0),
             prepare_event(cls.user, 2019, 2),
+            prepare_event(cls.user, 2018, 4),
+            prepare_event(cls.user, 2017, 6),
         ]
-        prepare_event(cls.user, 2018, 4)
-        prepare_event(cls.user, 2017, 6)
 
 
     def test__render(self) -> None:
@@ -180,13 +179,13 @@ class Test__GuideRules(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/rules.html')
-        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['events'], self.events)
         self.assertEqual(response.context['money'], money)
 
 
     def test__query_count(self) -> None:
         """Expect:
-            (1) SELECT recent events
+            (1) SELECT events
         """
 
         with self.assertNumQueries(1):
@@ -200,20 +199,17 @@ class Test__EventsList(TestCase):
     url = reverse('fantasy:events')
 
     user: auth.User
-    recent_events: list[models.Event]
-    past_events: list[models.Event]
+    events: list[models.Event]
 
 
     @classmethod
     def setUpTestData(cls) -> None:
         cls.user = auth.User.objects.get(username = 'DevTeam')
 
-        cls.recent_events = [
+        cls.events = [
             prepare_event(cls.user, 2021, -2),
             prepare_event(cls.user, 2020, 0),
             prepare_event(cls.user, 2019, 2),
-        ]
-        cls.past_events = [
             prepare_event(cls.user, 2018, 4),
             prepare_event(cls.user, 2017, 6),
         ]
@@ -226,27 +222,22 @@ class Test__EventsList(TestCase):
 
 
     def test__without_login(self) -> None:
-        """Returns a 200 success with augmented recent and past events."""
+        """Returns a 200 success with augmented events."""
 
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/events.html')
 
-        self.assertEqual(response.context['recent_events'], self.recent_events)
-        self.assertEqual(response.context['past_events'], self.past_events)
+        self.assertEqual(response.context['events'], self.events)
 
-        for event in response.context['recent_events']:
-            with self.subTest(year = event.year):
-                self.check_event_augmentation(event, with_user = False)
-
-        for event in response.context['past_events']:
+        for event in response.context['events']:
             with self.subTest(year = event.year):
                 self.check_event_augmentation(event, with_user = False)
 
 
     def test__with_login(self) -> None:
-        """Returns a 200 success with augmented recent and past events."""
+        """Returns a 200 success with augmented events."""
 
         self.client.login(username = 'DevTeam', password = 'password')
         response = self.client.get(self.url)
@@ -254,36 +245,29 @@ class Test__EventsList(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'fantasy/events.html')
 
-        self.assertEqual(response.context['recent_events'], self.recent_events)
-        self.assertEqual(response.context['past_events'], self.past_events)
+        self.assertEqual(response.context['events'], self.events)
 
-        for event in response.context['recent_events']:
-            with self.subTest(year = event.year):
-                self.check_event_augmentation(event, with_user = True)
-
-        for event in response.context['past_events']:
+        for event in response.context['events']:
             with self.subTest(year = event.year):
                 self.check_event_augmentation(event, with_user = True)
 
 
     def test__query_count__without_login(self) -> None:
         """Expect:
-            (1) SELECT recent events
-            (1) SELECT historical events
+            (1) SELECT events
             (1) SELECT event days prefetch
 
         * Seats query defined but not executed since it is not used
         """
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             self.client.get(self.url)
 
 
     def test__query_count__with_login(self) -> None:
         """Expect:
-            (1) SELECT recent events
+            (1) SELECT events
             (3) SELECT session, user & team
-            (1) SELECT historical events
             (1) SELECT financial information prefetch
             (2) SELECT user crew prefetches
             (1) SELECT all seats
@@ -291,7 +275,7 @@ class Test__EventsList(TestCase):
         """
         self.client.login(username = 'DevTeam', password = 'password')
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(9):
             self.client.get(self.url)
 
 
@@ -315,7 +299,7 @@ class GamePageBase(AbstractTestCase):
     event: models.Event
     day: models.Day
     prev_day: models.Day
-    recent_events: list[models.Event]
+    events: list[models.Event]
 
     user: auth.User
     team: models.Team
@@ -341,13 +325,13 @@ class GamePageBase(AbstractTestCase):
         cls.crew_womens = exists(models.Crew.objects.filter(gender = Genders.WOMEN).first())
 
         day_shift = (date.today() - cls.day.date).days
-        cls.recent_events = [
+        cls.events = [
             prepare_event(cls.user, 2021, 0),
             prepare_event(cls.user, 2020, day_shift + 10),
             prepare_event(cls.user, 2019, day_shift + 12),
+            prepare_event(cls.user, 2018, day_shift + 14),
+            prepare_event(cls.user, 2017, day_shift + 16),
         ]
-        prepare_event(cls.user, 2018, day_shift + 14)
-        prepare_event(cls.user, 2017, day_shift + 16)
 
 
     def test__generic__unknown_event(self) -> None:
@@ -371,7 +355,7 @@ class GamePageBase(AbstractTestCase):
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertFalse('team' in response.context)
-        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['events'], self.events)
 
         self.extra_context_without_user(exists(response.context_data))
 
@@ -392,7 +376,7 @@ class GamePageBase(AbstractTestCase):
         self.assertEqual(response.context['event'], self.event)
         self.assertEqual(response.context['day'], self.day)
         self.assertEqual(response.context['team'], self.team)
-        self.assertQuerySetEqual(response.context['recent_events'], self.recent_events)
+        self.assertQuerySetEqual(response.context['events'], self.events)
 
         self.extra_context_with_user(response.context)
 
@@ -521,7 +505,7 @@ class Test__Event(GamePageBase, TestCase):
         # Run test
         response = self.client.get(self.url)
 
-        for index, crew in enumerate(response.context['popular_crews_men']):
+        for index, crew in enumerate(response.context['popular_crews_men'][:5]):
             with self.subTest(order = index + 1):
                 self.assertEqual(crew, expected[index][0])
                 self.assertEqual(crew.purchase_count, expected[index][1])
@@ -564,7 +548,7 @@ class Test__Event(GamePageBase, TestCase):
         # Run test
         response = self.client.get(self.url)
 
-        for index, crew in enumerate(response.context['popular_crews_women']):
+        for index, crew in enumerate(response.context['popular_crews_women'][:5]):
             with self.subTest(order = index + 1):
                 self.assertEqual(crew, expected[index][0])
                 self.assertEqual(crew.purchase_count, expected[index][1])
@@ -575,7 +559,7 @@ class Test__Event(GamePageBase, TestCase):
         """Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
             (1) SELECT Total entry count (for popularity)
-            (1) FantasyBumps Overhead - Recent events
+            (1) FantasyBumps Overhead - Events
             (2) SELECT First and last racing days
             (1) SELECT Trophy winners
             (1) SELECT Top ranked teams
@@ -594,7 +578,7 @@ class Test__Event(GamePageBase, TestCase):
         """Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
             (1) SELECT Total entry count (for popularity)
-            (1) FantasyBumps Overhead - Recent events
+            (1) FantasyBumps Overhead - Events
             (2) SELECT First and last racing days
             (1) SELECT Trophy winners
             (1) SELECT Trophy winner game entries
@@ -1100,7 +1084,7 @@ class MarketPageBase(GamePageBase):
     @patching.market_closes(timezone.localtime() + timedelta(1))  # Required for redirect page
     def test__query_count(self, market_closes_mock: Mock, markets_mock: Mock) -> None:
         """Expect:
-            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
+            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Events (1)
             (2) Django Auth overheard - Session (1), User (1)
             (1) User's team
             (1) All game entries for event (for popularity count)
@@ -1243,7 +1227,7 @@ class LeaderboardPageBase(GamePageBase):
         """ Expect:
             (3) FantasyBumps Overhead - Event (1), Active day (2, but can be 1)
             (2) SELECT previous day and twice-previous day
-            (1) SELECT recent events
+            (1) SELECT events
             (1) Get rankings
             (1) Prefetch trophies
         """
@@ -1257,7 +1241,7 @@ class LeaderboardPageBase(GamePageBase):
             (4) Base queries
             (2) Django Auth overheard
             (2) SELECT previous day and twice-previous day
-            (1) SELECT recent events
+            (1) SELECT events
             (1) Get user's team
             (1) Prefetch trophies
         """
@@ -1449,7 +1433,7 @@ class Test__Team(TestCase):
     @patching.localtime_time(time(11, 15))
     def test__query_count__standard(self, _localtime_mock: Mock) -> None:
         """Expect:
-            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Recent events (1)
+            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Events (1)
             (1) SELECT target team's game entry
             (1) SELECT racing days
             (2) SELECT coaches' names
@@ -2710,7 +2694,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
         )
 
         self.assertQuerySetEqual(
-            response.context['recent_events'],
+            response.context['events'],
             list(models.Event.objects.all()),
         )
 
@@ -2991,7 +2975,7 @@ class Test__Switch(TestCase, MessagesTestMixin):
             (2) Django internals
             (1) SELECT user's team  (Could be avoided by comparing on User, but that feels wrong)
             (1) SELECT purchase, crew, day, event, and seat
-            (1) SELECT recent events
+            (1) SELECT events
             (1) SELECT purchase.athlete  (Skipped by above, because nullable)
             (1) SELECT list of crew's rowers
             (1) SELECT list of other purchases

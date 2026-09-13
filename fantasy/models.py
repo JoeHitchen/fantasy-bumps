@@ -44,6 +44,8 @@ class EventJson(TypedDict):
     year: int
     name: str
     tag: str
+    first_day: date_type
+    last_day: date_type
     coaching_competition: str | None
 
 
@@ -67,6 +69,13 @@ class FinanceJson(TypedDict):
     budget: int
     crew_value: int
     balance: int
+
+
+class TrophyJson(TypedDict):
+    team: str
+    code: str
+    name: str
+    description: str
 
 
 
@@ -110,6 +119,8 @@ class Event(models.Model):
             'year': self.year,
             'name': str(self),
             'tag': self.tag,
+            'first_day': self.first_day.date,
+            'last_day': self.last_racing_day.date,
             'coaching_competition': self.coaching_competition,
         }
 
@@ -652,6 +663,15 @@ class Trophy(models.Model):
 
     def __str__(self) -> str:
         return f'{self.Types(self.type).label} ({self.event})'
+
+
+    def json(self) -> TrophyJson:
+        return {
+            'team': str(self.team),
+            'code': self.type,
+            'name': self.Types(self.type).label,
+            'description': self.description(),
+        }
 
 
     def description(self) -> str:

@@ -85,7 +85,7 @@ class FantasyBaseMixin(TemplateResponseMixin, ContextMixin):
         events = utils.ordered_events()
         if 'event' in context:
             events = events.exclude(id = context['event'].id)
-        context['recent_events'] = events[:3]
+        context['events'] = list(events)
 
         return context
 
@@ -166,10 +166,13 @@ class IndexView(FantasyBaseMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         # Load and augment events
-        context['recent_events'] = list(context['recent_events'])
-        self.augment_events_for_events_boxes(context['recent_events'], self.request.user)
+        self.augment_events_for_events_boxes(context['events'], self.request.user)
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+        return {'events': [event.json() for event in context['events']]}
 
 
 
@@ -185,17 +188,13 @@ class EventsList(FantasyBaseMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         # Load and augment events
-        context['recent_events'] = list(context['recent_events'])
-        context['past_events'] = list(utils.ordered_events().exclude(
-            id__in = [event.id for event in context['recent_events']],
-        ))
-
-        self.augment_events_for_events_boxes(
-            context['past_events'] + context['recent_events'],
-            self.request.user,
-        )
+        self.augment_events_for_events_boxes(context['events'], self.request.user)
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+        return {'events': [event.json() for event in context['events']]}
 
 
 
@@ -276,6 +275,32 @@ class EventView(EventBase):
         context['popular_crews_women'] = self.popular_crew_query(Genders.WOMEN)
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+        def popularity_json(crew: CrewWithPopularity) -> dict[str, Any]:
+            return {
+                'crew': crew.json(),
+                'popularity': crew.popularity,
+                'purchases': crew.purchase_count,
+            }
+
+        return {
+            'event': context['event'].json(),
+            'all_days': [day.json() for day in context['event'].days.all()],
+            'active_day': self.day.json(),
+            'initial_market_open': context['event'].initial_market_open,
+            'market_held_closed': context['event'].market_held_closed,
+            'trophies': [trophy.json() for trophy in context['trophies']],
+            'mens_popularity': [
+                popularity_json(popularity)
+                for popularity in context['popular_crews_men']
+            ],
+            'womens_popularity': [
+                popularity_json(popularity)
+                for popularity in context['popular_crews_women']
+            ],
+        }
 
 
 
