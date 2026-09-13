@@ -18,6 +18,7 @@ from . import models
 from . import utils
 from . import transactions
 from . import errors
+from .management.game_advance import create_payout_matrix
 
 
 ContextKwargs = dict[str, Any]
@@ -598,6 +599,10 @@ class TeamView(EventBase):
                     'crew': purchase.crew.json(),
                     'athlete': purchase.athlete.name if purchase.athlete else None,
                     'price': purchase.crew.value(day),
+                    'result': (
+                        create_payout_matrix(day)[purchase.crew]
+                        if day != self.event.active_day else None
+                    ),
                 } if purchase else None
                 for seat, purchase in crew_list.items()
             }
