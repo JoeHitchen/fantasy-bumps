@@ -10,7 +10,7 @@ from django.urls import reverse
 
 from core.tests import MessagesTestMixin, exists
 
-from .constants import Series, Genders, GENDERS_OVERALL, money, CoachingCompetitions
+from .constants import Series, Clubs, Genders, GENDERS_OVERALL, money, CoachingCompetitions
 from . import models
 from . import utils
 from . import transactions
@@ -151,6 +151,38 @@ class Test__Index(TestCase):
             self.client.get(self.url)
 
 
+    def test__json_accept_header(self) -> None:
+        """Returns the events as JSON when requested by the Accept header."""
+
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        payload = response.json()
+        self.assertEqual(
+            [event['tag'] for event in payload['events']],
+            [event.tag for event in self.events],
+        )
+
+
+    def test__json_format_parameter(self) -> None:
+        """Returns the events as JSON when requested by the format parameter.
+
+        N.B. This acts as the global test of the `?format=json` request pattern. It will not be
+        tested elsewhere.
+        """
+
+        response = self.client.get(self.url, {'format': 'json'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        payload = response.json()
+        self.assertEqual(
+            [event['tag'] for event in payload['events']],
+            [event.tag for event in self.events],
+        )
+
+
 
 class Test__GuideRules(TestCase):
     fixtures = ['dev_team']
@@ -190,6 +222,16 @@ class Test__GuideRules(TestCase):
 
         with self.assertNumQueries(1):
             self.client.get(reverse('fantasy:rules'))
+
+
+    def test__json_not_supported(self) -> None:
+        """Returns a 406 response, since this page has no JSON representation.
+
+        N.B. This acts as the global check for views without a `convert_to_json` method."""
+
+        response = self.client.get(reverse('fantasy:rules'), HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 406)
+        self.assertEqual(response['Content-Type'], 'application/json')
 
 
 
@@ -277,6 +319,20 @@ class Test__EventsList(TestCase):
 
         with self.assertNumQueries(9):
             self.client.get(self.url)
+
+
+    def test__json(self) -> None:
+        """Returns the events as JSON when requested."""
+
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        payload = response.json()
+        self.assertEqual(
+            [event['tag'] for event in payload['events']],
+            [event.tag for event in self.events],
+        )
 
 
 
@@ -594,6 +650,20 @@ class Test__Event(GamePageBase, TestCase):
 
         with self.assertNumQueries(11):
             self.client.get(self.url)
+
+
+    def test__json(self) -> None:
+        """Returns the event's details, trophies & crew popularity as JSON when requested."""
+
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        payload = response.json()
+        self.assertEqual(payload['event']['tag'], self.event.tag)
+        self.assertIsInstance(payload['trophies'], list)
+        self.assertIsInstance(payload['mens_popularity'], list)
+        self.assertIsInstance(payload['womens_popularity'], list)
 
 
 
@@ -1130,6 +1200,37 @@ class MarketPageBase(GamePageBase):
             self.client.get(self.url)
 
 
+    def test__json(self) -> None:
+        """Returns the start order, purchase counts & payouts as JSON when requested."""
+
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        payload = response.json()
+        self.assertEqual(payload['event']['tag'], self.event.tag)
+        self.assertTrue(payload['start_order'])
+
+        keys = ['rank', 'division', 'bungline', 'crew', 'payouts', 'purchases', 'popularity']
+        for key in keys:
+            with self.subTest(key = key):
+                self.assertTrue(key in payload['start_order'][0])
+
+
+    def test__query_count__json(self) -> None:
+        """Expect:
+            (3) FantasyBumps Overhead - Event (1), Active day (1, but can be 2), Events (1)
+            (1) All game entries for event (for popularity count)
+            (1) Day's previous day, (for market-open timing)
+            (1) Event's last racing day (for JSON summary)
+            (1) Event's first day
+            (2 <-> Divisions) Select start order for each division
+        """
+
+        with self.assertNumQueries(9):
+            self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+
+
 
 class Test__Market_Men(MarketPageBase, TestCase):
 
@@ -1252,6 +1353,21 @@ class LeaderboardPageBase(GamePageBase):
             self.client.get(self.url)
 
 
+    def test__json(self) -> None:
+        """Returns the ranked leaderboard as JSON when requested."""
+
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        payload = response.json()
+        self.assertEqual(payload['event']['tag'], self.event.tag)
+        self.assertEqual(
+            [entry['team'] for entry in payload['leaderboard']],
+            [str(fantasy.team) for fantasy in self.get_ranked_fantasies()],
+        )
+
+
 
 class Test__Leaderboard_Main(LeaderboardPageBase, TestCase):
 
@@ -1324,8 +1440,14 @@ class Test__Team(TestCase):
         cls.day = cls.event.active_day
         cls.base_date_shift = timezone.now().date() - cls.event.active_day.date
 
-        cls.crew_mens = exists(models.Crew.objects.filter(gender = Genders.MEN).first())
-        cls.crew_womens = exists(models.Crew.objects.filter(gender = Genders.WOMEN).first())
+        cls.crew_mens = exists(models.Crew.objects.filter(
+            club = Clubs.BALL,
+            gender = Genders.MEN,
+        ).first())
+        cls.crew_womens = exists(models.Crew.objects.filter(
+            club = Clubs.CHRI,
+            gender = Genders.WOMEN,
+        ).first())
         cls.athlete = cls.event.crew_lists.create(
             crew = cls.crew_womens,
             seat = exists(models.Seat.objects.first()),
@@ -1522,6 +1644,135 @@ class Test__Team(TestCase):
                 self.url_name,
                 kwargs = {'event_tag': self.event.tag, 'team_name': self.view_team},
             ))
+
+
+    @patching.localtime_time(time(11, 15))
+    def test__json__structure(self, _localtime_mock: Mock) -> None:
+        """Checks the structure of the JSON response."""
+
+        self.event.days.update(date = db.F('date') + self.base_date_shift + timedelta(1))
+
+        bow = exists(models.Seat.objects.first())
+        for day in self.event.days.filter(first_race_time__isnull = False):
+            self.view_team.purchases.create(
+                day = day,
+                seat = bow,
+                crew = self.crew_mens,
+                athlete = self.athlete,
+            )
+
+        self.budgets.mens_coach = self.crew_mens
+        self.budgets.save()
+
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        payload = response.json()
+        self.assertTrue(payload['crews'])
+        for day_data in payload['crews']:
+            with self.subTest(day = day_data['day']['name']):
+
+                # Athlete object has correct keys
+                for key in ['crew', 'athlete', 'price']:
+                    with self.subTest(key = key):
+                        self.assertIn(key, day_data['mens_crew']['B'])
+
+                # Results included for previous days
+                if day_data['day']['name'] == 'Thursday':
+                    self.assertIsNone(day_data['mens_crew']['B']['result'])
+                else:
+                    self.assertIsNotNone(day_data['mens_crew']['B']['result'])
+
+                # Empty seats handled without error
+                self.assertTrue(all(
+                    data is None for seat, data
+                    in day_data['mens_crew'].items() if seat != 'B'
+                ))
+                self.assertTrue(all(data is None for data in day_data['womens_crew'].values()))
+
+        mens_coach = response.json()['crews'][0]['mens_coach']
+        self.assertEqual(mens_coach['name'], 'Test Coach 1')
+        self.assertEqual(mens_coach['crew']['club'], self.crew_mens.club)
+        self.assertIsNone(payload['crews'][0]['womens_coach'])
+
+
+    @patching.localtime_time(time(11, 15))
+    def test__json__coach_refund(self, _localtime_mock: Mock) -> None:
+        """A refund-competition coach earns a refund for each place their crew has dropped."""
+
+        self.event.days.update(date = db.F('date') + self.base_date_shift)
+        self.event.coaching_competition = CoachingCompetitions.REFUND
+        self.event.save()
+
+        self.budgets.mens_coach = self.crew_mens
+        self.budgets.womens_coach = self.crew_womens
+        self.budgets.save()
+
+        game_advance.create_payout_matrix.cache_clear()
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        self.assertEqual(
+            [day['mens_coach']['result']['refund'] for day in response.json()['crews']],
+            [0, 0],
+        )
+        self.assertEqual(
+            [day['womens_coach']['result']['refund'] for day in response.json()['crews']],
+            [2 * money.TORPIDS_REFUND, money.TORPIDS_REFUND],
+        )
+
+
+    @patching.localtime_time(time(11, 15))
+    def test__json__coach_blades(self, _localtime_mock: Mock) -> None:
+        """A blades-competition coach's running status is reported, per day."""
+
+        self.event.days.update(date = db.F('date') + self.base_date_shift)
+        self.event.coaching_competition = CoachingCompetitions.BLADES
+        self.event.save()
+
+        self.budgets.mens_coach = self.crew_mens
+        self.budgets.womens_coach = self.crew_womens
+        self.budgets.save()
+
+        game_advance.create_payout_matrix.cache_clear()
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        self.assertEqual(
+            [day['mens_coach']['result']['status'] for day in response.json()['crews']],
+            ['on', 'lost'],
+        )
+        self.assertEqual(
+            [day['womens_coach']['result']['status'] for day in response.json()['crews']],
+            ['off', 'lost'],
+        )
+
+
+    @patching.localtime_time(time(11, 15))
+    def test__json__coach_not_raced(self, _localtime_mock: Mock) -> None:
+        """A coach's result is null while their day is still active."""
+
+        self.event.days.update(date = db.F('date') + self.base_date_shift + timedelta(1))
+        self.event.coaching_competition = CoachingCompetitions.REFUND
+        self.event.save()
+
+        self.budgets.mens_coach = self.crew_mens
+        self.budgets.save()
+
+        game_advance.create_payout_matrix.cache_clear()
+        response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+
+        results = {
+            day_data['day']['name']: day_data['mens_coach']['result']
+            for day_data in response.json()['crews']
+        }
+        self.assertIsNone(results['Thursday'])
+        self.assertIsNotNone(results['Wednesday'])
 
 
 

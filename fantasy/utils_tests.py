@@ -3,7 +3,7 @@ from django.db import models as db
 
 from core.tests import exists
 
-from .constants import Series, Genders, Clubs
+from .constants import Series, Genders, Clubs, money, Blades
 from . import models
 from . import utils
 from . import errors
@@ -393,4 +393,68 @@ class Test__Payouts(TestCase):
 
         with self.assertNumQueries(0):
             utils.payout_by_day_gender_positions(day, Genders.WOMEN, 5, 5)
+
+
+
+class Test__Coaching_Blades_Status(TestCase):
+    fixtures = [
+        'dev_event',
+        'dev_days',
+        'dev_crews',
+        'dev_start_day1',
+        'dev_start_day2',
+        'dev_start_day3',
+    ]
+
+    day1: models.Day
+    day2: models.Day
+
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.day1 = models.Day.objects.get(name = 'Wednesday')
+        cls.day2 = models.Day.objects.get(name = 'Thursday')  # Last racing day
+
+
+    def test__get_blades(self) -> None:
+        """Hertford W1 gain a place both days."""
+
+        crew = models.Crew.objects.get(club = Clubs.HERT, gender = Genders.WOMEN)
+
+        self.assertEqual(utils.coaching_blades_status(crew, self.day1), Blades.ON)
+        self.assertEqual(utils.coaching_blades_status(crew, self.day2), Blades.WON)
+
+
+    def test__get_spoons(self) -> None:
+        """Christ Church W1 drop a place both days."""
+
+        crew = models.Crew.objects.get(club = Clubs.CHRI, gender = Genders.WOMEN)
+
+        self.assertEqual(utils.coaching_blades_status(crew, self.day1), Blades.OFF)
+        self.assertEqual(utils.coaching_blades_status(crew, self.day2), Blades.LOST)
+
+
+    def test__bump_then_row_over(self) -> None:
+        """Wadham W1 gain a place and then row over as head, but that doesn't count."""
+
+        crew = models.Crew.objects.get(club = Clubs.WADH, gender = Genders.WOMEN)
+
+        self.assertEqual(utils.coaching_blades_status(crew, self.day1), Blades.ON)
+        self.assertEqual(utils.coaching_blades_status(crew, self.day2), Blades.LOST)
+
+
+
+class Test__Coaching_Refund_Value(TestCase):
+
+    def test__gained_places(self) -> None:
+        """A crew gaining places earns no refund."""
+        self.assertEqual(utils.coaching_refund_value(2), 0)
+
+    def test__no_change(self) -> None:
+        """A crew rowing over earns no refund."""
+        self.assertEqual(utils.coaching_refund_value(0), 0)
+
+    def test__dropped_places(self) -> None:
+        """A crew dropping places earns a refund proportional to the places lost."""
+        self.assertEqual(utils.coaching_refund_value(-2), 2 * money.TORPIDS_REFUND)
 
