@@ -81,13 +81,14 @@ This is also primarily operated on an automatic task schedule, but two commands 
 
 Local development requires Python 3.14+ and [`uv`](https://docs.astral.sh/uv/).
 
-Install all dependencies (including development tools) and install the pre-commit checks with:
+Install all dependencies (including development tools) and then install the project's hooks with:
 
 ```bash
 uv sync --all-groups
-uv run pre-commit install --hook-type pre-commit --hook-type pre-push
+python project.py pre-commit
 ```
 
+This runs the full installation command: `uv run pre-commit install --hook-type pre-commit --hook-type pre-push`.
 If needed, the pre-commit & pre-push hooks can be validated with
 
 ``` bash
@@ -102,6 +103,7 @@ This will run all commands within the appropriate `uv` environment, but does not
 
 | Command | Effect |
 | ------- | ------ |
+| `python project.py pre-commit` | Install the repo's pre-commit and pre-push hooks |
 | `python project.py markdown` | Run markdown format checking |
 | `python project.py markdown:fix` | Check & fix markdown formatting issues* |
 | `python project.py lint` | Run flake8 code linting |

@@ -5,6 +5,7 @@ if not args:
     raise IndexError('Must supply at least one argument')
 
 commands = {
+    'pre-commit': ('uv run pre-commit install --hook-type pre-commit --hook-type pre-push', ''),
     'test': ('uv run pytest', 'fantasy core'),
     'test:ff': ('uv run pytest -x', 'fantasy core'),
     'test:external': ('uv run pytest', 'integrations'),
