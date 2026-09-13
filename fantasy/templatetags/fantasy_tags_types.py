@@ -1,18 +1,10 @@
 from typing import TypedDict, TYPE_CHECKING
-from enum import Enum
 
 from django.db import models as db
 from django.contrib.auth import models as auth
 
 from ..constants import Genders, money as money_type
 from .. import models
-
-
-class Blades(Enum):
-    WON = 'won'
-    ON = 'on'
-    OFF = 'off'
-    LOST = 'lost'
 
 
 class MarketStatus(TypedDict):

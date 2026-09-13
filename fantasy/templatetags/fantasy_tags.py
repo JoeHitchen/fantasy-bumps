@@ -12,7 +12,7 @@ from django.templatetags.static import static
 from django.template.defaultfilters import pluralize
 from django.contrib.humanize.templatetags.humanize import naturalday, apnumber
 
-from ..constants import Genders, money, CoachingCompetitions
+from ..constants import Genders, money, CoachingCompetitions, Blades
 from .. import models, utils
 from ..management.game_advance import create_payout_matrix
 from . import fantasy_tags_types as types
@@ -180,17 +180,17 @@ def athlete_result_display(purchase: models.Purchase) -> str:
 
 
 @register.filter
-def coaching_blades(blades: types.Blades, crew: models.Crew) -> str:
+def coaching_blades(blades: Blades, crew: models.Crew) -> str:
 
-    if blades == types.Blades.WON:
+    if blades == Blades.WON:
         message = f'{crew} won blades'
         content = currency(money.BLADES_BONUS, leading_plus = True)
 
-    elif blades == types.Blades.ON:
+    elif blades == Blades.ON:
         message = f'{crew} is on for blades'
         content = '<span class="oi oi-check text-success mr-1"></span>'
 
-    elif blades == types.Blades.OFF:
+    elif blades == Blades.OFF:
         message = f'{crew} is not on for blades'
         content = '<span class="oi oi-x text-danger mr-1"></span>'
 
@@ -204,7 +204,7 @@ def coaching_blades(blades: types.Blades, crew: models.Crew) -> str:
 @register.filter
 def coaching_refund(payout: utils.Payout, crew: models.Crew) -> str:
 
-    value = max(-money.TORPIDS_REFUND * payout['position_change'], 0)
+    value = utils.coaching_refund_value(payout['position_change'])
 
     if payout['position_change'] >= 0:
         tooltip = '{} were not owed a refund'
@@ -229,18 +229,7 @@ def coaching_result_display(crew: models.Crew, day: models.Day) -> str:
         payout_html = coaching_refund(payout, crew)
 
     elif day.event.coaching_competition == CoachingCompetitions.BLADES:
-
-        blades = types.Blades.ON
-        for itr_day in day.event.days.filter(date__lte = day.date):
-            if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
-                blades = types.Blades.OFF
-            if itr_day == day.event.last_racing_day:
-                blades = types.Blades.WON if blades == types.Blades.ON else types.Blades.LOST
-
-        if blades == types.Blades.OFF and itr_day == day.event.last_racing_day:
-            blades = types.Blades.LOST
-
-        payout_html = coaching_blades(blades, crew)
+        payout_html = coaching_blades(utils.coaching_blades_status(crew, day), crew)
 
     return mark_safe('{}{}'.format(payout_html, bump_arrow(payout)))
 

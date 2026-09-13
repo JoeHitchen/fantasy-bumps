@@ -607,7 +607,23 @@ class TeamView(EventBase):
                 for seat, purchase in crew_list.items()
             }
 
-        def convert_coach(gender: Genders) -> JsonOutput | None:
+        def coach_result(coach_crew: models.Crew, day: 'models.Day') -> JsonOutput | None:
+            if day == self.event.active_day:
+                return None
+            if self.event.coaching_competition == CoachingCompetitions.REFUND:
+                position_change = create_payout_matrix(day)[coach_crew]['position_change']
+                return {
+                    'type': 'refund',
+                    'refund': utils.coaching_refund_value(position_change),
+                }
+            if self.event.coaching_competition == CoachingCompetitions.BLADES:
+                return {
+                    'type': 'blades',
+                    'status': utils.coaching_blades_status(coach_crew, day),
+                }
+            return None
+
+        def convert_coach(gender: Genders, day: 'models.Day') -> JsonOutput | None:
             crew_key = {Genders.MEN: 'mens_coach_crew', Genders.WOMEN: 'womens_coach_crew'}[gender]
             name_key = {Genders.MEN: 'mens_coach_name', Genders.WOMEN: 'womens_coach_name'}[gender]
             coach_crew = context.get(crew_key)
@@ -615,6 +631,7 @@ class TeamView(EventBase):
             return {
                 'crew': coach_crew.json(),
                 'name': coach_name.name if coach_name else None,
+                'result': coach_result(coach_crew, day),
             } if coach_crew else None
 
         return {
@@ -626,10 +643,10 @@ class TeamView(EventBase):
                     'day': day_data['day'].json(),
                     'mens_crew': convert_crew_list(day_data['mens_crew'], day_data['day']),
                     'womens_crew': convert_crew_list(day_data['womens_crew'], day_data['day']),
+                    'mens_coach': convert_coach(Genders.MEN, day_data['day']),
+                    'womens_coach': convert_coach(Genders.WOMEN, day_data['day']),
                 } for day_data in context['crews'][::-1]
             ],
-            'mens_coach': convert_coach(Genders.MEN),
-            'womens_coach': convert_coach(Genders.WOMEN),
         }
 
 

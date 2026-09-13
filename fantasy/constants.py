@@ -60,6 +60,13 @@ class CoachingCompetitions(models.TextChoices):
     REFUND = ('refund', 'Coaching Refund')
 
 
+class Blades(str, enum.Enum):
+    WON = 'won'
+    ON = 'on'
+    OFF = 'off'
+    LOST = 'lost'
+
+
 class Clubs(models.TextChoices):
     BALL = ('ball', 'Balliol')
     BRAS = ('bras', 'Brasenose')

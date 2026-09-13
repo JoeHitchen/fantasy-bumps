@@ -13,7 +13,7 @@ from core.tests import exists
 
 from .. import models
 from .. import patching
-from ..constants import Genders, Clubs, money
+from ..constants import Genders, Clubs, money, Blades
 from . import fantasy_tags as tags, fantasy_tags_types as types
 
 
@@ -977,7 +977,7 @@ class Test__Result_Components(TestCase):
     def test__blades__won(self) -> None:
         """Displays successful text and the payout amount."""
 
-        blades = parser(tags.coaching_blades(types.Blades.WON, self.crew))
+        blades = parser(tags.coaching_blades(Blades.WON, self.crew))
         self.assertEqual(blades.get('title'), f'{self.crew} won blades')
         self.assertEqual(blades.text, self.currency(money.BLADES_BONUS))
 
@@ -985,7 +985,7 @@ class Test__Result_Components(TestCase):
     def test__blades__on_track(self) -> None:
         """Displays hopeful text and a green tick."""
 
-        blades = parser(tags.coaching_blades(types.Blades.ON, self.crew))
+        blades = parser(tags.coaching_blades(Blades.ON, self.crew))
 
         self.assertEqual(blades.get('title'), f'{self.crew} is on for blades')
 
@@ -997,7 +997,7 @@ class Test__Result_Components(TestCase):
     def test__blades__off_track(self) -> None:
         """Displays unhappy text and a red cross."""
 
-        blades = parser(tags.coaching_blades(types.Blades.OFF, self.crew))
+        blades = parser(tags.coaching_blades(Blades.OFF, self.crew))
         self.assertEqual(blades.get('title'), f'{self.crew} is not on for blades')
 
         inner_classes = blades[0].get('class', '').split(' ')
@@ -1008,7 +1008,7 @@ class Test__Result_Components(TestCase):
     def test__blades__lost(self) -> None:
         """Displays unhappy text and a red cross."""
 
-        blades = parser(tags.coaching_blades(types.Blades.LOST, self.crew))
+        blades = parser(tags.coaching_blades(Blades.LOST, self.crew))
         self.assertEqual(blades.get('title'), f'{self.crew} did not win blades')
 
         inner_classes = blades[0].get('class', '').split(' ')

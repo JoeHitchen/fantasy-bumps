@@ -317,7 +317,7 @@ def run_coaching_refund(day: models.Day) -> None:
         for ranking in day.ranking.select_related('crew')
     }
     for ranking in exists(day.next).ranking.select_related('crew'):
-        refund = money.TORPIDS_REFUND * (ranking.rank - starting_position[ranking.crew])
+        refund = utils.coaching_refund_value(starting_position[ranking.crew] - ranking.rank)
         if not refund > 0:
             continue
         refunds[ranking.crew] = refund
