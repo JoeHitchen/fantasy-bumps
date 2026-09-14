@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'fantasy',
     'django_celery_beat',
+    'mcp_server',
 ]
 
 MIDDLEWARE = [
@@ -153,6 +154,31 @@ STORAGES = {
 
 if STATIC_BACKEND.split('.')[0] == 'storages':
     INSTALLED_APPS.append('storages')
+
+
+# MCP server
+
+DJANGO_MCP_GLOBAL_SERVER_CONFIG = {
+    'stateless': True,  # No container/session state to share between requests.
+    'instructions': (
+        'Fantasy Bumps is a fantasy sports game built around Oxford and Cambridge '
+        'bumps racing (multi-day inter-collegiate rowing regattas where crews start '
+        'in a fixed order and try to bump - catch - the boat ahead). Players build a '
+        "team by buying real crews before each day's racing, using an in-game currency called "
+        '"crabs". The market data is static each day - Pricing is based only on position on the '
+        'river, there is no dynamic pricing. Payouts are awarded each day based on performance of '
+        'crews, with crews "rowing over" (neither bumping or being bumped) getting a small payout '
+        'and crews who bump getting a much larger payout, particularly if they gain multiple '
+        'places. Be aware that because bumps racing is a competition, lower rankings are '
+        'better, with rank 1 (also known as "Head of the River" or "Headship") being the best, '
+        "and position changes have the reversed effect - a gained place decreases a crew's rank. "
+        '\n\n'
+        'Call list_events() first to find valid series-year pairs. `series` is one of: `D`=Demo, '
+        '`T`=Torpids, `E`=Eights, `L`=Lents, `M`=Mays. Where a tool takes `gender`, it is `M`=Men '
+        'or `W`=Women.\n'
+        'Everything exposed here is read-only and already public via the website UI and JSON API.'
+    ),
+}
 
 
 # Other settings
