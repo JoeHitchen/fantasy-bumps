@@ -247,7 +247,7 @@ class EventView(EventBase):
             .annotate(popularity = popularity)
             .order_by('-purchase_count', 'positions__rank')
             # ^ Sort by popularity not possible on SQLite
-        )[:5]
+        )
 
 
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
