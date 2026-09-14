@@ -278,6 +278,22 @@ class Test__Pricing(TestCase):
                 self.assertGreaterEqual(bungline_1 - bungline_2, bungline_2 - bungline_3)
 
 
+    def test__upper_boundary_safety(self) -> None:
+        """Ensure no errors occur at the upper boundary of rankings."""
+
+        self.assertEqual(utils.pricing(1, 60), money.PRICE_MAX)
+        self.assertEqual(utils.pricing(0, 60), money.PRICE_MAX)
+        self.assertEqual(utils.pricing(-1, 60), money.PRICE_MAX)
+
+
+    def test__lower_boundary_safety(self) -> None:
+        """Ensure no errors occur at the lower boundary of rankings."""
+
+        self.assertEqual(utils.pricing(60, 60), money.PRICE_MIN)
+        self.assertEqual(utils.pricing(61, 60), money.PRICE_MIN)
+
+
+
 
 class Test__Payouts(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_start_day2']

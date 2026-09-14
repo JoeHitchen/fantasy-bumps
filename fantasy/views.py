@@ -236,7 +236,7 @@ class EventView(EventBase):
             filter = db.Q(purchases__day = self.day),
         )
         popularity = db.ExpressionWrapper(
-            db.F('purchase_count') / self.game_entry_count,
+            db.F('purchase_count') / float(self.game_entry_count),
             db.FloatField(),
         )
 
@@ -322,7 +322,7 @@ class MarketView(EventBase):
             filter = db.Q(crew__purchases__day = self.day),
         )
         popularity = db.ExpressionWrapper(
-            db.F('purchase_count') / self.game_entry_count,
+            db.F('purchase_count') / float(self.game_entry_count),
             db.FloatField(),
         )
         return (
