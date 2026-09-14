@@ -57,5 +57,6 @@ urlpatterns = [
         ),
         path('', views.EventView.as_view(), name = 'event'),
     ])),
+    path('', include('mcp_server.urls')),
     path('', views.IndexView.as_view(), name = 'index'),
 ]
