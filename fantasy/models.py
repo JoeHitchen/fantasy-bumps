@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date as date_type, datetime, timedelta
 from typing import TypedDict, TYPE_CHECKING
 from dataclasses import dataclass
 from functools import lru_cache
@@ -39,6 +39,46 @@ else:
     FinancialGameEntry = 'GameEntry'
 
 
+class EventJson(TypedDict):
+    series: str
+    year: int
+    name: str
+    tag: str
+    first_day: date_type
+    last_day: date_type
+    coaching_competition: str | None
+
+
+class DayJson(TypedDict):
+    name: str
+    date: date_type
+    first_race: datetime | None
+    last_race: datetime | None
+    market_opens: datetime | None
+    market_closes: datetime | None
+    market_is_open: bool
+
+
+class CrewJson(TypedDict):
+    club: str
+    gender: str
+    rank: int
+
+
+class FinanceJson(TypedDict):
+    budget: int
+    crew_value: int
+    balance: int
+
+
+class TrophyJson(TypedDict):
+    team: str
+    code: str
+    name: str
+    description: str
+
+
+
 class Event(models.Model):
     """A bumps competition, with simple division information."""
 
@@ -70,6 +110,19 @@ class Event(models.Model):
             Series.MAYS.value: 'May Bumps',
         }.get(self.series, self.get_series_display())
         return '{} {}'.format(series_long, self.year)
+
+
+    def json(self) -> EventJson:
+        """Returns a JSON-compatible representation of the event."""
+        return {
+            'series': self.series,
+            'year': self.year,
+            'name': str(self),
+            'tag': self.tag,
+            'first_day': self.first_day.date,
+            'last_day': self.last_racing_day.date,
+            'coaching_competition': self.coaching_competition,
+        }
 
 
     @cached_property
@@ -143,6 +196,20 @@ class Day(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+    def json(self) -> DayJson:
+        """Returns a JSON-compatible representation of the day."""
+        return {
+            'name': self.name,
+            'date': self.date,
+            'first_race': self.first_race,
+            'last_race': self.last_race,
+            'market_opens': self.market_opens,
+            'market_closes': self.market_closes,
+            'market_is_open': self.market_is_open,
+        }
+
 
     @cached_property
     def next(self) -> 'Day | None':
@@ -320,6 +387,15 @@ class Crew(models.Model):
     def as_tuple(self) -> 'Crew.Tuple':
         """Describes the crew in the tuple-form needed for parser interaction."""
         return self.make_tuple(self.club, self.gender, self.rank)
+
+
+    def json(self) -> CrewJson:
+        """Returns a JSON-compatible representation of the crew."""
+        return {
+            'club': self.club,
+            'gender': self.gender,
+            'rank': self.rank,
+        }
 
 
     def value(self, day: Day) -> int:
@@ -506,8 +582,34 @@ class GameEntry(models.Model):
 
     objects = GameEntryQuerySet.as_manager()
 
+    total_budget: int
+    total_crew_value: int
+    total_balance: int
+    mens_crew_value: int
+    womens_crew_value: int
+
     class Meta:
         unique_together = ['team', 'event']
+
+
+    def finance_json(self) -> dict[str, FinanceJson]:
+        return {
+            'overall': {
+                'budget': self.total_budget,
+                'crew_value': self.total_crew_value,
+                'balance': self.total_balance,
+            },
+            'mens': {
+                'budget': self.mens_budget,
+                'crew_value': self.mens_crew_value,
+                'balance': self.mens_balance,
+            },
+            'womens': {
+                'budget': self.womens_budget,
+                'crew_value': self.womens_crew_value,
+                'balance': self.womens_balance,
+            },
+        }
 
 
     def get_coach(self, gender: Genders) -> Crew | None:
@@ -561,6 +663,15 @@ class Trophy(models.Model):
 
     def __str__(self) -> str:
         return f'{self.Types(self.type).label} ({self.event})'
+
+
+    def json(self) -> TrophyJson:
+        return {
+            'team': str(self.team),
+            'code': self.type,
+            'name': self.Types(self.type).label,
+            'description': self.description(),
+        }
 
 
     def description(self) -> str:

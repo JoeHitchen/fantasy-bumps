@@ -56,7 +56,7 @@
             </a>
           </div>
         </div>
-        {% for crew in popular_crews_men %}
+        {% for crew in popular_crews_men|slice:":5" %}
         {% popularity_row forloop.counter crew %}{% endfor %}
       </div>
     </div>
@@ -74,7 +74,7 @@
             </a>
           </div>
         </div>
-        {% for crew in popular_crews_women %}
+        {% for crew in popular_crews_women|slice:":5" %}
         {% popularity_row forloop.counter crew %}{% endfor %}
       </div>
     </div>

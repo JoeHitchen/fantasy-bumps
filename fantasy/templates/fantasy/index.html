@@ -3,7 +3,7 @@
 
 {% block content %}
 
-{% for event in recent_events %}
+{% for event in events|slice:":3" %}
 {% event_box event user %}
 {% empty %}
 There are no events available

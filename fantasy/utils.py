@@ -5,7 +5,7 @@ from math import log
 
 from django.db import models as db
 
-from .constants import Genders, money
+from .constants import Genders, money, Blades
 from . import models
 from . import errors
 
@@ -124,4 +124,24 @@ def payout_by_day_gender_positions(
         'value_change': crew_value_new - crew_value_old,
         'payout': round(payout),
     }
+
+
+def coaching_blades_status(crew: models.Crew, day: models.Day) -> Blades:
+    """Determines if a crew has won/lost blades or, during racing, is on/off track to do so."""
+
+    from fantasy.management.game_advance import create_payout_matrix
+
+    status = Blades.ON
+    for itr_day in day.event.days.filter(date__lte = day.date):
+        if create_payout_matrix(itr_day)[crew]['position_change'] <= 0:
+            status = Blades.OFF
+        if itr_day == day.event.last_racing_day:
+            status = Blades.WON if status == Blades.ON else Blades.LOST
+
+    return status
+
+
+def coaching_refund_value(position_change: int) -> int:
+    """The refund paid by a coach for a given position change."""
+    return max(-money.TORPIDS_REFUND * position_change, 0)
 

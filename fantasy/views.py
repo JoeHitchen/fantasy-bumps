@@ -1,7 +1,7 @@
 from typing import TypedDict, Iterable, Any, TYPE_CHECKING
 
 from django.views.generic.detail import DetailView
-from django.views.generic.base import ContextMixin, TemplateView
+from django.views.generic.base import ContextMixin, TemplateView, TemplateResponseMixin
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
 from django.utils.datastructures import MultiValueDictKeyError
@@ -11,17 +11,19 @@ from django.contrib.auth import models as auth
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
-from django.http import HttpRequest, HttpResponse, HttpResponseBase
+from django.http import HttpRequest, HttpResponse, HttpResponseBase, JsonResponse
 
 from .constants import Genders, GENDERS_OVERALL, money, timings, CoachingCompetitions
 from . import models
 from . import utils
 from . import transactions
 from . import errors
+from .management.game_advance import create_payout_matrix
 
 
 ContextKwargs = dict[str, Any]
 ContextDict = dict[str, Any]
+JsonOutput = dict[str, Any]
 
 
 class EventAugmentation(TypedDict):
@@ -54,7 +56,25 @@ else:
 
 
 
-class FantasyBaseMixin(ContextMixin):
+class FantasyBaseMixin(TemplateResponseMixin, ContextMixin):
+
+    request: HttpRequest
+
+    def render_to_response(self, context: Any, **response_kwargs: Any) -> HttpResponse:
+        """Switches between HTML & JSON responses based on headers & query parameters."""
+
+        get_format = self.request.GET.get('format')
+        accept_header = self.request.headers.get('Accept')
+
+        if get_format != 'json' and accept_header != 'application/json':
+            return super().render_to_response(context, **response_kwargs)
+
+        if hasattr(self, 'convert_to_json'):
+            return JsonResponse(self.convert_to_json(context), **response_kwargs)
+        return JsonResponse({
+            'message': 'This page does not support JSON responses.',
+        }, status = 406)
+
 
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
@@ -66,7 +86,7 @@ class FantasyBaseMixin(ContextMixin):
         events = utils.ordered_events()
         if 'event' in context:
             events = events.exclude(id = context['event'].id)
-        context['recent_events'] = events[:3]
+        context['events'] = list(events)
 
         return context
 
@@ -147,10 +167,13 @@ class IndexView(FantasyBaseMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         # Load and augment events
-        context['recent_events'] = list(context['recent_events'])
-        self.augment_events_for_events_boxes(context['recent_events'], self.request.user)
+        self.augment_events_for_events_boxes(context['events'], self.request.user)
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+        return {'events': [event.json() for event in context['events']]}
 
 
 
@@ -166,17 +189,13 @@ class EventsList(FantasyBaseMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         # Load and augment events
-        context['recent_events'] = list(context['recent_events'])
-        context['past_events'] = list(utils.ordered_events().exclude(
-            id__in = [event.id for event in context['recent_events']],
-        ))
-
-        self.augment_events_for_events_boxes(
-            context['past_events'] + context['recent_events'],
-            self.request.user,
-        )
+        self.augment_events_for_events_boxes(context['events'], self.request.user)
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+        return {'events': [event.json() for event in context['events']]}
 
 
 
@@ -257,6 +276,32 @@ class EventView(EventBase):
         context['popular_crews_women'] = self.popular_crew_query(Genders.WOMEN)
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+        def popularity_json(crew: CrewWithPopularity) -> dict[str, Any]:
+            return {
+                'crew': crew.json(),
+                'popularity': crew.popularity,
+                'purchases': crew.purchase_count,
+            }
+
+        return {
+            'event': context['event'].json(),
+            'all_days': [day.json() for day in context['event'].days.all()],
+            'active_day': self.day.json(),
+            'initial_market_open': context['event'].initial_market_open,
+            'market_held_closed': context['event'].market_held_closed,
+            'trophies': [trophy.json() for trophy in context['trophies']],
+            'mens_popularity': [
+                popularity_json(popularity)
+                for popularity in context['popular_crews_men']
+            ],
+            'womens_popularity': [
+                popularity_json(popularity)
+                for popularity in context['popular_crews_women']
+            ],
+        }
 
 
 
@@ -384,6 +429,45 @@ class MarketView(EventBase):
         return context
 
 
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+
+        def calculate_single_payout(crew: models.StartOrderPosition, change: int) -> int:
+            payouts = utils.payout_by_day_gender_positions(
+                crew.day,
+                Genders(crew.crew.gender),
+                crew.rank,
+                crew.rank - change,
+            )
+            return payouts['value_change'] + payouts['payout']
+
+        def calculate_payouts(crew: models.StartOrderPosition) -> dict[int, int]:
+            payouts = {0: calculate_single_payout(crew, 0)}
+            if crew.rank > 1:
+                payouts[1] = calculate_single_payout(crew, 1)
+            if crew.rank < crew.day.event.num_crews(Genders(crew.crew.gender)):
+                payouts[-1] = calculate_single_payout(crew, -1)
+            return payouts
+
+        return {
+            'event': context['event'].json(),
+            'day': self.day.json(),
+            'start_order': [
+                {
+                    'rank': crew_position.rank,
+                    'division': div_idx + 1,
+                    'bungline': crew_position.bungline,
+                    'crew': crew_position.crew.json(),
+                    'payouts': calculate_payouts(crew_position),
+                    'purchases': crew_position.purchase_count,
+                    'popularity': crew_position.popularity,
+                }
+                for div_idx, division in enumerate(context['start_order'])
+                for crew_position in list(division)
+            ],
+            'total_crews': self.event.num_crews(context['gender']),
+        }
+
+
 
 class LeaderboardView(EventBase):
     """Presents the leaderboard for an event."""
@@ -426,6 +510,26 @@ class LeaderboardView(EventBase):
 
         return context
 
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+        return {
+            'event': context['event'].json(),
+            'day': context['day'].json(),
+            'ranking': {'O': 'overall', 'M': 'men', 'W': 'women'}[context['ranking']],
+            'filters': {
+                'invalid-entries': context['invalid_entries'],
+                'allow-subs': context['allow_subs'],
+                'returners': context['returners'],
+            },
+            'leaderboard': [{
+                'rank': rank,
+                'team': str(fantasy.team),
+                'finances': fantasy.finance_json(),
+                'valid_entry': fantasy.valid_entry,
+                'has_subs': fantasy.has_subs,
+                'previous_entries': fantasy.previous_entries,
+            } for rank, fantasy in enumerate(context['fantasies'], start = 1)],
+        }
 
 
 class TeamView(EventBase):
@@ -482,6 +586,68 @@ class TeamView(EventBase):
         )
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+
+        def convert_crew_list(
+            crew_list: dict[models.Seat, 'models.Purchase | None'],
+            day: 'models.Day',
+        ) -> JsonOutput:
+            return {
+                seat.short: {
+                    'crew': purchase.crew.json(),
+                    'athlete': purchase.athlete.name if purchase.athlete else None,
+                    'price': purchase.crew.value(day),
+                    'result': (
+                        create_payout_matrix(day)[purchase.crew]
+                        if day != self.event.active_day else None
+                    ),
+                } if purchase else None
+                for seat, purchase in crew_list.items()
+            }
+
+        def coach_result(coach_crew: models.Crew, day: 'models.Day') -> JsonOutput | None:
+            if day == self.event.active_day:
+                return None
+            if self.event.coaching_competition == CoachingCompetitions.REFUND:
+                position_change = create_payout_matrix(day)[coach_crew]['position_change']
+                return {
+                    'type': 'refund',
+                    'refund': utils.coaching_refund_value(position_change),
+                }
+            if self.event.coaching_competition == CoachingCompetitions.BLADES:
+                return {
+                    'type': 'blades',
+                    'status': utils.coaching_blades_status(coach_crew, day),
+                }
+            return None
+
+        def convert_coach(gender: Genders, day: 'models.Day') -> JsonOutput | None:
+            crew_key = {Genders.MEN: 'mens_coach_crew', Genders.WOMEN: 'womens_coach_crew'}[gender]
+            name_key = {Genders.MEN: 'mens_coach_name', Genders.WOMEN: 'womens_coach_name'}[gender]
+            coach_crew = context.get(crew_key)
+            coach_name = context.get(name_key)
+            return {
+                'crew': coach_crew.json(),
+                'name': coach_name.name if coach_name else None,
+                'result': coach_result(coach_crew, day),
+            } if coach_crew else None
+
+        return {
+            'event': context['event'].json(),
+            'team': context['team'].user.username,
+            'finances': context['finances'].finance_json(),
+            'crews': [
+                {
+                    'day': day_data['day'].json(),
+                    'mens_crew': convert_crew_list(day_data['mens_crew'], day_data['day']),
+                    'womens_crew': convert_crew_list(day_data['womens_crew'], day_data['day']),
+                    'mens_coach': convert_coach(Genders.MEN, day_data['day']),
+                    'womens_coach': convert_coach(Genders.WOMEN, day_data['day']),
+                } for day_data in context['crews'][::-1]
+            ],
+        }
 
 
 
