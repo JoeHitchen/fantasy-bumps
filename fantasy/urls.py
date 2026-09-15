@@ -35,6 +35,11 @@ urlpatterns = [
         views.RulesView.as_view(template_name = 'fantasy/privacy.html'),
         name = 'privacy',
     ),
+    path(
+        'developers/',
+        views.RulesView.as_view(template_name = 'fantasy/developers.html'),
+        name = 'developers',
+    ),
     path('buy/', views.buy, name = 'buy'),
     path('sell/', views.sell, name = 'sell'),
     path('hire/', views.hire, name = 'hire'),
@@ -55,6 +60,11 @@ urlpatterns = [
             'privacy/',
             views.EventBase.as_view(template_name = 'fantasy/privacy.html'),
             name = 'privacy',
+        ),
+        path(
+            'developers/',
+            views.EventBase.as_view(template_name = 'fantasy/developers.html'),
+            name = 'developers',
         ),
         path('', views.EventView.as_view(), name = 'event'),
     ])),
