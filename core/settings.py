@@ -158,7 +158,6 @@ if STATIC_BACKEND.split('.')[0] == 'storages':
 
 # MCP server
 
-DJANGO_MCP_ENDPOINT = 'mcp/'
 DJANGO_MCP_GLOBAL_SERVER_CONFIG = {
     'stateless': True,  # No container/session state to share between requests.
     'instructions': (

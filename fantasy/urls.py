@@ -27,7 +27,6 @@ leaderboard_subpatterns = [
 ]
 
 urlpatterns = [
-    path('', include('mcp_server.urls')),
     path('events/', views.EventsList.as_view(), name = 'events'),
     path('guide-rules/', views.RulesView.as_view(), name = 'rules'),
     path(
@@ -68,5 +67,6 @@ urlpatterns = [
         ),
         path('', views.EventView.as_view(), name = 'event'),
     ])),
+    path('', include('mcp_server.urls')),
     path('', views.IndexView.as_view(), name = 'index'),
 ]

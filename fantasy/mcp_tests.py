@@ -67,10 +67,10 @@ class Test__MCPTools(TestCase):
 
 
     def tool_call(self, name: str, arguments: dict[str, Any]) -> Any:
-        """Makes a real tool call to /mcp/ and returns the JSON-RPC result."""
+        """Makes a real tool call to /mcp and returns the JSON-RPC result."""
 
         response = self.client.post(
-            '/mcp/',
+            '/mcp',
             data = json.dumps({
                 'jsonrpc': '2.0',
                 'id': 1,
