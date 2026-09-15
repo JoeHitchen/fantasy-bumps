@@ -111,7 +111,7 @@ This will run all commands within the appropriate `uv` environment, but does not
 | `python project.py test` | Run pytest on main project modules |
 | `python project.py test:ff` | Run tests, stopping on first failure |
 | `python project.py test:external` | Run tests on external integrations |
-| `python project.py dump_database FILENAME` | Back up all users and app data to a JSON fixture |
+| `python project.py dumpdata [file]` | Back up all users and application data to a JSON fixture |
 | `python project.py <command> [args]` | Run any standard Django management command, including `migrate`, `runserver`, and others. |
 
 \* Note that support for actual fixes is limited.

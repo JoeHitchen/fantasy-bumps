@@ -13,6 +13,7 @@ commands = {
     'lint': ('uv run flake8', ''),
     'markdown': ('uv run pymarkdownlnt scan -r', '.'),
     'markdown:fix': ('uv run pymarkdownlnt fix -r', '.'),
+    'dumpdata': ('uv run python -X utf8 manage.py dumpdata --indent 2 auth.User fantasy -o', 'database.json'),  # noqa: E501
 }
 
 command_raw = args[0]
