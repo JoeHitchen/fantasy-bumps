@@ -303,6 +303,61 @@ class Test__Account_Signup(TestCase, MessagesTestMixin):
 
 
 
+class Test__Account_Signin(TestCase):
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        auth.models.User.objects.create_user('user', '', 'password')
+
+
+    def test__redirect__default(self) -> None:
+        """Redirects to the index page when no 'next' parameter is given."""
+
+        response = self.client.post(reverse('login'), {
+            'username': 'user',
+            'password': 'password',
+        })
+        self.assertRedirects(response, reverse('index'))
+
+
+    def test__redirect__with_next(self) -> None:
+        """Redirects to the page given by 'next', if present."""
+
+        next_url = reverse('profile')
+        response = self.client.post(
+            '{}?next={}'.format(reverse('login'), next_url),
+            {'username': 'user', 'password': 'password'},
+        )
+        self.assertRedirects(response, next_url)
+
+
+    def test__nav_link__includes_next(self) -> None:
+        """The nav-bar sign-in link redirects back to the current page."""
+
+        rules_url = reverse('fantasy:rules')
+        response = self.client.get(rules_url)
+        self.assertContains(response, f'{reverse("login")}?next={rules_url}')
+
+
+    def test__nav_link__login_page_excluded(self) -> None:
+        """The nav-bar sign-in link does not redirect for accounts pages."""
+
+        response = self.client.get(reverse('login'))
+        self.assertContains(response, f'href="{reverse("login")}"')
+        self.assertNotContains(response, 'next=')
+
+
+    def test__nav_link__logout_page_excluded(self) -> None:
+        """The nav-bar sign-in link does not redirect for accounts pages."""
+
+        self.client.login(username = 'user', password = 'password')
+
+        response = self.client.post(reverse('logout'))
+        self.assertContains(response, f'href="{reverse("login")}"')
+        self.assertNotContains(response, 'next=')
+
+
+
 class Test__Account_Update(TestCase, MessagesTestMixin):
 
     user: auth.models.User

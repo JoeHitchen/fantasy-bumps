@@ -54,9 +54,9 @@
           </form>
         </div>
       </div>
-      {% else %}
-      <a class="nav-item nav-link" href="{% url 'login' %}"><button class="btn btn-outline-light btn-sm" type="button">Sign in</button></a>
-      {% endif %}
+      {% else %}<a class="nav-item nav-link" href="{% url 'login' %}{% if request.path|slice:':10' != '/accounts/' %}?next={{ request.path|urlencode }}{% endif %}">
+        <button class="btn btn-outline-light btn-sm" type="button">Sign in</button>
+      </a>{% endif %}
     </div>
   </div>
   

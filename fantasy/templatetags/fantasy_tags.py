@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import cast
+from urllib.parse import urlencode
 
 from django import template
 from django.db import models as db
@@ -524,6 +525,8 @@ def crew_status_box(
 '''))
 def crew_ready_button(event: types.AugmentedEvent, gender: Genders) -> types.CrewReadyButton:
 
+    link = reverse(f'fantasy:{gender.label.lower()}', kwargs = {'event_tag': event.tag})
+
     try:
         crew_ready = {
             Genders.MEN: event.mens_crew_ready,
@@ -533,12 +536,10 @@ def crew_ready_button(event: types.AugmentedEvent, gender: Genders) -> types.Cre
     except AttributeError:
         action = 'to compete' if event.active_day.is_racing_day else 'for your team'
         return {
-            'link': reverse('login'),
+            'link': f'{reverse("login")}?{urlencode({"next": link})}',
             'colour': 'primary',
             'text': f'Sign in {action}',
         }
-
-    link = reverse(f'fantasy:{gender.label}'.lower(), kwargs = {'event_tag': event.tag})
 
     if not event.active_day.is_racing_day:
         return {'link': link, 'colour': 'primary', 'text': 'View final crew'}

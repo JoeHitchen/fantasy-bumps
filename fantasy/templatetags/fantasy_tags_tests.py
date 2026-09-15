@@ -2,6 +2,7 @@ from datetime import time, timedelta
 from xml.etree import ElementTree as ET
 from typing import cast
 from unittest.mock import Mock
+from urllib.parse import urlencode
 
 from django.test import TestCase
 from django.urls import reverse
@@ -1117,9 +1118,13 @@ class Test__Event_Box(TestCase):
         html = self.crew_ready_button(self.event, Genders.WOMEN)
 
         # Test root
+        market_link = reverse('fantasy:women', kwargs = {'event_tag': self.event.tag})
         button = parser(html)
         self.assertEqual(button.tag, 'a')
-        self.assertEqual(button.get('href'), reverse('login'))
+        self.assertEqual(
+            button.get('href'),
+            '{}?{}'.format(reverse('login'), urlencode({'next': market_link})),
+        )
         self.assertIn('btn-primary', button.get('class', '').split())
 
         # Test containment
@@ -1138,9 +1143,13 @@ class Test__Event_Box(TestCase):
         html = self.crew_ready_button(self.event, Genders.WOMEN)
 
         # Test root
+        market_link = reverse('fantasy:women', kwargs = {'event_tag': self.event.tag})
         button = parser(html)
         self.assertEqual(button.tag, 'a')
-        self.assertEqual(button.get('href'), reverse('login'))
+        self.assertEqual(
+            button.get('href'),
+            '{}?{}'.format(reverse('login'), urlencode({'next': market_link})),
+        )
         self.assertIn('btn-primary', button.get('class', '').split())
 
         # Test containment
