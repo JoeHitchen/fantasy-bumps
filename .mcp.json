@@ -2,7 +2,7 @@
   "mcpServers": {
     "Fantasy Bumps (Dev)": {
       "type": "http",
-      "url": "http://localhost:8000/mcp"
+      "url": "http://localhost:8000/mcp/"
     }
   }
 }
