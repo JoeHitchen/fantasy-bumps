@@ -457,6 +457,11 @@ class MarketView(EventBase):
                     'division': div_idx + 1,
                     'bungline': crew_position.bungline,
                     'crew': crew_position.crew.json(),
+                    'price': utils.pricing_by_day_gender(
+                        crew_position.rank,
+                        crew_position.day,
+                        Genders(crew_position.crew.gender),
+                    ),
                     'payouts': calculate_payouts(crew_position),
                     'purchases': crew_position.purchase_count,
                     'popularity': crew_position.popularity,
