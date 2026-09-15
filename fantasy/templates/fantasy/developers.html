@@ -1,0 +1,110 @@
+{% extends 'core/base.html' %}
+
+{% block page_head %}
+<style type="text/css">
+  h5 {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  table td:first-child {
+    white-space: nowrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row"><div class="col">
+  <h2>Developer Information</h2>
+  <div class="mb-3">
+    For better or worse, Fantasy Bumps provides a read-only JSON API and MCP server for all public data.
+  </div>
+  <div class="mb-3">
+    But before we go any further, <em>are you sure</em> that you don't have anything better to do with your time?<br/>
+    &emsp;Like your degree?<br/>
+    &emsp;Or training?
+  </div>
+  <div class="mb-3">
+    ... Really?
+    Ok, well in that case...
+  </div>
+
+  <h5>JSON API</h5>
+  <div class="mb-3">
+    A read-only JSON API is available on several of the standard pages, including events, markets, leaderboards, and team crews.
+    It can be accessed by setting the <code>Accept: application/json</code> header or by appending <code>?format=json</code> to the URL.
+    Because the API is read-only and only supplying data already fully public, no authentication is needed.
+  </div>
+  <div class="mb-3">
+    The full list of supported pages is:
+  </div>
+  <div class="mb-3">
+    <table class="table table-bordered table-responsive-md">
+      <tr>
+        <td><code>{% url 'fantasy:index' %}</code><br/><code>{% url 'fantasy:events' %}</code></td>
+        <td>Returns a list with basic information for all events, recent & historical.</td>
+      </tr>
+      <tr>
+        <td><code>{% url 'fantasy:event' "eights2026" %}</code></td>
+        <td>Returns the full details of a specific event, along with crew popularity rankings.</td>
+      </tr>
+      <tr>
+        <td><code>{% url 'fantasy:men' "eights2026" %}</code><br/><code>{% url 'fantasy:women' "eights2026" %}</code></td>
+        <td>Returns the market data for the specified event and respective gender, including start orders, crew prices, and projected payouts.</td>
+      </tr>
+      <tr>
+        <td>
+          <code>{% url 'fantasy:leaderboard' "eights2026" %}</code><br/>
+          <code>{% url 'fantasy:leaderboard_men' "eights2026" %}</code><br/>
+          <code>{% url 'fantasy:leaderboard_women' "eights2026" %}</code></td>
+        <td>
+          Returns the overall, men's, and women's leaderboards for the specified event.
+          Additionally accepts the following filters as query parameters (all default to <code>true</code>):
+          <ul class="mt-2">
+            <li><code>invalid-entries</code> – Include/exclude invalid entries</li>
+            <li><code>allow-subs</code> – Include/exclude crews with substitutions</li>
+            <li><code>returners</code> – Include/exclude returning players</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><code>{% url 'fantasy:team' "eights2026" "MyTeam" %}</code></td>
+        <td>Returns the full details of a team's crew lists for a specified event, including all results & payouts.</td>
+      </tr>
+    </table>
+  </div>
+  <div class="mb-3">
+    There is no published schema for any of these pages, because that sounds like far too much effort.
+    However, you go to Oxford, you're smart, you can probably figure it out, and for my part I will endeavour to keep it consistent.
+  </div>
+
+  <h5>MCP</h5>
+  <div class="mb-3">
+    All of the same data available via the API is also available in your chatbot of choice via an MCP (Model Context Protocol) server.
+    This can be accessed by pointing your MCP-aware client at: <code>https://fantasybumps.org.uk/mcp/</code>
+  </div>
+  <div class="mb-3">
+    The tools available are:
+  </div>
+  <div class="mb-3">
+    <ul>
+      <li><code>get_server_instructions</code> – The starting point for using and understanding the tools available via the MCP server</li>
+      <li><code>list_events</code> – Retrieves a list of all available events</li>
+      <li><code>get_event_details</code> – Retrieves details for a specific event</li>
+      <li><code>get_event_market</code> – Retrieves market data for a specific event, for men or women as appropriate</li>
+      <li><code>get_event_leaderboard</code> – Retrieves leaderboard data for a specific event, accepting the same sorting & filtering as the API view</li>
+      <li><code>get_event_team_crews</code> – Retrieves team crew data for a specific event</li>
+    </ul>
+  </div>
+
+  <h5>Final Thoughts</h5>
+  <div class="mb-3">
+    These connections are provided as much for my own enjoyment in creating them as for any practical purpose.
+    Fantasy Bumps is ultimately a game for people, not for computers, and as such it was a conscious choice not to add API support for the actions
+    – buy, sell, switch – both now and in future, so that crew selection always requires the appropriate human touch.
+    <br/><br/>
+    Also, if you find yourself trying to script up the perfect crew selection using these tools, please go outside and touch some <s>grass</s> <em>water</em> 🚣💙.
+  </div>
+</div></div>
+
+<br/>
+{% endblock %}

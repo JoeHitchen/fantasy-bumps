@@ -60,7 +60,8 @@ class DayJson(TypedDict):
 
 
 class CrewJson(TypedDict):
-    club: str
+    club_code: str
+    club_name: str
     gender: str
     rank: int
 
@@ -392,7 +393,8 @@ class Crew(models.Model):
     def json(self) -> CrewJson:
         """Returns a JSON-compatible representation of the crew."""
         return {
-            'club': self.club,
+            'club_code': self.club,
+            'club_name': self.get_club_display(),
             'gender': self.gender,
             'rank': self.rank,
         }

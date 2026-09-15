@@ -22,6 +22,7 @@
         <div class="dropdown-menu">
           <a class="dropdown-item" href="{% url 'fantasy:rules' event.tag %}">Guide & Rules</a>
           <a class="dropdown-item" href="{% url 'fantasy:privacy' event.tag %}">Privacy Policy</a>
+          <a class="dropdown-item" href="{% url 'fantasy:developers' event.tag %}">API & MCP</a>
         </div>
       </div>
       {% else %}
@@ -31,6 +32,7 @@
         <div class="dropdown-menu">
           <a class="dropdown-item" href="{% url 'fantasy:rules' %}">Guide & Rules</a>
           <a class="dropdown-item" href="{% url 'fantasy:privacy' %}">Privacy Policy</a>
+          <a class="dropdown-item" href="{% url 'fantasy:developers' %}">API & MCP</a>
         </div>
       </div>
       {% endif %}

@@ -1201,7 +1201,7 @@ class MarketPageBase(GamePageBase):
 
 
     def test__json(self) -> None:
-        """Returns the start order, purchase counts & payouts as JSON when requested."""
+        """Returns the start order, price, purchase counts & payouts as JSON when requested."""
 
         response = self.client.get(self.url, HTTP_ACCEPT = 'application/json')
         self.assertEqual(response.status_code, 200)
@@ -1211,7 +1211,9 @@ class MarketPageBase(GamePageBase):
         self.assertEqual(payload['event']['tag'], self.event.tag)
         self.assertTrue(payload['start_order'])
 
-        keys = ['rank', 'division', 'bungline', 'crew', 'payouts', 'purchases', 'popularity']
+        keys = [
+            'rank', 'division', 'bungline', 'crew', 'price', 'payouts', 'purchases', 'popularity',
+        ]
         for key in keys:
             with self.subTest(key = key):
                 self.assertTrue(key in payload['start_order'][0])
@@ -1693,7 +1695,8 @@ class Test__Team(TestCase):
 
         mens_coach = response.json()['crews'][0]['mens_coach']
         self.assertEqual(mens_coach['name'], 'Test Coach 1')
-        self.assertEqual(mens_coach['crew']['club'], self.crew_mens.club)
+        self.assertEqual(mens_coach['crew']['club_code'], self.crew_mens.club)
+        self.assertEqual(mens_coach['crew']['club_name'], self.crew_mens.get_club_display())
         self.assertIsNone(payload['crews'][0]['womens_coach'])
 
 
