@@ -47,7 +47,7 @@
           {{ user.username }}
         </a>
         <div class="dropdown-menu dropdown-menu-right">
-          {% if event %}<a class="dropdown-item" href="{% url 'fantasy:team' event.tag user.username %}">My Crews</a>{% endif %}
+          {% if event %}<a class="dropdown-item" href="{% url 'fantasy:team_crews' event.tag user.username %}">My Crews</a>{% endif %}
           <a class="dropdown-item" href="{% url 'profile'%}">My Account</a>
           <div class="dropdown-divider"></div>
           <form method="post" action="{% url 'logout' %}">

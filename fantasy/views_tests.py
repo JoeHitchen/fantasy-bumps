@@ -1404,7 +1404,7 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
 
 
 
-class Test__Team(TestCase):
+class Test__TeamCrews(TestCase):
     fixtures = [
         'dev_event',
         'dev_days',
@@ -1417,8 +1417,8 @@ class Test__Team(TestCase):
     ]
 
     # Test settings
-    url_name = 'fantasy:team'
-    template = 'fantasy/team.html'
+    url_name = 'fantasy:team_crews'
+    template = 'fantasy/team-crews.html'
 
     url: str
     event: models.Event

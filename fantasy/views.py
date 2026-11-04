@@ -537,11 +537,11 @@ class LeaderboardView(EventBase):
         }
 
 
-class TeamView(EventBase):
+class TeamCrewsView(EventBase):
     """Presents a team's crews for an event."""
 
     # View settings
-    template_name = 'fantasy/team.html'
+    template_name = 'fantasy/team-crews.html'
 
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
