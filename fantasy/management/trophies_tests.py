@@ -391,6 +391,40 @@ class Test__EventTrophies(TestCase):
         self.compare_trophies(self.teams[12], False, False, [])
 
 
+    def test__top_five_top_ten_flags(self) -> None:
+        """Top-5 and Top-10 flags are set for high finishes and not overwritten by later events."""
+
+        second_event = models.Event.objects.create(
+            series = self.event.series,
+            year = self.event.year - 1,
+            tag = f'{self.event.tag}-{self.event.year - 1}',
+            initial_market_open = self.event.initial_market_open,
+        )
+        for index, team in enumerate(reversed(self.teams)):
+            budgets = 1500 - 10 * index
+            second_event.fantasies.create(
+                team = team,
+                mens_budget = budgets,
+                womens_budget = budgets,
+                valid_entry = True,
+            )
+
+        award_event_trophies(self.event)
+        award_event_trophies(second_event)
+
+        expected_outcomes = {
+            self.teams[0]: {'top_5': True, 'top_10': True},  # 1st then 13th
+            self.teams[3]: {'top_5': True, 'top_10': True},  # 4th then 10th
+            self.teams[7]: {'top_5': False, 'top_10': True},  # 8th then 6th
+            self.teams[12]: {'top_5': True, 'top_10': True},  # 13th then 1st
+        }
+
+        for team, flags in expected_outcomes.items():
+            team.refresh_from_db()
+            self.assertEqual(team.top_five_finisher, flags['top_5'])
+            self.assertEqual(team.top_ten_finisher, flags['top_10'])
+
+
     def test__no_entries(self) -> None:
         """The routine should not crash if there are no entries."""
 

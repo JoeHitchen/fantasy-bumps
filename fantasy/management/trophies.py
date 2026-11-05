@@ -80,8 +80,9 @@ def award_event_trophies(event: models.Event) -> None:
 
     teams_to_update = []
     for rank, ranking in enumerate(rankings[0:10], start = 1):
-        ranking.team.top_five_finisher = rank <= 5
         ranking.team.top_ten_finisher = True
+        if rank <= 5:
+            ranking.team.top_five_finisher = True
         teams_to_update.append(ranking.team)
 
     models.Team.objects.bulk_update(
