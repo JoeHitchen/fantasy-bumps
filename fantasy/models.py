@@ -496,15 +496,15 @@ class Team(models.Model):
         return self.purchases.filter(day = day, crew__gender = gender)
 
 
-    def get_leaderboard_trophies(self) -> list['Trophy']:
-        """Displays the most prestigious trophy from each event, or a single top-five/ten award."""
+    def get_leaderboard_event_trophies(self) -> list['EventTrophy']:
+        """Lists the most prestigious event trophy from each event, plus any Jester Swan."""
 
         event_trophies = {}
         display_trophies = []
         jester_trophy = None
         for trophy in self.trophies.all():
 
-            if trophy.type == Trophy.Types.JESTER_SWAN:
+            if trophy.type == EventTrophy.Types.JESTER_SWAN:
                 jester_trophy = trophy
                 continue
 
@@ -642,7 +642,7 @@ class Purchase(models.Model):
     price: int
 
 
-class Trophy(models.Model):
+class EventTrophy(models.Model):
     """Describes accolades won in previous events."""
 
     class Types(models.TextChoices):

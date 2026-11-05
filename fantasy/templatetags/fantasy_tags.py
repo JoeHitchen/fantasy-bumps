@@ -556,15 +556,15 @@ def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser)
 
 
 trophy_styles: dict[str, tuple[str, bool, bool]] = {
-    models.Trophy.Types.GOLDEN_SWAN: ('gold', True, False),
-    models.Trophy.Types.SILVER_SWAN: ('silver', True, False),
-    models.Trophy.Types.BRONZE_SWAN: ('bronze', True, False),
-    models.Trophy.Types.GOLDEN_COB: ('cob', True, False),
-    models.Trophy.Types.GOLDEN_PEN: ('pen', True, False),
-    models.Trophy.Types.GOLDEN_CYGNET: ('gold', False, False),
-    models.Trophy.Types.STEADY_SWAN: ('silver', False, True),
-    models.Trophy.Types.UGLY_DUCKLING: ('ugly', False, False),
-    models.Trophy.Types.JESTER_SWAN: ('jester', False, True),
+    models.EventTrophy.Types.GOLDEN_SWAN: ('gold', True, False),
+    models.EventTrophy.Types.SILVER_SWAN: ('silver', True, False),
+    models.EventTrophy.Types.BRONZE_SWAN: ('bronze', True, False),
+    models.EventTrophy.Types.GOLDEN_COB: ('cob', True, False),
+    models.EventTrophy.Types.GOLDEN_PEN: ('pen', True, False),
+    models.EventTrophy.Types.GOLDEN_CYGNET: ('gold', False, False),
+    models.EventTrophy.Types.STEADY_SWAN: ('silver', False, True),
+    models.EventTrophy.Types.UGLY_DUCKLING: ('ugly', False, False),
+    models.EventTrophy.Types.JESTER_SWAN: ('jester', False, True),
     'Top Five': ('other', True, False),
     'Top Ten': ('other', False, False),
     'Oxford': ('oxford', False, False),
@@ -594,10 +594,10 @@ def display_trophies(team: models.Team, bottom_tooltip: bool = False) -> str:
 
     trophy_string = ''
 
-    for trophy in team.get_leaderboard_trophies():
+    for trophy in team.get_leaderboard_event_trophies():
         trophy_string += swan_image(trophy.type, str(trophy), bottom_tooltip)
 
-    if not team.get_leaderboard_trophies():
+    if not team.get_leaderboard_event_trophies():
         if team.top_five_finisher:
             trophy_string += swan_image('Top Five', 'Top Five Finisher', bottom_tooltip)
         elif team.top_ten_finisher:
@@ -612,8 +612,8 @@ def display_trophies(team: models.Team, bottom_tooltip: bool = False) -> str:
 
 
 @register.filter
-def trophy_label(trophy_type: str) -> str:
-    return models.Trophy.Types(trophy_type).label
+def event_trophy_label(trophy_type: str) -> str:
+    return models.EventTrophy.Types(trophy_type).label
 
 
 @register.filter
