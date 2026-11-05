@@ -48,10 +48,25 @@
 
   <div class="col-lg order-lg-first">
     {% for entry in entries %}
-    <div class="card card-body mb-3">
-      <div class="d-flex justify-content-between">
-        <div>{{ entry.event }}</div>
-        <div><a href="{% url 'fantasy:team_crews' entry.event.tag team.user.username %}">View details</a></div>
+    <div class="card mb-3">
+      <div class="card-header text-dark d-flex flex-wrap align-items-center">
+        <h4 class="mb-0 mr-2">{{ entry.event }}</h4>
+        <div class="ml-auto">
+          {% if entry.valid_entry is not None %}<span class="badge badge-pill badge-{% if entry.valid_entry %}success{% else %}danger{% endif %}">{% if entry.valid_entry %}Valid{% else %}Invalid{% endif %} entry</span>{% endif %}
+          {% if entry.has_subs %}<span class="badge badge-pill badge-secondary ml-1">Substitutes used</span>
+          {% else %}<span class="badge badge-pill badge-info ml-1">No substitutes used</span>{% endif %}
+          {% if forloop.last %}<span class="badge badge-pill badge-warning ml-1">First event</span>{% endif %}
+        </div>
+      </div>
+      <div class="card-body pb-2">
+        {% include 'fantasy/finance-card.html' with title='Overall' budget=entry.total_budget crew_value=entry.total_crew_value balance=entry.total_balance %}
+        {% include 'fantasy/finance-card.html' with title="Men's" budget=entry.mens_budget crew_value=entry.mens_crew_value balance=entry.mens_balance %}
+        {% include 'fantasy/finance-card.html' with title="Women's" budget=entry.womens_budget crew_value=entry.womens_crew_value balance=entry.womens_balance %}
+      </div>
+      <div class="card-footer d-flex justify-content-end">
+        <a href="{% url 'fantasy:event' entry.event.tag %}" class="btn btn-primary btn-sm ml-2">Event <small><span class="oi oi-chevron-right ml-1"></span></small></a>
+        <a href="{% url 'fantasy:leaderboard' entry.event.tag %}" class="btn btn-primary btn-sm ml-2">Leaderboard <small><span class="oi oi-chevron-right ml-1"></span></small></a>
+        <a href="{% url 'fantasy:team_crews' entry.event.tag team.user.username %}" class="btn btn-primary btn-sm ml-2">Crew Lists <small><span class="oi oi-chevron-right ml-1"></span></small></a>
       </div>
     </div>
     {% empty %}

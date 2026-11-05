@@ -1,0 +1,13 @@
+{% load fantasy_tags %}
+<div class="card bg-light py-2 mb-3">
+  <div class="row no-gutters flex-sm-nowrap align-items-center text-center">
+    <div class="col-12 col-sm-3 pl-sm-4 text-sm-left mb-2 mb-sm-0">
+      <div class="h5 mb-0"><strong>{{ title }}</strong></div>
+    </div>
+    <div class="finance-stats flex-grow-1 flex-sm-grow-0 ml-sm-auto d-flex justify-content-evenly">
+      <div><strong>Budget</strong><br/><strong class="text-primary">{{ budget|currency }}</strong></div>
+      <div><small><strong>Crew Value</strong></small><br/>{{ crew_value|currency }}</div>
+      <div><small><strong>Balance</strong></small><br/>{{ balance|currency }}</div>
+    </div>
+  </div>
+</div>

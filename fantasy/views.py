@@ -566,6 +566,7 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
         context['entries'] = (
             team.entries
             .select_related('event')
+            .extend_financials()
             .annotate(last_day = utils.event_last_day('event__'))
             .order_by('-last_day')
         )

@@ -90,6 +90,14 @@
   margin-top: -0.25em;
 }
 
+.justify-content-evenly {
+  justify-content: space-evenly;
+}
+
+.finance-stats {
+  flex-basis: 24rem;
+}
+
 .bump-arrow {
   display: inline-block;
   margin-right: 0.5em;

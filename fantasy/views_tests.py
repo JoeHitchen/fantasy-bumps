@@ -1502,6 +1502,41 @@ class Test__TeamProfile(TestCase):
         )
 
 
+    def test__entries__status(self) -> None:
+        """Labels each entry's validity, substitute usage and whether it was the first event."""
+
+        self.events[0].fantasies.update(valid_entry = False, has_subs = True)
+        self.events[2].fantasies.update(valid_entry = True)
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        self.assertContains(response, 'Invalid entry', count = 1)
+        self.assertContains(response, 'Valid entry', count = 1)
+        self.assertContains(response, 'Substitutes used', count = 1)
+        self.assertContains(response, 'No substitutes used', count = 2)
+        self.assertContains(response, 'First event', count = 1)
+
+
+    def test__entries__status__validity_undetermined(self) -> None:
+        """Entries without a validity are not labelled either way."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+        self.assertNotContains(response, 'Valid entry')
+        self.assertNotContains(response, 'Invalid entry')
+
+
+    def test__entries__finances(self) -> None:
+        """Entries are loaded with the correct financial information for display."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        entry = response.context['entries'][0]
+        self.assertEqual(entry.event, self.events[0])
+        self.assertEqual(entry.total_budget, 2176)
+        self.assertEqual(entry.total_crew_value, 1947)
+        self.assertEqual(entry.total_balance, 229)
+
+
 
 class Test__TeamCrews(TestCase):
     fixtures = [
