@@ -662,6 +662,7 @@ class Trophy(models.Model):
 
     class Meta:
         ordering = ['type', '-event']
+        unique_together = ['event', 'type']
 
     def __str__(self) -> str:
         return f'{self.Types(self.type).label} ({self.event})'

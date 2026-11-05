@@ -1,5 +1,6 @@
 from datetime import date, time
 
+from django.db import IntegrityError
 from django.test import TestCase
 from django.contrib.auth import models as auth
 
@@ -423,6 +424,19 @@ class Test__EventTrophies(TestCase):
             team.refresh_from_db()
             self.assertEqual(team.top_five_finisher, flags['top_5'])
             self.assertEqual(team.top_ten_finisher, flags['top_10'])
+
+
+    def test__repeated_awarding(self) -> None:
+        """Awarding the trophies a second time fails without changing the existing trophies."""
+
+        award_event_trophies(self.event)
+        self.teams[1].entries.update(mens_budget = 2000, womens_budget = 2000)
+
+        with self.assertRaises(IntegrityError):
+            award_event_trophies(self.event)
+
+        self.assertEqual(models.Trophy.objects.count(), 8)
+        self.compare_trophies(self.teams[1], True, True, [models.Trophy.Types.SILVER_SWAN])
 
 
     def test__no_entries(self) -> None:

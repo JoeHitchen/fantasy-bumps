@@ -1,9 +1,10 @@
-from django.db import models as db
+from django.db import models as db, transaction
 
 from ..constants import GENDERS_OVERALL, Genders, Series
 from .. import models
 
 
+@transaction.atomic
 def award_event_trophies(event: models.Event) -> None:
     """Awards the trophies for an event."""
 
