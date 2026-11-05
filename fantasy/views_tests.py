@@ -1407,6 +1407,56 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
 
 
 
+class Test__TeamProfile(TestCase):
+    fixtures = ['dev_team']
+
+    user: auth.User
+    events: list[models.Event]
+
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.user = auth.User.objects.get(username = 'DevTeam')
+
+        cls.events = [
+            prepare_event(cls.user, 2021, -2),
+            prepare_event(cls.user, 2019, 2),
+            prepare_event(cls.user, 2020, 0),
+        ]
+
+
+    def test__unknown_team(self) -> None:
+        """Returns a 404 response if the username does not exist."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['Nobody']))
+        self.assertEqual(response.status_code, 404)
+
+
+    def test__no_entries(self) -> None:
+        """Renders a placeholder for teams which have not played."""
+
+        auth.User.objects.create_user('Spectator', '', '')
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['Spectator']))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No entries yet')
+
+
+    def test__render(self) -> None:
+        """Renders the team's entries, newest event first."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasy/team-profile.html')
+        self.assertEqual(response.context['team'], self.user.team)
+        self.assertEqual(
+            [entry.event for entry in response.context['entries']],
+            [self.events[0], self.events[2], self.events[1]],
+        )
+
+
+
 class Test__TeamCrews(TestCase):
     fixtures = [
         'dev_event',
@@ -1518,9 +1568,9 @@ class Test__TeamCrews(TestCase):
         ))
         self.assertEqual(response.status_code, 200)
 
-        self.assertIn('Current crew lists for ', str(response.content))
-        self.assertNotIn('Thursday crew lists for ', str(response.content))
-        self.assertNotIn('Wednesday crew lists for ', str(response.content))
+        self.assertIn('Current crew lists', str(response.content))
+        self.assertNotIn('Thursday crew lists', str(response.content))
+        self.assertNotIn('Wednesday crew lists', str(response.content))
 
 
     @patching.localtime_time(time(11, 15))
@@ -1535,9 +1585,9 @@ class Test__TeamCrews(TestCase):
         ))
         self.assertEqual(response.status_code, 200)
 
-        self.assertIn('Current crew lists for ', str(response.content))
-        self.assertNotIn('Thursday crew lists for ', str(response.content))
-        self.assertIn('Wednesday crew lists for ', str(response.content))
+        self.assertIn('Current crew lists', str(response.content))
+        self.assertNotIn('Thursday crew lists', str(response.content))
+        self.assertIn('Wednesday crew lists', str(response.content))
 
 
     @patching.localtime_time(time(11, 15))
@@ -1552,9 +1602,9 @@ class Test__TeamCrews(TestCase):
         ))
         self.assertEqual(response.status_code, 200)
 
-        self.assertNotIn('Current crew lists for ', str(response.content))
-        self.assertIn('Thursday crew lists for ', str(response.content))
-        self.assertIn('Wednesday crew lists for ', str(response.content))
+        self.assertNotIn('Current crew lists', str(response.content))
+        self.assertIn('Thursday crew lists', str(response.content))
+        self.assertIn('Wednesday crew lists', str(response.content))
 
 
     @patching.localtime_time(time(11, 15))

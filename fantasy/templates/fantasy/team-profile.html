@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block page_head %}
+<link rel="stylesheet" type="text/css" href="{% static 'fantasy/main.css' %}">
+<meta name="robots" content="none">
+{% endblock %}
+
+
+{% block content %}
+<h1 class="mb-3">Entry history for {{ team }}</h1>
+
+{% for entry in entries %}
+<div class="card card-body mb-3">
+  <div class="d-flex justify-content-between">
+    <div>{{ entry.event }}</div>
+    <div><a href="{% url 'fantasy:team_crews' entry.event.tag team.user.username %}">View details</a></div>
+  </div>
+</div>
+{% empty %}
+No entries yet
+{% endfor %}
+
+{% endblock %}

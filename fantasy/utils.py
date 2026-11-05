@@ -17,9 +17,14 @@ class Payout(TypedDict):
     payout: int
 
 
+def event_last_day(event_path: str = '') -> db.Max:
+    """Finds the date of an event's last day, for annotating the event or a related model."""
+    return db.Max(f'{event_path}days__date')
+
+
 def ordered_events() -> db.QuerySet['models.Event']:
     """Lists events in reverse chronological order."""
-    return models.Event.objects.annotate(last_day = db.Max('days__date')).order_by('-last_day')
+    return models.Event.objects.annotate(last_day = event_last_day()).order_by('-last_day')
 
 
 def has_all_seats(

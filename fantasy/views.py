@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from django_stubs_ext import WithAnnotations
 
     EventDetailView = DetailView[models.Event]
+    TeamDetailView = DetailView[models.Team]
     AugmentedEvent = WithAnnotations[models.Event, EventAugmentation]
 
     CrewWithPopularity = WithAnnotations[models.Crew, CrewPopularity]
@@ -50,6 +51,7 @@ if TYPE_CHECKING:
 
 else:
     EventDetailView = DetailView
+    TeamDetailView = DetailView
 
     CrewWithPopularity = models.Crew
     PositionWithPopularity = models.Position
@@ -536,6 +538,31 @@ class LeaderboardView(EventBase):
                 'previous_entries': fantasy.previous_entries,
             } for rank, fantasy in enumerate(context['fantasies'], start = 1)],
         }
+
+
+class TeamProfileView(FantasyBaseMixin, TeamDetailView):
+    """Presents a team's entry history across events."""
+
+    # View settings
+    queryset = models.Team.objects.select_related('user')
+    slug_url_kwarg = 'team_name'
+    slug_field = 'user__username'
+    context_object_name = 'team'
+    template_name = 'fantasy/team-profile.html'
+
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
+        context = super().get_context_data(**kwargs)
+
+        team = self.object
+        context['entries'] = (
+            team.entries
+            .select_related('event')
+            .annotate(last_day = utils.event_last_day('event__'))
+            .order_by('-last_day')
+        )
+
+        return context
+
 
 
 class TeamCrewsView(EventBase):
