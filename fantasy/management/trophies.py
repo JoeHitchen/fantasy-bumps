@@ -32,24 +32,14 @@ def award_event_trophies(event: models.Event) -> None:
             type = models.Trophy.Types.BRONZE_SWAN,
         )
 
-    mens_winner = (
-        event.fantasies
-        .select_related('team', 'team__user')
-        .extend_financials()
-        .rank_by(Genders.MEN)
-    ).first()
+    mens_winner = rankings.rank_by(Genders.MEN).first()
     if mens_winner:
         mens_winner.team.trophies.create(
             event = event,
             type = models.Trophy.Types.GOLDEN_COB,
         )
 
-    womens_winner = (
-        event.fantasies
-        .select_related('team', 'team__user')
-        .extend_financials()
-        .rank_by(Genders.WOMEN)
-    ).first()
+    womens_winner = rankings.rank_by(Genders.WOMEN).first()
     if womens_winner:
         womens_winner.team.trophies.create(
             event = event,
