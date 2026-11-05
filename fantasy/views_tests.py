@@ -492,7 +492,10 @@ class Test__Event(GamePageBase, TestCase):
                 womens_budget = money.INITIAL_BALANCE + 100 * index,
             )
             if index == 1:
-                team.trophies.create(event = self.event, type = models.Trophy.Types.JESTER_SWAN)
+                team.trophies.create(
+                    event = self.event,
+                    type = models.EventTrophy.Types.JESTER_SWAN,
+                )
             fantasies.append(fantasy)
 
         response = self.client.get(self.url)
@@ -504,7 +507,7 @@ class Test__Event(GamePageBase, TestCase):
     def test__trophies(self) -> None:
         """Lists the trophy winners, if more than one has been awarded."""
 
-        trophies = list(models.Trophy.Types)
+        trophies = list(models.EventTrophy.Types)
 
         # Create teams
         fantasies = []
@@ -641,7 +644,7 @@ class Test__Event(GamePageBase, TestCase):
             (2) SELECT Most popular crews of each gender
         """
 
-        for trophy in models.Trophy.Types:
+        for trophy in models.EventTrophy.Types:
             team = auth.User.objects.create(
                 username = trophy.label,
             ).team
@@ -1404,7 +1407,7 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
 
 
 
-class Test__Team(TestCase):
+class Test__TeamCrews(TestCase):
     fixtures = [
         'dev_event',
         'dev_days',
@@ -1417,8 +1420,8 @@ class Test__Team(TestCase):
     ]
 
     # Test settings
-    url_name = 'fantasy:team'
-    template = 'fantasy/team.html'
+    url_name = 'fantasy:team_crews'
+    template = 'fantasy/team-crews.html'
 
     url: str
     event: models.Event

@@ -110,7 +110,7 @@ class FantasyBumpsMCP(MCPToolset):
         """Retrieve crew lists, finances, and payouts for a team's entry to an event,
         using the series, year, and team name."""
         return self._get_event_json(
-            views.TeamView,
+            views.TeamCrewsView,
             series,
             year,
             view_kwargs = {'team_name': team_name},

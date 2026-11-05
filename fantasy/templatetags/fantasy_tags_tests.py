@@ -317,6 +317,79 @@ class Test__Avatar(TestCase):
 
 
 
+class Test__Trophy_Styles(TestCase):
+
+    def test__every_trophy_has_a_style(self) -> None:
+        """Every event trophy and general trophy has a swan style."""
+
+        for trophy in [*models.EventTrophy.Types, *models.GeneralTrophy]:
+            with self.subTest(trophy = trophy):
+                self.assertIn(trophy, tags.trophy_styles)
+
+
+
+class Test__Display_Trophies(TestCase):
+    fixtures = ['dev_event', 'dev_team']
+
+    team: models.Team
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+
+
+    def test__no_trophies(self) -> None:
+        """Shows nothing for a team without any trophies."""
+
+        self.assertEqual(tags.display_trophies(self.team), '')
+
+
+    def test__veteran_swans(self) -> None:
+        """Shows a swan for each veteran trophy held."""
+
+        self.team.oxford_veteran = True
+        self.assertIn('Oxford Veteran', tags.display_trophies(self.team))
+        self.assertNotIn('Cambridge Veteran', tags.display_trophies(self.team))
+
+        self.team.cambridge_veteran = True
+        self.assertIn('Oxford Veteran', tags.display_trophies(self.team))
+        self.assertIn('Cambridge Veteran', tags.display_trophies(self.team))
+
+
+    def test__top_five(self) -> None:
+        """Shows only the Top Five swan to a team that also holds the Top Ten flag."""
+
+        self.team.top_five_finisher = True
+        self.team.top_ten_finisher = True
+
+        output = tags.display_trophies(self.team)
+        self.assertIn('Top Five Finisher', output)
+        self.assertNotIn('Top Ten Finisher', output)
+
+
+    def test__top_ten(self) -> None:
+        """Shows the Top Ten swan to a team that has not reached the top five."""
+
+        self.team.top_ten_finisher = True
+
+        self.assertIn('Top Ten Finisher', tags.display_trophies(self.team))
+
+
+    def test__event_trophy(self) -> None:
+        """Shows the event trophy in place of the Top Five and Top Ten swans."""
+
+        self.team.top_five_finisher = True
+        self.team.trophies.create(
+            event = exists(models.Event.objects.first()),
+            type = models.EventTrophy.Types.GOLDEN_SWAN,
+        )
+
+        output = tags.display_trophies(self.team)
+        self.assertIn('Golden Swan', output)
+        self.assertNotIn('Top Five Finisher', output)
+
+
+
 class Test__Misc(TestCase):
     fixtures = ['dev_event', 'dev_days', 'dev_crews', 'dev_start_day1', 'dev_team', 'seats']
 

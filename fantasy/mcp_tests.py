@@ -347,7 +347,7 @@ class Test__MCPTools(TestCase):
         self.assertFalse(result['isError'])
         self.assertEqual(
             result['structuredContent'],
-            self.get_api_json('team', {
+            self.get_api_json('team_crews', {
                 'event_tag': self.event.tag,
                 'team_name': str(self.team_1),
             }),

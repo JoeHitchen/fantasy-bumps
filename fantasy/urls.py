@@ -49,7 +49,7 @@ urlpatterns = [
         path('men/', views.MarketView.as_view(), {'gender': Genders.MEN}, name = 'men'),
         path('women/', views.MarketView.as_view(), {'gender': Genders.WOMEN}, name = 'women'),
         path('leaderboard/', include(leaderboard_subpatterns)),
-        path('teams/<team_name>/', views.TeamView.as_view(), name = 'team'),
+        path('teams/<team_name>/', views.TeamCrewsView.as_view(), name = 'team_crews'),
         path(
             'guide-rules/',
             views.EventBase.as_view(template_name = 'fantasy/rules.html'),
