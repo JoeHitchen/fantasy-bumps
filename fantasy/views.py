@@ -554,6 +554,15 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
         context = super().get_context_data(**kwargs)
 
         team = self.object
+        context['event_trophies'] = (
+            team.trophies
+            .select_related('event')
+            .annotate(last_day = utils.event_last_day('event__'))
+            .order_by('type', '-last_day')
+        )
+
+        context['general_trophies'] = team.get_general_trophies()
+
         context['entries'] = (
             team.entries
             .select_related('event')

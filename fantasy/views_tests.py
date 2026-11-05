@@ -1456,6 +1456,52 @@ class Test__TeamProfile(TestCase):
         )
 
 
+    def test__trophy_cabinet__empty(self) -> None:
+        """Does not render the trophy cabinet for teams without any trophies."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+        self.assertNotContains(response, 'Trophy Cabinet')
+
+
+    def test__trophy_cabinet__with_trophies(self) -> None:
+        """Lists every event trophy, plus any general trophies held as flags on the team."""
+
+        event_trophies = [
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = self.events[1],
+                type = models.EventTrophy.Types.GOLDEN_SWAN,
+            ),
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = self.events[0],
+                type = models.EventTrophy.Types.GOLDEN_SWAN,
+            ),
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = self.events[0],
+                type = models.EventTrophy.Types.GOLDEN_CYGNET,
+            ),
+        ]
+        self.user.team.top_five_finisher = True
+        self.user.team.oxford_veteran = True
+        self.user.team.save()
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Trophy Cabinet')
+        self.assertQuerySetEqual(response.context['event_trophies'], [
+            event_trophies[1],
+            event_trophies[0],
+            event_trophies[2],
+        ])
+        self.assertEqual(
+            response.context['general_trophies'],
+            [models.GeneralTrophy.TOP_FIVE, models.GeneralTrophy.OXFORD_VETERAN],
+        )
+
+
 
 class Test__TeamCrews(TestCase):
     fixtures = [
