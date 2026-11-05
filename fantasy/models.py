@@ -474,6 +474,24 @@ class Coach(models.Model):
 
 
 
+class GeneralTrophy(models.TextChoices):
+    """Trophies held as flags on a team, rather than as EventTrophy records, so are not stored."""
+
+    TOP_FIVE = 'TOP-FIVE', 'Top Five Finisher'
+    TOP_TEN = 'TOP-TEN', 'Top Ten Finisher'
+    OXFORD_VETERAN = 'OXFORD', 'Oxford Veteran'
+    CAMBRIDGE_VETERAN = 'CAMBRIDGE', 'Cambridge Veteran'
+
+    def description(self) -> str:
+        return {
+            GeneralTrophy.TOP_FIVE: 'Finished in the top five of an event',
+            GeneralTrophy.TOP_TEN: 'Finished in the top ten of an event',
+            GeneralTrophy.OXFORD_VETERAN: 'Competed in five Oxford events',
+            GeneralTrophy.CAMBRIDGE_VETERAN: 'Competed in five Cambridge events',
+        }[self]
+
+
+
 class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
 
@@ -516,6 +534,21 @@ class Team(models.Model):
             display_trophies.append(jester_trophy)
 
         return display_trophies
+
+
+    def get_general_trophies(self) -> list[GeneralTrophy]:
+        """Lists the general trophies held as flags on the team."""
+
+        trophies: list[GeneralTrophy] = []
+        if self.top_five_finisher:
+            trophies.append(GeneralTrophy.TOP_FIVE)
+        if self.top_ten_finisher:
+            trophies.append(GeneralTrophy.TOP_TEN)
+        if self.oxford_veteran:
+            trophies.append(GeneralTrophy.OXFORD_VETERAN)
+        if self.cambridge_veteran:
+            trophies.append(GeneralTrophy.CAMBRIDGE_VETERAN)
+        return trophies
 
 
 @receiver(models.signals.post_save, sender = auth.User)

@@ -1645,6 +1645,46 @@ class Test__Team__EventTrophies(TestCase):
 
 
 
+class Test__Team__GeneralTrophies(TestCase):
+    fixtures = ['dev_team']
+
+    team: models.Team
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+
+
+    def test__no_trophies(self) -> None:
+        """An empty list should be returned if the player holds none of the flags."""
+
+        self.assertEqual(self.team.get_general_trophies(), [])
+
+
+    def test__some_trophies(self) -> None:
+        """Only the trophies for the flags set are returned."""
+
+        self.team.top_ten_finisher = True
+        self.team.cambridge_veteran = True
+
+        self.assertEqual(
+            self.team.get_general_trophies(),
+            [models.GeneralTrophy.TOP_TEN, models.GeneralTrophy.CAMBRIDGE_VETERAN],
+        )
+
+
+    def test__all_trophies(self) -> None:
+        """All general trophies are returned in a fixed order."""
+
+        self.team.top_five_finisher = True
+        self.team.top_ten_finisher = True
+        self.team.oxford_veteran = True
+        self.team.cambridge_veteran = True
+
+        self.assertEqual(self.team.get_general_trophies(), list(models.GeneralTrophy))
+
+
+
 class Test__GameEntry(TestCase):
     fixtures = ['dev_event']
 
