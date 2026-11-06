@@ -1537,6 +1537,37 @@ class Test__TeamProfile(TestCase):
         self.assertEqual(entry.total_balance, 229)
 
 
+    def test__entries__ranks(self) -> None:
+        """Entries are loaded with their ranks, and the number of entries to their event."""
+
+        another_user = auth.User.objects.create_user('Another', '', '')
+        self.events[0].fantasies.create(
+            team = another_user.team,
+            mens_budget = 1,
+            womens_budget = 1,
+        )
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        entry = response.context['entries'][0]
+        self.assertEqual(entry.overall_rank, 1)
+        self.assertEqual(entry.mens_rank, 1)
+        self.assertEqual(entry.womens_rank, 1)
+        self.assertEqual(entry.total_entry_count, 2)
+
+
+    def test__query_count(self) -> None:
+        """Expect:
+            (1) SELECT events
+            (1) SELECT team
+            (1) SELECT trophies
+            (1) SELECT entries, with their finances and ranks
+        """
+
+        with self.assertNumQueries(4):
+            self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+
 
 class Test__TeamCrews(TestCase):
     fixtures = [

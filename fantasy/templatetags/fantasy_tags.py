@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 from django.contrib.auth import models as auth
 from django.templatetags.static import static
 from django.template.defaultfilters import pluralize
-from django.contrib.humanize.templatetags.humanize import naturalday, apnumber
+from django.contrib.humanize.templatetags.humanize import naturalday, apnumber, ordinal
 
 from ..constants import Genders, money, CoachingCompetitions, Blades
 from .. import models, utils
@@ -104,6 +104,11 @@ def mini_leaderboard_avatar(rank: int) -> str:
 def currency(amount: int, leading_plus: bool = False) -> str:
     amount_str = f'{amount:+d}' if leading_plus else str(amount)
     return format_html('{}&nbsp;🦀', amount_str)
+
+
+@register.filter
+def out_of(rank: int, total: int) -> str:
+    return f'{ordinal(rank)} of {total}'
 
 
 @register.filter

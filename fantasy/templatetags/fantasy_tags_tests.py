@@ -317,6 +317,16 @@ class Test__Avatar(TestCase):
 
 
 
+class Test__Out_Of(TestCase):
+
+    def test__out_of(self) -> None:
+        """Formats the rank as an ordinal, out of the total."""
+
+        self.assertEqual(tags.out_of(12, 340), '12th of 340')
+        self.assertEqual(tags.out_of(1, 2), '1st of 2')
+
+
+
 class Test__Trophy_Styles(TestCase):
 
     def test__every_trophy_has_a_style(self) -> None:

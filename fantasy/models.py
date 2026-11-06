@@ -5,6 +5,7 @@ from functools import lru_cache
 import zoneinfo
 
 from django.db import models
+from django.db.models.functions import Coalesce
 from django.contrib.auth import models as auth
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -586,6 +587,44 @@ class GameEntryQuerySet(models.QuerySet[FinancialGameEntry]):
         }[gender]
         return self.order_by(*ordering)
 
+    def extend_ranks(self) -> 'GameEntryQuerySet':
+        """Add leaderboard positions, and the number of entries, for each entry's event.
+
+        Positions follow the ordering of rank_by().
+        Requires .extend_financials() to have been called.
+        """
+
+        event_entries = (
+            GameEntry.objects
+            .filter(event = models.OuterRef('event'))
+            .extend_financials()
+        )
+
+        def count(entries: 'GameEntryQuerySet') -> models.Expression:
+            per_event = entries.order_by().values('event').annotate(count = models.Count('pk'))
+            return Coalesce(models.Subquery(per_event.values('count')), 0)
+
+        def position(budget: str, crew_value: str) -> models.Expression:
+            budget_ref = models.OuterRef(budget)
+            crew_value_ref = models.OuterRef(crew_value)
+            ahead = event_entries.filter(
+                models.Q(**{f'{budget}__gt': budget_ref})
+                | models.Q(**{budget: budget_ref, f'{crew_value}__gt': crew_value_ref})
+                | models.Q(**{
+                    budget: budget_ref,
+                    crew_value: crew_value_ref,
+                    'team__user__username__lt': models.OuterRef('team__user__username'),
+                }),
+            )
+            return count(ahead) + 1
+
+        return self.annotate(  # type: ignore
+            overall_rank = position('total_budget', 'total_crew_value'),
+            mens_rank = position('mens_budget', 'mens_crew_value'),
+            womens_rank = position('womens_budget', 'womens_crew_value'),
+            total_entry_count = count(event_entries),
+        )
+
 
 
 class GameEntry(models.Model):
@@ -622,6 +661,10 @@ class GameEntry(models.Model):
     total_balance: int
     mens_crew_value: int
     womens_crew_value: int
+    overall_rank: int
+    mens_rank: int
+    womens_rank: int
+    total_entry_count: int
 
     class Meta:
         unique_together = ['team', 'event']

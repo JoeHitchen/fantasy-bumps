@@ -59,9 +59,9 @@
         </div>
       </div>
       <div class="card-body pb-2">
-        {% include 'fantasy/finance-card.html' with title='Overall' budget=entry.total_budget crew_value=entry.total_crew_value balance=entry.total_balance %}
-        {% include 'fantasy/finance-card.html' with title="Men's" budget=entry.mens_budget crew_value=entry.mens_crew_value balance=entry.mens_balance %}
-        {% include 'fantasy/finance-card.html' with title="Women's" budget=entry.womens_budget crew_value=entry.womens_crew_value balance=entry.womens_balance %}
+        {% include 'fantasy/finance-card.html' with title='Overall' rank=entry.overall_rank num_entries=entry.total_entry_count budget=entry.total_budget crew_value=entry.total_crew_value balance=entry.total_balance %}
+        {% include 'fantasy/finance-card.html' with title="Men's" rank=entry.mens_rank num_entries=entry.total_entry_count budget=entry.mens_budget crew_value=entry.mens_crew_value balance=entry.mens_balance %}
+        {% include 'fantasy/finance-card.html' with title="Women's" rank=entry.womens_rank num_entries=entry.total_entry_count budget=entry.womens_budget crew_value=entry.womens_crew_value balance=entry.womens_balance %}
       </div>
       <div class="card-footer d-flex justify-content-end">
         <a href="{% url 'fantasy:event' entry.event.tag %}" class="btn btn-primary btn-sm ml-2">Event <small><span class="oi oi-chevron-right ml-1"></span></small></a>

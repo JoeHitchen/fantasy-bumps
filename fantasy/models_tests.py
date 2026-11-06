@@ -1728,8 +1728,8 @@ class Test__GameEntry(TestCase):
             team = cls.team_3,
             mens_budget = 701,
             womens_budget = 713,
-            mens_balance = 117,
-            womens_balance = 112,
+            mens_balance = 217,
+            womens_balance = 12,
         )
         cls.game_entry_4 = cls.event.fantasies.create(
             team = cls.team_4,  # Alphabetically before but otherwise identical to 'Three'
@@ -1841,8 +1841,42 @@ class Test__GameEntry(TestCase):
 
         self.assertQuerySetEqual(
             self.event.fantasies.extend_financials().rank_by(Genders.WOMEN),
-            [self.game_entry_1, self.game_entry_4, self.game_entry_3, self.game_entry_2],
+            [self.game_entry_3, self.game_entry_1, self.game_entry_4, self.game_entry_2],
         )
+
+
+    def test__query__extend_ranks(self) -> None:
+        """Sets the rank in each competition on every entry, along with the total entry count."""
+
+        # Introduce spoiler entry that should be ignored
+        other_event = models.Event.objects.create(
+            series = Series.EIGHTS,
+            year = 2018,
+            tag = 'eights2018',
+            initial_market_open = '2019-02-24T20:00:00Z',
+        )
+        other_event.fantasies.create(
+            team = self.team_1,
+            mens_budget = 2000,
+            womens_budget = 2000,
+        )
+
+        # Helper function
+        def get_ranks(entry: models.GameEntry) -> tuple[int, int, int]:
+            return (entry.overall_rank, entry.mens_rank, entry.womens_rank)
+
+        # Main test
+        expected_ranks = [
+            (1, 2, 2),
+            (2, 3, 3),
+            (3, 4, 1),
+            (4, 1, 4),
+        ]
+        entries = self.event.fantasies.extend_financials().extend_ranks().rank_by(GENDERS_OVERALL)
+        for index, entry in enumerate(entries):
+            with self.subTest(rank = index + 1):
+                self.assertEqual(get_ranks(entry), expected_ranks[index])
+                self.assertEqual(entry.total_entry_count, 4)
 
 
 
