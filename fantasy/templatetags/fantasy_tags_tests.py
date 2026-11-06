@@ -1333,3 +1333,101 @@ class Test__Event_Box(TestCase):
         # Test containment
         self.assertInHTML('View final crew', html)
 
+
+
+class Test__Display_Entry_Trophies(TestCase):
+    fixtures = ['dev_event', 'dev_team']
+
+    event: models.Event
+    team: models.Team
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.event = exists(models.Event.objects.first())
+        cls.team = exists(models.Team.objects.first())
+        cls.event.fantasies.create(team = cls.team)
+
+
+    @staticmethod
+    def swan_image(trophy: models.EventTrophy.Types) -> str:
+        """A helper function that renders a swan icon."""
+        return (
+            template
+            .Template('{% load fantasy_tags %}{{ trophy|swan_image:label }}')
+            .render(template.Context({'trophy': trophy, 'label': trophy.label}))
+        )
+
+
+    def make_entry(
+        self,
+        overall_rank: int,
+        trophies: list[models.EventTrophy.Types] = [],
+    ) -> models.GameEntry:
+        """A helper function that prepares an entry with trophy & rank information."""
+
+        entry = self.event.fantasies.get(team = self.team)
+        entry.overall_rank = overall_rank
+        entry.event._team_trophies = [self.team.trophies.create(
+            event = self.event,
+            type = trophy,
+        ) for trophy in trophies]
+        return entry
+
+
+    def test__trophies__specific_trophies(self) -> None:
+        """Shows all specific trophies listed, regardless of possible conflicts."""
+
+        entry = self.make_entry(
+            overall_rank = 1,
+            trophies = [
+                models.EventTrophy.Types.GOLDEN_SWAN,
+                models.EventTrophy.Types.SILVER_SWAN,  # Normally not awarded with #1
+                models.EventTrophy.Types.GOLDEN_COB,
+                models.EventTrophy.Types.STEADY_SWAN,
+                models.EventTrophy.Types.JESTER_SWAN,
+            ],
+        )
+
+        output = tags.display_entry_trophies(entry)
+        self.assertInHTML(self.swan_image(models.EventTrophy.Types.GOLDEN_SWAN), output)
+        self.assertInHTML(self.swan_image(models.EventTrophy.Types.SILVER_SWAN), output)
+        self.assertInHTML(self.swan_image(models.EventTrophy.Types.GOLDEN_COB), output)
+        self.assertInHTML(self.swan_image(models.EventTrophy.Types.STEADY_SWAN), output)
+        self.assertInHTML(self.swan_image(models.EventTrophy.Types.JESTER_SWAN), output)
+
+
+    def test__trophies__top_five(self) -> None:
+        """Shows both the top-5 and top-10 trophy for those finishing in positions 1 -> 5."""
+
+        for overall_ranking in range(1, 6):
+            with self.subTest(overall_ranking = overall_ranking):
+
+                entry = self.make_entry(overall_rank = overall_ranking)
+
+                output = tags.display_entry_trophies(entry)
+                self.assertIn('Top Five Finisher', output)
+                self.assertIn('Top Ten Finisher', output)
+
+
+    def test__trophies__top_ten(self) -> None:
+        """Shows only the top-10 trophy for those finishing in positions 6 -> 10."""
+
+        for overall_ranking in range(6, 11):
+            with self.subTest(overall_ranking = overall_ranking):
+
+                entry = self.make_entry(overall_rank = overall_ranking)
+
+                output = tags.display_entry_trophies(entry)
+                self.assertNotIn('Top Five Finisher', output)
+                self.assertIn('Top Ten Finisher', output)
+
+
+    def test__trophies__outside_top_ten(self) -> None:
+        """Does not show either the top-5 or top-10 trophies for those finishing lower down."""
+
+        entry = self.make_entry(overall_rank = 11)
+
+        output = tags.display_entry_trophies(entry)
+        self.assertNotIn('Top Five Finisher', output)
+        self.assertNotIn('Top Ten Finisher', output)
+

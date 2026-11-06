@@ -634,6 +634,27 @@ def event_trophy_label(trophy_type: str) -> str:
     return models.EventTrophy.Types(trophy_type).label
 
 
+@register.simple_tag
+def display_entry_trophies(entry: models.GameEntry) -> str:
+    """Displays an entry's trophies, including extra trophies for top-5 and top-10 finishes."""
+
+    event_trophies = []
+    if hasattr(entry.event, '_team_trophies'):
+        event_trophies = entry.event._team_trophies
+
+    trophy_string = ''.join(
+        swan_image(models.EventTrophy.Types(trophy.type), event_trophy_label(trophy.type))
+        for trophy in event_trophies
+    )
+
+    if entry.overall_rank <= 5:
+        trophy_string += general_trophy(models.GeneralTrophy.TOP_FIVE)
+    if entry.overall_rank <= 10:
+        trophy_string += general_trophy(models.GeneralTrophy.TOP_TEN)
+
+    return mark_safe(trophy_string)
+
+
 @register.filter
 def trophy_team_score(team: models.Team) -> int:
     # Unclear how to correctly type an annotated related model in this context

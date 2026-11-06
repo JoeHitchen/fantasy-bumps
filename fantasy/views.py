@@ -566,6 +566,11 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
         context['entries'] = (
             team.entries
             .select_related('event')
+            .prefetch_related(db.Prefetch(
+                'event__trophies',
+                queryset = team.trophies.all(),
+                to_attr = '_team_trophies',
+            ))
             .extend_financials()
             .extend_ranks()
             .annotate(last_day = utils.event_last_day('event__'))

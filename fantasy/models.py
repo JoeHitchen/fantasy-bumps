@@ -104,6 +104,7 @@ class Event(models.Model):
     )
 
     _days: list['Day']
+    _team_trophies: list['EventTrophy']
 
     def __str__(self) -> str:
         series_long = {

@@ -1501,6 +1501,11 @@ class Test__TeamProfile(TestCase):
             [models.GeneralTrophy.TOP_FIVE, models.GeneralTrophy.OXFORD_VETERAN],
         )
 
+        self.assertEqual(
+            [entry.event._team_trophies for entry in response.context['entries']],
+            [[event_trophies[1], event_trophies[2]], [], [event_trophies[0]]],
+        )
+
 
     def test__entries__status(self) -> None:
         """Labels each entry's validity, substitute usage and whether it was the first event."""
@@ -1562,9 +1567,10 @@ class Test__TeamProfile(TestCase):
             (1) SELECT team
             (1) SELECT trophies
             (1) SELECT entries, with their finances and ranks
+            (1) Prefetch the team's trophies at each event
         """
 
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
 
 

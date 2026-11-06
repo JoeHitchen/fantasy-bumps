@@ -51,6 +51,7 @@
     <div class="card mb-3">
       <div class="card-header text-dark d-flex flex-wrap align-items-center">
         <h4 class="mb-0 mr-2">{{ entry.event }}</h4>
+        <span>{% display_entry_trophies entry %}</span>
         <div class="ml-auto">
           {% if entry.valid_entry is not None %}<span class="badge badge-pill badge-{% if entry.valid_entry %}success{% else %}danger{% endif %}">{% if entry.valid_entry %}Valid{% else %}Invalid{% endif %} entry</span>{% endif %}
           {% if entry.has_subs %}<span class="badge badge-pill badge-secondary ml-1">Substitutes used</span>
