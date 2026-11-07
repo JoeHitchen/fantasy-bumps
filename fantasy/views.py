@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from django_stubs_ext import WithAnnotations
 
     EventDetailView = DetailView[models.Event]
+    TeamDetailView = DetailView[models.Team]
     AugmentedEvent = WithAnnotations[models.Event, EventAugmentation]
 
     CrewWithPopularity = WithAnnotations[models.Crew, CrewPopularity]
@@ -50,6 +51,7 @@ if TYPE_CHECKING:
 
 else:
     EventDetailView = DetailView
+    TeamDetailView = DetailView
 
     CrewWithPopularity = models.Crew
     PositionWithPopularity = models.Position
@@ -81,7 +83,8 @@ class FantasyBaseMixin(TemplateResponseMixin, ContextMixin):
         context['money'] = money
         context['timings'] = timings
         context['coaching'] = CoachingCompetitions
-        context['trophy_types'] = models.Trophy.Types
+        context['event_trophy_types'] = models.EventTrophy.Types
+        context['general_trophy_types'] = models.GeneralTrophy
 
         events = utils.ordered_events()
         if 'event' in context:
@@ -537,11 +540,53 @@ class LeaderboardView(EventBase):
         }
 
 
-class TeamView(EventBase):
+
+class TeamProfileView(FantasyBaseMixin, TeamDetailView):
+    """Presents a team's entry history across events."""
+
+    # View settings
+    queryset = models.Team.objects.select_related('user')
+    slug_url_kwarg = 'team_name'
+    slug_field = 'user__username'
+    context_object_name = 'team'
+    template_name = 'fantasy/team-profile.html'
+
+    def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
+        context = super().get_context_data(**kwargs)
+
+        team = self.object
+        context['event_trophies'] = (
+            team.trophies
+            .select_related('event')
+            .annotate(last_day = utils.event_last_day('event__'))
+            .order_by('type', '-last_day')
+        )
+
+        context['general_trophies'] = team.get_general_trophies()
+
+        context['entries'] = (
+            team.entries
+            .select_related('event')
+            .prefetch_related(db.Prefetch(
+                'event__trophies',
+                queryset = team.trophies.all(),
+                to_attr = '_team_trophies',
+            ))
+            .extend_financials()
+            .extend_ranks()
+            .annotate(last_day = utils.event_last_day('event__'))
+            .order_by('-last_day')
+        )
+
+        return context
+
+
+
+class TeamCrewsView(EventBase):
     """Presents a team's crews for an event."""
 
     # View settings
-    template_name = 'fantasy/team.html'
+    template_name = 'fantasy/team-crews.html'
 
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)

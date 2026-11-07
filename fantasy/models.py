@@ -5,6 +5,7 @@ from functools import lru_cache
 import zoneinfo
 
 from django.db import models
+from django.db.models.functions import Coalesce
 from django.contrib.auth import models as auth
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -103,6 +104,7 @@ class Event(models.Model):
     )
 
     _days: list['Day']
+    _team_trophies: list['EventTrophy']
 
     def __str__(self) -> str:
         series_long = {
@@ -474,6 +476,24 @@ class Coach(models.Model):
 
 
 
+class GeneralTrophy(models.TextChoices):
+    """Trophies held as flags on a team, rather than as EventTrophy records, so are not stored."""
+
+    TOP_FIVE = 'TOP-FIVE', 'Top Five Finisher'
+    TOP_TEN = 'TOP-TEN', 'Top Ten Finisher'
+    OXFORD_VETERAN = 'OXFORD', 'Oxford Veteran'
+    CAMBRIDGE_VETERAN = 'CAMBRIDGE', 'Cambridge Veteran'
+
+    def description(self) -> str:
+        return {
+            GeneralTrophy.TOP_FIVE: 'Finished in the top five of an event',
+            GeneralTrophy.TOP_TEN: 'Finished in the top ten of an event',
+            GeneralTrophy.OXFORD_VETERAN: 'Competed in five Oxford events',
+            GeneralTrophy.CAMBRIDGE_VETERAN: 'Competed in five Cambridge events',
+        }[self]
+
+
+
 class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
 
@@ -496,15 +516,15 @@ class Team(models.Model):
         return self.purchases.filter(day = day, crew__gender = gender)
 
 
-    def get_leaderboard_trophies(self) -> list['Trophy']:
-        """Displays the most prestigious trophy from each event, or a single top-five/ten award."""
+    def get_leaderboard_event_trophies(self) -> list['EventTrophy']:
+        """Lists the most prestigious event trophy from each event, plus any Jester Swan."""
 
         event_trophies = {}
         display_trophies = []
         jester_trophy = None
         for trophy in self.trophies.all():
 
-            if trophy.type == Trophy.Types.JESTER_SWAN:
+            if trophy.type == EventTrophy.Types.JESTER_SWAN:
                 jester_trophy = trophy
                 continue
 
@@ -516,6 +536,21 @@ class Team(models.Model):
             display_trophies.append(jester_trophy)
 
         return display_trophies
+
+
+    def get_general_trophies(self) -> list[GeneralTrophy]:
+        """Lists the general trophies held as flags on the team."""
+
+        trophies: list[GeneralTrophy] = []
+        if self.top_five_finisher:
+            trophies.append(GeneralTrophy.TOP_FIVE)
+        if self.top_ten_finisher:
+            trophies.append(GeneralTrophy.TOP_TEN)
+        if self.oxford_veteran:
+            trophies.append(GeneralTrophy.OXFORD_VETERAN)
+        if self.cambridge_veteran:
+            trophies.append(GeneralTrophy.CAMBRIDGE_VETERAN)
+        return trophies
 
 
 @receiver(models.signals.post_save, sender = auth.User)
@@ -553,6 +588,44 @@ class GameEntryQuerySet(models.QuerySet[FinancialGameEntry]):
         }[gender]
         return self.order_by(*ordering)
 
+    def extend_ranks(self) -> 'GameEntryQuerySet':
+        """Add leaderboard positions, and the number of entries, for each entry's event.
+
+        Positions follow the ordering of rank_by().
+        Requires .extend_financials() to have been called.
+        """
+
+        event_entries = (
+            GameEntry.objects
+            .filter(event = models.OuterRef('event'))
+            .extend_financials()
+        )
+
+        def count(entries: 'GameEntryQuerySet') -> models.Expression:
+            per_event = entries.order_by().values('event').annotate(count = models.Count('pk'))
+            return Coalesce(models.Subquery(per_event.values('count')), 0)
+
+        def position(budget: str, crew_value: str) -> models.Expression:
+            budget_ref = models.OuterRef(budget)
+            crew_value_ref = models.OuterRef(crew_value)
+            ahead = event_entries.filter(
+                models.Q(**{f'{budget}__gt': budget_ref})
+                | models.Q(**{budget: budget_ref, f'{crew_value}__gt': crew_value_ref})
+                | models.Q(**{
+                    budget: budget_ref,
+                    crew_value: crew_value_ref,
+                    'team__user__username__lt': models.OuterRef('team__user__username'),
+                }),
+            )
+            return count(ahead) + 1
+
+        return self.annotate(  # type: ignore
+            overall_rank = position('total_budget', 'total_crew_value'),
+            mens_rank = position('mens_budget', 'mens_crew_value'),
+            womens_rank = position('womens_budget', 'womens_crew_value'),
+            total_entry_count = count(event_entries),
+        )
+
 
 
 class GameEntry(models.Model):
@@ -589,6 +662,10 @@ class GameEntry(models.Model):
     total_balance: int
     mens_crew_value: int
     womens_crew_value: int
+    overall_rank: int
+    mens_rank: int
+    womens_rank: int
+    total_entry_count: int
 
     class Meta:
         unique_together = ['team', 'event']
@@ -642,7 +719,7 @@ class Purchase(models.Model):
     price: int
 
 
-class Trophy(models.Model):
+class EventTrophy(models.Model):
     """Describes accolades won in previous events."""
 
     class Types(models.TextChoices):

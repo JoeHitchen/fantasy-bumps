@@ -20,31 +20,31 @@ def award_event_trophies(event: models.Event) -> None:
     if total_entries > 0:
         rankings[0].team.trophies.create(
             event = event,
-            type = models.Trophy.Types.GOLDEN_SWAN,
+            type = models.EventTrophy.Types.GOLDEN_SWAN,
         )
     if total_entries > 1:
         rankings[1].team.trophies.create(
             event = event,
-            type = models.Trophy.Types.SILVER_SWAN,
+            type = models.EventTrophy.Types.SILVER_SWAN,
         )
     if total_entries > 2:
         rankings[2].team.trophies.create(
             event = event,
-            type = models.Trophy.Types.BRONZE_SWAN,
+            type = models.EventTrophy.Types.BRONZE_SWAN,
         )
 
     mens_winner = rankings.rank_by(Genders.MEN).first()
     if mens_winner:
         mens_winner.team.trophies.create(
             event = event,
-            type = models.Trophy.Types.GOLDEN_COB,
+            type = models.EventTrophy.Types.GOLDEN_COB,
         )
 
     womens_winner = rankings.rank_by(Genders.WOMEN).first()
     if womens_winner:
         womens_winner.team.trophies.create(
             event = event,
-            type = models.Trophy.Types.GOLDEN_PEN,
+            type = models.EventTrophy.Types.GOLDEN_PEN,
         )
 
     cygnet_rankings = rankings.annotate(
@@ -53,20 +53,20 @@ def award_event_trophies(event: models.Event) -> None:
     if cygnet_rankings.count() > 0:
         cygnet_rankings[0].team.trophies.create(
             event = event,
-            type = models.Trophy.Types.GOLDEN_CYGNET,
+            type = models.EventTrophy.Types.GOLDEN_CYGNET,
         )
 
     steady_swan_rankings = rankings.filter(has_subs = False)
     if steady_swan_rankings.count() > 0:
         steady_swan_rankings[0].team.trophies.create(
             event = event,
-            type = models.Trophy.Types.STEADY_SWAN,
+            type = models.EventTrophy.Types.STEADY_SWAN,
         )
 
     if total_entries > 0:
         rankings.reverse()[0].team.trophies.create(
             event = event,
-            type = models.Trophy.Types.UGLY_DUCKLING,
+            type = models.EventTrophy.Types.UGLY_DUCKLING,
         )
 
     teams_to_update = []

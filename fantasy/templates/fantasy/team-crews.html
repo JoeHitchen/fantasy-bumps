@@ -17,7 +17,15 @@
 
 
 {% block content %}
-<h1 class="mb-3">{% if event.active_day.is_racing_day %}Current{% else %}Final{% endif %} finances for {{ team }}</h1>
+<div class="row">
+  <div class="col d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <h1>{{ team }} <span class="h3">at</span> {{ event }}</h1>
+    <a href="{% url 'fantasy:team_profile' team.user.username %}" class="btn btn-secondary">View full entry history</a>
+  </div>
+</div>
+<hr class="mt-2 mb-4">
+
+<h2 class="mb-3">{% if event.active_day.is_racing_day %}Current{% else %}Final{% endif %} finances</h2>
 <div class="row">
   <div class="col-md mb-3">
     <div class="card card-body bg-primary text-light">
@@ -70,11 +78,12 @@
 </div>
 
 {% for day_data in crews %}
-<h1 class="mb-3">{% if event.active_day == day_data.day %}Current{% else %}{{ day_data.day }}{% endif %} crew lists for {{ team }}</h1>
+<hr class="mt-2 mb-4">
+<h2 class="mb-3">{% if event.active_day == day_data.day %}Current{% else %}{{ day_data.day }}{% endif %} crew lists</h2>
 
 <div class="row">
   <div class="col-md mb-3">
-    <h3>Men's Crew</h3>
+    <h3 class="h5">Men's Crew</h3>
     {% for seat, athlete in day_data.mens_crew.items %}
       {% crew_list_row seat athlete %}
         {% if athlete and athlete.day != event.active_day %}{% athlete_result_display athlete %}{% endif %}
@@ -85,7 +94,7 @@
     {% end_crew_list_row %}{% endif %}
   </div>
   <div class="col-md mb-3">
-    <h3>Women's Crew</h3>
+    <h3 class="h5">Women's Crew</h3>
     {% for seat, athlete in day_data.womens_crew.items %}
       {% crew_list_row seat athlete %}
         {% if athlete and athlete.day != event.active_day %}{% athlete_result_display athlete %}{% endif %}

@@ -492,7 +492,10 @@ class Test__Event(GamePageBase, TestCase):
                 womens_budget = money.INITIAL_BALANCE + 100 * index,
             )
             if index == 1:
-                team.trophies.create(event = self.event, type = models.Trophy.Types.JESTER_SWAN)
+                team.trophies.create(
+                    event = self.event,
+                    type = models.EventTrophy.Types.JESTER_SWAN,
+                )
             fantasies.append(fantasy)
 
         response = self.client.get(self.url)
@@ -504,7 +507,7 @@ class Test__Event(GamePageBase, TestCase):
     def test__trophies(self) -> None:
         """Lists the trophy winners, if more than one has been awarded."""
 
-        trophies = list(models.Trophy.Types)
+        trophies = list(models.EventTrophy.Types)
 
         # Create teams
         fantasies = []
@@ -641,7 +644,7 @@ class Test__Event(GamePageBase, TestCase):
             (2) SELECT Most popular crews of each gender
         """
 
-        for trophy in models.Trophy.Types:
+        for trophy in models.EventTrophy.Types:
             team = auth.User.objects.create(
                 username = trophy.label,
             ).team
@@ -1404,7 +1407,175 @@ class Test__Leaderboard_Women(LeaderboardPageBase, TestCase):
 
 
 
-class Test__Team(TestCase):
+class Test__TeamProfile(TestCase):
+    fixtures = ['dev_team']
+
+    user: auth.User
+    events: list[models.Event]
+
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.user = auth.User.objects.get(username = 'DevTeam')
+
+        cls.events = [
+            prepare_event(cls.user, 2021, -2),
+            prepare_event(cls.user, 2019, 2),
+            prepare_event(cls.user, 2020, 0),
+        ]
+
+
+    def test__unknown_team(self) -> None:
+        """Returns a 404 response if the username does not exist."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['Nobody']))
+        self.assertEqual(response.status_code, 404)
+
+
+    def test__no_entries(self) -> None:
+        """Renders a placeholder for teams which have not played."""
+
+        auth.User.objects.create_user('Spectator', '', '')
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['Spectator']))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No entries yet')
+
+
+    def test__render(self) -> None:
+        """Renders the team's entries, newest event first."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'fantasy/team-profile.html')
+        self.assertEqual(response.context['team'], self.user.team)
+        self.assertEqual(
+            [entry.event for entry in response.context['entries']],
+            [self.events[0], self.events[2], self.events[1]],
+        )
+
+
+    def test__trophy_cabinet__empty(self) -> None:
+        """Does not render the trophy cabinet for teams without any trophies."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+        self.assertNotContains(response, 'Trophy Cabinet')
+
+
+    def test__trophy_cabinet__with_trophies(self) -> None:
+        """Lists every event trophy, plus any general trophies held as flags on the team."""
+
+        event_trophies = [
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = self.events[1],
+                type = models.EventTrophy.Types.GOLDEN_SWAN,
+            ),
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = self.events[0],
+                type = models.EventTrophy.Types.GOLDEN_SWAN,
+            ),
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = self.events[0],
+                type = models.EventTrophy.Types.GOLDEN_CYGNET,
+            ),
+        ]
+        self.user.team.top_five_finisher = True
+        self.user.team.oxford_veteran = True
+        self.user.team.save()
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Trophy Cabinet')
+        self.assertQuerySetEqual(response.context['event_trophies'], [
+            event_trophies[1],
+            event_trophies[0],
+            event_trophies[2],
+        ])
+        self.assertEqual(
+            response.context['general_trophies'],
+            [models.GeneralTrophy.TOP_FIVE, models.GeneralTrophy.OXFORD_VETERAN],
+        )
+
+        self.assertEqual(
+            [entry.event._team_trophies for entry in response.context['entries']],
+            [[event_trophies[1], event_trophies[2]], [], [event_trophies[0]]],
+        )
+
+
+    def test__entries__status(self) -> None:
+        """Labels each entry's validity, substitute usage and whether it was the first event."""
+
+        self.events[0].fantasies.update(valid_entry = False, has_subs = True)
+        self.events[2].fantasies.update(valid_entry = True)
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        self.assertContains(response, 'Invalid entry', count = 1)
+        self.assertContains(response, 'Valid entry', count = 1)
+        self.assertContains(response, 'Substitutes used', count = 1)
+        self.assertContains(response, 'No substitutes used', count = 2)
+        self.assertContains(response, 'First event', count = 1)
+
+
+    def test__entries__status__validity_undetermined(self) -> None:
+        """Entries without a validity are not labelled either way."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+        self.assertNotContains(response, 'Valid entry')
+        self.assertNotContains(response, 'Invalid entry')
+
+
+    def test__entries__finances(self) -> None:
+        """Entries are loaded with the correct financial information for display."""
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        entry = response.context['entries'][0]
+        self.assertEqual(entry.event, self.events[0])
+        self.assertEqual(entry.total_budget, 2176)
+        self.assertEqual(entry.total_crew_value, 1947)
+        self.assertEqual(entry.total_balance, 229)
+
+
+    def test__entries__ranks(self) -> None:
+        """Entries are loaded with their ranks, and the number of entries to their event."""
+
+        another_user = auth.User.objects.create_user('Another', '', '')
+        self.events[0].fantasies.create(
+            team = another_user.team,
+            mens_budget = 1,
+            womens_budget = 1,
+        )
+
+        response = self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+        entry = response.context['entries'][0]
+        self.assertEqual(entry.overall_rank, 1)
+        self.assertEqual(entry.mens_rank, 1)
+        self.assertEqual(entry.womens_rank, 1)
+        self.assertEqual(entry.total_entry_count, 2)
+
+
+    def test__query_count(self) -> None:
+        """Expect:
+            (1) SELECT events
+            (1) SELECT team
+            (1) SELECT trophies
+            (1) SELECT entries, with their finances and ranks
+            (1) Prefetch the team's trophies at each event
+        """
+
+        with self.assertNumQueries(5):
+            self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+
+
+class Test__TeamCrews(TestCase):
     fixtures = [
         'dev_event',
         'dev_days',
@@ -1417,8 +1588,8 @@ class Test__Team(TestCase):
     ]
 
     # Test settings
-    url_name = 'fantasy:team'
-    template = 'fantasy/team.html'
+    url_name = 'fantasy:team_crews'
+    template = 'fantasy/team-crews.html'
 
     url: str
     event: models.Event
@@ -1515,9 +1686,9 @@ class Test__Team(TestCase):
         ))
         self.assertEqual(response.status_code, 200)
 
-        self.assertIn('Current crew lists for ', str(response.content))
-        self.assertNotIn('Thursday crew lists for ', str(response.content))
-        self.assertNotIn('Wednesday crew lists for ', str(response.content))
+        self.assertIn('Current crew lists', str(response.content))
+        self.assertNotIn('Thursday crew lists', str(response.content))
+        self.assertNotIn('Wednesday crew lists', str(response.content))
 
 
     @patching.localtime_time(time(11, 15))
@@ -1532,9 +1703,9 @@ class Test__Team(TestCase):
         ))
         self.assertEqual(response.status_code, 200)
 
-        self.assertIn('Current crew lists for ', str(response.content))
-        self.assertNotIn('Thursday crew lists for ', str(response.content))
-        self.assertIn('Wednesday crew lists for ', str(response.content))
+        self.assertIn('Current crew lists', str(response.content))
+        self.assertNotIn('Thursday crew lists', str(response.content))
+        self.assertIn('Wednesday crew lists', str(response.content))
 
 
     @patching.localtime_time(time(11, 15))
@@ -1549,9 +1720,9 @@ class Test__Team(TestCase):
         ))
         self.assertEqual(response.status_code, 200)
 
-        self.assertNotIn('Current crew lists for ', str(response.content))
-        self.assertIn('Thursday crew lists for ', str(response.content))
-        self.assertIn('Wednesday crew lists for ', str(response.content))
+        self.assertNotIn('Current crew lists', str(response.content))
+        self.assertIn('Thursday crew lists', str(response.content))
+        self.assertIn('Wednesday crew lists', str(response.content))
 
 
     @patching.localtime_time(time(11, 15))

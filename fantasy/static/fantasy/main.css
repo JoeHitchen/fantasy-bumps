@@ -44,7 +44,7 @@
   margin-left: 1em;
 }
 
-.trophy-row :first-child {
+.trophy-row > :first-child {
   width: 2.25em;
   margin-top: 0em;
   margin-right: 0.25em;
@@ -88,6 +88,14 @@
 .team-finance-header {
   font-size: 125%;
   margin-top: -0.25em;
+}
+
+.justify-content-evenly {
+  justify-content: space-evenly;
+}
+
+.finance-stats {
+  flex-basis: 24rem;
 }
 
 .bump-arrow {

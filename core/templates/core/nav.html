@@ -47,8 +47,9 @@
           {{ user.username }}
         </a>
         <div class="dropdown-menu dropdown-menu-right">
-          {% if event %}<a class="dropdown-item" href="{% url 'fantasy:team' event.tag user.username %}">My Crews</a>{% endif %}
-          <a class="dropdown-item" href="{% url 'profile'%}">My Account</a>
+          <a class="dropdown-item" href="{% url 'fantasy:team_profile' user.username %}">My Entry History</a>
+          {% if event %}<a class="dropdown-item" href="{% url 'fantasy:team_crews' event.tag user.username %}">My Event Crews</a>{% endif %}
+          <a class="dropdown-item" href="{% url 'profile'%}">Settings</a>
           <div class="dropdown-divider"></div>
           <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}

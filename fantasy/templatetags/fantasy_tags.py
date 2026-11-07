@@ -11,7 +11,7 @@ from django.utils.safestring import mark_safe
 from django.contrib.auth import models as auth
 from django.templatetags.static import static
 from django.template.defaultfilters import pluralize
-from django.contrib.humanize.templatetags.humanize import naturalday, apnumber
+from django.contrib.humanize.templatetags.humanize import naturalday, apnumber, ordinal
 
 from ..constants import Genders, money, CoachingCompetitions, Blades
 from .. import models, utils
@@ -104,6 +104,11 @@ def mini_leaderboard_avatar(rank: int) -> str:
 def currency(amount: int, leading_plus: bool = False) -> str:
     amount_str = f'{amount:+d}' if leading_plus else str(amount)
     return format_html('{}&nbsp;🦀', amount_str)
+
+
+@register.filter
+def out_of(rank: int, total: int) -> str:
+    return f'{ordinal(rank)} of {total}'
 
 
 @register.filter
@@ -555,25 +560,29 @@ def event_box(event: types.AugmentedEvent, user: auth.User | auth.AnonymousUser)
     return {'event': event, 'genders': Genders, 'user': user, 'money': money}
 
 
-trophy_styles: dict[str, tuple[str, bool, bool]] = {
-    models.Trophy.Types.GOLDEN_SWAN: ('gold', True, False),
-    models.Trophy.Types.SILVER_SWAN: ('silver', True, False),
-    models.Trophy.Types.BRONZE_SWAN: ('bronze', True, False),
-    models.Trophy.Types.GOLDEN_COB: ('cob', True, False),
-    models.Trophy.Types.GOLDEN_PEN: ('pen', True, False),
-    models.Trophy.Types.GOLDEN_CYGNET: ('gold', False, False),
-    models.Trophy.Types.STEADY_SWAN: ('silver', False, True),
-    models.Trophy.Types.UGLY_DUCKLING: ('ugly', False, False),
-    models.Trophy.Types.JESTER_SWAN: ('jester', False, True),
-    'Top Five': ('other', True, False),
-    'Top Ten': ('other', False, False),
-    'Oxford': ('oxford', False, False),
-    'Cambridge': ('cambridge', False, False),
+trophy_styles: dict[models.EventTrophy.Types | models.GeneralTrophy, tuple[str, bool, bool]] = {
+    models.EventTrophy.Types.GOLDEN_SWAN: ('gold', True, False),
+    models.EventTrophy.Types.SILVER_SWAN: ('silver', True, False),
+    models.EventTrophy.Types.BRONZE_SWAN: ('bronze', True, False),
+    models.EventTrophy.Types.GOLDEN_COB: ('cob', True, False),
+    models.EventTrophy.Types.GOLDEN_PEN: ('pen', True, False),
+    models.EventTrophy.Types.GOLDEN_CYGNET: ('gold', False, False),
+    models.EventTrophy.Types.STEADY_SWAN: ('silver', False, True),
+    models.EventTrophy.Types.UGLY_DUCKLING: ('ugly', False, False),
+    models.EventTrophy.Types.JESTER_SWAN: ('jester', False, True),
+    models.GeneralTrophy.TOP_FIVE: ('other', True, False),
+    models.GeneralTrophy.TOP_TEN: ('other', False, False),
+    models.GeneralTrophy.OXFORD_VETERAN: ('oxford', False, False),
+    models.GeneralTrophy.CAMBRIDGE_VETERAN: ('cambridge', False, False),
 }
 
 
 @register.filter
-def swan_image(trophy_type: str, tooltip: str = '', bottom_tooltip: bool = False) -> str:
+def swan_image(
+    trophy_type: models.EventTrophy.Types | models.GeneralTrophy,
+    tooltip: str = '',
+    bottom_tooltip: bool = False,
+) -> str:
 
     file_tag, is_large, is_reversed = trophy_styles[trophy_type]
 
@@ -589,31 +598,61 @@ def swan_image(trophy_type: str, tooltip: str = '', bottom_tooltip: bool = False
     ))
 
 
+def general_trophy(trophy: models.GeneralTrophy, bottom_tooltip: bool = False) -> str:
+    """Displays a general trophy's swan, with the trophy's name as the tooltip."""
+    return swan_image(trophy, trophy.label, bottom_tooltip)
+
+
 @register.filter
 def display_trophies(team: models.Team, bottom_tooltip: bool = False) -> str:
 
     trophy_string = ''
 
-    for trophy in team.get_leaderboard_trophies():
-        trophy_string += swan_image(trophy.type, str(trophy), bottom_tooltip)
+    for trophy in team.get_leaderboard_event_trophies():
+        trophy_string += swan_image(
+            models.EventTrophy.Types(trophy.type),
+            str(trophy),
+            bottom_tooltip,
+        )
 
-    if not team.get_leaderboard_trophies():
+    if not team.get_leaderboard_event_trophies():
         if team.top_five_finisher:
-            trophy_string += swan_image('Top Five', 'Top Five Finisher', bottom_tooltip)
+            trophy_string += general_trophy(models.GeneralTrophy.TOP_FIVE, bottom_tooltip)
         elif team.top_ten_finisher:
-            trophy_string += swan_image('Top Ten', 'Top Ten Finisher', bottom_tooltip)
+            trophy_string += general_trophy(models.GeneralTrophy.TOP_TEN, bottom_tooltip)
 
     if team.oxford_veteran:
-        trophy_string += swan_image('Oxford', 'Oxford Veteran', bottom_tooltip)
+        trophy_string += general_trophy(models.GeneralTrophy.OXFORD_VETERAN, bottom_tooltip)
     if team.cambridge_veteran:
-        trophy_string += swan_image('Cambridge', 'Cambridge Veteran', bottom_tooltip)
+        trophy_string += general_trophy(models.GeneralTrophy.CAMBRIDGE_VETERAN, bottom_tooltip)
 
     return mark_safe(trophy_string)
 
 
 @register.filter
-def trophy_label(trophy_type: str) -> str:
-    return models.Trophy.Types(trophy_type).label
+def event_trophy_label(trophy_type: str) -> str:
+    return models.EventTrophy.Types(trophy_type).label
+
+
+@register.simple_tag
+def display_entry_trophies(entry: models.GameEntry) -> str:
+    """Displays an entry's trophies, including extra trophies for top-5 and top-10 finishes."""
+
+    event_trophies = []
+    if hasattr(entry.event, '_team_trophies'):
+        event_trophies = entry.event._team_trophies
+
+    trophy_string = ''.join(
+        swan_image(models.EventTrophy.Types(trophy.type), event_trophy_label(trophy.type))
+        for trophy in event_trophies
+    )
+
+    if entry.overall_rank <= 5:
+        trophy_string += general_trophy(models.GeneralTrophy.TOP_FIVE)
+    if entry.overall_rank <= 10:
+        trophy_string += general_trophy(models.GeneralTrophy.TOP_TEN)
+
+    return mark_safe(trophy_string)
 
 
 @register.filter

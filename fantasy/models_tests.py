@@ -1566,7 +1566,7 @@ class Test__Team(TestCase):
         self.assertEqual(crew.count(), 9)
 
 
-class Test__Team__Trophies(TestCase):
+class Test__Team__EventTrophies(TestCase):
     fixtures = ['dev_event', 'dev_team']
 
     team: models.Team
@@ -1600,7 +1600,7 @@ class Test__Team__Trophies(TestCase):
     def test__no_trophies(self) -> None:
         """An empty list should be returned if the player has not won any trophies."""
 
-        self.assertEqual(self.team.get_leaderboard_trophies(), [])
+        self.assertEqual(self.team.get_leaderboard_event_trophies(), [])
 
 
     def test__one_per_event(self) -> None:
@@ -1608,23 +1608,26 @@ class Test__Team__Trophies(TestCase):
 
         trophy_1 = self.team.trophies.create(
             event = self.event_1,
-            type = models.Trophy.Types.GOLDEN_SWAN,  # Out-ranks Golden Cob this event
+            type = models.EventTrophy.Types.GOLDEN_SWAN,  # Out-ranks Golden Cob this event
         )
-        self.team.trophies.create(event = self.event_1, type = models.Trophy.Types.GOLDEN_COB)
+        self.team.trophies.create(event = self.event_1, type = models.EventTrophy.Types.GOLDEN_COB)
 
         trophy_2 = self.team.trophies.create(
             event = self.event_2,
-            type = models.Trophy.Types.BRONZE_SWAN,  # Out-ranks Golden Pen this event
+            type = models.EventTrophy.Types.BRONZE_SWAN,  # Out-ranks Golden Pen this event
         )
-        self.team.trophies.create(event = self.event_2, type = models.Trophy.Types.GOLDEN_PEN)
+        self.team.trophies.create(event = self.event_2, type = models.EventTrophy.Types.GOLDEN_PEN)
 
-        self.team.trophies.create(event = self.event_3, type = models.Trophy.Types.GOLDEN_PEN)
+        self.team.trophies.create(event = self.event_3, type = models.EventTrophy.Types.GOLDEN_PEN)
         trophy_3 = self.team.trophies.create(
             event = self.event_3,
-            type = models.Trophy.Types.SILVER_SWAN,  # Out-ranks Golden Pen from this event
+            type = models.EventTrophy.Types.SILVER_SWAN,  # Out-ranks Golden Pen from this event
         )
 
-        self.assertEqual(self.team.get_leaderboard_trophies(), [trophy_1, trophy_3, trophy_2])
+        self.assertEqual(
+            self.team.get_leaderboard_event_trophies(),
+            [trophy_1, trophy_3, trophy_2],
+        )
 
 
     def test__jester_swan(self) -> None:
@@ -1632,13 +1635,53 @@ class Test__Team__Trophies(TestCase):
 
         trophy_1 = self.team.trophies.create(
             event = self.event_1,
-            type = models.Trophy.Types.GOLDEN_SWAN,  # Out-ranks Jester Swan
+            type = models.EventTrophy.Types.GOLDEN_SWAN,  # Out-ranks Jester Swan
         )
         trophy_2 = self.team.trophies.create(
             event = self.event_1,
-            type = models.Trophy.Types.JESTER_SWAN,
+            type = models.EventTrophy.Types.JESTER_SWAN,
         )
-        self.assertEqual(self.team.get_leaderboard_trophies(), [trophy_1, trophy_2])
+        self.assertEqual(self.team.get_leaderboard_event_trophies(), [trophy_1, trophy_2])
+
+
+
+class Test__Team__GeneralTrophies(TestCase):
+    fixtures = ['dev_team']
+
+    team: models.Team
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        cls.team = exists(models.Team.objects.first())
+
+
+    def test__no_trophies(self) -> None:
+        """An empty list should be returned if the player holds none of the flags."""
+
+        self.assertEqual(self.team.get_general_trophies(), [])
+
+
+    def test__some_trophies(self) -> None:
+        """Only the trophies for the flags set are returned."""
+
+        self.team.top_ten_finisher = True
+        self.team.cambridge_veteran = True
+
+        self.assertEqual(
+            self.team.get_general_trophies(),
+            [models.GeneralTrophy.TOP_TEN, models.GeneralTrophy.CAMBRIDGE_VETERAN],
+        )
+
+
+    def test__all_trophies(self) -> None:
+        """All general trophies are returned in a fixed order."""
+
+        self.team.top_five_finisher = True
+        self.team.top_ten_finisher = True
+        self.team.oxford_veteran = True
+        self.team.cambridge_veteran = True
+
+        self.assertEqual(self.team.get_general_trophies(), list(models.GeneralTrophy))
 
 
 
@@ -1685,8 +1728,8 @@ class Test__GameEntry(TestCase):
             team = cls.team_3,
             mens_budget = 701,
             womens_budget = 713,
-            mens_balance = 117,
-            womens_balance = 112,
+            mens_balance = 217,
+            womens_balance = 12,
         )
         cls.game_entry_4 = cls.event.fantasies.create(
             team = cls.team_4,  # Alphabetically before but otherwise identical to 'Three'
@@ -1798,8 +1841,42 @@ class Test__GameEntry(TestCase):
 
         self.assertQuerySetEqual(
             self.event.fantasies.extend_financials().rank_by(Genders.WOMEN),
-            [self.game_entry_1, self.game_entry_4, self.game_entry_3, self.game_entry_2],
+            [self.game_entry_3, self.game_entry_1, self.game_entry_4, self.game_entry_2],
         )
+
+
+    def test__query__extend_ranks(self) -> None:
+        """Sets the rank in each competition on every entry, along with the total entry count."""
+
+        # Introduce spoiler entry that should be ignored
+        other_event = models.Event.objects.create(
+            series = Series.EIGHTS,
+            year = 2018,
+            tag = 'eights2018',
+            initial_market_open = '2019-02-24T20:00:00Z',
+        )
+        other_event.fantasies.create(
+            team = self.team_1,
+            mens_budget = 2000,
+            womens_budget = 2000,
+        )
+
+        # Helper function
+        def get_ranks(entry: models.GameEntry) -> tuple[int, int, int]:
+            return (entry.overall_rank, entry.mens_rank, entry.womens_rank)
+
+        # Main test
+        expected_ranks = [
+            (1, 2, 2),
+            (2, 3, 3),
+            (3, 4, 1),
+            (4, 1, 4),
+        ]
+        entries = self.event.fantasies.extend_financials().extend_ranks().rank_by(GENDERS_OVERALL)
+        for index, entry in enumerate(entries):
+            with self.subTest(rank = index + 1):
+                self.assertEqual(get_ranks(entry), expected_ranks[index])
+                self.assertEqual(entry.total_entry_count, 4)
 
 
 
@@ -1830,16 +1907,16 @@ class Test__Purchase(TestCase):
         self.assertIsNone(purchase.athlete)
 
 
-class Test__Trophy(TestCase):
+class Test__EventTrophy(TestCase):
     fixtures = ['dev_event', 'dev_team']
 
     def test__string(self) -> None:
         """Returns the trophy type and event."""
 
-        trophy = models.Trophy(
+        trophy = models.EventTrophy(
             event = exists(models.Event.objects.first()),
             team = exists(models.Team.objects.first()),
-            type = models.Trophy.Types.GOLDEN_SWAN,
+            type = models.EventTrophy.Types.GOLDEN_SWAN,
         )
 
         self.assertEqual(str(trophy), 'Golden Swan (Demo 2019)')
