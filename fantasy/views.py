@@ -176,7 +176,7 @@ class IndexView(FantasyBaseMixin, TemplateView):
 
 
     def convert_to_json(self, context: ContextDict) -> JsonOutput:
-        return {'events': [event.json() for event in context['events']]}
+        return {'events': [event.full_json() for event in context['events']]}
 
 
 
@@ -198,7 +198,7 @@ class EventsList(FantasyBaseMixin, TemplateView):
 
 
     def convert_to_json(self, context: ContextDict) -> JsonOutput:
-        return {'events': [event.json() for event in context['events']]}
+        return {'events': [event.full_json() for event in context['events']]}
 
 
 
@@ -290,12 +290,12 @@ class EventView(EventBase):
             }
 
         return {
-            'event': context['event'].json(),
+            'event': context['event'].full_json(),
             'all_days': [day.json() for day in context['event'].days.all()],
             'active_day': self.day.json(),
             'initial_market_open': context['event'].initial_market_open,
             'market_held_closed': context['event'].market_held_closed,
-            'trophies': [trophy.json() for trophy in context['trophies']],
+            'trophies': [trophy.full_json() for trophy in context['trophies']],
             'mens_popularity': [
                 popularity_json(popularity)
                 for popularity in context['popular_crews_men']
@@ -452,7 +452,7 @@ class MarketView(EventBase):
             return payouts
 
         return {
-            'event': context['event'].json(),
+            'event': context['event'].full_json(),
             'day': self.day.json(),
             'start_order': [
                 {
@@ -521,7 +521,7 @@ class LeaderboardView(EventBase):
 
     def convert_to_json(self, context: ContextDict) -> JsonOutput:
         return {
-            'event': context['event'].json(),
+            'event': context['event'].full_json(),
             'day': context['day'].json(),
             'ranking': {'O': 'overall', 'M': 'men', 'W': 'women'}[context['ranking']],
             'filters': {
@@ -578,6 +578,48 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
         )
 
         return context
+
+
+    def convert_to_json(self, context: ContextDict) -> JsonOutput:
+
+
+        def convert_rankings(entry: models.GameEntry) -> JsonOutput:
+            return {
+                'overall': entry.overall_rank,
+                'mens': entry.mens_rank,
+                'womens': entry.womens_rank,
+                'total_entries': entry.total_entry_count,
+            }
+
+
+        def convert_trophies(entry: models.GameEntry) -> list[models.TrophySummaryJson]:
+            trophies: list[models.EventTrophy | models.GeneralTrophy] = [
+                *entry.event._team_trophies,
+            ]
+            if entry.overall_rank <= 5:
+                trophies.append(models.GeneralTrophy.TOP_FIVE)
+            if entry.overall_rank <= 10:
+                trophies.append(models.GeneralTrophy.TOP_TEN)
+            return [trophy.summary_json() for trophy in trophies]
+
+
+        return {
+            'team': context['team'].user.username,
+            'trophies': [
+                {**trophy.summary_json(), 'event': trophy.event.summary_json()}
+                for trophy in context['event_trophies']
+            ],
+            'general_trophies': [trophy.summary_json() for trophy in context['general_trophies']],
+            'entries': [{
+                'event': entry.event.summary_json(),
+                'valid_entry': entry.valid_entry,
+                'has_subs': entry.has_subs,
+                'first_entry': index == len(context['entries']) - 1,
+                'finances': entry.finance_json(),
+                'rankings': convert_rankings(entry),
+                'trophies': convert_trophies(entry),
+            } for index, entry in enumerate(context['entries'])],
+        }
 
 
 
@@ -684,7 +726,7 @@ class TeamCrewsView(EventBase):
             } if coach_crew else None
 
         return {
-            'event': context['event'].json(),
+            'event': context['event'].full_json(),
             'team': context['team'].user.username,
             'finances': context['finances'].finance_json(),
             'crews': [

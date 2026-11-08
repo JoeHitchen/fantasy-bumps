@@ -1425,6 +1425,33 @@ class Test__TeamProfile(TestCase):
         ]
 
 
+    def get_json(self, username: str = 'DevTeam') -> Any:
+        """A helper function that requests a team's profile as JSON."""
+
+        response = self.client.get(
+            reverse('fantasy:team_profile', args = [username]),
+            HTTP_ACCEPT = 'application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        return response.json()
+
+
+    def create_trophies(self) -> None:
+        """A helper function that gives the team two golden swans and a golden cygnet."""
+
+        for event, trophy_type in [
+            (self.events[1], models.EventTrophy.Types.GOLDEN_SWAN),
+            (self.events[0], models.EventTrophy.Types.GOLDEN_SWAN),
+            (self.events[0], models.EventTrophy.Types.GOLDEN_CYGNET),
+        ]:
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = event,
+                type = trophy_type,
+            )
+
+
     def test__unknown_team(self) -> None:
         """Returns a 404 response if the username does not exist."""
 
@@ -1572,6 +1599,213 @@ class Test__TeamProfile(TestCase):
 
         with self.assertNumQueries(5):
             self.client.get(reverse('fantasy:team_profile', args = ['DevTeam']))
+
+
+    def test__json__no_entries(self) -> None:
+        """Returns empty lists for teams which have not played."""
+
+        auth.User.objects.create_user('Spectator', '', '')
+
+        self.assertEqual(self.get_json('Spectator'), {
+            'team': 'Spectator',
+            'trophies': [],
+            'general_trophies': [],
+            'entries': [],
+        })
+
+
+    def test__json__trophies(self) -> None:
+        """Lists the team's event trophies, as in the cabinet, each tied to its event."""
+
+        self.create_trophies()
+
+        self.assertEqual(self.get_json()['trophies'], [
+            {
+                'code': '01-GOLDEN',
+                'name': 'Golden Swan',
+                'description': 'Overall Winner',
+                'event': self.events[0].summary_json(),
+            },
+            {
+                'code': '01-GOLDEN',
+                'name': 'Golden Swan',
+                'description': 'Overall Winner',
+                'event': self.events[1].summary_json(),
+            },
+            {
+                'code': '06-G-CYG',
+                'name': 'Golden Cygnet',
+                'description': 'Best Newcomer',
+                'event': self.events[0].summary_json(),
+            },
+        ])
+
+
+    def test__json__general_trophies(self) -> None:
+        """Lists the awards held as flags on the team."""
+
+        self.user.team.top_five_finisher = True
+        self.user.team.oxford_veteran = True
+        self.user.team.save()
+
+        self.assertEqual(self.get_json()['general_trophies'], [
+            models.GeneralTrophy.TOP_FIVE.summary_json(),
+            models.GeneralTrophy.OXFORD_VETERAN.summary_json(),
+        ])
+
+
+    def test__json__entries(self) -> None:
+        """Lists the team's entries newest first, with their status and finances."""
+
+        self.events[0].fantasies.update(valid_entry = False, has_subs = True)
+
+        entries = self.get_json()['entries']
+
+        self.assertEqual(
+            [entry['event'] for entry in entries],
+            [event.summary_json() for event in [self.events[0], self.events[2], self.events[1]]],
+        )
+        self.assertFalse(entries[0]['valid_entry'])
+        self.assertTrue(entries[0]['has_subs'])
+        self.assertIsNone(entries[1]['valid_entry'])
+        self.assertFalse(entries[1]['has_subs'])
+        self.assertEqual(entries[0]['finances'], {
+            'overall': {'budget': 2176, 'crew_value': 1947, 'balance': 229},
+            'mens': {'budget': 967, 'crew_value': 841, 'balance': 126},
+            'womens': {'budget': 1209, 'crew_value': 1106, 'balance': 103},
+        })
+
+
+    def test__json__entries__first_entry(self) -> None:
+        """Flags only the team's oldest entry as the first."""
+
+        entries = self.get_json()['entries']
+        self.assertEqual([entry['first_entry'] for entry in entries], [False, False, True])
+
+
+    def test__json__entries__rankings(self) -> None:
+        """Ranks each entry among all of its event's entries, for each leaderboard."""
+
+        # The team trails one team overall, trails both for men, and leads both for women
+        for username, mens_budget, womens_budget in [
+            ('MensOnly', 2000, 100),  # Ahead for men only
+            ('Stronger', 3000, 1000),  # Ahead overall and for men
+        ]:
+            self.events[0].fantasies.create(
+                team = auth.User.objects.create_user(username, '', '').team,
+                mens_budget = mens_budget,
+                womens_budget = womens_budget,
+            )
+
+        entries = self.get_json()['entries']
+
+        self.assertEqual(entries[0]['rankings'], {
+            'overall': 2,
+            'mens': 3,
+            'womens': 1,
+            'total_entries': 3,
+        })
+        self.assertEqual(entries[1]['rankings'], {
+            'overall': 1,
+            'mens': 1,
+            'womens': 1,
+            'total_entries': 1,
+        })
+
+
+    def test__json__entries__trophies(self) -> None:
+        """Lists each event's trophies, followed by the awards for the finishing position."""
+
+        self.create_trophies()
+
+        entries = self.get_json()['entries']
+
+        self.assertEqual(
+            [trophy['code'] for trophy in entries[0]['trophies']],
+            ['01-GOLDEN', '06-G-CYG', 'TOP-FIVE', 'TOP-TEN'],
+        )
+        self.assertEqual(entries[1]['trophies'], [
+            models.GeneralTrophy.TOP_FIVE.summary_json(),
+            models.GeneralTrophy.TOP_TEN.summary_json(),
+        ])
+        self.assertEqual(
+            [trophy['code'] for trophy in entries[2]['trophies']],
+            ['01-GOLDEN', 'TOP-FIVE', 'TOP-TEN'],
+        )
+
+
+    def test__json__entries__trophies__outside_top_ten(self) -> None:
+        """Gives no awards for the finishing position below tenth."""
+
+        models.EventTrophy.objects.create(
+            team = self.user.team,
+            event = self.events[0],
+            type = models.EventTrophy.Types.GOLDEN_CYGNET,
+        )
+        for index in range(10):
+            ahead_user = auth.User.objects.create_user(f'Ahead{index}', '', '')
+            self.events[0].fantasies.create(
+                team = ahead_user.team,
+                mens_budget = 5000,
+                womens_budget = 5000,
+            )
+
+        entries = self.get_json()['entries']
+
+        self.assertEqual(entries[0]['rankings']['overall'], 11)
+        self.assertEqual(
+            [trophy['code'] for trophy in entries[0]['trophies']],
+            ['06-G-CYG'],
+        )
+
+
+    def test__json__entries__trophies__award_boundaries(self) -> None:
+        """Gives both awards up to fifth, only the top-ten award up to tenth, and none after."""
+
+        # Entries are newest first, so the events are 2021, 2020, then 2019
+        for event, teams_ahead in [(self.events[0], 4), (self.events[2], 5), (self.events[1], 9)]:
+            for index in range(teams_ahead):
+                ahead_user = auth.User.objects.create_user(f'{event.tag}Ahead{index}', '', '')
+                event.fantasies.create(
+                    team = ahead_user.team,
+                    mens_budget = 5000,
+                    womens_budget = 5000,
+                )
+
+        entries = self.get_json()['entries']
+
+        self.assertEqual(
+            [entry['rankings']['overall'] for entry in entries],
+            [5, 6, 10],
+        )
+        self.assertEqual(
+            [[trophy['code'] for trophy in entry['trophies']] for entry in entries],
+            [['TOP-FIVE', 'TOP-TEN'], ['TOP-TEN'], ['TOP-TEN']],
+        )
+
+
+    def test__json__query_count(self) -> None:
+        """Expect the same queries as the page, however many events and trophies there are:
+            (1) SELECT events
+            (1) SELECT team
+            (1) SELECT trophies
+            (1) SELECT entries, with their finances and ranks
+            (1) Prefetch the team's trophies at each event
+        """
+
+        for index in range(3):
+            event = prepare_event(self.user, 2022 + index, -3 - index)
+            models.EventTrophy.objects.create(
+                team = self.user.team,
+                event = event,
+                type = models.EventTrophy.Types.GOLDEN_SWAN,
+            )
+
+        with self.assertNumQueries(5):
+            self.client.get(
+                reverse('fantasy:team_profile', args = ['DevTeam']),
+                HTTP_ACCEPT = 'application/json',
+            )
 
 
 

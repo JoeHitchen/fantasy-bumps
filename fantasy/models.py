@@ -40,7 +40,14 @@ else:
     FinancialGameEntry = 'GameEntry'
 
 
-class EventJson(TypedDict):
+class EventSummaryJson(TypedDict):
+    series: str
+    year: int
+    name: str
+    tag: str
+
+
+class EventFullJson(TypedDict):
     series: str
     year: int
     name: str
@@ -73,7 +80,13 @@ class FinanceJson(TypedDict):
     balance: int
 
 
-class TrophyJson(TypedDict):
+class TrophySummaryJson(TypedDict):
+    code: str
+    name: str
+    description: str
+
+
+class TrophyFullJson(TypedDict):
     team: str
     code: str
     name: str
@@ -115,8 +128,18 @@ class Event(models.Model):
         return '{} {}'.format(series_long, self.year)
 
 
-    def json(self) -> EventJson:
-        """Returns a JSON-compatible representation of the event."""
+    def summary_json(self) -> EventSummaryJson:
+        """Returns a lightweight JSON-compatible representation of the event that identifies it."""
+        return {
+            'series': self.series,
+            'year': self.year,
+            'name': str(self),
+            'tag': self.tag,
+        }
+
+
+    def full_json(self) -> EventFullJson:
+        """Returns a JSON-compatible representation of the full event information."""
         return {
             'series': self.series,
             'year': self.year,
@@ -493,6 +516,11 @@ class GeneralTrophy(models.TextChoices):
         }[self]
 
 
+    def summary_json(self) -> TrophySummaryJson:
+        """Returns the trophy in the same JSON form as an event trophy's summary."""
+        return {'code': self.value, 'name': self.label, 'description': self.description()}
+
+
 
 class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
@@ -744,7 +772,17 @@ class EventTrophy(models.Model):
         return f'{self.Types(self.type).label} ({self.event})'
 
 
-    def json(self) -> TrophyJson:
+    def summary_json(self) -> TrophySummaryJson:
+        """Returns the trophy's code, name and description, without its team or event."""
+        return {
+            'code': self.type,
+            'name': self.Types(self.type).label,
+            'description': self.description(),
+        }
+
+
+    def full_json(self) -> TrophyFullJson:
+        """Returns the trophy with the team that holds it, as in an event's list of trophies."""
         return {
             'team': str(self.team),
             'code': self.type,
