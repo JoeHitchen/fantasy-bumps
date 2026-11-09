@@ -307,6 +307,30 @@ class Test__MCPTools(TestCase):
         )
 
 
+    def test__get_team_entry_history__unknown_team(self) -> None:
+        """Returns a tool-level error for unknown teams."""
+
+        result = self.tool_call('get_team_entry_history', {'team_name': 'Unknown'})
+        self.assertTrue(result['isError'])
+
+
+    def test__get_team_entry_history__successful_lookup(self) -> None:
+        """Returns data matching the API's team profile response."""
+
+        models.EventTrophy.objects.create(
+            team = self.team_1,
+            event = self.event,
+            type = models.EventTrophy.Types.GOLDEN_SWAN,
+        )
+
+        result = self.tool_call('get_team_entry_history', {'team_name': str(self.team_1)})
+        self.assertFalse(result['isError'])
+        self.assertEqual(
+            result['structuredContent'],
+            self.get_api_json('team_profile', {'team_name': str(self.team_1)}),
+        )
+
+
     def test__get_event_team_crews__unknown_event(self) -> None:
         """Returns a tool-level error for unknown events and a readable message in the content."""
 

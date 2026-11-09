@@ -176,6 +176,8 @@ DJANGO_MCP_GLOBAL_SERVER_CONFIG = {
         'Call list_events() first to find valid series-year pairs. `series` is one of: `D`=Demo, '
         '`T`=Torpids, `E`=Eights, `L`=Lents, `M`=Mays. Where a tool takes `gender`, it is `M`=Men '
         'or `W`=Women.\n'
+        'To look at a team across events use get_team_entry_history, then get_event_team_crews '
+        'for the crew lists of any one of its entries.\n'
         'Everything exposed here is read-only and already public via the website UI and JSON API.'
     ),
 }
