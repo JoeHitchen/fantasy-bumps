@@ -106,6 +106,20 @@ class FantasyBumpsMCP(MCPToolset):
         )
 
 
+    def get_team_entry_history(self, team_name: str) -> views.JsonOutput:
+        """Retrieve a team's entry history across all events - finances, rankings, status, and
+        trophies - using the team name. Use get_event_team_crews for the crew lists of a
+        specific entry."""
+
+        assert self.request is not None  # Needed for MyPy
+        view = views.TeamProfileView(
+            object = models.Team.objects.select_related('user').get(user__username = team_name),
+            kwargs = {'team_name': team_name},
+            request = self.request,
+        )
+        return view.convert_to_json(view.get_context_data())
+
+
     def get_event_team_crews(self, series: Series, year: int, team_name: str) -> views.JsonOutput:
         """Retrieve crew lists, finances, and payouts for a team's entry to an event,
         using the series, year, and team name."""

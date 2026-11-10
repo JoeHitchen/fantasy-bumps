@@ -30,7 +30,7 @@
 
   <h5>JSON API</h5>
   <div class="mb-3">
-    A read-only JSON API is available on several of the standard pages, including events, markets, leaderboards, and team crews.
+    A read-only JSON API is available on several of the standard pages, including events, markets, leaderboards, team entry histories, and team crews.
     It can be accessed by setting the <code>Accept: application/json</code> header or by appending <code>?format=json</code> to the URL.
     Because the API is read-only and only supplying data already fully public, no authentication is needed.
   </div>
@@ -67,6 +67,10 @@
         </td>
       </tr>
       <tr>
+        <td><code>{% url 'fantasy:team_profile' "MyTeam" %}</code></td>
+        <td>Returns a team's entry history across all events, including their finances, rankings, and trophies for each.</td>
+      </tr>
+      <tr>
         <td><code>{% url 'fantasy:team_crews' "eights2026" "MyTeam" %}</code></td>
         <td>Returns the full details of a team's crew lists for a specified event, including all results & payouts.</td>
       </tr>
@@ -92,6 +96,7 @@
       <li><code>get_event_details</code> – Retrieves details for a specific event</li>
       <li><code>get_event_market</code> – Retrieves market data for a specific event, for men or women as appropriate</li>
       <li><code>get_event_leaderboard</code> – Retrieves leaderboard data for a specific event, accepting the same sorting & filtering as the API view</li>
+      <li><code>get_team_entry_history</code> – Retrieves a team's entry history across all events</li>
       <li><code>get_event_team_crews</code> – Retrieves team crew data for a specific event</li>
     </ul>
   </div>
