@@ -82,6 +82,13 @@ class GenderFinances(TypedDict):
     balance: int
 
 
+class CrewListFinances(TypedDict):
+    title: str
+    finances: GenderFinances
+    rank: int | None
+    entries: int | None
+
+
 class CrewStatusStyling(TypedDict):
     colour: str
     crew: str

@@ -1910,7 +1910,7 @@ class Test__TeamCrews(TestCase):
 
     @patching.localtime_time(time(11, 15))
     def test__day_one(self, _localtime_mock: Mock) -> None:
-        """Only displays one set of crew lists."""
+        """Only displays one set of crew lists, and does not provide any ranks."""
 
         self.event.days.update(date = db.F('date') + self.base_date_shift + timedelta(2))
 
@@ -1924,12 +1924,24 @@ class Test__TeamCrews(TestCase):
         self.assertNotIn('Thursday crew lists', str(response.content))
         self.assertNotIn('Wednesday crew lists', str(response.content))
 
+        self.assertIsNone(response.context['overall_rank'])
+        self.assertIsNone(response.context['mens_rank'])
+        self.assertIsNone(response.context['womens_rank'])
+
 
     @patching.localtime_time(time(11, 15))
     def test__day_two(self, _localtime_mock: Mock) -> None:
-        """Displays both the current and the previous crew lists."""
+        """Displays both the current and the previous crew lists, and provides the ranks."""
 
         self.event.days.update(date = db.F('date') + self.base_date_shift + timedelta(1))
+
+        self.event.fantasies.create(
+            team = auth.User.objects.create_user('Rival', '', '').team,
+            womens_budget = 3000,
+        )
+        self.budgets.mens_budget = 3000
+        self.budgets.womens_budget = 2000
+        self.budgets.save()
 
         response = self.client.get(reverse(
             self.url_name,
@@ -1940,6 +1952,14 @@ class Test__TeamCrews(TestCase):
         self.assertIn('Current crew lists', str(response.content))
         self.assertNotIn('Thursday crew lists', str(response.content))
         self.assertIn('Wednesday crew lists', str(response.content))
+
+        self.assertEqual(response.context['overall_rank'], 1)
+        self.assertEqual(response.context['mens_rank'], 1)
+        self.assertEqual(response.context['womens_rank'], 2)
+        self.assertEqual(
+            response.context['finances'].total_entry_count,
+            self.event.fantasies.count(),
+        )
 
 
     @patching.localtime_time(time(11, 15))

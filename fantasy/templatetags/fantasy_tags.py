@@ -474,6 +474,36 @@ def crew_list_header(finances: types.GenderFinances) -> types.GenderFinances:
 
 
 @register.inclusion_tag(template.Template('''
+  {% load fantasy_tags %}
+  <div class="card card-body bg-primary text-light">
+    <div class="d-flex team-finance-header mb-2">
+      <div class="flex-grow-1"><strong>{{ title }} Budget:</strong></div>
+      <div><strong>{{ finances.budget|currency }}</strong></div>
+    </div>
+    <div class="d-flex">
+      <div class="flex-grow-1">{{ title }} Crew Value:</div>
+      <div>{{ finances.crew_value|currency }}</div>
+    </div>
+    <div class="d-flex">
+      <div class="flex-grow-1">{{ title }} Balance:</div>
+      <div>{{ finances.balance|currency }}</div>
+    </div>
+    {% if rank %}<div class="d-flex justify-content-center team-finance-header mt-3">
+      <div class="badge badge-light">{{ rank|out_of:entries }}</div>
+    </div>{% endif %}
+  </div>
+'''))
+def crew_list_finances(
+    title: str,
+    finances: types.GenderFinances,
+    rank: int | None = None,
+    entries: int | None = None,
+) -> types.CrewListFinances:
+    """Displays a team's finances, with its rank if one is provided."""
+    return {'title': title, 'finances': finances, 'rank': rank, 'entries': entries}
+
+
+@register.inclusion_tag(template.Template('''
     <div class="list-group-item p-0">
       <table class="table table-sm table-borderless mb-0"><tr>
       <td class="table-{{ main.colour }} text-center align-middle" style="width: 50%">

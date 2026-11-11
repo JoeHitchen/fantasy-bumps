@@ -633,9 +633,11 @@ class TeamCrewsView(EventBase):
     def get_context_data(self, **kwargs: ContextKwargs) -> ContextDict:
         context = super().get_context_data(**kwargs)
 
-        related_selects = ['team', 'team__user', 'mens_coach', 'womens_coach']
         entry = get_object_or_404(
-            models.GameEntry.objects.select_related(*related_selects).extend_financials(),
+            models.GameEntry.objects
+            .select_related('team', 'team__user', 'mens_coach', 'womens_coach')
+            .extend_financials()
+            .extend_ranks(),
             team__user__username = self.kwargs['team_name'],
             event = self.event,
         )
@@ -662,6 +664,11 @@ class TeamCrewsView(EventBase):
                 context['seats'],
             ),
         } for day in racing_days.reverse()]
+
+        show_ranks = len(context['crews']) > 1  # Day one ranks are meaningless
+        context['overall_rank'] = entry.overall_rank if show_ranks else None
+        context['mens_rank'] = entry.mens_rank if show_ranks else None
+        context['womens_rank'] = entry.womens_rank if show_ranks else None
 
         context['show_coach_row'] = self.event.coaching_competition and (
             entry.mens_coach

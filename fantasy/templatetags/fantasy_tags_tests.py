@@ -1431,3 +1431,53 @@ class Test__Display_Entry_Trophies(TestCase):
         self.assertNotIn('Top Five Finisher', output)
         self.assertNotIn('Top Ten Finisher', output)
 
+
+
+class Test__Crew_List_Finances(TestCase):
+
+    finances: types.GenderFinances = {'budget': 1500, 'crew_value': 1200, 'balance': 300}
+
+    def crew_list_finances(self, rank: int | None = None, entries: int | None = None) -> str:
+        """A helper function that renders the crew list finances."""
+        return (
+            template
+            .Template((
+                '{% load fantasy_tags %}'
+                + '{% crew_list_finances title finances rank entries %}'
+            ))
+            .render(template.Context({
+                'title': 'Overall',
+                'finances': self.finances,
+                'rank': rank,
+                'entries': entries,
+            }))
+        )
+
+
+    def test__no_rank(self) -> None:
+        """Does not display a rank row if no rank is provided."""
+
+        self.assertNotIn('badge', self.crew_list_finances())
+
+
+    def test__rank(self) -> None:
+        """Displays the rank, out of the number of entries, if one is provided."""
+
+        self.assertInHTML(
+            '<div class="badge badge-light">15th of 359</div>',
+            self.crew_list_finances(15, 359),
+        )
+
+
+    def test__figures(self) -> None:
+        """Displays the budget, crew value and balance, each under the title."""
+
+        html = self.crew_list_finances()
+
+        self.assertInHTML('<div class="flex-grow-1"><strong>Overall Budget:</strong></div>', html)
+        self.assertInHTML(f'<div><strong>{tags.currency(1500)}</strong></div>', html)
+        self.assertInHTML('<div class="flex-grow-1">Overall Crew Value:</div>', html)
+        self.assertInHTML(f'<div>{tags.currency(1200)}</div>', html)
+        self.assertInHTML('<div class="flex-grow-1">Overall Balance:</div>', html)
+        self.assertInHTML(f'<div>{tags.currency(300)}</div>', html)
+
