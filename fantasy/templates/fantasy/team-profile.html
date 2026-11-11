@@ -48,21 +48,23 @@
 
   <div class="col-lg order-lg-first">
     {% for entry in entries %}
+    {% with day=entry.event.active_day %}
     <div class="card mb-3">
       <div class="card-header text-dark d-flex flex-wrap align-items-center">
         <h4 class="mb-0 mr-2">{{ entry.event }}</h4>
-        <span>{% display_entry_trophies entry %}</span>
+        {% if not day.next %}<span>{% display_entry_trophies entry %}</span>{% endif %}
         <div class="ml-auto">
-          {% if entry.valid_entry is not None %}<span class="badge badge-pill badge-{% if entry.valid_entry %}success{% else %}danger{% endif %}">{% if entry.valid_entry %}Valid{% else %}Invalid{% endif %} entry</span>{% endif %}
-          {% if entry.has_subs %}<span class="badge badge-pill badge-secondary ml-1">Substitutes used</span>
-          {% else %}<span class="badge badge-pill badge-info ml-1">No substitutes used</span>{% endif %}
+          {% if day.next %}<span class="badge badge-pill badge-primary">Provisional</span>{% endif %}
+          {% if day.prev and entry.valid_entry is not None %}<span class="badge badge-pill badge-{% if entry.valid_entry %}success{% else %}danger{% endif %} ml-1">{% if entry.valid_entry %}Valid{% else %}Invalid{% endif %} entry</span>{% endif %}
+          {% if day.prev.prev %}{% if entry.has_subs %}<span class="badge badge-pill badge-secondary ml-1">Substitutes used</span>
+          {% else %}<span class="badge badge-pill badge-info ml-1">No substitutes used</span>{% endif %}{% endif %}
           {% if forloop.last %}<span class="badge badge-pill badge-warning ml-1">First event</span>{% endif %}
         </div>
       </div>
       <div class="card-body pb-2">
-        {% include 'fantasy/finance-card.html' with title='Overall' rank=entry.overall_rank num_entries=entry.total_entry_count budget=entry.total_budget crew_value=entry.total_crew_value balance=entry.total_balance %}
-        {% include 'fantasy/finance-card.html' with title="Men's" rank=entry.mens_rank num_entries=entry.total_entry_count budget=entry.mens_budget crew_value=entry.mens_crew_value balance=entry.mens_balance %}
-        {% include 'fantasy/finance-card.html' with title="Women's" rank=entry.womens_rank num_entries=entry.total_entry_count budget=entry.womens_budget crew_value=entry.womens_crew_value balance=entry.womens_balance %}
+        {% include 'fantasy/finance-card.html' with title='Overall' show_rank=day.prev rank=entry.overall_rank num_entries=entry.total_entry_count budget=entry.total_budget crew_value=entry.total_crew_value balance=entry.total_balance %}
+        {% include 'fantasy/finance-card.html' with title="Men's" show_rank=day.prev rank=entry.mens_rank num_entries=entry.total_entry_count budget=entry.mens_budget crew_value=entry.mens_crew_value balance=entry.mens_balance %}
+        {% include 'fantasy/finance-card.html' with title="Women's" show_rank=day.prev rank=entry.womens_rank num_entries=entry.total_entry_count budget=entry.womens_budget crew_value=entry.womens_crew_value balance=entry.womens_balance %}
       </div>
       <div class="card-footer d-flex justify-content-end">
         <a href="{% url 'fantasy:event' entry.event.tag %}" class="btn btn-primary btn-sm ml-2">Event <small><span class="oi oi-chevron-right ml-1"></span></small></a>
@@ -70,6 +72,7 @@
         <a href="{% url 'fantasy:team_crews' entry.event.tag team.user.username %}" class="btn btn-primary btn-sm ml-2">Crew Lists <small><span class="oi oi-chevron-right ml-1"></span></small></a>
       </div>
     </div>
+    {% endwith %}
     {% empty %}
     No entries yet
     {% endfor %}

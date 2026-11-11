@@ -68,7 +68,10 @@
       </tr>
       <tr>
         <td><code>{% url 'fantasy:team_profile' "MyTeam" %}</code></td>
-        <td>Returns a team's entry history across all events, including their finances, rankings, and trophies for each.</td>
+        <td>
+          Returns a team's entry history across all events, including their finances, rankings, and trophies.
+          Information for ongoing events is also shown, but remains provisional until the <code>event_finished</code> has been set.
+        </td>
       </tr>
       <tr>
         <td><code>{% url 'fantasy:team_crews' "eights2026" "MyTeam" %}</code></td>
