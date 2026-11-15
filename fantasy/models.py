@@ -499,29 +499,6 @@ class Coach(models.Model):
 
 
 
-class GeneralTrophy(models.TextChoices):
-    """Trophies held as flags on a team, rather than as EventTrophy records, so are not stored."""
-
-    TOP_FIVE = 'TOP-FIVE', 'Top Five Finisher'
-    TOP_TEN = 'TOP-TEN', 'Top Ten Finisher'
-    OXFORD_VETERAN = 'OXFORD', 'Oxford Veteran'
-    CAMBRIDGE_VETERAN = 'CAMBRIDGE', 'Cambridge Veteran'
-
-    def description(self) -> str:
-        return {
-            GeneralTrophy.TOP_FIVE: 'Finished in the top five of an event',
-            GeneralTrophy.TOP_TEN: 'Finished in the top ten of an event',
-            GeneralTrophy.OXFORD_VETERAN: 'Competed in five Oxford events',
-            GeneralTrophy.CAMBRIDGE_VETERAN: 'Competed in five Cambridge events',
-        }[self]
-
-
-    def summary_json(self) -> TrophySummaryJson:
-        """Returns the trophy in the same JSON form as an event trophy's summary."""
-        return {'code': self.value, 'name': self.label, 'description': self.description()}
-
-
-
 class Team(models.Model):
     """Extends auth.User functionality for the Fantasy Bumps game."""
 
@@ -804,4 +781,27 @@ class EventTrophy(models.Model):
             self.Types.UGLY_DUCKLING: 'Worst Performing Team',
             self.Types.JESTER_SWAN: 'Best Team Name',
         }[self.Types(self.type)]
+
+
+
+class GeneralTrophy(models.TextChoices):
+    """Trophies held as flags on a team, rather than as EventTrophy records, so are not stored."""
+
+    TOP_FIVE = 'TOP-FIVE', 'Top Five Finisher'
+    TOP_TEN = 'TOP-TEN', 'Top Ten Finisher'
+    OXFORD_VETERAN = 'OXFORD', 'Oxford Veteran'
+    CAMBRIDGE_VETERAN = 'CAMBRIDGE', 'Cambridge Veteran'
+
+    def description(self) -> str:
+        return {
+            GeneralTrophy.TOP_FIVE: 'Finished in the top five of an event',
+            GeneralTrophy.TOP_TEN: 'Finished in the top ten of an event',
+            GeneralTrophy.OXFORD_VETERAN: 'Competed in five Oxford events',
+            GeneralTrophy.CAMBRIDGE_VETERAN: 'Competed in five Cambridge events',
+        }[self]
+
+
+    def summary_json(self) -> TrophySummaryJson:
+        """Returns the trophy in the same JSON form as an event trophy's summary."""
+        return {'code': self.value, 'name': self.label, 'description': self.description()}
 

@@ -567,11 +567,14 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
         context['entries'] = (
             team.entries
             .select_related('event')
-            .prefetch_related(db.Prefetch(
-                'event__trophies',
-                queryset = team.trophies.all(),
-                to_attr = '_team_trophies',
-            ))
+            .prefetch_related(
+                db.Prefetch(
+                    'event__trophies',
+                    queryset = team.trophies.all(),
+                    to_attr = '_team_trophies',
+                ),
+                db.Prefetch('event__days', to_attr = '_days'),
+            )
             .extend_financials()
             .extend_ranks()
             .annotate(last_day = utils.event_last_day('event__'))
@@ -604,6 +607,20 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
             return [trophy.summary_json() for trophy in trophies]
 
 
+        def convert_entry(entry: models.GameEntry, first_entry: bool) -> JsonOutput:
+            day = entry.event.active_day
+            return {
+                'event': entry.event.summary_json(),
+                'event_finished': not day.next,
+                'valid_entry': entry.valid_entry if day.prev else None,
+                'has_subs': entry.has_subs if day.prev and day.prev.prev else None,
+                'first_entry': first_entry,
+                'finances': entry.finance_json(),
+                'rankings': convert_rankings(entry) if day.prev else None,
+                'trophies': convert_trophies(entry) if not day.next else [],
+            }
+
+
         return {
             'team': context['team'].user.username,
             'trophies': [
@@ -611,15 +628,12 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
                 for trophy in context['event_trophies']
             ],
             'general_trophies': [trophy.summary_json() for trophy in context['general_trophies']],
-            'entries': [{
-                'event': entry.event.summary_json(),
-                'valid_entry': entry.valid_entry,
-                'has_subs': entry.has_subs,
-                'first_entry': index == len(context['entries']) - 1,
-                'finances': entry.finance_json(),
-                'rankings': convert_rankings(entry),
-                'trophies': convert_trophies(entry),
-            } for index, entry in enumerate(context['entries'])],
+            'entries': [
+                convert_entry(
+                    entry = entry,
+                    first_entry = (count == len(context['entries'])),
+                ) for count, entry in enumerate(context['entries'], start = 1)
+            ],
         }
 
 

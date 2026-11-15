@@ -108,8 +108,11 @@ class FantasyBumpsMCP(MCPToolset):
 
     def get_team_entry_history(self, team_name: str) -> views.JsonOutput:
         """Retrieve a team's entry history across all events - finances, rankings, status, and
-        trophies - using the team name. Use get_event_team_crews for the crew lists of a
-        specific entry."""
+        trophies - using the team name. Entries to events still in progress are provisional and
+        flagged with event_finished = False. For these events, rankings are not given until after
+        the first day of racing and substitute usage is not set until after the second day.
+        Trophies are not awarded until the event has finished. Use get_event_team_crews for the
+        crew lists of a specific entry and a breakdown of the payouts earned."""
 
         assert self.request is not None  # Needed for MyPy
         view = views.TeamProfileView(
