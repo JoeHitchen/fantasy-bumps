@@ -10,6 +10,9 @@
     border-top: 0;
     padding-left: 0.5em;
     padding-right: 0.5em;
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
   .team-name {
     overflow-wrap: anywhere;
@@ -20,6 +23,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .table-responsive {
+    max-height: calc(100dvh - 2rem);
+  }
+  .table-scroll-locked {
+    overflow-y: hidden;
+  }
 </style>
 
 <script type="text/javascript">
@@ -27,6 +36,10 @@
     $('[data-toggle="tooltip"]').tooltip();
     $(".btn-sort").click(changeSort);
     $(".btn-filter").click(toggleFilters);
+
+    $(window).on("scroll resize", lockTableScroll);
+    $(".table-responsive").on("scroll", lockTableScroll);
+    lockTableScroll();
   });
 
   function changeSort(event) {
@@ -42,6 +55,11 @@
     currentState = url.searchParams.get(thisFilter);
     url.searchParams.set(thisFilter, currentState === 'false');  // Flips boolean string, with null=true
     window.location.href = url.href;
+  };
+
+  function lockTableScroll() {
+    atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
+    $(".table-responsive").toggleClass("table-scroll-locked", !atBottom && $(".table-responsive").scrollTop() === 0);
   };
 </script>
 {% endblock %}
@@ -64,8 +82,8 @@
     {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="returners">Show Returning Players</button>{% endif %}
   </div>
 
-  <div class="card mb-3">
-    <table class="table table-hover table-sm table-responsive-md text-center mb-0 mt-0">
+  <div class="card mb-3"><div class="table-responsive">
+    <table class="table table-hover table-sm text-center mb-0 mt-0">
       <thead class="thead-light"><tr>
         <th>Rank</th>
         <th class="text-left">Team</th>
@@ -127,7 +145,7 @@
         </tr>{% endfor %}
       </tbody>
     </table>
-  </div>
+  </div></div>
 </div></div>
 
 {% endblock %}
