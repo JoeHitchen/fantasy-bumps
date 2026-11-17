@@ -50,7 +50,7 @@
     {% for entry in entries %}
     {% with day=entry.event.active_day %}
     <div class="card mb-3">
-      <div class="card-header text-dark d-flex flex-wrap align-items-center">
+      <div class="card-header text-dark d-flex flex-wrap align-items-center" style="row-gap: 0.5rem">
         <h4 class="mb-0 mr-2">{{ entry.event }}</h4>
         {% if not day.next %}<span>{% display_entry_trophies entry %}</span>{% endif %}
         <div class="ml-auto">
