@@ -10,12 +10,24 @@
     border-top: 0;
     padding-left: 0.5em;
     padding-right: 0.5em;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .team-name {
+    overflow-wrap: anywhere;
   }
   .narrow-column {
     width: 10em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .table-responsive {
+    max-height: calc(100dvh - 2rem);
+  }
+  .table-scroll-locked {
+    overflow-y: hidden;
   }
 </style>
 
@@ -24,6 +36,10 @@
     $('[data-toggle="tooltip"]').tooltip();
     $(".btn-sort").click(changeSort);
     $(".btn-filter").click(toggleFilters);
+
+    $(window).on("scroll resize", lockTableScroll);
+    $(".table-responsive").on("scroll", lockTableScroll);
+    lockTableScroll();
   });
 
   function changeSort(event) {
@@ -39,6 +55,11 @@
     currentState = url.searchParams.get(thisFilter);
     url.searchParams.set(thisFilter, currentState === 'false');  // Flips boolean string, with null=true
     window.location.href = url.href;
+  };
+
+  function lockTableScroll() {
+    atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
+    $(".table-responsive").toggleClass("table-scroll-locked", !atBottom && $(".table-responsive").scrollTop() === 0);
   };
 </script>
 {% endblock %}
@@ -61,8 +82,8 @@
     {% else %}<button class="btn btn-sm btn-danger btn-filter" data-filter="returners">Show Returning Players</button>{% endif %}
   </div>
 
-  <div class="card mb-3">
-    <table class="table table-hover table-sm table-responsive-md text-center mb-0 mt-0">
+  <div class="card mb-3"><div class="table-responsive">
+    <table class="table table-hover table-sm text-center mb-0 mt-0">
       <thead class="thead-light"><tr>
         <th>Rank</th>
         <th class="text-left">Team</th>
@@ -114,17 +135,17 @@
             {{ fantasy.previous_entries|new_player_flag }}
           </td>
           <td class="align-middle text-nowrap">
-            <a href="{% url 'fantasy:team_crews' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2" style="padding-bottom: 2px" data-toggle="tooltip" data-placement="top" title="Crew lists">
+            <a href="{% url 'fantasy:team_crews' event.tag fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2 d-block d-md-inline-block mb-1 mb-md-0" style="padding-bottom: 2px" data-toggle="tooltip" data-placement="top" title="Crew lists">
               <small><span class="oi oi-align-left"></span></small>
             </a>
-            <a href="{% url 'fantasy:team_profile' fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2" style="padding-bottom: 2px" data-toggle="tooltip" data-placement="top" title="Full entry history">
+            <a href="{% url 'fantasy:team_profile' fantasy.team.user.username %}" class="btn btn-secondary btn-sm pt-0 pl-2 pr-2 d-block d-md-inline-block" style="padding-bottom: 2px" data-toggle="tooltip" data-placement="top" title="Full entry history">
               <small><span class="oi oi-calendar"></span></small>
             </a>
           </td>
         </tr>{% endfor %}
       </tbody>
     </table>
-  </div>
+  </div></div>
 </div></div>
 
 {% endblock %}
