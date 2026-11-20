@@ -861,17 +861,16 @@ class Test__CoachingCompetition(TestCase):
 
         with self.assertNumQueries(5):
             winners = game_advance.run_blades_or_bust(saturday)
-            self.assertEqual(winners, 4)
+            self.assertEqual(winners, 2)
 
         for rank, entry in enumerate(self.entries, start = 1):
             with self.subTest(rank = rank):
                 entry.refresh_from_db()
 
-                mens_increase = money.BLADES_BONUS if rank == 1 else 0
-                self.assertEqual(entry.mens_budget, self.mens_budget + mens_increase)
-                self.assertEqual(entry.mens_balance, self.mens_balance + mens_increase)
+                self.assertEqual(entry.mens_budget, self.mens_budget)  # No men's blades
+                self.assertEqual(entry.mens_balance, self.mens_balance)
 
-                womens_increase = money.BLADES_BONUS if rank in [1, 8, 10] else 0
+                womens_increase = money.BLADES_BONUS if rank in [8, 10] else 0
                 self.assertEqual(entry.womens_budget, self.womens_budget + womens_increase)
                 self.assertEqual(entry.womens_balance, self.womens_balance + womens_increase)
 

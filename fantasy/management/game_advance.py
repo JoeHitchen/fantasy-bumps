@@ -279,6 +279,7 @@ def run_blades_or_bust(day: models.Day) -> int | None:
     """Pays out on the final day of racing for crews which have won blades.
 
     "Blades" is calculated assuming Eights rules, where gaining a place every day is sufficient.
+    Headship row overs do not count towards this competition; there must be a bump every day.
     """
 
     if day.next and day.next.is_racing_day:
@@ -292,7 +293,7 @@ def run_blades_or_bust(day: models.Day) -> int | None:
         for ranking in event_day.ranking.all():
             if ranking.crew not in eligible_crews:
                 continue
-            elif eligible_crews[ranking.crew] > ranking.rank or ranking.rank == 1:
+            elif eligible_crews[ranking.crew] > ranking.rank:
                 eligible_crews[ranking.crew] = ranking.rank
             else:
                 eligible_crews.pop(ranking.crew)
