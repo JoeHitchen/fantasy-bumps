@@ -40,62 +40,23 @@ else:
     FinancialGameEntry = 'GameEntry'
 
 
-class EventSummaryJson(TypedDict):
-    series: str
-    year: int
-    name: str
-    tag: str
-
-
-class EventFullJson(TypedDict):
-    series: str
-    year: int
-    name: str
-    tag: str
-    first_day: date_type
-    last_day: date_type
-    coaching_competition: str | None
-
-
-class DayJson(TypedDict):
-    name: str
-    date: date_type
-    first_race: datetime | None
-    last_race: datetime | None
-    market_opens: datetime | None
-    market_closes: datetime | None
-    market_is_open: bool
-
-
-class CrewJson(TypedDict):
-    club_code: str
-    club_name: str
-    gender: str
-    rank: int
-
-
-class FinanceJson(TypedDict):
-    budget: int
-    crew_value: int
-    balance: int
-
-
-class TrophySummaryJson(TypedDict):
-    code: str
-    name: str
-    description: str
-
-
-class TrophyFullJson(TypedDict):
-    team: str
-    code: str
-    name: str
-    description: str
-
-
-
 class Event(models.Model):
     """A bumps competition, with simple division information."""
+
+    class SummaryJson(TypedDict):
+        series: str
+        year: int
+        name: str
+        tag: str
+
+    class FullJson(TypedDict):
+        series: str
+        year: int
+        name: str
+        tag: str
+        first_day: date_type
+        last_day: date_type
+        coaching_competition: str | None
 
     series = models.CharField(
         max_length = 1,
@@ -128,7 +89,7 @@ class Event(models.Model):
         return '{} {}'.format(series_long, self.year)
 
 
-    def summary_json(self) -> EventSummaryJson:
+    def summary_json(self) -> Event.SummaryJson:
         """Returns a lightweight JSON-compatible representation of the event that identifies it."""
         return {
             'series': self.series,
@@ -138,7 +99,7 @@ class Event(models.Model):
         }
 
 
-    def full_json(self) -> EventFullJson:
+    def full_json(self) -> Event.FullJson:
         """Returns a JSON-compatible representation of the full event information."""
         return {
             'series': self.series,
@@ -206,6 +167,15 @@ class Event(models.Model):
 class Day(models.Model):
     """A day of racing."""
 
+    class Json(TypedDict):
+        name: str
+        date: date_type
+        first_race: datetime | None
+        last_race: datetime | None
+        market_opens: datetime | None
+        market_closes: datetime | None
+        market_is_open: bool
+
     event = models.ForeignKey(Event, models.CASCADE, related_name = 'days')
     name = models.CharField(max_length = 10)
     date = models.DateField(db_index = True)
@@ -224,7 +194,7 @@ class Day(models.Model):
         return self.name
 
 
-    def json(self) -> DayJson:
+    def json(self) -> Day.Json:
         """Returns a JSON-compatible representation of the day."""
         return {
             'name': self.name,
@@ -386,6 +356,12 @@ class Crew(models.Model):
     """Describes a crew (e.g. New College W1)"""
     Tuple = tuple[Clubs, Genders, int]
 
+    class Json(TypedDict):
+        club_code: str
+        club_name: str
+        gender: str
+        rank: int
+
     club = models.CharField(
         max_length = 4,
         choices = Clubs.choices,
@@ -415,7 +391,7 @@ class Crew(models.Model):
         return self.make_tuple(self.club, self.gender, self.rank)
 
 
-    def json(self) -> CrewJson:
+    def json(self) -> Crew.Json:
         """Returns a JSON-compatible representation of the crew."""
         return {
             'club_code': self.club,
@@ -636,6 +612,11 @@ class GameEntryQuerySet(models.QuerySet[FinancialGameEntry]):
 class GameEntry(models.Model):
     """Describes a team's finances (and by extension, score) for an event."""
 
+    class FinanceJson(TypedDict):
+        budget: int
+        crew_value: int
+        balance: int
+
     # Fields
     team = models.ForeignKey(Team, models.CASCADE, related_name='entries')
     event = models.ForeignKey(Event, models.CASCADE, related_name='fantasies')
@@ -676,7 +657,7 @@ class GameEntry(models.Model):
         unique_together = ['team', 'event']
 
 
-    def finance_json(self) -> dict[str, FinanceJson]:
+    def finance_json(self) -> dict[str, GameEntry.FinanceJson]:
         return {
             'overall': {
                 'budget': self.total_budget,
@@ -727,6 +708,17 @@ class Purchase(models.Model):
 class EventTrophy(models.Model):
     """Describes accolades won in previous events."""
 
+    class SummaryJson(TypedDict):
+        code: str
+        name: str
+        description: str
+
+    class FullJson(TypedDict):
+        team: str
+        code: str
+        name: str
+        description: str
+
     class Types(models.TextChoices):
         GOLDEN_SWAN = '01-GOLDEN', 'Golden Swan'
         SILVER_SWAN = '02-SILVER', 'Silver Swan'
@@ -750,7 +742,7 @@ class EventTrophy(models.Model):
         return f'{self.Types(self.type).label} ({self.event})'
 
 
-    def summary_json(self) -> TrophySummaryJson:
+    def summary_json(self) -> EventTrophy.SummaryJson:
         """Returns the trophy's code, name and description, without its team or event."""
         return {
             'code': self.type,
@@ -759,7 +751,7 @@ class EventTrophy(models.Model):
         }
 
 
-    def full_json(self) -> TrophyFullJson:
+    def full_json(self) -> EventTrophy.FullJson:
         """Returns the trophy with the team that holds it, as in an event's list of trophies."""
         return {
             'team': str(self.team),
@@ -801,7 +793,7 @@ class GeneralTrophy(models.TextChoices):
         }[self]
 
 
-    def summary_json(self) -> TrophySummaryJson:
+    def summary_json(self) -> EventTrophy.SummaryJson:
         """Returns the trophy in the same JSON form as an event trophy's summary."""
         return {'code': self.value, 'name': self.label, 'description': self.description()}
 

@@ -596,7 +596,7 @@ class TeamProfileView(FantasyBaseMixin, TeamDetailView):
             }
 
 
-        def convert_trophies(entry: models.GameEntry) -> list[models.TrophySummaryJson]:
+        def convert_trophies(entry: models.GameEntry) -> list[models.EventTrophy.SummaryJson]:
             trophies: list[models.EventTrophy | models.GeneralTrophy] = [
                 *entry.event._team_trophies,
             ]
